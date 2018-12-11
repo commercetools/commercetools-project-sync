@@ -1,0 +1,25 @@
+jacoco {
+    toolVersion = jacocoVersion
+}
+
+jacocoTestCoverageVerification {
+    violationRules {
+        rule {
+            limit {
+                minimum = 0.7 // test coverage should be at a minimum of 70%, otherwise build would fail.
+            }
+        }
+    }
+}
+
+jacocoTestReport {
+    reports {
+        xml.enabled = true
+        xml.destination = "${buildDir}/reports/jacoco/report.xml"
+        html.enabled = true
+        csv.enabled = false
+    }
+}
+
+check.dependsOn jacocoTestCoverageVerification // Build should fail if jacocoTestCoverageVerification task rules are not fulfilled.
+test.finalizedBy jacocoTestReport
