@@ -11,18 +11,16 @@ sourceSets {
 
 configurations {
     integrationTestImplementation.extendsFrom implementation, testImplementation
-    testImplementation.exclude group: 'org.slf4j', module: 'slf4j-simple'
-    integrationTestImplementation.exclude group: 'org.slf4j', module: 'slf4j-simple'
+    integrationTestRuntimeOnly.extendsFrom testRuntimeOnly
 }
 
 task integrationTest(type: Test) {
-    testClassesDir = sourceSets.integrationTest.output.classesDir
+    useJUnitPlatform {
+        includeEngines 'junit-jupiter', 'junit-vintage'
+    }
+    testClassesDirs = sourceSets.integrationTest.output.classesDirs
     classpath = sourceSets.integrationTest.runtimeClasspath
     outputs.upToDateWhen { false }
-}
-
-tasks.withType(Test) {
-    reports.html.destination = file("${reporting.baseDir}/${name}")
 }
 
 check.dependsOn integrationTest

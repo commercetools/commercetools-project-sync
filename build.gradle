@@ -12,14 +12,16 @@ buildscript {
 
 plugins {
     id "com.github.ben-manes.versions" version '0.20.0'
+    id 'com.adarshr.test-logger' version '1.6.0'
 }
 
 apply from: "$rootDir/gradle-scripts/plugins.gradle"
 apply from: "$rootDir/gradle-scripts/project-info.gradle"
 apply from: "$rootDir/gradle-scripts/java-compile.gradle"
 apply from: "$rootDir/gradle-scripts/repositories.gradle"
+apply from: "$rootDir/gradle-scripts/test.gradle"
 apply from: "$rootDir/gradle-scripts/integration-tests.gradle"
-apply from: "$rootDir/gradle-scripts/test-logging.gradle"
+apply from: "$rootDir/gradle-scripts/test-logger.gradle"
 apply from: "$rootDir/gradle-scripts/dependencies.gradle"
 apply from: "$rootDir/gradle-scripts/pmd.gradle"
 apply from: "$rootDir/gradle-scripts/jacoco.gradle"
