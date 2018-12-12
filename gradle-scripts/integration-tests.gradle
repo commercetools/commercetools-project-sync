@@ -22,6 +22,3 @@ task integrationTest(type: Test) {
     classpath = sourceSets.integrationTest.runtimeClasspath
     outputs.upToDateWhen { false }
 }
-
-check.dependsOn integrationTest
-integrationTest.mustRunAfter test
