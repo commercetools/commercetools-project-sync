@@ -1,12 +1,12 @@
 buildscript {
     ext {
-        shadowJar = '2.0.4'
+        shadowJarVersion = '4.0.3'
     }
     repositories {
         jcenter()
     }
     dependencies {
-        classpath "com.github.jengelman.gradle.plugins:shadow:${shadowJar}"
+        classpath "com.github.jengelman.gradle.plugins:shadow:${shadowJarVersion}"
     }
 }
 
