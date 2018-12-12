@@ -40,7 +40,15 @@ apply from: "$rootDir/gradle-scripts/execution-order.gradle"
  *
  * 2. Cannot use normal dependsOn syntax due to https://github.com/diffplug/spotless/issues/198#issuecomment-363542192
  */
-tasks.withType(com.diffplug.gradle.spotless.SpotlessTask) {
+
+import com.diffplug.gradle.spotless.SpotlessTask
+tasks.withType(SpotlessTask) {
     it.mustRunAfter compileIntegrationTestJava
     pmdMain.mustRunAfter it
+}
+
+import com.bmuschko.gradle.docker.tasks.image.Dockerfile
+task dockerfile(type: Dockerfile) {
+    from 'java:openjdk-8-jre-alpine'
+    copyFile '/build/libs/commercetools-project-sync.jar', '/home/commercetools-project-sync.jar'
 }

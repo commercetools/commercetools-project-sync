@@ -1,0 +1,22 @@
+sudo: required
+language: java
+dist: trusty
+jdk:
+- openjdk8
+install: true # skips travis' default installation step which executes gradle assemble.
+script: ./gradlew clean build
+# The before_cache and the cache steps cache the gradle installation on travis.
+before_cache:
+- rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
+- rm -fr $HOME/.gradle/caches/*/plugin-resolution/
+cache:
+  directories:
+  - $HOME/.gradle/caches/
+  - $HOME/.gradle/wrapper/
+env:
+  global:
+  - DOCKER_TAG=${TRAVIS_TAG:-$TRAVIS_COMMIT}
+  - PROJECT_NAME="commercetools-project-sync"
+after_success:
+  - bash <(curl -s https://codecov.io/bash)
+  - ./gradlew dockerBuildImage

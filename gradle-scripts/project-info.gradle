@@ -1,4 +1,4 @@
-group = 'commercetools'
+group = 'com.commercetools'
 version = '1.0.0'
 mainClassName = 'com.commercetools.sync.Main'
 description = "Dockerized CLI application which allows to automatically sync different resources between commercetools projects."
