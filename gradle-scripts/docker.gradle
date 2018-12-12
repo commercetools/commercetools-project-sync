@@ -1,0 +1,9 @@
+docker {
+    javaApplication {
+        baseImage = 'java/java:openjdk-8-jre'
+        maintainer = 'Hesham Massoud "hesham.massoud@commercetools.com"'
+        //tag = 'commercetools-project-sync:' + version
+        //copyFile '/build/libs/commercetools-project-sync.jar', /home/
+
+    }
+}
