@@ -13,6 +13,7 @@ buildscript {
 plugins {
     id "com.github.ben-manes.versions" version '0.20.0'
     id 'com.adarshr.test-logger' version '1.6.0'
+    id "com.diffplug.gradle.spotless" version "3.16.0"
 }
 
 apply from: "$rootDir/gradle-scripts/plugins.gradle"

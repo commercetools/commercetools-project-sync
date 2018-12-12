@@ -1,0 +1,6 @@
+apply plugin: 'java'
+spotless {
+    java {
+        googleJavaFormat('1.6')
+    }
+}
