@@ -1,7 +1,5 @@
 package com.commercetools.sync.utils;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import com.commercetools.sync.categories.helpers.CategorySyncStatistics;
 import com.commercetools.sync.commons.helpers.BaseSyncStatistics;
 import com.commercetools.sync.products.helpers.ProductSyncStatistics;
@@ -11,6 +9,8 @@ import uk.org.lidalia.slf4jext.Level;
 import uk.org.lidalia.slf4jtest.LoggingEvent;
 import uk.org.lidalia.slf4jtest.TestLogger;
 import uk.org.lidalia.slf4jtest.TestLoggerFactory;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class StatisticsUtilsTest {
   private static final TestLogger testLogger =

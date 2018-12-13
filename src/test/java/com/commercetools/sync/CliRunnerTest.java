@@ -1,5 +1,21 @@
 package com.commercetools.sync;
 
+import org.junit.After;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import uk.org.lidalia.slf4jext.Level;
+import uk.org.lidalia.slf4jtest.LoggingEvent;
+import uk.org.lidalia.slf4jtest.TestLogger;
+import uk.org.lidalia.slf4jtest.TestLoggerFactory;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
+import java.io.UnsupportedEncodingException;
+import java.util.concurrent.CompletableFuture;
+
 import static com.commercetools.sync.CliRunner.APPLICATION_DEFAULT_NAME;
 import static com.commercetools.sync.CliRunner.APPLICATION_DEFAULT_VERSION;
 import static com.commercetools.sync.CliRunner.HELP_OPTION_DESCRIPTION;
@@ -19,21 +35,6 @@ import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import java.io.ByteArrayOutputStream;
-import java.io.PrintStream;
-import java.io.UnsupportedEncodingException;
-import java.util.concurrent.CompletableFuture;
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import uk.org.lidalia.slf4jext.Level;
-import uk.org.lidalia.slf4jtest.LoggingEvent;
-import uk.org.lidalia.slf4jtest.TestLogger;
-import uk.org.lidalia.slf4jtest.TestLoggerFactory;
-
 public class CliRunnerTest {
   private static final TestLogger testLogger = TestLoggerFactory.getTestLogger(CliRunner.class);
   private static ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
@@ -47,7 +48,7 @@ public class CliRunnerTest {
   }
 
   @AfterClass
-  public static void tearDownSuite() throws UnsupportedEncodingException {
+  public static void tearDownSuite() {
     System.setOut(originalSystemOut);
   }
 
@@ -70,6 +71,7 @@ public class CliRunnerTest {
       @Nonnull final Level logLevel,
       @Nonnull final String logMessage,
       @Nullable final Throwable logThrowable) {
+
     assertThat(testLogger.getAllLoggingEvents()).hasSize(1);
     final LoggingEvent loggingEvent = testLogger.getAllLoggingEvents().get(0);
     assertThat(loggingEvent).isExactlyInstanceOf(LoggingEvent.class);

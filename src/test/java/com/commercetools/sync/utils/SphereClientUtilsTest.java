@@ -1,15 +1,16 @@
 package com.commercetools.sync.utils;
 
+import io.sphere.sdk.client.SphereClient;
+import io.sphere.sdk.products.commands.ProductCreateCommand;
+import org.junit.Test;
+
+import java.util.concurrent.RejectedExecutionException;
+
 import static com.commercetools.sync.utils.SphereClientUtils.CTP_SOURCE_CLIENT;
 import static com.commercetools.sync.utils.SphereClientUtils.CTP_TARGET_CLIENT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
-
-import io.sphere.sdk.client.SphereClient;
-import io.sphere.sdk.products.commands.ProductCreateCommand;
-import java.util.concurrent.RejectedExecutionException;
-import org.junit.Test;
 
 public class SphereClientUtilsTest {
   @Test
