@@ -5,5 +5,9 @@ docker {
         tag = 'commercetools/commercetools-project-sync:' + version
         ports = []
     }
+    registryCredentials {
+        username = System.getenv('DOCKER_USERNAME')
+        password = System.getenv('DOCKER_PASSWORD')
+    }
 }
 
