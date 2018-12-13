@@ -21,7 +21,7 @@
    **Critical Bug Fixes** (n)
    **Bug Fixes** (n)
    **Hotfix** (n)
-   - **Category Sync** - Sync now supports product variant images syncing. [#114](https://github.com/commercetools/commercetools-sync-java/issues/114)
+   - **Category Sync** - Sync now supports product variant images syncing. [#114](https://github.com/commercetools/commercetools-project-sync/issues/114)
    - **Build Tools** - Convinient handelling of env vars for integration tests.
 
 6. Add Compatibility notes section, which specifies explicitly if there
@@ -29,8 +29,8 @@ are breaking changes. If there are, then a migration guide should be provided.
 
 
 ### 1.0.0 - Nov 10, 2018
-[Commits](https://github.com/commercetools/commercetools-sync/commits/1.0.0) |
-[Docker Image](https://hub.docker.com/r/heshamm/commercetools-sync/)
+[Commits](https://github.com/commercetools/commercetools-project-sync/commits/1.0.0) |
+[Docker Image](https://hub.docker.com/r/commercetools/commercetools-project-sync/)
  
 **New Features** (1)
  - **Category Sync** - First version of the tool.
