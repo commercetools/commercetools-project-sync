@@ -1,0 +1,40 @@
+/**
+ * Contains declarations of tasks' execution orders.
+ */
+/**
+ * Sub-tasks execution order
+ */
+//Compile sub-tasks execution order
+compileTestJava.mustRunAfter compileJava
+compileIntegrationTestJava.mustRunAfter compileTestJava
+
+//PMD sub-tasks execution order
+pmdTest.mustRunAfter pmdMain
+pmdIntegrationTest.mustRunAfter pmdTest
+
+//FindBugs sub-tasks execution order
+findbugsTest.mustRunAfter findbugsMain
+findbugsIntegrationTest.mustRunAfter findbugsTest
+
+//Jacoco sub-tasks execution order
+jacocoTestReport.mustRunAfter jacocoTestCoverageVerification
+
+
+/**
+ * Global execution order
+ */
+// Ensure FindBugs runs after PMD
+findbugsMain.mustRunAfter pmdIntegrationTest
+// Ensure dependencyUpdates runs after findbugsIntegrationTest
+dependencyUpdates.mustRunAfter findbugsIntegrationTest
+// Ensure unit tests are run after dependencyUpdates
+test.mustRunAfter dependencyUpdates
+// Ensure integration tests are run after unit tests and are part of check
+check.dependsOn integrationTest
+integrationTest.mustRunAfter test
+// Ensure jacocoTestCoverageVerification and jacocoTestReport are part of check
+check.dependsOn jacocoTestCoverageVerification
+check.dependsOn jacocoTestReport
+// Ensure jacocoTestCoverageVerification and jacocoTestReport run after integrationTest
+jacocoTestCoverageVerification.mustRunAfter integrationTest
+jacocoTestReport.mustRunAfter integrationTest

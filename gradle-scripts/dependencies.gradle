@@ -1,6 +1,6 @@
 ext {
     commercetoolsJvmSdkVersion =  '1.38.0'
-    mockitoVersion = '2.23.0'
+    mockitoVersion = '2.23.4'
     slf4jVersion = '1.7.25'
     slf4jTestVersion = '1.2.0'
     assertjVersion = '3.11.1'

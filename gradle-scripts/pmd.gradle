@@ -11,6 +11,3 @@ tasks.withType(Pmd) {
         xml.enabled = false
     }
 }
-
-pmdTest.mustRunAfter pmdMain
-pmdIntegrationTest.mustRunAfter pmdTest

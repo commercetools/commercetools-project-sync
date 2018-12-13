@@ -4,7 +4,7 @@
          xsi:schemaLocation="http://pmd.sourceforge.net/ruleset/2.0.0 http://pmd.sourceforge.net/ruleset_2_0_0.xsd">
 
     <description>
-        This is the PMD ruleset for the commercetools-sync-java project.
+        This is the PMD ruleset for the commercetools-project-sync project.
     </description>
 
     <!-- Use the entire 'basic' ruleset -->

@@ -1,21 +1,23 @@
 buildscript {
     ext {
-        shadowJar = '2.0.4'
+        shadowJarVersion = '4.0.3'
     }
     repositories {
         jcenter()
     }
     dependencies {
-        classpath "com.github.jengelman.gradle.plugins:shadow:${shadowJar}"
+        classpath "com.github.jengelman.gradle.plugins:shadow:${shadowJarVersion}"
     }
 }
 
 plugins {
     id "com.github.ben-manes.versions" version '0.20.0'
     id 'com.adarshr.test-logger' version '1.6.0'
-    id "com.diffplug.gradle.spotless" version "3.16.0"
+    id "com.diffplug.gradle.spotless" version '3.16.0'
+    id 'com.bmuschko.docker-java-application' version '4.1.0'
 }
 
+apply from: "$rootDir/gradle-scripts/extensions.gradle"
 apply from: "$rootDir/gradle-scripts/plugins.gradle"
 apply from: "$rootDir/gradle-scripts/project-info.gradle"
 apply from: "$rootDir/gradle-scripts/java-compile.gradle"
@@ -29,3 +31,19 @@ apply from: "$rootDir/gradle-scripts/pmd.gradle"
 apply from: "$rootDir/gradle-scripts/jacoco.gradle"
 apply from: "$rootDir/gradle-scripts/findbugs.gradle"
 apply from: "$rootDir/gradle-scripts/shadow.gradle"
+apply from: "$rootDir/gradle-scripts/docker.gradle"
+apply from: "$rootDir/gradle-scripts/execution-order.gradle"
+
+/**
+ * 1. This cannot be in the "gradle-scripts/execution-order.gradle" script due to
+ * "Script plugins do not have access to the main buildscript classpath.":
+ * https://discuss.gradle.org/t/cant-access-classes-from-plugin-directly-in-included-script/14721/2
+ *
+ * 2. Cannot use normal dependsOn syntax due to https://github.com/diffplug/spotless/issues/198#issuecomment-363542192
+ */
+
+import com.diffplug.gradle.spotless.SpotlessTask
+tasks.withType(SpotlessTask) {
+    it.mustRunAfter compileIntegrationTestJava
+    pmdMain.mustRunAfter it
+}
