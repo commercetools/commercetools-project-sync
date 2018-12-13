@@ -13,10 +13,6 @@ cache:
   directories:
   - $HOME/.gradle/caches/
   - $HOME/.gradle/wrapper/
-env:
-  global:
-  - DOCKER_TAG=${TRAVIS_TAG:-$TRAVIS_COMMIT}
-  - PROJECT_NAME="commercetools-project-sync"
 after_success:
   - bash <(curl -s https://codecov.io/bash)
   - ./gradlew shadowJar || travis_terminate 1
