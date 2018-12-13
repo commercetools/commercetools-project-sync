@@ -38,5 +38,3 @@ check.dependsOn jacocoTestReport
 // Ensure jacocoTestCoverageVerification and jacocoTestReport run after integrationTest
 jacocoTestCoverageVerification.mustRunAfter integrationTest
 jacocoTestReport.mustRunAfter integrationTest
-// Ensure jacocoTestCoverageVerification and jacocoTestReport run after integrationTest
-shadowJar.mustRunAfter jacocoTestReport
