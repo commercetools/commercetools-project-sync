@@ -38,3 +38,5 @@ check.dependsOn jacocoTestReport
 // Ensure jacocoTestCoverageVerification and jacocoTestReport run after integrationTest
 jacocoTestCoverageVerification.mustRunAfter integrationTest
 jacocoTestReport.mustRunAfter integrationTest
+// Ensure ShadowJar is only run after jacocoTestReport
+shadowJar.mustRunAfter jacocoTestReport
