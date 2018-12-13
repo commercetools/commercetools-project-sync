@@ -1,5 +1,14 @@
 package com.commercetools.sync;
 
+import com.commercetools.sync.category.CategorySyncer;
+import com.commercetools.sync.inventoryentry.InventoryEntrySyncer;
+import com.commercetools.sync.product.ProductSyncer;
+import com.commercetools.sync.producttype.ProductTypeSyncer;
+import com.commercetools.sync.type.TypeSyncer;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
 import static com.commercetools.sync.CliRunner.SYNC_MODULE_OPTION_CATEGORY_SYNC;
 import static com.commercetools.sync.CliRunner.SYNC_MODULE_OPTION_INVENTORY_ENTRY_SYNC;
 import static com.commercetools.sync.CliRunner.SYNC_MODULE_OPTION_LONG;
@@ -10,15 +19,16 @@ import static com.commercetools.sync.CliRunner.SYNC_MODULE_OPTION_TYPE_SYNC;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
-import com.commercetools.sync.category.CategorySyncer;
-import com.commercetools.sync.inventoryentry.InventoryEntrySyncer;
-import com.commercetools.sync.product.ProductSyncer;
-import com.commercetools.sync.producttype.ProductTypeSyncer;
-import com.commercetools.sync.type.TypeSyncer;
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-
 public final class SyncerFactory {
+
+  public static final String AVAILABLE_OPTIONS =
+      format(
+          "Please use any of the following options: \"%s\", \"%s\", \"%s\", \"%s\", \"%s\".",
+          SYNC_MODULE_OPTION_TYPE_SYNC,
+          SYNC_MODULE_OPTION_PRODUCT_TYPE_SYNC,
+          SYNC_MODULE_OPTION_CATEGORY_SYNC,
+          SYNC_MODULE_OPTION_PRODUCT_SYNC,
+          SYNC_MODULE_OPTION_INVENTORY_ENTRY_SYNC);
 
   private SyncerFactory() {}
 
@@ -40,15 +50,10 @@ public final class SyncerFactory {
     if (isBlank(syncOptionValue)) {
       final String errorMessage =
           format(
-              "Blank argument supplied to \"-%s\" or \"--%s\" option! Please choose either "
-                  + "\"%s\" or \"%s\" or \"%s\" or \"%s\" or \"%s\".",
+              "Blank argument supplied to \"-%s\" or \"--%s\" option! %s",
               SYNC_MODULE_OPTION_SHORT,
               SYNC_MODULE_OPTION_LONG,
-              SYNC_MODULE_OPTION_TYPE_SYNC,
-              SYNC_MODULE_OPTION_PRODUCT_TYPE_SYNC,
-              SYNC_MODULE_OPTION_CATEGORY_SYNC,
-              SYNC_MODULE_OPTION_PRODUCT_SYNC,
-              SYNC_MODULE_OPTION_INVENTORY_ENTRY_SYNC);
+              AVAILABLE_OPTIONS);
       throw new IllegalArgumentException(errorMessage);
     }
 
@@ -67,17 +72,11 @@ public final class SyncerFactory {
       default:
         final String errorMessage =
             format(
-                "Unknown argument \"%s\" supplied to \"-%s\" or \"--%s\" option! "
-                    + "Please choose either "
-                    + "\"%s\" or \"%s\" or \"%s\" or \"%s\" or \"%s\".",
+                "Unknown argument \"%s\" supplied to \"-%s\" or \"--%s\" option! %s",
                 syncOptionValue,
                 SYNC_MODULE_OPTION_SHORT,
                 SYNC_MODULE_OPTION_LONG,
-                SYNC_MODULE_OPTION_TYPE_SYNC,
-                SYNC_MODULE_OPTION_PRODUCT_TYPE_SYNC,
-                SYNC_MODULE_OPTION_CATEGORY_SYNC,
-                SYNC_MODULE_OPTION_PRODUCT_SYNC,
-                SYNC_MODULE_OPTION_INVENTORY_ENTRY_SYNC);
+                AVAILABLE_OPTIONS);
         throw new IllegalArgumentException(errorMessage);
     }
   }
