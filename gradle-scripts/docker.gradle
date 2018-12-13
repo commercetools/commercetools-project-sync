@@ -1,7 +1,9 @@
 docker {
     javaApplication {
-        maintainer = 'Hesham Massoud "hesham.massoud@commercetools.com"'
+        baseImage = 'java:openjdk-8-jre'
+        maintainer = 'Hesham Massoud [hesham.massoud@commercetools.com]'
         tag = 'commercetools/commercetools-project-sync:' + version
+        ports = []
     }
 }
 

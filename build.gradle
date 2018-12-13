@@ -46,9 +46,3 @@ tasks.withType(SpotlessTask) {
     it.mustRunAfter compileIntegrationTestJava
     pmdMain.mustRunAfter it
 }
-
-import com.bmuschko.gradle.docker.tasks.image.Dockerfile
-task dockerfile(type: Dockerfile) {
-    from 'java:openjdk-8-jre-alpine'
-    copyFile '/build/libs/commercetools-project-sync.jar', '/home/commercetools-project-sync.jar'
-}
