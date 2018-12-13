@@ -17,6 +17,7 @@ plugins {
     id 'com.bmuschko.docker-java-application' version '4.1.0'
 }
 
+apply from: "$rootDir/gradle-scripts/extensions.gradle"
 apply from: "$rootDir/gradle-scripts/plugins.gradle"
 apply from: "$rootDir/gradle-scripts/project-info.gradle"
 apply from: "$rootDir/gradle-scripts/java-compile.gradle"
