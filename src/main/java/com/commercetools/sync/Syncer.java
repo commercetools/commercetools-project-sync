@@ -42,65 +42,65 @@ import org.slf4j.LoggerFactory;
  *     com.commercetools.sync.categories.CategorySync}, etc..)
  */
 public abstract class Syncer<
-        T extends Resource,
-        S,
-        U extends BaseSyncStatistics,
-        V extends BaseSyncOptions<T, S>,
-        C extends QueryDsl<T, C>,
-        B extends BaseSync<S, U, V>> {
+    T extends Resource,
+    S,
+    U extends BaseSyncStatistics,
+    V extends BaseSyncOptions<T, S>,
+    C extends QueryDsl<T, C>,
+    B extends BaseSync<S, U, V>> {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(Syncer.class);
-    private final B sync;
-    private final C query;
+  private static final Logger LOGGER = LoggerFactory.getLogger(Syncer.class);
+  private final B sync;
+  private final C query;
 
-    public Syncer(@Nonnull final B sync, @Nonnull final C query) {
-        this.sync = sync;
-        this.query = query;
-    }
+  public Syncer(@Nonnull final B sync, @Nonnull final C query) {
+    this.sync = sync;
+    this.query = query;
+  }
 
-    /**
-     * Fetches the {@code CTP_SOURCE_CLIENT} project resources of type {@code T} with all needed
-     * references expanded and treats each page as a batch to the sync process. Then executes the
-     * sync process of all pages in parallel. It then returns a completion stage containing no
-     * result after the execution of the sync process and logging the result.
-     *
-     * @return completion stage containing no result after the execution of the sync process and
-     *     logging the result.
-     */
-    public CompletionStage<Void> sync() {
-        LOGGER.info("Starting sync..");
-        return queryAll(CTP_SOURCE_CLIENT, query, this::syncPage)
-                .thenAccept(ignoredResult -> processSyncResult());
-    }
+  /**
+   * Fetches the {@code CTP_SOURCE_CLIENT} project resources of type {@code T} with all needed
+   * references expanded and treats each page as a batch to the sync process. Then executes the sync
+   * process of all pages in parallel. It then returns a completion stage containing no result after
+   * the execution of the sync process and logging the result.
+   *
+   * @return completion stage containing no result after the execution of the sync process and
+   *     logging the result.
+   */
+  public CompletionStage<Void> sync() {
+    LOGGER.info("Starting sync..");
+    return queryAll(CTP_SOURCE_CLIENT, query, this::syncPage)
+        .thenAccept(ignoredResult -> processSyncResult());
+  }
 
-    private void processSyncResult() {
-        final BaseSyncStatistics statistics = sync.getStatistics();
-        logStatistics(statistics, LOGGER);
-        LOGGER.info(
-                format(
-                        "Syncing from CTP project '%s' to project '%s' is done.",
-                        CTP_SOURCE_CLIENT.getConfig().getProjectKey(),
-                        CTP_TARGET_CLIENT.getConfig().getProjectKey()));
-        closeCtpClients();
-    }
+  private void processSyncResult() {
+    final BaseSyncStatistics statistics = sync.getStatistics();
+    logStatistics(statistics, LOGGER);
+    LOGGER.info(
+        format(
+            "Syncing from CTP project '%s' to project '%s' is done.",
+            CTP_SOURCE_CLIENT.getConfig().getProjectKey(),
+            CTP_TARGET_CLIENT.getConfig().getProjectKey()));
+    closeCtpClients();
+  }
 
-    /**
-     * Given a {@link List} representing a page of resources of type {@code T}, this method creates
-     * a {@link CompletableFuture} of each sync process on the given page as a batch.
-     */
-    @Nonnull
-    private U syncPage(@Nonnull final List<T> page) {
-        final List<S> draftsWithKeysInReferences = getDraftsFromPage(page);
-        return sync.sync(draftsWithKeysInReferences).toCompletableFuture().join();
-    }
+  /**
+   * Given a {@link List} representing a page of resources of type {@code T}, this method creates a
+   * {@link CompletableFuture} of each sync process on the given page as a batch.
+   */
+  @Nonnull
+  private U syncPage(@Nonnull final List<T> page) {
+    final List<S> draftsWithKeysInReferences = getDraftsFromPage(page);
+    return sync.sync(draftsWithKeysInReferences).toCompletableFuture().join();
+  }
 
-    /**
-     * Given a {@link List} representing a page of resources of type {@code T}, this method creates
-     * a a list of drafts of type {@link S} where reference ids of the references are replaced with
-     * keys and are ready for reference resolution by the sync process.
-     *
-     * @return list of drafts of type {@link S}.
-     */
-    @Nonnull
-    protected abstract List<S> getDraftsFromPage(@Nonnull final List<T> page);
+  /**
+   * Given a {@link List} representing a page of resources of type {@code T}, this method creates a
+   * a list of drafts of type {@link S} where reference ids of the references are replaced with keys
+   * and are ready for reference resolution by the sync process.
+   *
+   * @return list of drafts of type {@link S}.
+   */
+  @Nonnull
+  protected abstract List<S> getDraftsFromPage(@Nonnull final List<T> page);
 }

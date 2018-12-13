@@ -18,32 +18,32 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class ProductTypeSyncer
-        extends Syncer<
-                ProductType,
-                ProductTypeDraft,
-                ProductTypeSyncStatistics,
-                ProductTypeSyncOptions,
-                ProductTypeQuery,
-                ProductTypeSync> {
+    extends Syncer<
+        ProductType,
+        ProductTypeDraft,
+        ProductTypeSyncStatistics,
+        ProductTypeSyncOptions,
+        ProductTypeQuery,
+        ProductTypeSync> {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(ProductTypeSyncer.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(ProductTypeSyncer.class);
 
-    /** Instantiates a {@link Syncer} instance. */
-    public ProductTypeSyncer() {
-        super(
-                new ProductTypeSync(
-                        ProductTypeSyncOptionsBuilder.of(CTP_TARGET_CLIENT)
-                                .errorCallback(LOGGER::error)
-                                .warningCallback(LOGGER::warn)
-                                .build()),
-                ProductTypeQuery.of());
-    }
+  /** Instantiates a {@link Syncer} instance. */
+  public ProductTypeSyncer() {
+    super(
+        new ProductTypeSync(
+            ProductTypeSyncOptionsBuilder.of(CTP_TARGET_CLIENT)
+                .errorCallback(LOGGER::error)
+                .warningCallback(LOGGER::warn)
+                .build()),
+        ProductTypeQuery.of());
+  }
 
-    @Nonnull
-    @Override
-    protected List<ProductTypeDraft> getDraftsFromPage(@Nonnull final List<ProductType> page) {
-        return page.stream()
-                .map(productType -> ProductTypeDraftBuilder.of(productType).build())
-                .collect(Collectors.toList());
-    }
+  @Nonnull
+  @Override
+  protected List<ProductTypeDraft> getDraftsFromPage(@Nonnull final List<ProductType> page) {
+    return page.stream()
+        .map(productType -> ProductTypeDraftBuilder.of(productType).build())
+        .collect(Collectors.toList());
+  }
 }

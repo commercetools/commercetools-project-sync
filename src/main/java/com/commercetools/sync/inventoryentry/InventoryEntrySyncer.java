@@ -19,42 +19,41 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class InventoryEntrySyncer
-        extends Syncer<
-                InventoryEntry,
-                InventoryEntryDraft,
-                InventorySyncStatistics,
-                InventorySyncOptions,
-                InventoryEntryQuery,
-                InventorySync> {
+    extends Syncer<
+        InventoryEntry,
+        InventoryEntryDraft,
+        InventorySyncStatistics,
+        InventorySyncOptions,
+        InventoryEntryQuery,
+        InventorySync> {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(InventoryEntrySyncer.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(InventoryEntrySyncer.class);
 
-    /** Instantiates a {@link Syncer} instance. */
-    public InventoryEntrySyncer() {
-        super(
-                new InventorySync(
-                        InventorySyncOptionsBuilder.of(CTP_TARGET_CLIENT)
-                                .errorCallback(LOGGER::error)
-                                .warningCallback(LOGGER::warn)
-                                .build()),
-                buildQuery());
-    }
+  /** Instantiates a {@link Syncer} instance. */
+  public InventoryEntrySyncer() {
+    super(
+        new InventorySync(
+            InventorySyncOptionsBuilder.of(CTP_TARGET_CLIENT)
+                .errorCallback(LOGGER::error)
+                .warningCallback(LOGGER::warn)
+                .build()),
+        buildQuery());
+  }
 
-    /**
-     * TODO: Should be added to the commercetools-sync library.
-     *
-     * @return an {@link InventoryEntryQuery} instance.
-     */
-    private static InventoryEntryQuery buildQuery() {
-        return InventoryEntryQuery.of()
-                .withExpansionPaths(InventoryEntryExpansionModel::supplyChannel)
-                .plusExpansionPaths(ExpansionPath.of("custom.type"));
-    }
+  /**
+   * TODO: Should be added to the commercetools-sync library.
+   *
+   * @return an {@link InventoryEntryQuery} instance.
+   */
+  private static InventoryEntryQuery buildQuery() {
+    return InventoryEntryQuery.of()
+        .withExpansionPaths(InventoryEntryExpansionModel::supplyChannel)
+        .plusExpansionPaths(ExpansionPath.of("custom.type"));
+  }
 
-    @Nonnull
-    @Override
-    protected List<InventoryEntryDraft> getDraftsFromPage(
-            @Nonnull final List<InventoryEntry> page) {
-        return replaceInventoriesReferenceIdsWithKeys(page);
-    }
+  @Nonnull
+  @Override
+  protected List<InventoryEntryDraft> getDraftsFromPage(@Nonnull final List<InventoryEntry> page) {
+    return replaceInventoriesReferenceIdsWithKeys(page);
+  }
 }

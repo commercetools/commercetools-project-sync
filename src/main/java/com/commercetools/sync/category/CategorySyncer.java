@@ -18,32 +18,32 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class CategorySyncer
-        extends Syncer<
-                Category,
-                CategoryDraft,
-                CategorySyncStatistics,
-                CategorySyncOptions,
-                CategoryQuery,
-                CategorySync> {
+    extends Syncer<
+        Category,
+        CategoryDraft,
+        CategorySyncStatistics,
+        CategorySyncOptions,
+        CategoryQuery,
+        CategorySync> {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(CategorySyncer.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(CategorySyncer.class);
 
-    /** Instantiates a {@link Syncer} instance. */
-    public CategorySyncer() {
-        super(
-                new CategorySync(
-                        CategorySyncOptionsBuilder.of(CTP_TARGET_CLIENT)
-                                .errorCallback(LOGGER::error)
-                                .warningCallback(LOGGER::warn)
-                                .build()),
-                buildCategoryQuery());
-        // TODO: Instead of reference expansion, we could cache all keys and replace references
-        // manually.
-    }
+  /** Instantiates a {@link Syncer} instance. */
+  public CategorySyncer() {
+    super(
+        new CategorySync(
+            CategorySyncOptionsBuilder.of(CTP_TARGET_CLIENT)
+                .errorCallback(LOGGER::error)
+                .warningCallback(LOGGER::warn)
+                .build()),
+        buildCategoryQuery());
+    // TODO: Instead of reference expansion, we could cache all keys and replace references
+    // manually.
+  }
 
-    @Override
-    @Nonnull
-    protected List<CategoryDraft> getDraftsFromPage(@Nonnull final List<Category> page) {
-        return replaceCategoriesReferenceIdsWithKeys(page);
-    }
+  @Override
+  @Nonnull
+  protected List<CategoryDraft> getDraftsFromPage(@Nonnull final List<Category> page) {
+    return replaceCategoriesReferenceIdsWithKeys(page);
+  }
 }
