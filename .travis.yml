@@ -19,5 +19,6 @@ env:
   - PROJECT_NAME="commercetools-project-sync"
 after_success:
   - bash <(curl -s https://codecov.io/bash)
-  - ./gradlew dockerBuildImage
   - ./gradlew shadowJar || travis_terminate 1
+  - ./gradlew dockerBuildImage -Dbuild.version=${$TRAVIS_COMMIT} || travis_terminate 1
+  - ./gradlew dockerBuildImage -Dbuild.version=${$TRAVIS_TAG} || travis_terminate 1
