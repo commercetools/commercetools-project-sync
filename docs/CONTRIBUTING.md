@@ -1,0 +1,82 @@
+# Contributing
+
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+
+
+  - [Development](#development)
+      - [Run unit tests](#run-unit-tests)
+      - [Run Spotless Style Check](#run-spotless-style-check)
+      - [Fix Spotless style violations](#fix-spotless-style-violations)
+      - [Package JARs (Without dependencies)](#package-jars-without-dependencies)
+      - [Package an über jar(packed with all needed dependencies)](#package-an-%C3%BCber-jarpacked-with-all-needed-dependencies)
+      - [Package JARs and run tests (Recommended for development)](#package-jars-and-run-tests-recommended-for-development)
+      - [Full build with tests](#full-build-with-tests)
+  - [Build](#build)
+- [License](#license)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
+
+- Every PR should address an issue on the repository. If the issue doesn't exist, please create it first.
+- Pull requests should always follow the following naming convention: 
+`[issue-number]-[pr-name]`. For example,
+to address issue #2055 which refers to a style bug, the PR addressing it should have a name that looks something like
+ `2055-fix-style-bug`.
+- Commit messages should always be prefixed with the number of the issue that they address. 
+For example, `#2055: Remove redundant space.`
+- After your PR is merged to master:
+    - Delete the branch.
+    - Mark the issue it addresses with the `merged-to-master` label.
+    - Close the issue **only** if the change was released.
+
+### Development
+##### Run unit tests
+````bash
+./gradlew test
+````
+
+##### Run Spotless Style Check
+````bash
+./gradlew spotlessCheck
+````
+
+##### Fix Spotless style violations
+````bash
+./gradlew spotlessApply
+````
+
+It uses the [Google Java Style Guide](https://google.github.io/styleguide/javaguide.html) as rules for the style. 
+It is recommended to set it in your IDE auto formatting settings for this project. 
+[More info](https://github.com/google/google-java-format#intellij).
+
+
+##### Package JARs (Without dependencies)
+````bash
+./gradlew clean jar
+````
+
+##### Package an über JAR (packed with all needed dependencies)
+````bash
+./gradlew clean shadowJar
+````
+
+##### Package JARs and run tests (Recommended for development)
+````bash
+./gradlew clean check
+````
+
+##### Full build with tests
+````bash
+./gradlew clean build
+````
+
+### Build 
+ After every successful build on travis, a Docker image is built. Every image is tagged twice:
+ - `$TRAVIS_COMMIT` [travis' environment variable](https://docs.travis-ci.com/user/environment-variables/#default-environment-variables)
+ - `$TRAVIS_BRANCH` [travis' environment variable](https://docs.travis-ci.com/user/environment-variables/#default-environment-variables)
+ 
+This images are pushed to the docker hub repo: [commercetools/commercetools-project-sync](https://hub.docker.com/r/commercetools/commercetools-project-sync/)
+
+## License
+Copyright (c) 2018 commercetools

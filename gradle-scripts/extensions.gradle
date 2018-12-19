@@ -1,0 +1,12 @@
+ext {
+    SNAPSHOT_SUFFIX = "-SNAPSHOT"
+    versionWIP = "development$SNAPSHOT_SUFFIX"
+    validateVersion = { prefix ->
+        // validate version is set and not a default version
+        if (!rootProject.version?.trim() || rootProject.version == versionWIP) {
+            throw new InvalidUserDataException(
+                    "$prefix.\nPlease specify -Dbuild.version=<version-name> as the build argument.\n" +
+                            "Current version is \"$rootProject.version\"")
+        }
+    }
+}

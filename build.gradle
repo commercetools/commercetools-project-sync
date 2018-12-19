@@ -14,8 +14,10 @@ plugins {
     id "com.github.ben-manes.versions" version '0.20.0'
     id 'com.adarshr.test-logger' version '1.6.0'
     id "com.diffplug.gradle.spotless" version '3.16.0'
+    id 'com.bmuschko.docker-java-application' version '4.2.0'
 }
 
+apply from: "$rootDir/gradle-scripts/extensions.gradle"
 apply from: "$rootDir/gradle-scripts/plugins.gradle"
 apply from: "$rootDir/gradle-scripts/project-info.gradle"
 apply from: "$rootDir/gradle-scripts/java-compile.gradle"
@@ -29,6 +31,7 @@ apply from: "$rootDir/gradle-scripts/pmd.gradle"
 apply from: "$rootDir/gradle-scripts/jacoco.gradle"
 apply from: "$rootDir/gradle-scripts/findbugs.gradle"
 apply from: "$rootDir/gradle-scripts/shadow.gradle"
+apply from: "$rootDir/gradle-scripts/docker.gradle"
 apply from: "$rootDir/gradle-scripts/execution-order.gradle"
 
 /**
@@ -38,7 +41,9 @@ apply from: "$rootDir/gradle-scripts/execution-order.gradle"
  *
  * 2. Cannot use normal dependsOn syntax due to https://github.com/diffplug/spotless/issues/198#issuecomment-363542192
  */
-tasks.withType(com.diffplug.gradle.spotless.SpotlessTask) {
+
+import com.diffplug.gradle.spotless.SpotlessTask
+tasks.withType(SpotlessTask) {
     it.mustRunAfter compileIntegrationTestJava
     pmdMain.mustRunAfter it
 }
