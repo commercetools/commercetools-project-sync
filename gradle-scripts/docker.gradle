@@ -1,0 +1,13 @@
+docker {
+    javaApplication {
+        baseImage = 'java:openjdk-8-jre-alpine'
+        maintainer = 'Hesham Massoud [hesham.massoud@commercetools.com]'
+        tag = 'commercetools/commercetools-project-sync:' + version
+        ports = []
+    }
+    registryCredentials {
+        username = System.getenv('DOCKER_USERNAME')
+        password = System.getenv('DOCKER_PASSWORD')
+    }
+}
+
