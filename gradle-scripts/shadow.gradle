@@ -1,0 +1,14 @@
+apply plugin: 'com.github.johnrengelman.shadow'
+shadowJar {
+    baseName = 'commercetools-project-sync'
+    classifier = null
+    version = null
+    manifest {
+        attributes 'Implementation-Title': rootProject.name
+        attributes 'Implementation-Version': rootProject.version
+        attributes 'Description': rootProject.description
+    }
+    doLast {
+        println "Packaged JAR to ${destinationDir}/${archiveName}"
+    }
+}

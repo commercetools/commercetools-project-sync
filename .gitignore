@@ -1,0 +1,14 @@
+# IDEA
+.idea
+*.iml
+
+# Gradle
+.gradle/
+build/
+out/
+
+# MACOS
+.DS_Store
+
+# Project-specific
+/src/main/resources/ctp.credentials.properties

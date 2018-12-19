@@ -1,0 +1,31 @@
+/**
+ * JaCoCo test coverage report generation and verification of coverage limit.
+ *
+ * If the code coverage is below 80% (minimum =0.8) the build should fail.
+ *
+ */
+
+jacoco {
+    toolVersion = jacocoVersion
+}
+
+jacocoTestCoverageVerification {
+    executionData fileTree(project.rootDir.absolutePath).include("**/build/jacoco/*.exec")
+    violationRules {
+        rule {
+            limit {
+                minimum = 0.8
+            }
+        }
+    }
+}
+
+jacocoTestReport {
+    executionData fileTree(project.rootDir.absolutePath).include("**/build/jacoco/*.exec")
+    reports {
+        xml.enabled = true
+        xml.setDestination(file("${buildDir}/reports/jacoco/report.xml"))
+        html.enabled = false
+        csv.enabled = false
+    }
+}

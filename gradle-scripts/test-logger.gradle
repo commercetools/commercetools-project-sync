@@ -1,0 +1,4 @@
+testlogger {
+    theme 'mocha'
+    slowThreshold 35000
+}
