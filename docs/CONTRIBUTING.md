@@ -47,7 +47,8 @@ For example, `#2055: Remove redundant space.`
 ````
 
 It uses the [Google Java Style Guide](https://google.github.io/styleguide/javaguide.html) as rules for the style. 
-It is recommended to set it in your IDE auto formatting settings for this project.  
+It is recommended to set it in your IDE auto formatting settings for this project. 
+[More info](https://github.com/google/google-java-format#intellij).
 
 
 ##### Package JARs (Without dependencies)
