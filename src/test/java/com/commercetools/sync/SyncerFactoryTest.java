@@ -1,12 +1,5 @@
 package com.commercetools.sync;
 
-import com.commercetools.sync.category.CategorySyncer;
-import com.commercetools.sync.inventoryentry.InventoryEntrySyncer;
-import com.commercetools.sync.product.ProductSyncer;
-import com.commercetools.sync.producttype.ProductTypeSyncer;
-import com.commercetools.sync.type.TypeSyncer;
-import org.junit.Test;
-
 import static com.commercetools.sync.CliRunner.SYNC_MODULE_OPTION_CATEGORY_SYNC;
 import static com.commercetools.sync.CliRunner.SYNC_MODULE_OPTION_INVENTORY_ENTRY_SYNC;
 import static com.commercetools.sync.CliRunner.SYNC_MODULE_OPTION_PRODUCT_SYNC;
@@ -16,6 +9,13 @@ import static com.commercetools.sync.SyncerFactory.AVAILABLE_OPTIONS;
 import static java.lang.String.format;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
+
+import com.commercetools.sync.category.CategorySyncer;
+import com.commercetools.sync.inventoryentry.InventoryEntrySyncer;
+import com.commercetools.sync.product.ProductSyncer;
+import com.commercetools.sync.producttype.ProductTypeSyncer;
+import com.commercetools.sync.type.TypeSyncer;
+import org.junit.Test;
 
 public class SyncerFactoryTest {
   @Test

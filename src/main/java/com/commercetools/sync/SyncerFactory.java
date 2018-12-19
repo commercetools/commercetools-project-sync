@@ -19,9 +19,9 @@ import static com.commercetools.sync.CliRunner.SYNC_MODULE_OPTION_TYPE_SYNC;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
-public final class SyncerFactory {
+final class SyncerFactory {
 
-  public static final String AVAILABLE_OPTIONS =
+  static final String AVAILABLE_OPTIONS =
       format(
           "Please use any of the following options: \"%s\", \"%s\", \"%s\", \"%s\", \"%s\".",
           SYNC_MODULE_OPTION_TYPE_SYNC,
@@ -51,9 +51,7 @@ public final class SyncerFactory {
       final String errorMessage =
           format(
               "Blank argument supplied to \"-%s\" or \"--%s\" option! %s",
-              SYNC_MODULE_OPTION_SHORT,
-              SYNC_MODULE_OPTION_LONG,
-              AVAILABLE_OPTIONS);
+              SYNC_MODULE_OPTION_SHORT, SYNC_MODULE_OPTION_LONG, AVAILABLE_OPTIONS);
       throw new IllegalArgumentException(errorMessage);
     }
 

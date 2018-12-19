@@ -1,10 +1,5 @@
 package com.commercetools.sync;
 
-import static java.lang.String.format;
-import static org.apache.commons.lang3.StringUtils.isBlank;
-
-import java.util.concurrent.CompletionStage;
-import javax.annotation.Nonnull;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
@@ -14,6 +9,12 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.annotation.Nonnull;
+import java.util.concurrent.CompletionStage;
+
+import static java.lang.String.format;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 public class CliRunner {
   static final String SYNC_MODULE_OPTION_SHORT = "s";
@@ -41,8 +42,8 @@ public class CliRunner {
   static final String HELP_OPTION_DESCRIPTION = "Print help information to System.out.";
   static final String VERSION_OPTION_DESCRIPTION = "Print the version of the application.";
 
-  static final String APPLICATION_DEFAULT_NAME = "COMMERCETOOLS-SYNC";
-  static final String APPLICATION_DEFAULT_VERSION = "1.0-dev";
+  static final String APPLICATION_DEFAULT_NAME = "commercetools-project-sync";
+  static final String APPLICATION_DEFAULT_VERSION = "1.0.0";
 
   private static final Logger LOGGER = LoggerFactory.getLogger(CliRunner.class);
 
