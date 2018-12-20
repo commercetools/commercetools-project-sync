@@ -1,6 +1,6 @@
 group = 'com.commercetools'
 version = System.getProperty('build.version') ?: versionWIP
-mainClassName = 'com.commercetools.sync.Main'
+mainClassName = 'com.commercetools.sync.SyncerApplication'
 description = "Dockerized CLI application which allows to automatically sync different resources between commercetools projects."
 
 logger.quiet("\nActual Build Version: [{}]\n", version)
