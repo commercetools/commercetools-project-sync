@@ -98,7 +98,7 @@ public class CliRunner {
       final String optionName = option.getOpt();
       switch (optionName) {
         case SYNC_MODULE_OPTION_SHORT:
-          processSyncOption(commandLine).toCompletableFuture().join();
+          processSyncOptionAndExecute(commandLine).toCompletableFuture().join();
           break;
         case HELP_OPTION_SHORT:
           printHelpToStdOut();
@@ -120,9 +120,10 @@ public class CliRunner {
     printHelpToStdOut();
   }
 
-  CompletionStage processSyncOption(@Nonnull final CommandLine commandLine) {
+  CompletionStage processSyncOptionAndExecute(@Nonnull final CommandLine commandLine) {
     final String syncOptionValue = commandLine.getOptionValue(SYNC_MODULE_OPTION_SHORT);
-    return SyncerFactory.getSyncer(syncOptionValue).sync();
+    return SyncerFactory.getSyncer(syncOptionValue)
+                        .sync();
   }
 
   private void printHelpToStdOut() {
