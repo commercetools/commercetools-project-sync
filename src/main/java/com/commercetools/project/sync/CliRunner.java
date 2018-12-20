@@ -132,7 +132,7 @@ public class CliRunner {
   }
 
   private static String getApplicationName() {
-    final String implementationTitle = Main.class.getPackage().getImplementationTitle();
+    final String implementationTitle = SyncerApplication.class.getPackage().getImplementationTitle();
     return isBlank(implementationTitle) ? APPLICATION_DEFAULT_NAME : implementationTitle;
   }
 
@@ -142,7 +142,7 @@ public class CliRunner {
   }
 
   private static String getApplicationVersion() {
-    final String implementationVersion = Main.class.getPackage().getImplementationVersion();
+    final String implementationVersion = SyncerApplication.class.getPackage().getImplementationVersion();
     return isBlank(implementationVersion) ? APPLICATION_DEFAULT_VERSION : implementationVersion;
   }
 
