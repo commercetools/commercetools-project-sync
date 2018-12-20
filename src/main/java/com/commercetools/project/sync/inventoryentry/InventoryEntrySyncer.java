@@ -1,9 +1,9 @@
-package com.commercetools.sync.inventoryentry;
+package com.commercetools.project.sync.inventoryentry;
 
+import static com.commercetools.project.sync.util.SphereClientUtils.CTP_TARGET_CLIENT;
 import static com.commercetools.sync.inventories.utils.InventoryReferenceReplacementUtils.replaceInventoriesReferenceIdsWithKeys;
-import static com.commercetools.sync.utils.SphereClientUtils.CTP_TARGET_CLIENT;
 
-import com.commercetools.sync.Syncer;
+import com.commercetools.project.sync.Syncer;
 import com.commercetools.sync.inventories.InventorySync;
 import com.commercetools.sync.inventories.InventorySyncOptions;
 import com.commercetools.sync.inventories.InventorySyncOptionsBuilder;

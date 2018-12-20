@@ -1,10 +1,10 @@
-package com.commercetools.sync.category;
+package com.commercetools.project.sync.category;
 
+import static com.commercetools.project.sync.util.SphereClientUtils.CTP_TARGET_CLIENT;
 import static com.commercetools.sync.categories.utils.CategoryReferenceReplacementUtils.buildCategoryQuery;
 import static com.commercetools.sync.categories.utils.CategoryReferenceReplacementUtils.replaceCategoriesReferenceIdsWithKeys;
-import static com.commercetools.sync.utils.SphereClientUtils.CTP_TARGET_CLIENT;
 
-import com.commercetools.sync.Syncer;
+import com.commercetools.project.sync.Syncer;
 import com.commercetools.sync.categories.CategorySync;
 import com.commercetools.sync.categories.CategorySyncOptions;
 import com.commercetools.sync.categories.CategorySyncOptionsBuilder;

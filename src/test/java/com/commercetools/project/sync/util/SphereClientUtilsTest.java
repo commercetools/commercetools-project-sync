@@ -1,15 +1,15 @@
-package com.commercetools.sync.utils;
+package com.commercetools.project.sync.util;
 
-import static com.commercetools.sync.utils.SphereClientUtils.CTP_SOURCE_CLIENT;
-import static com.commercetools.sync.utils.SphereClientUtils.CTP_TARGET_CLIENT;
+import static com.commercetools.project.sync.util.SphereClientUtils.CTP_SOURCE_CLIENT;
+import static com.commercetools.project.sync.util.SphereClientUtils.CTP_TARGET_CLIENT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.mock;
 
 import io.sphere.sdk.client.SphereClient;
 import io.sphere.sdk.products.commands.ProductCreateCommand;
 import java.util.concurrent.RejectedExecutionException;
 import org.junit.Test;
+import org.mockito.Mockito;
 
 public class SphereClientUtilsTest {
   @Test
@@ -30,10 +30,10 @@ public class SphereClientUtilsTest {
   public void closeCtpClients_ShouldCloseClients() {
     SphereClientUtils.closeCtpClients();
 
-    assertThatThrownBy(() -> CTP_SOURCE_CLIENT.execute(mock(ProductCreateCommand.class)))
+    assertThatThrownBy(() -> CTP_SOURCE_CLIENT.execute(Mockito.mock(ProductCreateCommand.class)))
         .isInstanceOf(RejectedExecutionException.class);
 
-    assertThatThrownBy(() -> CTP_TARGET_CLIENT.execute(mock(ProductCreateCommand.class)))
+    assertThatThrownBy(() -> CTP_TARGET_CLIENT.execute(Mockito.mock(ProductCreateCommand.class)))
         .isInstanceOf(RejectedExecutionException.class);
   }
 }

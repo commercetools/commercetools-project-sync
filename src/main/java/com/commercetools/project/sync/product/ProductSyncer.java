@@ -1,10 +1,10 @@
-package com.commercetools.sync.product;
+package com.commercetools.project.sync.product;
 
+import static com.commercetools.project.sync.util.SphereClientUtils.CTP_TARGET_CLIENT;
 import static com.commercetools.sync.products.utils.ProductReferenceReplacementUtils.buildProductQuery;
 import static com.commercetools.sync.products.utils.ProductReferenceReplacementUtils.replaceProductsReferenceIdsWithKeys;
-import static com.commercetools.sync.utils.SphereClientUtils.CTP_TARGET_CLIENT;
 
-import com.commercetools.sync.Syncer;
+import com.commercetools.project.sync.Syncer;
 import com.commercetools.sync.products.ProductSync;
 import com.commercetools.sync.products.ProductSyncOptions;
 import com.commercetools.sync.products.ProductSyncOptionsBuilder;

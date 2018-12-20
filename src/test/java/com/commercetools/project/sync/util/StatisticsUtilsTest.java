@@ -1,4 +1,4 @@
-package com.commercetools.sync.utils;
+package com.commercetools.project.sync.util;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

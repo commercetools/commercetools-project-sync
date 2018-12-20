@@ -1,11 +1,10 @@
-package com.commercetools.sync;
+package com.commercetools.project.sync;
 
+import static com.commercetools.project.sync.util.SphereClientUtils.CTP_SOURCE_CLIENT;
+import static com.commercetools.project.sync.util.SphereClientUtils.CTP_TARGET_CLIENT;
+import static com.commercetools.project.sync.util.SphereClientUtils.closeCtpClients;
+import static com.commercetools.project.sync.util.StatisticsUtils.logStatistics;
 import static com.commercetools.sync.commons.utils.CtpQueryUtils.queryAll;
-import static com.commercetools.sync.utils.SphereClientUtils.CTP_SOURCE_CLIENT;
-import static com.commercetools.sync.utils.SphereClientUtils.CTP_TARGET_CLIENT;
-import static com.commercetools.sync.utils.SphereClientUtils.closeCtpClients;
-import static com.commercetools.sync.utils.StatisticsUtils.logStatistics;
-import static com.neovisionaries.i18n.LanguageCode.io;
 import static java.lang.String.format;
 
 import com.commercetools.sync.commons.BaseSync;

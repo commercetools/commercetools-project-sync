@@ -1,8 +1,8 @@
-package com.commercetools.sync.type;
+package com.commercetools.project.sync.type;
 
-import static com.commercetools.sync.utils.SphereClientUtils.CTP_TARGET_CLIENT;
+import static com.commercetools.project.sync.util.SphereClientUtils.CTP_TARGET_CLIENT;
 
-import com.commercetools.sync.Syncer;
+import com.commercetools.project.sync.Syncer;
 import com.commercetools.sync.types.TypeSync;
 import com.commercetools.sync.types.TypeSyncOptions;
 import com.commercetools.sync.types.TypeSyncOptionsBuilder;

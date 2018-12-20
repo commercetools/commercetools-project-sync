@@ -1,4 +1,4 @@
-package com.commercetools.sync.utils;
+package com.commercetools.project.sync.util;
 
 import com.commercetools.sync.commons.helpers.BaseSyncStatistics;
 import com.fasterxml.jackson.core.JsonProcessingException;
