@@ -15,7 +15,7 @@ import org.apache.commons.cli.ParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class CliRunner {
+class CliRunner {
   static final String SYNC_MODULE_OPTION_SHORT = "s";
   static final String HELP_OPTION_SHORT = "h";
   static final String VERSION_OPTION_SHORT = "v";
@@ -48,7 +48,7 @@ public class CliRunner {
 
   private Options options;
 
-  public CliRunner() {
+  CliRunner() {
     options = buildCliOptions();
   }
 
@@ -122,8 +122,7 @@ public class CliRunner {
 
   CompletionStage processSyncOptionAndExecute(@Nonnull final CommandLine commandLine) {
     final String syncOptionValue = commandLine.getOptionValue(SYNC_MODULE_OPTION_SHORT);
-    return SyncerFactory.getSyncer(syncOptionValue)
-                        .sync();
+    return SyncerFactory.getSyncer(syncOptionValue).sync();
   }
 
   private void printHelpToStdOut() {
@@ -132,7 +131,8 @@ public class CliRunner {
   }
 
   private static String getApplicationName() {
-    final String implementationTitle = SyncerApplication.class.getPackage().getImplementationTitle();
+    final String implementationTitle =
+        SyncerApplication.class.getPackage().getImplementationTitle();
     return isBlank(implementationTitle) ? APPLICATION_DEFAULT_NAME : implementationTitle;
   }
 
@@ -142,7 +142,8 @@ public class CliRunner {
   }
 
   private static String getApplicationVersion() {
-    final String implementationVersion = SyncerApplication.class.getPackage().getImplementationVersion();
+    final String implementationVersion =
+        SyncerApplication.class.getPackage().getImplementationVersion();
     return isBlank(implementationVersion) ? APPLICATION_DEFAULT_VERSION : implementationVersion;
   }
 
