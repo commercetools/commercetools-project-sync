@@ -1,6 +1,6 @@
 package com.commercetools.project.sync;
 
-public class Main {
+public class SyncerApplication {
 
   /**
    * Application entry point.
