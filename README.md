@@ -11,7 +11,18 @@ Dockerized CLI application which allows to automatically sync different resource
 ### Prerequisites
  
  - install Java 8
- - keys are **required** to be set on the resources that should be synced.
+ - The following fields are **required** to be set on the following resources (and sub-resources) that should be synced:
+    - `Product`
+        - `key`
+        - `Variant`
+            - `key`
+            - `Asset`
+                - `key`
+    - `ProductType`
+        - `key`
+    - `Category`
+        - `key`         
+ 
  - set the following environment variables before running the application
    ```bash
    export SOURCE_PROJECT_KEY = xxxxxxxxxxxxx
@@ -51,7 +62,7 @@ Dockerized CLI application which allows to automatically sync different resource
   ```bash
   usage: commercetools-sync
    -h,--help         Print help information to System.out.
-   -s,--sync <arg>   Choose which sync module to run: "productTypes",
+   -s,--sync <arg>   Choose which sync module to run: "types", "productTypes",
                       "categories", "products" or "inventoryEntries".
    -v,--version      Print the version of the application.
   ```
