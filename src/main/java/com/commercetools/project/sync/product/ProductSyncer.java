@@ -20,7 +20,7 @@ import javax.annotation.Nonnull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ProductSyncer
+public final class ProductSyncer
     extends Syncer<
         Product,
         ProductDraft,
@@ -32,15 +32,22 @@ public class ProductSyncer
   private static final Logger LOGGER = LoggerFactory.getLogger(ProductSyncer.class);
 
   /** Instantiates a {@link Syncer} instance. */
-  public ProductSyncer() {
-    super(
-        new ProductSync(
-            ProductSyncOptionsBuilder.of(CTP_TARGET_CLIENT)
-                .errorCallback(LOGGER::error)
-                .warningCallback(LOGGER::warn)
-                .beforeUpdateCallback(ProductSyncer::appendPublishIfPublished)
-                .build()),
-        buildProductQuery());
+  private ProductSyncer(
+      @Nonnull final ProductSync productSync, @Nonnull final ProductQuery productQuery) {
+    super(productSync, productQuery);
+  }
+
+  public static ProductSyncer of() {
+
+    final ProductSyncOptions syncOptions =
+        ProductSyncOptionsBuilder.of(CTP_TARGET_CLIENT)
+            .errorCallback(LOGGER::error)
+            .warningCallback(LOGGER::warn)
+            .build();
+
+    final ProductSync productSync = new ProductSync(syncOptions);
+
+    return new ProductSyncer(productSync, buildProductQuery());
     // TODO: Instead of reference expansion, we could cache all keys and replace references
     // manually.
   }

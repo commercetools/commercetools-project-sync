@@ -17,7 +17,7 @@ import javax.annotation.Nonnull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class CategorySyncer
+public final class CategorySyncer
     extends Syncer<
         Category,
         CategoryDraft,
@@ -29,16 +29,23 @@ public class CategorySyncer
   private static final Logger LOGGER = LoggerFactory.getLogger(CategorySyncer.class);
 
   /** Instantiates a {@link Syncer} instance. */
-  public CategorySyncer() {
-    super(
-        new CategorySync(
-            CategorySyncOptionsBuilder.of(CTP_TARGET_CLIENT)
-                .errorCallback(LOGGER::error)
-                .warningCallback(LOGGER::warn)
-                .build()),
-        buildCategoryQuery());
+  private CategorySyncer(
+      @Nonnull final CategorySync categorySync, @Nonnull final CategoryQuery categoryQuery) {
+    super(categorySync, categoryQuery);
     // TODO: Instead of reference expansion, we could cache all keys and replace references
     // manually.
+  }
+
+  public static CategorySyncer of() {
+    final CategorySyncOptions syncOptions =
+        CategorySyncOptionsBuilder.of(CTP_TARGET_CLIENT)
+            .errorCallback(LOGGER::error)
+            .warningCallback(LOGGER::warn)
+            .build();
+
+    final CategorySync categorySync = new CategorySync(syncOptions);
+
+    return new CategorySyncer(categorySync, buildCategoryQuery());
   }
 
   @Override

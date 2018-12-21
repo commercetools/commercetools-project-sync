@@ -57,15 +57,15 @@ final class SyncerFactory {
     final String trimmedValue = syncOptionValue.trim();
     switch (trimmedValue) {
       case SYNC_MODULE_OPTION_PRODUCT_TYPE_SYNC:
-        return new ProductTypeSyncer();
+        return ProductTypeSyncer.of();
       case SYNC_MODULE_OPTION_CATEGORY_SYNC:
-        return new CategorySyncer();
+        return CategorySyncer.of();
       case SYNC_MODULE_OPTION_PRODUCT_SYNC:
-        return new ProductSyncer();
+        return ProductSyncer.of();
       case SYNC_MODULE_OPTION_INVENTORY_ENTRY_SYNC:
-        return new InventoryEntrySyncer();
+        return InventoryEntrySyncer.of();
       case SYNC_MODULE_OPTION_TYPE_SYNC:
-        return new TypeSyncer();
+        return TypeSyncer.of();
       default:
         final String errorMessage =
             format(

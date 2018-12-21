@@ -17,7 +17,7 @@ import javax.annotation.Nonnull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ProductTypeSyncer
+public final class ProductTypeSyncer
     extends Syncer<
         ProductType,
         ProductTypeDraft,
@@ -29,14 +29,21 @@ public class ProductTypeSyncer
   private static final Logger LOGGER = LoggerFactory.getLogger(ProductTypeSyncer.class);
 
   /** Instantiates a {@link Syncer} instance. */
-  public ProductTypeSyncer() {
-    super(
-        new ProductTypeSync(
-            ProductTypeSyncOptionsBuilder.of(CTP_TARGET_CLIENT)
-                .errorCallback(LOGGER::error)
-                .warningCallback(LOGGER::warn)
-                .build()),
-        ProductTypeQuery.of());
+  private ProductTypeSyncer(
+      @Nonnull final ProductTypeSync productTypeSync, @Nonnull final ProductTypeQuery query) {
+    super(productTypeSync, query);
+  }
+
+  public static ProductTypeSyncer of() {
+    final ProductTypeSyncOptions syncOptions =
+        ProductTypeSyncOptionsBuilder.of(CTP_TARGET_CLIENT)
+            .errorCallback(LOGGER::error)
+            .warningCallback(LOGGER::warn)
+            .build();
+
+    final ProductTypeSync productTypeSync = new ProductTypeSync(syncOptions);
+
+    return new ProductTypeSyncer(productTypeSync, ProductTypeQuery.of());
   }
 
   @Nonnull

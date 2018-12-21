@@ -17,20 +17,27 @@ import javax.annotation.Nonnull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class TypeSyncer
+public final class TypeSyncer
     extends Syncer<Type, TypeDraft, TypeSyncStatistics, TypeSyncOptions, TypeQuery, TypeSync> {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(TypeSyncer.class);
 
   /** Instantiates a {@link Syncer} instance. */
-  public TypeSyncer() {
-    super(
-        new TypeSync(
-            TypeSyncOptionsBuilder.of(CTP_TARGET_CLIENT)
-                .errorCallback(LOGGER::error)
-                .warningCallback(LOGGER::warn)
-                .build()),
-        TypeQuery.of());
+  private TypeSyncer(@Nonnull final TypeSync typeSync, @Nonnull final TypeQuery query) {
+    super(typeSync, query);
+  }
+
+  public static TypeSyncer of() {
+
+    final TypeSyncOptions syncOptions =
+        TypeSyncOptionsBuilder.of(CTP_TARGET_CLIENT)
+            .errorCallback(LOGGER::error)
+            .warningCallback(LOGGER::warn)
+            .build();
+
+    final TypeSync typeSync = new TypeSync(syncOptions);
+
+    return new TypeSyncer(typeSync, TypeQuery.of());
   }
 
   @Nonnull
