@@ -1,23 +1,24 @@
 package com.commercetools.project.sync;
 
+import com.commercetools.sync.commons.BaseSync;
+import com.commercetools.sync.commons.BaseSyncOptions;
+import com.commercetools.sync.commons.helpers.BaseSyncStatistics;
+import io.sphere.sdk.models.Resource;
+import io.sphere.sdk.queries.QueryDsl;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.annotation.Nonnull;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
+
 import static com.commercetools.project.sync.util.SphereClientUtils.CTP_SOURCE_CLIENT;
 import static com.commercetools.project.sync.util.SphereClientUtils.CTP_TARGET_CLIENT;
 import static com.commercetools.project.sync.util.SphereClientUtils.closeCtpClients;
 import static com.commercetools.project.sync.util.StatisticsUtils.logStatistics;
 import static com.commercetools.sync.commons.utils.CtpQueryUtils.queryAll;
 import static java.lang.String.format;
-
-import com.commercetools.sync.commons.BaseSync;
-import com.commercetools.sync.commons.BaseSyncOptions;
-import com.commercetools.sync.commons.helpers.BaseSyncStatistics;
-import io.sphere.sdk.models.Resource;
-import io.sphere.sdk.queries.QueryDsl;
-import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
-import javax.annotation.Nonnull;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Base class of the syncer that handles syncing a resource from a source CTP project to a target
@@ -89,7 +90,7 @@ public abstract class Syncer<
    */
   @Nonnull
   private U syncPage(@Nonnull final List<T> page) {
-    final List<S> draftsWithKeysInReferences = getDraftsFromPage(page);
+    final List<S> draftsWithKeysInReferences = transformResourcesToDrafts(page);
     return sync.sync(draftsWithKeysInReferences).toCompletableFuture().join();
   }
 
@@ -101,5 +102,13 @@ public abstract class Syncer<
    * @return list of drafts of type {@link S}.
    */
   @Nonnull
-  protected abstract List<S> getDraftsFromPage(@Nonnull final List<T> page);
+  protected abstract List<S> transformResourcesToDrafts(@Nonnull final List<T> page);
+
+  public B getSync() {
+    return sync;
+  }
+
+  public C getQuery() {
+    return query;
+  }
 }

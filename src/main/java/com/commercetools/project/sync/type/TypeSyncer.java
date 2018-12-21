@@ -41,7 +41,7 @@ public final class TypeSyncer
 
   @Nonnull
   @Override
-  protected List<TypeDraft> getDraftsFromPage(@Nonnull final List<Type> page) {
+  protected List<TypeDraft> transformResourcesToDrafts(@Nonnull final List<Type> page) {
     return page.stream().map(TypeSyncer::typeToDraft).collect(Collectors.toList());
   }
 

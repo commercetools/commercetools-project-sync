@@ -48,7 +48,7 @@ public final class ProductTypeSyncer
 
   @Nonnull
   @Override
-  protected List<ProductTypeDraft> getDraftsFromPage(@Nonnull final List<ProductType> page) {
+  protected List<ProductTypeDraft> transformResourcesToDrafts(@Nonnull final List<ProductType> page) {
     return page.stream()
         .map(productType -> ProductTypeDraftBuilder.of(productType).build())
         .collect(Collectors.toList());

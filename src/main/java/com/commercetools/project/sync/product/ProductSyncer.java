@@ -38,6 +38,7 @@ public final class ProductSyncer
     super(productSync, productQuery);
   }
 
+  @Nonnull
   public static ProductSyncer of(@Nonnull final SphereClient client) {
 
     final ProductSyncOptions syncOptions =
@@ -55,7 +56,7 @@ public final class ProductSyncer
 
   @Override
   @Nonnull
-  protected List<ProductDraft> getDraftsFromPage(@Nonnull final List<Product> page) {
+  protected List<ProductDraft> transformResourcesToDrafts(@Nonnull final List<Product> page) {
     return replaceProductsReferenceIdsWithKeys(page);
   }
 
@@ -73,6 +74,7 @@ public final class ProductSyncer
    * @return the same list of update actions with a publish update action added, if there are staged
    *     changes that should be published.
    */
+  @Nonnull
   static List<UpdateAction<Product>> appendPublishIfPublished(
       @Nonnull final List<UpdateAction<Product>> updateActions,
       @Nonnull final ProductDraft srcProductDraft,

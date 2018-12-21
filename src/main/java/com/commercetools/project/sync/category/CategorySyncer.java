@@ -51,7 +51,7 @@ public final class CategorySyncer
 
   @Override
   @Nonnull
-  protected List<CategoryDraft> getDraftsFromPage(@Nonnull final List<Category> page) {
+  protected List<CategoryDraft> transformResourcesToDrafts(@Nonnull final List<Category> page) {
     return replaceCategoriesReferenceIdsWithKeys(page);
   }
 }

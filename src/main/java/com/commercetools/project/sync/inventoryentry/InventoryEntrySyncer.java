@@ -61,7 +61,7 @@ public final class InventoryEntrySyncer
 
   @Nonnull
   @Override
-  protected List<InventoryEntryDraft> getDraftsFromPage(@Nonnull final List<InventoryEntry> page) {
+  protected List<InventoryEntryDraft> transformResourcesToDrafts(@Nonnull final List<InventoryEntry> page) {
     return replaceInventoriesReferenceIdsWithKeys(page);
   }
 }
