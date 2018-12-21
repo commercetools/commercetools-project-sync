@@ -138,7 +138,7 @@ public class CliRunnerTest {
   public void run_WithSyncAsArgumentWithProductsArg_ShouldBuildSyncerAndExecuteSync() {
     // preparation
     final ProductSyncer productSyncer = mock(ProductSyncer.class);
-    final CompletionStage<Void> future = CompletableFuture.completedFuture(null);
+    final CompletionStage<Void> future = CompletableFuture.runAsync(() -> {});
     when(productSyncer.sync()).thenReturn(future);
 
     final SyncerFactory syncerFactory = spy(SyncerFactory.of(mock(SphereClient.class)));
