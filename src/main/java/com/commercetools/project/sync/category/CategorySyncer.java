@@ -1,8 +1,5 @@
 package com.commercetools.project.sync.category;
 
-import static com.commercetools.sync.categories.utils.CategoryReferenceReplacementUtils.buildCategoryQuery;
-import static com.commercetools.sync.categories.utils.CategoryReferenceReplacementUtils.replaceCategoriesReferenceIdsWithKeys;
-
 import com.commercetools.project.sync.Syncer;
 import com.commercetools.sync.categories.CategorySync;
 import com.commercetools.sync.categories.CategorySyncOptions;
@@ -12,10 +9,14 @@ import io.sphere.sdk.categories.Category;
 import io.sphere.sdk.categories.CategoryDraft;
 import io.sphere.sdk.categories.queries.CategoryQuery;
 import io.sphere.sdk.client.SphereClient;
-import java.util.List;
-import javax.annotation.Nonnull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.annotation.Nonnull;
+import java.util.List;
+
+import static com.commercetools.sync.categories.utils.CategoryReferenceReplacementUtils.buildCategoryQuery;
+import static com.commercetools.sync.categories.utils.CategoryReferenceReplacementUtils.replaceCategoriesReferenceIdsWithKeys;
 
 public final class CategorySyncer
     extends Syncer<
@@ -36,6 +37,7 @@ public final class CategorySyncer
     // manually.
   }
 
+  @Nonnull
   public static CategorySyncer of(@Nonnull final SphereClient client) {
     final CategorySyncOptions syncOptions =
         CategorySyncOptionsBuilder.of(client)
