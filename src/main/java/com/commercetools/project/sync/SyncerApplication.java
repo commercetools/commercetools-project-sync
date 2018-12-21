@@ -1,5 +1,7 @@
 package com.commercetools.project.sync;
 
+import static com.commercetools.project.sync.util.SphereClientUtils.CTP_TARGET_CLIENT;
+
 public class SyncerApplication {
 
   /**
@@ -8,6 +10,6 @@ public class SyncerApplication {
    * @param args all args
    */
   public static void main(final String[] args) {
-    new CliRunner().run(args);
+    CliRunner.of().run(args, SyncerFactory.of(CTP_TARGET_CLIENT));
   }
 }

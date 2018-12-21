@@ -1,21 +1,21 @@
 package com.commercetools.project.sync.type;
 
-import static com.commercetools.project.sync.util.SphereClientUtils.CTP_TARGET_CLIENT;
-
 import com.commercetools.project.sync.Syncer;
 import com.commercetools.sync.types.TypeSync;
 import com.commercetools.sync.types.TypeSyncOptions;
 import com.commercetools.sync.types.TypeSyncOptionsBuilder;
 import com.commercetools.sync.types.helpers.TypeSyncStatistics;
+import io.sphere.sdk.client.SphereClient;
 import io.sphere.sdk.types.Type;
 import io.sphere.sdk.types.TypeDraft;
 import io.sphere.sdk.types.TypeDraftBuilder;
 import io.sphere.sdk.types.queries.TypeQuery;
-import java.util.List;
-import java.util.stream.Collectors;
-import javax.annotation.Nonnull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.annotation.Nonnull;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public final class TypeSyncer
     extends Syncer<Type, TypeDraft, TypeSyncStatistics, TypeSyncOptions, TypeQuery, TypeSync> {
@@ -27,10 +27,10 @@ public final class TypeSyncer
     super(typeSync, query);
   }
 
-  public static TypeSyncer of() {
+  public static TypeSyncer of(@Nonnull final SphereClient client) {
 
     final TypeSyncOptions syncOptions =
-        TypeSyncOptionsBuilder.of(CTP_TARGET_CLIENT)
+        TypeSyncOptionsBuilder.of(client)
             .errorCallback(LOGGER::error)
             .warningCallback(LOGGER::warn)
             .build();

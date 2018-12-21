@@ -1,5 +1,15 @@
 package com.commercetools.project.sync;
 
+import com.commercetools.project.sync.category.CategorySyncer;
+import com.commercetools.project.sync.inventoryentry.InventoryEntrySyncer;
+import com.commercetools.project.sync.product.ProductSyncer;
+import com.commercetools.project.sync.producttype.ProductTypeSyncer;
+import com.commercetools.project.sync.type.TypeSyncer;
+import io.sphere.sdk.client.SphereClient;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
 import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_CATEGORY_SYNC;
 import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_INVENTORY_ENTRY_SYNC;
 import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_LONG;
@@ -10,15 +20,7 @@ import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_TYPE_S
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
-import com.commercetools.project.sync.category.CategorySyncer;
-import com.commercetools.project.sync.inventoryentry.InventoryEntrySyncer;
-import com.commercetools.project.sync.product.ProductSyncer;
-import com.commercetools.project.sync.producttype.ProductTypeSyncer;
-import com.commercetools.project.sync.type.TypeSyncer;
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-
-final class SyncerFactory {
+class SyncerFactory {
 
   static final String AVAILABLE_OPTIONS =
       format(
@@ -29,7 +31,15 @@ final class SyncerFactory {
           SYNC_MODULE_OPTION_PRODUCT_SYNC,
           SYNC_MODULE_OPTION_INVENTORY_ENTRY_SYNC);
 
-  private SyncerFactory() {}
+  private SphereClient sphereClient;
+
+  private SyncerFactory(@Nonnull final SphereClient sphereClient) {
+    this.sphereClient = sphereClient;
+  }
+
+  public static SyncerFactory of(@Nonnull final SphereClient sphereClient) {
+    return new SyncerFactory(sphereClient);
+  }
 
   /**
    * Builds an instance of {@link Syncer} corresponding to the passed option value. Acceptable
@@ -45,7 +55,8 @@ final class SyncerFactory {
    *     "inventoryEntries".
    */
   @Nonnull
-  static Syncer getSyncer(@Nullable final String syncOptionValue) {
+  Syncer buildSyncer(@Nullable final String syncOptionValue) {
+
     if (isBlank(syncOptionValue)) {
       final String errorMessage =
           format(
@@ -57,15 +68,15 @@ final class SyncerFactory {
     final String trimmedValue = syncOptionValue.trim();
     switch (trimmedValue) {
       case SYNC_MODULE_OPTION_PRODUCT_TYPE_SYNC:
-        return ProductTypeSyncer.of();
+        return ProductTypeSyncer.of(sphereClient);
       case SYNC_MODULE_OPTION_CATEGORY_SYNC:
-        return CategorySyncer.of();
+        return CategorySyncer.of(sphereClient);
       case SYNC_MODULE_OPTION_PRODUCT_SYNC:
-        return ProductSyncer.of();
+        return ProductSyncer.of(sphereClient);
       case SYNC_MODULE_OPTION_INVENTORY_ENTRY_SYNC:
-        return InventoryEntrySyncer.of();
+        return InventoryEntrySyncer.of(sphereClient);
       case SYNC_MODULE_OPTION_TYPE_SYNC:
-        return TypeSyncer.of();
+        return TypeSyncer.of(sphereClient);
       default:
         final String errorMessage =
             format(

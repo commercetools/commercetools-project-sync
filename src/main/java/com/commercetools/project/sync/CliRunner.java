@@ -15,7 +15,7 @@ import org.apache.commons.cli.ParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-class CliRunner {
+final class CliRunner {
   static final String SYNC_MODULE_OPTION_SHORT = "s";
   static final String HELP_OPTION_SHORT = "h";
   static final String VERSION_OPTION_SHORT = "v";
@@ -46,13 +46,25 @@ class CliRunner {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(CliRunner.class);
 
-  private Options options;
-
-  CliRunner() {
-    options = buildCliOptions();
+  public static CliRunner of() {
+    return new CliRunner();
   }
 
-  static Options buildCliOptions() {
+  void run(@Nonnull final String[] arguments, @Nonnull final SyncerFactory syncerFactory) {
+
+    final Options cliOptions = buildCliOptions();
+    final CommandLineParser parser = new DefaultParser();
+
+    try {
+      final CommandLine commandLine = parser.parse(cliOptions, arguments);
+      processCliArguments(commandLine, cliOptions, syncerFactory);
+    } catch (final ParseException | IllegalArgumentException exception) {
+      handleIllegalArgumentException(
+          format("Parse error:%n%s", exception.getMessage()), cliOptions);
+    }
+  }
+
+  private static Options buildCliOptions() {
     final Options options = new Options();
 
     final Option syncOption =
@@ -73,35 +85,31 @@ class CliRunner {
             .longOpt(VERSION_OPTION_LONG)
             .desc(VERSION_OPTION_DESCRIPTION)
             .build();
+
     options.addOption(syncOption);
     options.addOption(helpOption);
     options.addOption(versionOption);
+
     return options;
   }
 
-  void run(@Nonnull final String[] arguments) {
-    final CommandLineParser parser = new DefaultParser();
-    try {
-      final CommandLine commandLine = parser.parse(getOptions(), arguments);
-      processCliArguments(commandLine);
-    } catch (final ParseException | IllegalArgumentException exception) {
-      handleIllegalArgumentException(format("Parse error:%n%s", exception.getMessage()));
-    }
-  }
+  private static void processCliArguments(
+      @Nonnull final CommandLine commandLine,
+      @Nonnull final Options cliOptions,
+      @Nonnull final SyncerFactory syncerFactory) {
 
-  private void processCliArguments(@Nonnull final CommandLine commandLine) {
     final Option[] options = commandLine.getOptions();
     if (options.length == 0) {
-      handleIllegalArgumentException("Please pass at least 1 option to the CLI.");
+      handleIllegalArgumentException("Please pass at least 1 option to the CLI.", cliOptions);
     } else {
       final Option option = options[0];
       final String optionName = option.getOpt();
       switch (optionName) {
         case SYNC_MODULE_OPTION_SHORT:
-          processSyncOptionAndExecute(commandLine).toCompletableFuture().join();
+          processSyncOptionAndExecute(commandLine, syncerFactory).toCompletableFuture().join();
           break;
         case HELP_OPTION_SHORT:
-          printHelpToStdOut();
+          printHelpToStdOut(cliOptions);
           break;
         case VERSION_OPTION_SHORT:
           logApplicationVersion();
@@ -109,27 +117,32 @@ class CliRunner {
         default:
           // Unreachable code since this case is already handled by parser.parse(options,
           // arguments);
-          // in the constructor.
+          // in the CliRunner#run method.
           throw new IllegalStateException(format("Unrecognized option: -%s", optionName));
       }
     }
   }
 
-  private void handleIllegalArgumentException(@Nonnull final String errorMessage) {
+  private static void handleIllegalArgumentException(
+      @Nonnull final String errorMessage, @Nonnull final Options cliOptions) {
     LOGGER.error(errorMessage);
-    printHelpToStdOut();
+    printHelpToStdOut(cliOptions);
   }
 
-  CompletionStage processSyncOptionAndExecute(@Nonnull final CommandLine commandLine) {
+  @Nonnull
+  private static CompletionStage processSyncOptionAndExecute(
+      @Nonnull final CommandLine commandLine, @Nonnull final SyncerFactory syncerFactory) {
+
     final String syncOptionValue = commandLine.getOptionValue(SYNC_MODULE_OPTION_SHORT);
-    return SyncerFactory.getSyncer(syncOptionValue).sync();
+    return syncerFactory.buildSyncer(syncOptionValue).sync();
   }
 
-  private void printHelpToStdOut() {
+  private static void printHelpToStdOut(@Nonnull final Options cliOptions) {
     final HelpFormatter formatter = new HelpFormatter();
-    formatter.printHelp(getApplicationName(), getOptions());
+    formatter.printHelp(getApplicationName(), cliOptions);
   }
 
+  @Nonnull
   private static String getApplicationName() {
     final String implementationTitle =
         SyncerApplication.class.getPackage().getImplementationTitle();
@@ -141,13 +154,12 @@ class CliRunner {
     LOGGER.info(implementationVersion);
   }
 
+  @Nonnull
   private static String getApplicationVersion() {
     final String implementationVersion =
         SyncerApplication.class.getPackage().getImplementationVersion();
     return isBlank(implementationVersion) ? APPLICATION_DEFAULT_VERSION : implementationVersion;
   }
 
-  Options getOptions() {
-    return options;
-  }
+  private CliRunner() {}
 }

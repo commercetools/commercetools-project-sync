@@ -1,21 +1,21 @@
 package com.commercetools.project.sync.producttype;
 
-import static com.commercetools.project.sync.util.SphereClientUtils.CTP_TARGET_CLIENT;
-
 import com.commercetools.project.sync.Syncer;
 import com.commercetools.sync.producttypes.ProductTypeSync;
 import com.commercetools.sync.producttypes.ProductTypeSyncOptions;
 import com.commercetools.sync.producttypes.ProductTypeSyncOptionsBuilder;
 import com.commercetools.sync.producttypes.helpers.ProductTypeSyncStatistics;
+import io.sphere.sdk.client.SphereClient;
 import io.sphere.sdk.producttypes.ProductType;
 import io.sphere.sdk.producttypes.ProductTypeDraft;
 import io.sphere.sdk.producttypes.ProductTypeDraftBuilder;
 import io.sphere.sdk.producttypes.queries.ProductTypeQuery;
-import java.util.List;
-import java.util.stream.Collectors;
-import javax.annotation.Nonnull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.annotation.Nonnull;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public final class ProductTypeSyncer
     extends Syncer<
@@ -34,9 +34,9 @@ public final class ProductTypeSyncer
     super(productTypeSync, query);
   }
 
-  public static ProductTypeSyncer of() {
+  public static ProductTypeSyncer of(@Nonnull final SphereClient client) {
     final ProductTypeSyncOptions syncOptions =
-        ProductTypeSyncOptionsBuilder.of(CTP_TARGET_CLIENT)
+        ProductTypeSyncOptionsBuilder.of(client)
             .errorCallback(LOGGER::error)
             .warningCallback(LOGGER::warn)
             .build();

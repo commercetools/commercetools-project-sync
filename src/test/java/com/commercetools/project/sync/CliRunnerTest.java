@@ -11,18 +11,23 @@ import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_SHORT;
 import static com.commercetools.project.sync.CliRunner.VERSION_OPTION_DESCRIPTION;
 import static com.commercetools.project.sync.CliRunner.VERSION_OPTION_LONG;
 import static com.commercetools.project.sync.CliRunner.VERSION_OPTION_SHORT;
-import static com.commercetools.project.sync.CliRunner.buildCliOptions;
 import static java.lang.String.format;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.commercetools.project.sync.product.ProductSyncer;
+import io.sphere.sdk.client.SphereClient;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import org.junit.After;
@@ -59,7 +64,7 @@ public class CliRunnerTest {
   @Test
   public void run_WithEmptyArgumentList_ShouldLogErrorAndPrintHelp()
       throws UnsupportedEncodingException {
-    new CliRunner().run(new String[] {});
+    CliRunner.of().run(new String[] {}, mock(SyncerFactory.class));
 
     // Assert error log
     assertSingleLoggingEvent(Level.ERROR, "Please pass at least 1 option to the CLI.", null);
@@ -91,7 +96,7 @@ public class CliRunnerTest {
   @Test
   public void run_WithHelpAsLongArgument_ShouldPrintUsageHelpToSystemOut()
       throws UnsupportedEncodingException {
-    new CliRunner().run(new String[] {"-help"});
+    CliRunner.of().run(new String[] {"-help"}, mock(SyncerFactory.class));
 
     assertThat(testLogger.getAllLoggingEvents()).isEmpty();
     assertOutputStreamContainsHelpUsageWithSpecifiedCliOptions();
@@ -100,7 +105,7 @@ public class CliRunnerTest {
   @Test
   public void run_WithHelpAsShortArgument_ShouldPrintUsageHelpToSystemOut()
       throws UnsupportedEncodingException {
-    new CliRunner().run(new String[] {"-h"});
+    CliRunner.of().run(new String[] {"-h"}, mock(SyncerFactory.class));
 
     assertThat(testLogger.getAllLoggingEvents()).isEmpty();
     assertOutputStreamContainsHelpUsageWithSpecifiedCliOptions();
@@ -108,14 +113,14 @@ public class CliRunnerTest {
 
   @Test
   public void run_WithVersionAsShortArgument_ShouldLogApplicationVersionAsInfo() {
-    new CliRunner().run(new String[] {"-v"});
+    CliRunner.of().run(new String[] {"-v"}, mock(SyncerFactory.class));
 
     assertSingleLoggingEvent(Level.INFO, APPLICATION_DEFAULT_VERSION, null);
   }
 
   @Test
   public void run_WithVersionAsLongArgument_ShouldLogApplicationVersionAsInfo() {
-    new CliRunner().run(new String[] {"--version"});
+    CliRunner.of().run(new String[] {"--version"}, mock(SyncerFactory.class));
 
     assertSingleLoggingEvent(Level.INFO, APPLICATION_DEFAULT_VERSION, null);
   }
@@ -123,18 +128,37 @@ public class CliRunnerTest {
   @Test
   public void run_WithSyncAsArgumentWithNoArgs_ShouldLogErrorAndPrintHelpUsageToSystemOut()
       throws UnsupportedEncodingException {
-    new CliRunner().run(new String[] {"-s"});
+    CliRunner.of().run(new String[] {"-s"}, mock(SyncerFactory.class));
 
     assertSingleLoggingEvent(Level.ERROR, "Parse error:\nMissing argument for option: s", null);
     assertOutputStreamContainsHelpUsageWithSpecifiedCliOptions();
   }
 
   @Test
+  public void run_WithSyncAsArgumentWithProductsArg_ShouldBuildSyncerAndExecuteSync() {
+    // preparation
+    final ProductSyncer productSyncer = mock(ProductSyncer.class);
+    final CompletionStage<Void> future = CompletableFuture.completedFuture(null);
+    when(productSyncer.sync()).thenReturn(future);
+
+    final SyncerFactory syncerFactory = spy(SyncerFactory.of(mock(SphereClient.class)));
+    when(syncerFactory.buildSyncer("products")).thenReturn(productSyncer);
+    // test
+    CliRunner.of().run(new String[] {"-s", "products"}, syncerFactory);
+    // assertions
+    verify(syncerFactory, times(1)).buildSyncer("products");
+    verify(productSyncer, times(1)).sync();
+  }
+
+  @Test
   public void run_WithSyncAsArgumentWithIllegalArgs_ShouldLogErrorAndPrintHelpUsageToSystemOut()
       throws UnsupportedEncodingException {
+    // preparation
+    final SyncerFactory syncerFactory = spy(SyncerFactory.of(mock(SphereClient.class)));
+    // test
     final String illegalArg = "illegal";
-    new CliRunner().run(new String[] {"-s", illegalArg});
-
+    CliRunner.of().run(new String[] {"-s", illegalArg}, syncerFactory);
+    // Assert error log
     assertSingleLoggingEvent(
         Level.ERROR,
         format(
@@ -142,57 +166,52 @@ public class CliRunnerTest {
             illegalArg, SYNC_MODULE_OPTION_SHORT, SYNC_MODULE_OPTION_LONG),
         null);
     assertOutputStreamContainsHelpUsageWithSpecifiedCliOptions();
+    verify(syncerFactory, times(1)).buildSyncer(illegalArg);
   }
 
   @Test
   public void run_WithSyncAsLongArgument_ShouldProcessSyncOption() {
-    final CliRunner cliRunner = mock(CliRunner.class);
-
-    final String mockLog = "sync done.";
-    final CompletableFuture<Void> syncFutureResult =
-        CompletableFuture.completedFuture("").thenAccept(ignoredResult -> testLogger.info(mockLog));
-
-    when(cliRunner.getOptions()).thenReturn(buildCliOptions());
-    doCallRealMethod().when(cliRunner).run(any());
-    when(cliRunner.processSyncOptionAndExecute(any())).thenReturn(syncFutureResult);
-
-    cliRunner.run(new String[] {"--sync", "arg"});
-
-    assertSingleLoggingEvent(Level.INFO, mockLog, null);
+    // preparation
+    final SyncerFactory syncerFactory = spy(SyncerFactory.of(mock(SphereClient.class)));
+    // test
+    CliRunner.of().run(new String[] {"-sync", "arg"}, syncerFactory);
+    // assertions
+    verify(syncerFactory, times(1)).buildSyncer("arg");
   }
 
   @Test
   public void run_WithSyncAsShortArgument_ShouldProcessSyncOption() {
-    final CliRunner cliRunner = mock(CliRunner.class);
-
-    final String mockLog = "sync done.";
-    final CompletableFuture<Void> syncFutureResult =
-        CompletableFuture.completedFuture("").thenAccept(ignoredResult -> testLogger.info(mockLog));
-
-    when(cliRunner.getOptions()).thenReturn(buildCliOptions());
-    doCallRealMethod().when(cliRunner).run(any());
-    when(cliRunner.processSyncOptionAndExecute(any())).thenReturn(syncFutureResult);
-
-    cliRunner.run(new String[] {"-s", "arg"});
-
-    assertSingleLoggingEvent(Level.INFO, mockLog, null);
+    // preparation
+    final SyncerFactory syncerFactory = spy(SyncerFactory.of(mock(SphereClient.class)));
+    // test
+    CliRunner.of().run(new String[] {"-s", "arg"}, syncerFactory);
+    // assertions
+    verify(syncerFactory, times(1)).buildSyncer("arg");
   }
 
   @Test
   public void run_WithUnknownArgument_ShouldPrintErrorLogAndHelpUsage()
       throws UnsupportedEncodingException {
-    new CliRunner().run(new String[] {"-u"});
-
+    // preparation
+    final SyncerFactory syncerFactory = spy(SyncerFactory.of(mock(SphereClient.class)));
+    // test
+    CliRunner.of().run(new String[] {"-u"}, syncerFactory);
     // Assert error log
     assertSingleLoggingEvent(Level.ERROR, "Parse error:\nUnrecognized option: -u", null);
     assertOutputStreamContainsHelpUsageWithSpecifiedCliOptions();
+    verify(syncerFactory, never()).buildSyncer(any());
   }
 
   @Test
   public void run_WithHelpAsArgument_ShouldPrintThreeOptionsWithDescriptionsToSystemOut()
       throws UnsupportedEncodingException {
-    new CliRunner().run(new String[] {"-h"});
+    // preparation
+    final SyncerFactory syncerFactory = spy(SyncerFactory.of(mock(SphereClient.class)));
 
+    // test
+    CliRunner.of().run(new String[] {"-h"}, syncerFactory);
+
+    // assertions
     assertThat(testLogger.getAllLoggingEvents()).isEmpty();
 
     // Remove line breaks from output stream string.
@@ -213,5 +232,6 @@ public class CliRunnerTest {
             format(
                 "-%s,--%s %s",
                 VERSION_OPTION_SHORT, VERSION_OPTION_LONG, VERSION_OPTION_DESCRIPTION));
+    verify(syncerFactory, never()).buildSyncer(any());
   }
 }
