@@ -20,7 +20,7 @@ import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_TYPE_S
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
-class SyncerFactory {
+final class SyncerFactory {
 
   static final String AVAILABLE_OPTIONS =
       format(
