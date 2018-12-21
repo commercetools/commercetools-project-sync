@@ -1,20 +1,19 @@
 package com.commercetools.project.sync.type;
 
+import static io.sphere.sdk.json.SphereJsonUtils.readObjectFromResource;
+import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.toList;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+
 import com.commercetools.sync.types.TypeSync;
 import io.sphere.sdk.client.SphereClient;
 import io.sphere.sdk.types.Type;
 import io.sphere.sdk.types.TypeDraft;
 import io.sphere.sdk.types.TypeDraftBuilder;
 import io.sphere.sdk.types.queries.TypeQuery;
-import org.junit.Test;
-
 import java.util.List;
-
-import static io.sphere.sdk.json.SphereJsonUtils.readObjectFromResource;
-import static java.util.Arrays.asList;
-import static java.util.stream.Collectors.toList;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
+import org.junit.Test;
 
 public class TypeSyncerTest {
   @Test
@@ -46,12 +45,16 @@ public class TypeSyncerTest {
 
     // assertions
     assertThat(draftsFromPage)
-        .isEqualTo(typePage
-            .stream()
-            .map(type -> TypeDraftBuilder.of(type.getKey(), type.getName(), type.getResourceTypeIds())
-                                         .fieldDefinitions(type.getFieldDefinitions())
-                                         .description(type.getDescription()))
-            .map(TypeDraftBuilder::build)
-            .collect(toList()));
+        .isEqualTo(
+            typePage
+                .stream()
+                .map(
+                    type ->
+                        TypeDraftBuilder.of(
+                                type.getKey(), type.getName(), type.getResourceTypeIds())
+                            .fieldDefinitions(type.getFieldDefinitions())
+                            .description(type.getDescription()))
+                .map(TypeDraftBuilder::build)
+                .collect(toList()));
   }
 }
