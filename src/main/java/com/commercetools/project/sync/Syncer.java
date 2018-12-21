@@ -1,24 +1,23 @@
 package com.commercetools.project.sync;
 
-import com.commercetools.sync.commons.BaseSync;
-import com.commercetools.sync.commons.BaseSyncOptions;
-import com.commercetools.sync.commons.helpers.BaseSyncStatistics;
-import io.sphere.sdk.models.Resource;
-import io.sphere.sdk.queries.QueryDsl;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.annotation.Nonnull;
-import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
-
 import static com.commercetools.project.sync.util.SphereClientUtils.CTP_SOURCE_CLIENT;
 import static com.commercetools.project.sync.util.SphereClientUtils.CTP_TARGET_CLIENT;
 import static com.commercetools.project.sync.util.SphereClientUtils.closeCtpClients;
 import static com.commercetools.project.sync.util.StatisticsUtils.logStatistics;
 import static com.commercetools.sync.commons.utils.CtpQueryUtils.queryAll;
 import static java.lang.String.format;
+
+import com.commercetools.sync.commons.BaseSync;
+import com.commercetools.sync.commons.BaseSyncOptions;
+import com.commercetools.sync.commons.helpers.BaseSyncStatistics;
+import io.sphere.sdk.models.Resource;
+import io.sphere.sdk.queries.QueryDsl;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
+import javax.annotation.Nonnull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Base class of the syncer that handles syncing a resource from a source CTP project to a target

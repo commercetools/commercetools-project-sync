@@ -10,12 +10,11 @@ import io.sphere.sdk.producttypes.ProductType;
 import io.sphere.sdk.producttypes.ProductTypeDraft;
 import io.sphere.sdk.producttypes.ProductTypeDraftBuilder;
 import io.sphere.sdk.producttypes.queries.ProductTypeQuery;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.annotation.Nonnull;
 import java.util.List;
 import java.util.stream.Collectors;
+import javax.annotation.Nonnull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public final class ProductTypeSyncer
     extends Syncer<
@@ -48,7 +47,8 @@ public final class ProductTypeSyncer
 
   @Nonnull
   @Override
-  protected List<ProductTypeDraft> transformResourcesToDrafts(@Nonnull final List<ProductType> page) {
+  protected List<ProductTypeDraft> transformResourcesToDrafts(
+      @Nonnull final List<ProductType> page) {
     return page.stream()
         .map(productType -> ProductTypeDraftBuilder.of(productType).build())
         .collect(Collectors.toList());
