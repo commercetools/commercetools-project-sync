@@ -1,11 +1,5 @@
 package com.commercetools.project.sync.inventoryentry;
 
-import static com.commercetools.sync.inventories.utils.InventoryReferenceReplacementUtils.replaceInventoriesReferenceIdsWithKeys;
-import static io.sphere.sdk.json.SphereJsonUtils.readObjectFromResource;
-import static java.util.Arrays.asList;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
-
 import com.commercetools.sync.inventories.InventorySync;
 import io.sphere.sdk.client.SphereClient;
 import io.sphere.sdk.expansion.ExpansionPath;
@@ -13,17 +7,22 @@ import io.sphere.sdk.inventory.InventoryEntry;
 import io.sphere.sdk.inventory.InventoryEntryDraft;
 import io.sphere.sdk.inventory.expansion.InventoryEntryExpansionModel;
 import io.sphere.sdk.inventory.queries.InventoryEntryQuery;
-import java.util.List;
 import org.junit.Test;
+
+import java.util.List;
+
+import static com.commercetools.sync.inventories.utils.InventoryReferenceReplacementUtils.replaceInventoriesReferenceIdsWithKeys;
+import static io.sphere.sdk.json.SphereJsonUtils.readObjectFromResource;
+import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
 
 public class InventoryEntrySyncerTest {
   @Test
   public void of_ShouldCreateInventoryEntrySyncerInstance() {
-    // preparation
-    final SphereClient client = mock(SphereClient.class);
-
     // test
-    final InventoryEntrySyncer inventorySyncer = InventoryEntrySyncer.of(client);
+    final InventoryEntrySyncer inventorySyncer =
+        InventoryEntrySyncer.of(mock(SphereClient.class), mock(SphereClient.class));
 
     // assertions
     assertThat(inventorySyncer).isNotNull();
@@ -40,8 +39,8 @@ public class InventoryEntrySyncerTest {
   @Test
   public void transformResourcesToDrafts_ShouldReplaceInventoryEntryReferenceIdsWithKeys() {
     // preparation
-    final SphereClient client = mock(SphereClient.class);
-    final InventoryEntrySyncer inventoryEntrySyncer = InventoryEntrySyncer.of(client);
+    final InventoryEntrySyncer inventoryEntrySyncer =
+        InventoryEntrySyncer.of(mock(SphereClient.class), mock(SphereClient.class));
     final List<InventoryEntry> inventoryPage =
         asList(
             readObjectFromResource("inventory-sku-1.json", InventoryEntry.class),

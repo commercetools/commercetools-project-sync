@@ -1,28 +1,27 @@
 package com.commercetools.project.sync.producttype;
 
-import static io.sphere.sdk.json.SphereJsonUtils.readObjectFromResource;
-import static java.util.Arrays.asList;
-import static java.util.stream.Collectors.toList;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
-
 import com.commercetools.sync.producttypes.ProductTypeSync;
 import io.sphere.sdk.client.SphereClient;
 import io.sphere.sdk.producttypes.ProductType;
 import io.sphere.sdk.producttypes.ProductTypeDraft;
 import io.sphere.sdk.producttypes.ProductTypeDraftBuilder;
 import io.sphere.sdk.producttypes.queries.ProductTypeQuery;
-import java.util.List;
 import org.junit.Test;
+
+import java.util.List;
+
+import static io.sphere.sdk.json.SphereJsonUtils.readObjectFromResource;
+import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.toList;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
 
 public class ProductTypeSyncerTest {
   @Test
   public void of_ShouldCreateProductTypeSyncerInstance() {
-    // preparation
-    final SphereClient client = mock(SphereClient.class);
-
     // test
-    final ProductTypeSyncer productTypeSyncer = ProductTypeSyncer.of(client);
+    final ProductTypeSyncer productTypeSyncer =
+        ProductTypeSyncer.of(mock(SphereClient.class), mock(SphereClient.class));
 
     // assertions
     assertThat(productTypeSyncer).isNotNull();
@@ -33,8 +32,8 @@ public class ProductTypeSyncerTest {
   @Test
   public void transformResourcesToDrafts_ShouldConvertResourcesToDrafts() {
     // preparation
-    final SphereClient client = mock(SphereClient.class);
-    final ProductTypeSyncer productTypeSyncer = ProductTypeSyncer.of(client);
+    final ProductTypeSyncer productTypeSyncer =
+        ProductTypeSyncer.of(mock(SphereClient.class), mock(SphereClient.class));
     final List<ProductType> productTypePage =
         asList(
             readObjectFromResource("product-type-key-1.json", ProductType.class),

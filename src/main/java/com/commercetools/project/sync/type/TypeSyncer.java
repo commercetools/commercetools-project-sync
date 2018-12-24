@@ -10,11 +10,12 @@ import io.sphere.sdk.types.Type;
 import io.sphere.sdk.types.TypeDraft;
 import io.sphere.sdk.types.TypeDraftBuilder;
 import io.sphere.sdk.types.queries.TypeQuery;
-import java.util.List;
-import java.util.stream.Collectors;
-import javax.annotation.Nonnull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.annotation.Nonnull;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public final class TypeSyncer
     extends Syncer<Type, TypeDraft, TypeSyncStatistics, TypeSyncOptions, TypeQuery, TypeSync> {
@@ -22,22 +23,25 @@ public final class TypeSyncer
   private static final Logger LOGGER = LoggerFactory.getLogger(TypeSyncer.class);
 
   /** Instantiates a {@link Syncer} instance. */
-  private TypeSyncer(@Nonnull final TypeSync typeSync, @Nonnull final TypeQuery query) {
-    super(typeSync, query);
+  private TypeSyncer(
+      @Nonnull final TypeSync typeSync,
+      @Nonnull final TypeQuery query,
+      @Nonnull final SphereClient sourceClient) {
+    super(typeSync, query, sourceClient);
   }
 
   @Nonnull
-  public static TypeSyncer of(@Nonnull final SphereClient client) {
+  public static TypeSyncer of(@Nonnull final SphereClient sourceClient, @Nonnull final SphereClient targetClient) {
 
     final TypeSyncOptions syncOptions =
-        TypeSyncOptionsBuilder.of(client)
+        TypeSyncOptionsBuilder.of(targetClient)
             .errorCallback(LOGGER::error)
             .warningCallback(LOGGER::warn)
             .build();
 
     final TypeSync typeSync = new TypeSync(syncOptions);
 
-    return new TypeSyncer(typeSync, TypeQuery.of());
+    return new TypeSyncer(typeSync, TypeQuery.of(), sourceClient);
   }
 
   @Nonnull
