@@ -45,7 +45,7 @@ final class CliRunner {
   static final String VERSION_OPTION_DESCRIPTION = "Print the version of the application.";
 
   static final String APPLICATION_DEFAULT_NAME = "commercetools-project-sync";
-  static final String APPLICATION_DEFAULT_VERSION = "1.0.0";
+  static final String APPLICATION_DEFAULT_VERSION = "development-SNAPSHOT";
 
   private static final Logger LOGGER = LoggerFactory.getLogger(CliRunner.class);
 
