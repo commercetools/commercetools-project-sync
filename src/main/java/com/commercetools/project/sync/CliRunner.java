@@ -1,5 +1,10 @@
 package com.commercetools.project.sync;
 
+import static java.lang.String.format;
+import static org.apache.commons.lang3.StringUtils.isBlank;
+
+import java.util.concurrent.CompletionStage;
+import javax.annotation.Nonnull;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
@@ -9,12 +14,6 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.annotation.Nonnull;
-import java.util.concurrent.CompletionStage;
-
-import static java.lang.String.format;
-import static org.apache.commons.lang3.StringUtils.isBlank;
 
 final class CliRunner {
   static final String SYNC_MODULE_OPTION_SHORT = "s";
@@ -110,9 +109,7 @@ final class CliRunner {
       final String optionName = option.getOpt();
       switch (optionName) {
         case SYNC_MODULE_OPTION_SHORT:
-          processSyncOptionAndExecute(commandLine, syncerFactory)
-              .toCompletableFuture()
-              .join();
+          processSyncOptionAndExecute(commandLine, syncerFactory).toCompletableFuture().join();
           break;
         case HELP_OPTION_SHORT:
           printHelpToStdOut(cliOptions);
