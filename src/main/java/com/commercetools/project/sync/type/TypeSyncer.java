@@ -10,12 +10,11 @@ import io.sphere.sdk.types.Type;
 import io.sphere.sdk.types.TypeDraft;
 import io.sphere.sdk.types.TypeDraftBuilder;
 import io.sphere.sdk.types.queries.TypeQuery;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.annotation.Nonnull;
 import java.util.List;
 import java.util.stream.Collectors;
+import javax.annotation.Nonnull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public final class TypeSyncer
     extends Syncer<Type, TypeDraft, TypeSyncStatistics, TypeSyncOptions, TypeQuery, TypeSync> {
@@ -31,7 +30,8 @@ public final class TypeSyncer
   }
 
   @Nonnull
-  public static TypeSyncer of(@Nonnull final SphereClient sourceClient, @Nonnull final SphereClient targetClient) {
+  public static TypeSyncer of(
+      @Nonnull final SphereClient sourceClient, @Nonnull final SphereClient targetClient) {
 
     final TypeSyncOptions syncOptions =
         TypeSyncOptionsBuilder.of(targetClient)

@@ -1,6 +1,12 @@
 package com.commercetools.project.sync;
 
+import static com.commercetools.project.sync.util.StatisticsUtils.logStatistics;
+import static java.lang.String.format;
+import static org.apache.commons.lang3.StringUtils.isBlank;
+
 import com.commercetools.sync.commons.helpers.BaseSyncStatistics;
+import java.util.concurrent.CompletionStage;
+import javax.annotation.Nonnull;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
@@ -10,13 +16,6 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.annotation.Nonnull;
-import java.util.concurrent.CompletionStage;
-
-import static com.commercetools.project.sync.util.StatisticsUtils.logStatistics;
-import static java.lang.String.format;
-import static org.apache.commons.lang3.StringUtils.isBlank;
 
 final class CliRunner {
   static final String SYNC_MODULE_OPTION_SHORT = "s";
@@ -64,7 +63,7 @@ final class CliRunner {
     } catch (final ParseException | IllegalArgumentException exception) {
       handleIllegalArgumentException(
           format("Parse error:%n%s", exception.getMessage()), cliOptions);
-    } finally{
+    } finally {
       syncerFactory.getTargetClient().close();
       syncerFactory.getSourceClient().close();
     }
@@ -113,14 +112,15 @@ final class CliRunner {
       switch (optionName) {
         case SYNC_MODULE_OPTION_SHORT:
           processSyncOptionAndExecute(commandLine, syncerFactory)
-              .thenAccept(statistics -> {
-                logStatistics(statistics, LOGGER);
-                LOGGER.info(
-                    format(
-                        "Syncing from CTP project '%s' to project '%s' is done.",
-                        syncerFactory.getSourceClient().getConfig().getProjectKey(),
-                        syncerFactory.getTargetClient().getConfig().getProjectKey()));
-              })
+              .thenAccept(
+                  statistics -> {
+                    logStatistics(statistics, LOGGER);
+                    LOGGER.info(
+                        format(
+                            "Syncing from CTP project '%s' to project '%s' is done.",
+                            syncerFactory.getSourceClient().getConfig().getProjectKey(),
+                            syncerFactory.getTargetClient().getConfig().getProjectKey()));
+                  })
               .toCompletableFuture()
               .join();
 
@@ -148,13 +148,11 @@ final class CliRunner {
 
   @Nonnull
   private static CompletionStage<BaseSyncStatistics> processSyncOptionAndExecute(
-      @Nonnull final CommandLine commandLine,
-      @Nonnull final SyncerFactory syncerFactory) {
+      @Nonnull final CommandLine commandLine, @Nonnull final SyncerFactory syncerFactory) {
 
     final String syncOptionValue = commandLine.getOptionValue(SYNC_MODULE_OPTION_SHORT);
     final Syncer syncer = syncerFactory.buildSyncer(syncOptionValue);
-    return syncer.sync()
-                 .thenApply(ignoredResult -> syncer.getSync().getStatistics());
+    return syncer.sync().thenApply(ignoredResult -> syncer.getSync().getStatistics());
   }
 
   private static void printHelpToStdOut(@Nonnull final Options cliOptions) {
