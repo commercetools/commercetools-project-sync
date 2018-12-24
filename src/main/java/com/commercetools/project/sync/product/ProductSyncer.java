@@ -1,8 +1,5 @@
 package com.commercetools.project.sync.product;
 
-import static com.commercetools.sync.products.utils.ProductReferenceReplacementUtils.buildProductQuery;
-import static com.commercetools.sync.products.utils.ProductReferenceReplacementUtils.replaceProductsReferenceIdsWithKeys;
-
 import com.commercetools.project.sync.Syncer;
 import com.commercetools.sync.products.ProductSync;
 import com.commercetools.sync.products.ProductSyncOptions;
@@ -15,10 +12,14 @@ import io.sphere.sdk.products.ProductDraft;
 import io.sphere.sdk.products.commands.updateactions.Publish;
 import io.sphere.sdk.products.commands.updateactions.Unpublish;
 import io.sphere.sdk.products.queries.ProductQuery;
-import java.util.List;
-import javax.annotation.Nonnull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.annotation.Nonnull;
+import java.util.List;
+
+import static com.commercetools.sync.products.utils.ProductReferenceReplacementUtils.buildProductQuery;
+import static com.commercetools.sync.products.utils.ProductReferenceReplacementUtils.replaceProductsReferenceIdsWithKeys;
 
 public final class ProductSyncer
     extends Syncer<
@@ -35,8 +36,9 @@ public final class ProductSyncer
   private ProductSyncer(
       @Nonnull final ProductSync productSync,
       @Nonnull final ProductQuery productQuery,
-      @Nonnull final SphereClient sourceClient) {
-    super(productSync, productQuery, sourceClient);
+      @Nonnull final SphereClient sourceClient,
+      @Nonnull final SphereClient targetClient) {
+    super(productSync, productQuery, sourceClient, targetClient);
   }
 
   @Nonnull
@@ -51,7 +53,7 @@ public final class ProductSyncer
 
     final ProductSync productSync = new ProductSync(syncOptions);
 
-    return new ProductSyncer(productSync, buildProductQuery(), sourceClient);
+    return new ProductSyncer(productSync, buildProductQuery(), sourceClient, targetClient);
     // TODO: Instead of reference expansion, we could cache all keys and replace references
     // manually.
   }

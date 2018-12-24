@@ -10,11 +10,12 @@ import io.sphere.sdk.producttypes.ProductType;
 import io.sphere.sdk.producttypes.ProductTypeDraft;
 import io.sphere.sdk.producttypes.ProductTypeDraftBuilder;
 import io.sphere.sdk.producttypes.queries.ProductTypeQuery;
-import java.util.List;
-import java.util.stream.Collectors;
-import javax.annotation.Nonnull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.annotation.Nonnull;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public final class ProductTypeSyncer
     extends Syncer<
@@ -31,8 +32,9 @@ public final class ProductTypeSyncer
   private ProductTypeSyncer(
       @Nonnull final ProductTypeSync productTypeSync,
       @Nonnull final ProductTypeQuery query,
-      @Nonnull final SphereClient sourceClient) {
-    super(productTypeSync, query, sourceClient);
+      @Nonnull final SphereClient sourceClient,
+      @Nonnull final SphereClient targetClient) {
+    super(productTypeSync, query, sourceClient, targetClient);
   }
 
   @Nonnull
@@ -47,7 +49,7 @@ public final class ProductTypeSyncer
 
     final ProductTypeSync productTypeSync = new ProductTypeSync(syncOptions);
 
-    return new ProductTypeSyncer(productTypeSync, ProductTypeQuery.of(), sourceClient);
+    return new ProductTypeSyncer(productTypeSync, ProductTypeQuery.of(), sourceClient, targetClient);
   }
 
   @Nonnull

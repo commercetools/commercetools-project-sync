@@ -1,19 +1,22 @@
 package com.commercetools.project.sync;
 
-import static com.commercetools.sync.commons.utils.CtpQueryUtils.queryAll;
-
 import com.commercetools.sync.commons.BaseSync;
 import com.commercetools.sync.commons.BaseSyncOptions;
 import com.commercetools.sync.commons.helpers.BaseSyncStatistics;
 import io.sphere.sdk.client.SphereClient;
 import io.sphere.sdk.models.Resource;
 import io.sphere.sdk.queries.QueryDsl;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.annotation.Nonnull;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
-import javax.annotation.Nonnull;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import static com.commercetools.project.sync.util.StatisticsUtils.logStatistics;
+import static com.commercetools.sync.commons.utils.CtpQueryUtils.queryAll;
+import static java.lang.String.format;
 
 /**
  * Base class of the syncer that handles syncing a resource from a source CTP project to a target
@@ -46,14 +49,18 @@ public abstract class Syncer<
 
   private static final Logger LOGGER = LoggerFactory.getLogger(Syncer.class);
   private final SphereClient sourceClient;
+  private final SphereClient targetClient;
   private final B sync;
   private final C query;
 
   public Syncer(
-      @Nonnull final B sync, @Nonnull final C query, @Nonnull final SphereClient sourceClient) {
+      @Nonnull final B sync, @Nonnull final C query,
+      @Nonnull final SphereClient sourceClient,
+      @Nonnull final SphereClient targetClient) {
     this.sync = sync;
     this.query = query;
     this.sourceClient = sourceClient;
+    this.targetClient = targetClient;
   }
 
   /**
@@ -65,9 +72,18 @@ public abstract class Syncer<
    * @return completion stage containing no result after the execution of the sync process and
    *     logging the result.
    */
-  CompletionStage<List<U>> sync() {
+  CompletionStage<Void> sync() {
     LOGGER.info("Starting sync..");
-    return queryAll(sourceClient, query, this::syncPage);
+    return queryAll(sourceClient, query, this::syncPage)
+        .thenAccept(
+            ignoredResult -> {
+              logStatistics(sync.getStatistics(), LOGGER);
+              LOGGER.info(
+                  format(
+                      "Syncing from CTP project '%s' to project '%s' is done.",
+                      sourceClient.getConfig().getProjectKey(),
+                      targetClient.getConfig().getProjectKey()));
+            });
   }
 
   /**
