@@ -1,5 +1,15 @@
 package com.commercetools.project.sync;
 
+import com.commercetools.project.sync.category.CategorySyncer;
+import com.commercetools.project.sync.inventoryentry.InventoryEntrySyncer;
+import com.commercetools.project.sync.product.ProductSyncer;
+import com.commercetools.project.sync.producttype.ProductTypeSyncer;
+import com.commercetools.project.sync.type.TypeSyncer;
+import io.sphere.sdk.client.SphereClient;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
 import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_CATEGORY_SYNC;
 import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_INVENTORY_ENTRY_SYNC;
 import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_LONG;
@@ -9,15 +19,6 @@ import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_SHORT;
 import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_TYPE_SYNC;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isBlank;
-
-import com.commercetools.project.sync.category.CategorySyncer;
-import com.commercetools.project.sync.inventoryentry.InventoryEntrySyncer;
-import com.commercetools.project.sync.product.ProductSyncer;
-import com.commercetools.project.sync.producttype.ProductTypeSyncer;
-import com.commercetools.project.sync.type.TypeSyncer;
-import io.sphere.sdk.client.SphereClient;
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 
 final class SyncerFactory {
 
@@ -59,7 +60,7 @@ final class SyncerFactory {
    *     "inventoryEntries".
    */
   @Nonnull
-  Syncer buildSyncer(@Nullable final String syncOptionValue) {
+   Syncer buildSyncer(@Nullable final String syncOptionValue) {
 
     if (isBlank(syncOptionValue)) {
       final String errorMessage =
@@ -91,5 +92,13 @@ final class SyncerFactory {
                 AVAILABLE_OPTIONS);
         throw new IllegalArgumentException(errorMessage);
     }
+  }
+
+  public SphereClient getTargetClient() {
+    return targetClient;
+  }
+
+  public SphereClient getSourceClient() {
+    return sourceClient;
   }
 }

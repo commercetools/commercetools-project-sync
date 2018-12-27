@@ -1,21 +1,22 @@
 package com.commercetools.project.sync;
 
-import static com.commercetools.project.sync.util.StatisticsUtils.logStatistics;
-import static com.commercetools.sync.commons.utils.CtpQueryUtils.queryAll;
-import static java.lang.String.format;
-
 import com.commercetools.sync.commons.BaseSync;
 import com.commercetools.sync.commons.BaseSyncOptions;
 import com.commercetools.sync.commons.helpers.BaseSyncStatistics;
 import io.sphere.sdk.client.SphereClient;
 import io.sphere.sdk.models.Resource;
 import io.sphere.sdk.queries.QueryDsl;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.annotation.Nonnull;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
-import javax.annotation.Nonnull;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import static com.commercetools.project.sync.util.StatisticsUtils.logStatistics;
+import static com.commercetools.sync.commons.utils.CtpQueryUtils.queryAll;
+import static java.lang.String.format;
 
 /**
  * Base class of the syncer that handles syncing a resource from a source CTP project to a target
@@ -72,7 +73,7 @@ public abstract class Syncer<
    * @return completion stage containing no result after the execution of the sync process and
    *     logging the result.
    */
-  CompletionStage<Void> sync() {
+  public CompletionStage<Void> sync() {
     LOGGER.info("Starting sync..");
     return queryAll(sourceClient, query, this::syncPage)
         .thenAccept(
@@ -84,17 +85,6 @@ public abstract class Syncer<
                       sourceClient.getConfig().getProjectKey(),
                       targetClient.getConfig().getProjectKey());
               System.out.println(successMessage); // NOPMD
-            })
-        .whenComplete(
-            (result, throwable) -> {
-              if (throwable != null) {
-                final String errorMessage =
-                    "Failed to sync from CTP project '%s' to project '%s'. ";
-                System.out.println(errorMessage); // NOPMD
-                LOGGER.error(errorMessage, throwable);
-              }
-              sourceClient.close();
-              targetClient.close();
             });
   }
 
