@@ -29,14 +29,10 @@ import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
 import java.util.concurrent.CompletableFuture;
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import uk.org.lidalia.slf4jext.Level;
-import uk.org.lidalia.slf4jtest.LoggingEvent;
 import uk.org.lidalia.slf4jtest.TestLogger;
 import uk.org.lidalia.slf4jtest.TestLoggerFactory;
 
@@ -73,21 +69,9 @@ public class CliRunnerTest {
     CliRunner.of().run(new String[] {}, () -> syncerFactory);
 
     // Assert error log
-    assertSingleLoggingEvent(Level.ERROR, "Please pass at least 1 option to the CLI.", null);
+    assertThat(outputStream.toString("UTF-8"))
+        .contains("Please pass at least 1 option to the CLI.");
     assertOutputStreamContainsHelpUsageWithSpecifiedCliOptions();
-  }
-
-  private void assertSingleLoggingEvent(
-      @Nonnull final Level logLevel,
-      @Nonnull final String logMessage,
-      @Nullable final Throwable logThrowable) {
-
-    assertThat(testLogger.getAllLoggingEvents()).hasSize(1);
-    final LoggingEvent loggingEvent = testLogger.getAllLoggingEvents().get(0);
-    assertThat(loggingEvent).isExactlyInstanceOf(LoggingEvent.class);
-    assertThat(loggingEvent.getLevel()).isEqualTo(logLevel);
-    assertThat(loggingEvent.getMessage()).contains(logMessage);
-    assertThat(loggingEvent.getThrowable().orNull()).isEqualTo(logThrowable);
   }
 
   private void assertOutputStreamContainsHelpUsageWithSpecifiedCliOptions()
@@ -128,7 +112,8 @@ public class CliRunnerTest {
   }
 
   @Test
-  public void run_WithVersionAsShortArgument_ShouldLogApplicationVersionAsInfo() {
+  public void run_WithVersionAsShortArgument_ShouldLogApplicationVersionAsInfo()
+      throws UnsupportedEncodingException {
     // preparation
     final SyncerFactory syncerFactory =
         SyncerFactory.of(mock(SphereClient.class), mock(SphereClient.class));
@@ -136,11 +121,12 @@ public class CliRunnerTest {
     // test
     CliRunner.of().run(new String[] {"-v"}, () -> syncerFactory);
 
-    assertSingleLoggingEvent(Level.INFO, APPLICATION_DEFAULT_VERSION, null);
+    assertThat(outputStream.toString("UTF-8")).contains(APPLICATION_DEFAULT_VERSION);
   }
 
   @Test
-  public void run_WithVersionAsLongArgument_ShouldLogApplicationVersionAsInfo() {
+  public void run_WithVersionAsLongArgument_ShouldLogApplicationVersionAsInfo()
+      throws UnsupportedEncodingException {
     // preparation
     final SyncerFactory syncerFactory =
         SyncerFactory.of(mock(SphereClient.class), mock(SphereClient.class));
@@ -148,7 +134,7 @@ public class CliRunnerTest {
     // test
     CliRunner.of().run(new String[] {"--version"}, () -> syncerFactory);
 
-    assertSingleLoggingEvent(Level.INFO, APPLICATION_DEFAULT_VERSION, null);
+    assertThat(outputStream.toString("UTF-8")).contains(APPLICATION_DEFAULT_VERSION);
   }
 
   @Test
@@ -161,7 +147,8 @@ public class CliRunnerTest {
     // test
     CliRunner.of().run(new String[] {"-s"}, () -> syncerFactory);
 
-    assertSingleLoggingEvent(Level.ERROR, "Parse error:\nMissing argument for option: s", null);
+    assertThat(outputStream.toString("UTF-8"))
+        .contains("Parse error:\nMissing argument for option: s");
     assertOutputStreamContainsHelpUsageWithSpecifiedCliOptions();
   }
 
@@ -197,12 +184,12 @@ public class CliRunnerTest {
     final String illegalArg = "illegal";
     CliRunner.of().run(new String[] {"-s", illegalArg}, () -> syncerFactory);
     // Assert error log
-    assertSingleLoggingEvent(
-        Level.ERROR,
-        format(
-            "Parse error:%nUnknown argument \"%s\" supplied to \"-%s\" or" + " \"--%s\" option!",
-            illegalArg, SYNC_MODULE_OPTION_SHORT, SYNC_MODULE_OPTION_LONG),
-        null);
+    assertThat(outputStream.toString("UTF-8"))
+        .contains(
+            format(
+                "Parse error:%nUnknown argument \"%s\" supplied to \"-%s\" or"
+                    + " \"--%s\" option!",
+                illegalArg, SYNC_MODULE_OPTION_SHORT, SYNC_MODULE_OPTION_LONG));
     assertOutputStreamContainsHelpUsageWithSpecifiedCliOptions();
     verify(syncerFactory, times(1)).buildSyncer(illegalArg);
   }
@@ -238,7 +225,7 @@ public class CliRunnerTest {
     // test
     CliRunner.of().run(new String[] {"-u"}, () -> syncerFactory);
     // Assert error log
-    assertSingleLoggingEvent(Level.ERROR, "Parse error:\nUnrecognized option: -u", null);
+    assertThat(outputStream.toString("UTF-8")).contains("Parse error:\nUnrecognized option: -u");
     assertOutputStreamContainsHelpUsageWithSpecifiedCliOptions();
     verify(syncerFactory, never()).buildSyncer(any());
   }

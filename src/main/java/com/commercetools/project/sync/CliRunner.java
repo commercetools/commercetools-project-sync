@@ -13,8 +13,6 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 final class CliRunner {
   static final String SYNC_MODULE_OPTION_SHORT = "s";
@@ -44,8 +42,6 @@ final class CliRunner {
 
   static final String APPLICATION_DEFAULT_NAME = "commercetools-project-sync";
   static final String APPLICATION_DEFAULT_VERSION = "development-SNAPSHOT";
-
-  private static final Logger LOGGER = LoggerFactory.getLogger(CliRunner.class);
 
   public static CliRunner of() {
     return new CliRunner();
@@ -117,7 +113,7 @@ final class CliRunner {
           printHelpToStdOut(cliOptions);
           break;
         case VERSION_OPTION_SHORT:
-          logApplicationVersion();
+          printApplicationVersion();
           break;
         default:
           // Unreachable code since this case is already handled by parser.parse(options,
@@ -131,7 +127,7 @@ final class CliRunner {
   private static void handleIllegalArgumentException(
       @Nonnull final String errorMessage, @Nonnull final Options cliOptions) {
 
-    LOGGER.error(errorMessage);
+    System.out.println(errorMessage); // NOPMD
     printHelpToStdOut(cliOptions);
   }
 
@@ -157,9 +153,9 @@ final class CliRunner {
     return isBlank(implementationTitle) ? APPLICATION_DEFAULT_NAME : implementationTitle;
   }
 
-  private static void logApplicationVersion() {
+  private static void printApplicationVersion() {
     final String implementationVersion = getApplicationVersion();
-    LOGGER.info(implementationVersion);
+    System.out.println(implementationVersion); // NOPMD
   }
 
   @Nonnull

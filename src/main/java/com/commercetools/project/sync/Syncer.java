@@ -78,16 +78,20 @@ public abstract class Syncer<
         .thenAccept(
             ignoredResult -> {
               logStatistics(sync.getStatistics(), LOGGER);
-              LOGGER.info(
+              final String successMessage =
                   format(
-                      "Syncing from CTP project '%s' to project '%s' is done.",
+                      "Syncing from CTP project '%s' to project '%s' is done.%n",
                       sourceClient.getConfig().getProjectKey(),
-                      targetClient.getConfig().getProjectKey()));
+                      targetClient.getConfig().getProjectKey());
+              System.out.println(successMessage); // NOPMD
             })
         .whenComplete(
             (result, throwable) -> {
               if (throwable != null) {
-                LOGGER.error("Failed to sync from CTP project '%s' to project '%s'. ", throwable);
+                final String errorMessage =
+                    "Failed to sync from CTP project '%s' to project '%s'. ";
+                System.out.println(errorMessage); // NOPMD
+                LOGGER.error(errorMessage, throwable);
               }
               sourceClient.close();
               targetClient.close();
