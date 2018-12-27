@@ -4,9 +4,15 @@
 
 Dockerized CLI application which allows to automatically sync different resources between commercetools projects
 
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+
 - [Usage](#usage)
-  - [Prerequisites](#prerequisites)
-  - [Run the application](#run-the-application)
+    - [Prerequisites](#prerequisites)
+    - [Examples](#examples)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
+
 ## Usage
 ### Prerequisites
  
@@ -32,12 +38,16 @@ Dockerized CLI application which allows to automatically sync different resource
    export TARGET_CLIENT_ID = xxxxxxxxxxxxxxx
    export TARGET_CLIENT_SECRET = xxxxxxxxxxx
    ```
-   
-### Run the application   
- - First, package the JAR
+ - Usage
    ```bash
-   ./gradlew clean shadowJar
+   usage: commercetools-sync
+    -h,--help         Print help information to System.out.
+    -s,--sync <arg>   Choose which sync module to run: "types", "productTypes",
+                       "categories", "products" or "inventoryEntries".
+    -v,--version      Print the version of the application.
    ```
+   
+### Examples   
  - To run the productType sync
    ```bash
    java -jar build/libs/commercetools-sync.jar -s productTypes
@@ -58,11 +68,4 @@ Dockerized CLI application which allows to automatically sync different resource
    java -jar build/libs/commercetools-sync.jar -s inventoryEntries
    ```     
    
-- Usage
-  ```bash
-  usage: commercetools-sync
-   -h,--help         Print help information to System.out.
-   -s,--sync <arg>   Choose which sync module to run: "types", "productTypes",
-                      "categories", "products" or "inventoryEntries".
-   -v,--version      Print the version of the application.
-  ```
+
