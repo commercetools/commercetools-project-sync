@@ -83,6 +83,14 @@ public abstract class Syncer<
                       "Syncing from CTP project '%s' to project '%s' is done.",
                       sourceClient.getConfig().getProjectKey(),
                       targetClient.getConfig().getProjectKey()));
+            })
+        .whenComplete(
+            (result, throwable) -> {
+              if (throwable != null) {
+                LOGGER.error("Failed to sync from CTP project '%s' to project '%s'. ", throwable);
+              }
+              sourceClient.close();
+              targetClient.close();
             });
   }
 
