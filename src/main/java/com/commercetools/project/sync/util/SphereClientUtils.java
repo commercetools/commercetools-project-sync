@@ -2,7 +2,6 @@ package com.commercetools.project.sync.util;
 
 import static java.lang.String.format;
 
-import com.commercetools.sync.commons.utils.ClientConfigurationUtils;
 import io.sphere.sdk.client.SphereClient;
 import io.sphere.sdk.client.SphereClientConfig;
 import java.io.InputStream;
@@ -17,11 +16,6 @@ public final class SphereClientUtils {
       ClientConfigurationUtils.createClient(CTP_SOURCE_CLIENT_CONFIG);
   public static final SphereClient CTP_TARGET_CLIENT =
       ClientConfigurationUtils.createClient(CTP_TARGET_CLIENT_CONFIG);
-
-  public static void closeCtpClients() {
-    CTP_SOURCE_CLIENT.close();
-    CTP_TARGET_CLIENT.close();
-  }
 
   private static SphereClientConfig getCtpSourceClientConfig() {
     return getCtpClientConfig("source.", "SOURCE");
@@ -52,4 +46,6 @@ public final class SphereClientUtils {
 
     return SphereClientConfig.ofEnvironmentVariables(envVarPrefix);
   }
+
+  private SphereClientUtils() {}
 }
