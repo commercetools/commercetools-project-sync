@@ -70,7 +70,7 @@ public class CliRunnerTest {
         SyncerFactory.of(mock(SphereClient.class), mock(SphereClient.class));
 
     // test
-    CliRunner.of().run(new String[] {}, syncerFactory);
+    CliRunner.of().run(new String[] {}, () -> syncerFactory);
 
     // Assert error log
     assertSingleLoggingEvent(Level.ERROR, "Please pass at least 1 option to the CLI.", null);
@@ -107,7 +107,7 @@ public class CliRunnerTest {
         SyncerFactory.of(mock(SphereClient.class), mock(SphereClient.class));
 
     // test
-    CliRunner.of().run(new String[] {"-help"}, syncerFactory);
+    CliRunner.of().run(new String[] {"-help"}, () -> syncerFactory);
 
     assertThat(testLogger.getAllLoggingEvents()).isEmpty();
     assertOutputStreamContainsHelpUsageWithSpecifiedCliOptions();
@@ -121,7 +121,7 @@ public class CliRunnerTest {
         SyncerFactory.of(mock(SphereClient.class), mock(SphereClient.class));
 
     // test
-    CliRunner.of().run(new String[] {"-h"}, syncerFactory);
+    CliRunner.of().run(new String[] {"-h"}, () -> syncerFactory);
 
     assertThat(testLogger.getAllLoggingEvents()).isEmpty();
     assertOutputStreamContainsHelpUsageWithSpecifiedCliOptions();
@@ -134,7 +134,7 @@ public class CliRunnerTest {
         SyncerFactory.of(mock(SphereClient.class), mock(SphereClient.class));
 
     // test
-    CliRunner.of().run(new String[] {"-v"}, syncerFactory);
+    CliRunner.of().run(new String[] {"-v"}, () -> syncerFactory);
 
     assertSingleLoggingEvent(Level.INFO, APPLICATION_DEFAULT_VERSION, null);
   }
@@ -146,7 +146,7 @@ public class CliRunnerTest {
         SyncerFactory.of(mock(SphereClient.class), mock(SphereClient.class));
 
     // test
-    CliRunner.of().run(new String[] {"--version"}, syncerFactory);
+    CliRunner.of().run(new String[] {"--version"}, () -> syncerFactory);
 
     assertSingleLoggingEvent(Level.INFO, APPLICATION_DEFAULT_VERSION, null);
   }
@@ -159,7 +159,7 @@ public class CliRunnerTest {
         SyncerFactory.of(mock(SphereClient.class), mock(SphereClient.class));
 
     // test
-    CliRunner.of().run(new String[] {"-s"}, syncerFactory);
+    CliRunner.of().run(new String[] {"-s"}, () -> syncerFactory);
 
     assertSingleLoggingEvent(Level.ERROR, "Parse error:\nMissing argument for option: s", null);
     assertOutputStreamContainsHelpUsageWithSpecifiedCliOptions();
@@ -180,7 +180,7 @@ public class CliRunnerTest {
     final SyncerFactory syncerFactory = spy(SyncerFactory.of(sourceClient, targetClient));
 
     // test
-    CliRunner.of().run(new String[] {"-s", "products"}, syncerFactory);
+    CliRunner.of().run(new String[] {"-s", "products"}, () -> syncerFactory);
 
     // assertions
     verify(syncerFactory, times(1)).buildSyncer("products");
@@ -195,7 +195,7 @@ public class CliRunnerTest {
         spy(SyncerFactory.of(mock(SphereClient.class), mock(SphereClient.class)));
     // test
     final String illegalArg = "illegal";
-    CliRunner.of().run(new String[] {"-s", illegalArg}, syncerFactory);
+    CliRunner.of().run(new String[] {"-s", illegalArg}, () -> syncerFactory);
     // Assert error log
     assertSingleLoggingEvent(
         Level.ERROR,
@@ -213,7 +213,7 @@ public class CliRunnerTest {
     final SyncerFactory syncerFactory =
         spy(SyncerFactory.of(mock(SphereClient.class), mock(SphereClient.class)));
     // test
-    CliRunner.of().run(new String[] {"-sync", "arg"}, syncerFactory);
+    CliRunner.of().run(new String[] {"-sync", "arg"}, () -> syncerFactory);
     // assertions
     verify(syncerFactory, times(1)).buildSyncer("arg");
   }
@@ -224,7 +224,7 @@ public class CliRunnerTest {
     final SyncerFactory syncerFactory =
         spy(SyncerFactory.of(mock(SphereClient.class), mock(SphereClient.class)));
     // test
-    CliRunner.of().run(new String[] {"-s", "arg"}, syncerFactory);
+    CliRunner.of().run(new String[] {"-s", "arg"}, () -> syncerFactory);
     // assertions
     verify(syncerFactory, times(1)).buildSyncer("arg");
   }
@@ -236,7 +236,7 @@ public class CliRunnerTest {
     final SyncerFactory syncerFactory =
         spy(SyncerFactory.of(mock(SphereClient.class), mock(SphereClient.class)));
     // test
-    CliRunner.of().run(new String[] {"-u"}, syncerFactory);
+    CliRunner.of().run(new String[] {"-u"}, () -> syncerFactory);
     // Assert error log
     assertSingleLoggingEvent(Level.ERROR, "Parse error:\nUnrecognized option: -u", null);
     assertOutputStreamContainsHelpUsageWithSpecifiedCliOptions();
@@ -251,7 +251,7 @@ public class CliRunnerTest {
         spy(SyncerFactory.of(mock(SphereClient.class), mock(SphereClient.class)));
 
     // test
-    CliRunner.of().run(new String[] {"-h"}, syncerFactory);
+    CliRunner.of().run(new String[] {"-h"}, () -> syncerFactory);
 
     // assertions
     assertThat(testLogger.getAllLoggingEvents()).isEmpty();

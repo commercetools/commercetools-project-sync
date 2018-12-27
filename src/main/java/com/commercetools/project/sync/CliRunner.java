@@ -4,6 +4,7 @@ import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import java.util.concurrent.CompletionStage;
+import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -50,20 +51,19 @@ final class CliRunner {
     return new CliRunner();
   }
 
-  void run(@Nonnull final String[] arguments, @Nonnull final SyncerFactory syncerFactory) {
+  void run(
+      @Nonnull final String[] arguments,
+      @Nonnull final Supplier<SyncerFactory> syncerFactorySupplier) {
 
     final Options cliOptions = buildCliOptions();
     final CommandLineParser parser = new DefaultParser();
 
     try {
       final CommandLine commandLine = parser.parse(cliOptions, arguments);
-      processCliArguments(commandLine, cliOptions, syncerFactory);
+      processCliArguments(commandLine, cliOptions, syncerFactorySupplier);
     } catch (final ParseException | IllegalArgumentException exception) {
       handleIllegalArgumentException(
           format("Parse error:%n%s", exception.getMessage()), cliOptions);
-    } finally {
-      syncerFactory.getTargetClient().close();
-      syncerFactory.getSourceClient().close();
     }
   }
 
@@ -99,7 +99,7 @@ final class CliRunner {
   private static void processCliArguments(
       @Nonnull final CommandLine commandLine,
       @Nonnull final Options cliOptions,
-      @Nonnull final SyncerFactory syncerFactory) {
+      @Nonnull final Supplier<SyncerFactory> syncerFactorySupplier) {
 
     final Option[] options = commandLine.getOptions();
     if (options.length == 0) {
@@ -109,7 +109,9 @@ final class CliRunner {
       final String optionName = option.getOpt();
       switch (optionName) {
         case SYNC_MODULE_OPTION_SHORT:
-          processSyncOptionAndExecute(commandLine, syncerFactory).toCompletableFuture().join();
+          processSyncOptionAndExecute(commandLine, syncerFactorySupplier.get())
+              .toCompletableFuture()
+              .join();
           break;
         case HELP_OPTION_SHORT:
           printHelpToStdOut(cliOptions);
@@ -128,6 +130,7 @@ final class CliRunner {
 
   private static void handleIllegalArgumentException(
       @Nonnull final String errorMessage, @Nonnull final Options cliOptions) {
+
     LOGGER.error(errorMessage);
     printHelpToStdOut(cliOptions);
   }
@@ -138,6 +141,7 @@ final class CliRunner {
 
     final String syncOptionValue = commandLine.getOptionValue(SYNC_MODULE_OPTION_SHORT);
     final Syncer syncer = syncerFactory.buildSyncer(syncOptionValue);
+
     return syncer.sync();
   }
 
