@@ -38,6 +38,16 @@ Dockerized CLI application which allows to automatically sync different resource
    export TARGET_CLIENT_SECRET = xxxxxxxxxxx
    ```
 
+### Usage
+
+   ```bash
+   usage: commercetools-project-sync
+    -h,--help         Print help information.
+    -s,--sync <arg>   Choose which sync module to run: "types", "productTypes", "categories", "products" or
+                      "inventoryEntries".
+    -v,--version      Print the version of the application.
+   ```
+
 ### Examples   
  - To run the productType sync
    ```bash
