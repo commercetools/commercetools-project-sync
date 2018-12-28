@@ -3,6 +3,7 @@ package com.commercetools.project.sync;
 import com.commercetools.sync.commons.BaseSync;
 import com.commercetools.sync.commons.BaseSyncOptions;
 import com.commercetools.sync.commons.helpers.BaseSyncStatistics;
+import com.commercetools.sync.inventories.InventorySync;
 import io.sphere.sdk.client.SphereClient;
 import io.sphere.sdk.models.Resource;
 import io.sphere.sdk.queries.QueryDsl;
@@ -74,18 +75,36 @@ public abstract class Syncer<
    *     logging the result.
    */
   public CompletionStage<Void> sync() {
-    LOGGER.info("Starting sync..");
+
+    if (LOGGER.isInfoEnabled()) {
+      LOGGER.info(format("Starting %s..", sync.getClass().getSimpleName()));
+    }
+
     return queryAll(sourceClient, query, this::syncPage)
         .thenAccept(
             ignoredResult -> {
               logStatistics(sync.getStatistics(), LOGGER);
               final String successMessage =
                   format(
-                      "Syncing from CTP project '%s' to project '%s' is done.%n",
+                      "%nSyncing %s from CTP project with key '%s' to project with key '%s' is done.%n",
+                      getResourceName(),
                       sourceClient.getConfig().getProjectKey(),
                       targetClient.getConfig().getProjectKey());
               System.out.println(successMessage); // NOPMD
             });
+  }
+
+  @Nonnull
+  private String getResourceName() {
+
+    if (sync instanceof InventorySync) {
+      // special case, to avoid returning "Inventorys"
+      return "Inventories";
+    }
+
+    final String syncClassName = sync.getClass().getSimpleName();
+    // e.g. productTypeSync -> productTypes, productSync -> products
+    return syncClassName.replace("Sync", "s");
   }
 
   /**
