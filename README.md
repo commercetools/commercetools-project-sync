@@ -6,14 +6,13 @@ Dockerized CLI application which allows to automatically sync different resource
 
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
+- [Prerequisites](#prerequisites)
 - [Usage](#usage)
-    - [Prerequisites](#prerequisites)
-    - [Examples](#examples)
+- [Examples](#examples)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 
-## Usage
 ### Prerequisites
  
  - Make sure you have `JDK 8` installed.
@@ -38,7 +37,9 @@ Dockerized CLI application which allows to automatically sync different resource
    export TARGET_CLIENT_ID = xxxxxxxxxxxxxxx
    export TARGET_CLIENT_SECRET = xxxxxxxxxxx
    ```
- - Usage
+
+### Usage
+
    ```bash
    usage: commercetools-sync
     -h,--help         Print help information to System.out.
