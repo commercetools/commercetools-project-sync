@@ -49,6 +49,7 @@ public final class ProductSyncer
         ProductSyncOptionsBuilder.of(targetClient)
             .errorCallback(LOGGER::error)
             .warningCallback(LOGGER::warn)
+            .beforeUpdateCallback(ProductSyncer::appendPublishIfPublished)
             .build();
 
     final ProductSync productSync = new ProductSync(syncOptions);
