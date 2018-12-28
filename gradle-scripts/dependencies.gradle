@@ -7,7 +7,7 @@ ext {
     pmdVersion = '5.6.1'
     jacocoVersion = '0.7.9'
     findbugsVersion = '3.0.1'
-    commercetoolsSyncJava='1.0.0'
+    commercetoolsSyncJava='1.1.0'
     apacheCliVersion = '1.4'
     jupiterApiVersion = '5.3.2'
 }
@@ -24,6 +24,5 @@ dependencies {
     testImplementation "org.junit.jupiter:junit-jupiter-api:${jupiterApiVersion}"
     testImplementation "org.junit.jupiter:junit-jupiter-params:${jupiterApiVersion}"
     testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:${jupiterApiVersion}"
-    testRuntimeOnly "org.junit.vintage:junit-vintage-engine:${jupiterApiVersion}"
     testImplementation "org.assertj:assertj-core:${assertjVersion}"
 }

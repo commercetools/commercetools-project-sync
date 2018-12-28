@@ -1,0 +1,14 @@
+{
+  "id": "ba81a6da-cf83-435b-a89e-2afab579846f",
+  "name": {
+    "en": "category-name-1"
+  },
+  "key" : "categoryKey2",
+  "slug": {
+    "en": "category-slug-1"
+  },
+  "description": {
+    "en": "description-1"
+  },
+  "assets": []
+}
