@@ -1,24 +1,23 @@
 package com.commercetools.project.sync.type;
 
-import com.commercetools.sync.types.TypeSync;
-import io.sphere.sdk.client.SphereClient;
-import io.sphere.sdk.types.Type;
-import io.sphere.sdk.types.TypeDraft;
-import io.sphere.sdk.types.TypeDraftBuilder;
-import io.sphere.sdk.types.queries.TypeQuery;
-import org.junit.jupiter.api.Test;
-
-import java.util.List;
-
 import static io.sphere.sdk.json.SphereJsonUtils.readObjectFromResource;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
- class TypeSyncerTest {
+import com.commercetools.sync.types.TypeSync;
+import io.sphere.sdk.client.SphereClient;
+import io.sphere.sdk.types.Type;
+import io.sphere.sdk.types.TypeDraft;
+import io.sphere.sdk.types.TypeDraftBuilder;
+import io.sphere.sdk.types.queries.TypeQuery;
+import java.util.List;
+import org.junit.jupiter.api.Test;
+
+class TypeSyncerTest {
   @Test
-   void of_ShouldCreateTypeSyncerInstance() {
+  void of_ShouldCreateTypeSyncerInstance() {
     // test
     final TypeSyncer typeSyncer = TypeSyncer.of(mock(SphereClient.class), mock(SphereClient.class));
 
@@ -29,7 +28,7 @@ import static org.mockito.Mockito.mock;
   }
 
   @Test
-   void transformResourcesToDrafts_ShouldConvertResourcesToDrafts() {
+  void transformResourcesToDrafts_ShouldConvertResourcesToDrafts() {
     // preparation
     final TypeSyncer typeSyncer = TypeSyncer.of(mock(SphereClient.class), mock(SphereClient.class));
     final List<Type> typePage =

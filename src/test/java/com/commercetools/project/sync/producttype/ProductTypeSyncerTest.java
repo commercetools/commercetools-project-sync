@@ -1,24 +1,23 @@
 package com.commercetools.project.sync.producttype;
 
-import com.commercetools.sync.producttypes.ProductTypeSync;
-import io.sphere.sdk.client.SphereClient;
-import io.sphere.sdk.producttypes.ProductType;
-import io.sphere.sdk.producttypes.ProductTypeDraft;
-import io.sphere.sdk.producttypes.ProductTypeDraftBuilder;
-import io.sphere.sdk.producttypes.queries.ProductTypeQuery;
-import org.junit.jupiter.api.Test;
-
-import java.util.List;
-
 import static io.sphere.sdk.json.SphereJsonUtils.readObjectFromResource;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
- class ProductTypeSyncerTest {
+import com.commercetools.sync.producttypes.ProductTypeSync;
+import io.sphere.sdk.client.SphereClient;
+import io.sphere.sdk.producttypes.ProductType;
+import io.sphere.sdk.producttypes.ProductTypeDraft;
+import io.sphere.sdk.producttypes.ProductTypeDraftBuilder;
+import io.sphere.sdk.producttypes.queries.ProductTypeQuery;
+import java.util.List;
+import org.junit.jupiter.api.Test;
+
+class ProductTypeSyncerTest {
   @Test
-   void of_ShouldCreateProductTypeSyncerInstance() {
+  void of_ShouldCreateProductTypeSyncerInstance() {
     // test
     final ProductTypeSyncer productTypeSyncer =
         ProductTypeSyncer.of(mock(SphereClient.class), mock(SphereClient.class));
@@ -30,7 +29,7 @@ import static org.mockito.Mockito.mock;
   }
 
   @Test
-   void transformResourcesToDrafts_ShouldConvertResourcesToDrafts() {
+  void transformResourcesToDrafts_ShouldConvertResourcesToDrafts() {
     // preparation
     final ProductTypeSyncer productTypeSyncer =
         ProductTypeSyncer.of(mock(SphereClient.class), mock(SphereClient.class));

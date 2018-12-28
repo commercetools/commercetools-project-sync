@@ -1,13 +1,5 @@
 package com.commercetools.project.sync;
 
-import com.commercetools.project.sync.category.CategorySyncer;
-import com.commercetools.project.sync.inventoryentry.InventoryEntrySyncer;
-import com.commercetools.project.sync.product.ProductSyncer;
-import com.commercetools.project.sync.producttype.ProductTypeSyncer;
-import com.commercetools.project.sync.type.TypeSyncer;
-import io.sphere.sdk.client.SphereClient;
-import org.junit.jupiter.api.Test;
-
 import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_CATEGORY_SYNC;
 import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_INVENTORY_ENTRY_SYNC;
 import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_PRODUCT_SYNC;
@@ -19,9 +11,17 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 
- class SyncerFactoryTest {
+import com.commercetools.project.sync.category.CategorySyncer;
+import com.commercetools.project.sync.inventoryentry.InventoryEntrySyncer;
+import com.commercetools.project.sync.product.ProductSyncer;
+import com.commercetools.project.sync.producttype.ProductTypeSyncer;
+import com.commercetools.project.sync.type.TypeSyncer;
+import io.sphere.sdk.client.SphereClient;
+import org.junit.jupiter.api.Test;
+
+class SyncerFactoryTest {
   @Test
-   void getSyncer_WithNullOptionValue_ShouldThrowIllegalArgumentException() {
+  void getSyncer_WithNullOptionValue_ShouldThrowIllegalArgumentException() {
     assertThatThrownBy(
             () ->
                 SyncerFactory.of(mock(SphereClient.class), mock(SphereClient.class))
@@ -33,7 +33,7 @@ import static org.mockito.Mockito.mock;
   }
 
   @Test
-   void getSyncer_WithEmptyOptionValue_ShouldThrowIllegalArgumentException() {
+  void getSyncer_WithEmptyOptionValue_ShouldThrowIllegalArgumentException() {
     assertThatThrownBy(
             () ->
                 SyncerFactory.of(mock(SphereClient.class), mock(SphereClient.class))
@@ -45,7 +45,7 @@ import static org.mockito.Mockito.mock;
   }
 
   @Test
-   void getSyncer_WithUnknownOptionValue_ShouldThrowIllegalArgumentException() {
+  void getSyncer_WithUnknownOptionValue_ShouldThrowIllegalArgumentException() {
     final String unknownOptionValue = "anyOption";
     assertThatThrownBy(
             () ->
@@ -59,7 +59,7 @@ import static org.mockito.Mockito.mock;
   }
 
   @Test
-   void getSyncer_WithValidOptionValue_ShouldReturnCorrectSyncer() {
+  void getSyncer_WithValidOptionValue_ShouldReturnCorrectSyncer() {
     assertThat(
             SyncerFactory.of(mock(SphereClient.class), mock(SphereClient.class))
                 .buildSyncer(SYNC_MODULE_OPTION_CATEGORY_SYNC))

@@ -1,19 +1,5 @@
 package com.commercetools.project.sync.product;
 
-import com.commercetools.sync.products.ProductSync;
-import io.sphere.sdk.client.SphereClient;
-import io.sphere.sdk.commands.UpdateAction;
-import io.sphere.sdk.products.Product;
-import io.sphere.sdk.products.ProductCatalogData;
-import io.sphere.sdk.products.ProductDraft;
-import io.sphere.sdk.products.commands.updateactions.ChangeName;
-import io.sphere.sdk.products.commands.updateactions.Publish;
-import io.sphere.sdk.products.commands.updateactions.Unpublish;
-import org.junit.jupiter.api.Test;
-
-import java.util.ArrayList;
-import java.util.List;
-
 import static com.commercetools.sync.products.utils.ProductReferenceReplacementUtils.buildProductQuery;
 import static com.commercetools.sync.products.utils.ProductReferenceReplacementUtils.replaceProductsReferenceIdsWithKeys;
 import static io.sphere.sdk.json.SphereJsonUtils.readObjectFromResource;
@@ -23,10 +9,23 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
- class ProductSyncerTest {
+import com.commercetools.sync.products.ProductSync;
+import io.sphere.sdk.client.SphereClient;
+import io.sphere.sdk.commands.UpdateAction;
+import io.sphere.sdk.products.Product;
+import io.sphere.sdk.products.ProductCatalogData;
+import io.sphere.sdk.products.ProductDraft;
+import io.sphere.sdk.products.commands.updateactions.ChangeName;
+import io.sphere.sdk.products.commands.updateactions.Publish;
+import io.sphere.sdk.products.commands.updateactions.Unpublish;
+import java.util.ArrayList;
+import java.util.List;
+import org.junit.jupiter.api.Test;
+
+class ProductSyncerTest {
 
   @Test
-   void of_ShouldCreateProductSyncerInstance() {
+  void of_ShouldCreateProductSyncerInstance() {
     // test
     final ProductSyncer productSyncer =
         ProductSyncer.of(mock(SphereClient.class), mock(SphereClient.class));
@@ -38,7 +37,7 @@ import static org.mockito.Mockito.when;
   }
 
   @Test
-   void transformResourcesToDrafts_ShouldReplaceProductReferenceIdsWithKeys() {
+  void transformResourcesToDrafts_ShouldReplaceProductReferenceIdsWithKeys() {
     // preparation
     final ProductSyncer productSyncer =
         ProductSyncer.of(mock(SphereClient.class), mock(SphereClient.class));
@@ -56,8 +55,7 @@ import static org.mockito.Mockito.when;
   }
 
   @Test
-   void
-      appendPublishIfPublished_WithPublishedProductAndEmptyActions_ShouldNotAppendPublish() {
+  void appendPublishIfPublished_WithPublishedProductAndEmptyActions_ShouldNotAppendPublish() {
     final ProductCatalogData masterData = mock(ProductCatalogData.class);
     when(masterData.isPublished()).thenReturn(true);
 
@@ -72,8 +70,7 @@ import static org.mockito.Mockito.when;
   }
 
   @Test
-   void
-      appendPublishIfPublished_WithPublishedProductAndNonEmptyActions_ShouldAppendPublish() {
+  void appendPublishIfPublished_WithPublishedProductAndNonEmptyActions_ShouldAppendPublish() {
     final ProductCatalogData masterData = mock(ProductCatalogData.class);
     when(masterData.isPublished()).thenReturn(true);
 
@@ -91,8 +88,7 @@ import static org.mockito.Mockito.when;
   }
 
   @Test
-   void
-      appendPublishIfPublished_WithUnPublishedProductAndEmptyActions_ShouldNotAppendPublish() {
+  void appendPublishIfPublished_WithUnPublishedProductAndEmptyActions_ShouldNotAppendPublish() {
     final ProductCatalogData masterData = mock(ProductCatalogData.class);
     when(masterData.isPublished()).thenReturn(false);
 
@@ -107,8 +103,7 @@ import static org.mockito.Mockito.when;
   }
 
   @Test
-   void
-      appendPublishIfPublished_WithUnPublishedProductAndNonEmptyActions_ShouldNotAppendPublish() {
+  void appendPublishIfPublished_WithUnPublishedProductAndNonEmptyActions_ShouldNotAppendPublish() {
     final ProductCatalogData masterData = mock(ProductCatalogData.class);
     when(masterData.isPublished()).thenReturn(false);
 
@@ -126,7 +121,7 @@ import static org.mockito.Mockito.when;
   }
 
   @Test
-   void appendPublishIfPublished_WithPublishedProductAndOnePublish_ShouldNotAppendPublish() {
+  void appendPublishIfPublished_WithPublishedProductAndOnePublish_ShouldNotAppendPublish() {
     final ProductCatalogData masterData = mock(ProductCatalogData.class);
     when(masterData.isPublished()).thenReturn(true);
 
@@ -144,8 +139,7 @@ import static org.mockito.Mockito.when;
   }
 
   @Test
-   void
-      appendPublishIfPublished_WithUnPublishedProductAndOnePublishAction_ShouldNotAppendPublish() {
+  void appendPublishIfPublished_WithUnPublishedProductAndOnePublishAction_ShouldNotAppendPublish() {
     final ProductCatalogData masterData = mock(ProductCatalogData.class);
     when(masterData.isPublished()).thenReturn(false);
 
@@ -163,8 +157,7 @@ import static org.mockito.Mockito.when;
   }
 
   @Test
-   void
-      appendPublishIfPublished_WithPublishedProductAndOneUnPublishAction_ShouldNotAppendPublish() {
+  void appendPublishIfPublished_WithPublishedProductAndOneUnPublishAction_ShouldNotAppendPublish() {
     final ProductCatalogData masterData = mock(ProductCatalogData.class);
     when(masterData.isPublished()).thenReturn(true);
 

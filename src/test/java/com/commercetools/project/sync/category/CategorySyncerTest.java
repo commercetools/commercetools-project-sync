@@ -1,19 +1,18 @@
 package com.commercetools.project.sync.category;
 
-import com.commercetools.sync.categories.CategorySync;
-import io.sphere.sdk.categories.Category;
-import io.sphere.sdk.categories.CategoryDraft;
-import io.sphere.sdk.client.SphereClient;
-import org.junit.jupiter.api.Test;
-
-import java.util.List;
-
 import static com.commercetools.sync.categories.utils.CategoryReferenceReplacementUtils.buildCategoryQuery;
 import static com.commercetools.sync.categories.utils.CategoryReferenceReplacementUtils.replaceCategoriesReferenceIdsWithKeys;
 import static io.sphere.sdk.json.SphereJsonUtils.readObjectFromResource;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
+
+import com.commercetools.sync.categories.CategorySync;
+import io.sphere.sdk.categories.Category;
+import io.sphere.sdk.categories.CategoryDraft;
+import io.sphere.sdk.client.SphereClient;
+import java.util.List;
+import org.junit.jupiter.api.Test;
 
 class CategorySyncerTest {
   @Test

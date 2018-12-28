@@ -1,5 +1,7 @@
 package com.commercetools.project.sync.util;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import com.commercetools.sync.categories.helpers.CategorySyncStatistics;
 import com.commercetools.sync.commons.helpers.BaseSyncStatistics;
 import com.commercetools.sync.products.helpers.ProductSyncStatistics;
@@ -10,15 +12,13 @@ import uk.org.lidalia.slf4jtest.LoggingEvent;
 import uk.org.lidalia.slf4jtest.TestLogger;
 import uk.org.lidalia.slf4jtest.TestLoggerFactory;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
- class StatisticsUtilsTest {
+class StatisticsUtilsTest {
   private static final TestLogger testLogger =
       TestLoggerFactory.getTestLogger(StatisticsUtils.class);
   private BaseSyncStatistics syncStatistics;
 
   @Test
-   void logStatistics_WithProductSyncStatistics_ShouldLogStatistics()
+  void logStatistics_WithProductSyncStatistics_ShouldLogStatistics()
       throws JsonProcessingException {
     syncStatistics = new ProductSyncStatistics();
     syncStatistics.incrementCreated(10);
@@ -38,7 +38,7 @@ import static org.assertj.core.api.Assertions.assertThat;
   }
 
   @Test
-   void getStatisticsAsJSONString_WithProductSyncStatistics_ShouldBuildJsonString()
+  void getStatisticsAsJSONString_WithProductSyncStatistics_ShouldBuildJsonString()
       throws JsonProcessingException {
     syncStatistics = new ProductSyncStatistics();
     syncStatistics.incrementCreated(10);
@@ -54,7 +54,7 @@ import static org.assertj.core.api.Assertions.assertThat;
   }
 
   @Test
-   void getStatisticsAsJSONString_WithCategorySyncStatistics_ShouldBuildJsonString()
+  void getStatisticsAsJSONString_WithCategorySyncStatistics_ShouldBuildJsonString()
       throws JsonProcessingException {
     syncStatistics = new CategorySyncStatistics();
     syncStatistics.incrementCreated(10);

@@ -1,21 +1,5 @@
 package com.commercetools.project.sync;
 
-import io.sphere.sdk.client.SphereClient;
-import io.sphere.sdk.client.SphereClientConfig;
-import io.sphere.sdk.products.queries.ProductQuery;
-import io.sphere.sdk.queries.PagedQueryResult;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
-import uk.org.lidalia.slf4jtest.TestLogger;
-import uk.org.lidalia.slf4jtest.TestLoggerFactory;
-
-import java.io.ByteArrayOutputStream;
-import java.io.PrintStream;
-import java.io.UnsupportedEncodingException;
-import java.util.concurrent.CompletableFuture;
-
 import static com.commercetools.project.sync.CliRunner.APPLICATION_DEFAULT_NAME;
 import static com.commercetools.project.sync.CliRunner.APPLICATION_DEFAULT_VERSION;
 import static com.commercetools.project.sync.CliRunner.HELP_OPTION_DESCRIPTION;
@@ -37,31 +21,45 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
- class CliRunnerTest {
+import io.sphere.sdk.client.SphereClient;
+import io.sphere.sdk.client.SphereClientConfig;
+import io.sphere.sdk.products.queries.ProductQuery;
+import io.sphere.sdk.queries.PagedQueryResult;
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
+import java.io.UnsupportedEncodingException;
+import java.util.concurrent.CompletableFuture;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import uk.org.lidalia.slf4jtest.TestLogger;
+import uk.org.lidalia.slf4jtest.TestLoggerFactory;
+
+class CliRunnerTest {
   private static final TestLogger testLogger = TestLoggerFactory.getTestLogger(CliRunner.class);
   private static ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
   private static PrintStream originalSystemOut;
 
   @BeforeAll
-   static void setupSuite() throws UnsupportedEncodingException {
+  static void setupSuite() throws UnsupportedEncodingException {
     final PrintStream printStream = new PrintStream(outputStream, false, "UTF-8");
     originalSystemOut = System.out;
     System.setOut(printStream);
   }
 
   @AfterAll
-   static void tearDownSuite() {
+  static void tearDownSuite() {
     System.setOut(originalSystemOut);
   }
 
   @AfterEach
-   void tearDownTest() {
+  void tearDownTest() {
     testLogger.clearAll();
   }
 
   @Test
-   void run_WithEmptyArgumentList_ShouldLogErrorAndPrintHelp()
-      throws UnsupportedEncodingException {
+  void run_WithEmptyArgumentList_ShouldLogErrorAndPrintHelp() throws UnsupportedEncodingException {
     // preparation
     final SyncerFactory syncerFactory =
         SyncerFactory.of(mock(SphereClient.class), mock(SphereClient.class));
@@ -85,7 +83,7 @@ import static org.mockito.Mockito.when;
   }
 
   @Test
-   void run_WithHelpAsLongArgument_ShouldPrintUsageHelpToSystemOut()
+  void run_WithHelpAsLongArgument_ShouldPrintUsageHelpToSystemOut()
       throws UnsupportedEncodingException {
     // preparation
     final SyncerFactory syncerFactory =
@@ -99,7 +97,7 @@ import static org.mockito.Mockito.when;
   }
 
   @Test
-   void run_WithHelpAsShortArgument_ShouldPrintUsageHelpToSystemOut()
+  void run_WithHelpAsShortArgument_ShouldPrintUsageHelpToSystemOut()
       throws UnsupportedEncodingException {
     // preparation
     final SyncerFactory syncerFactory =
@@ -113,7 +111,7 @@ import static org.mockito.Mockito.when;
   }
 
   @Test
-   void run_WithVersionAsShortArgument_ShouldLogApplicationVersionAsInfo()
+  void run_WithVersionAsShortArgument_ShouldLogApplicationVersionAsInfo()
       throws UnsupportedEncodingException {
     // preparation
     final SyncerFactory syncerFactory =
@@ -126,7 +124,7 @@ import static org.mockito.Mockito.when;
   }
 
   @Test
-   void run_WithVersionAsLongArgument_ShouldLogApplicationVersionAsInfo()
+  void run_WithVersionAsLongArgument_ShouldLogApplicationVersionAsInfo()
       throws UnsupportedEncodingException {
     // preparation
     final SyncerFactory syncerFactory =
@@ -139,7 +137,7 @@ import static org.mockito.Mockito.when;
   }
 
   @Test
-   void run_WithSyncAsArgumentWithNoArgs_ShouldLogErrorAndPrintHelpUsageToSystemOut()
+  void run_WithSyncAsArgumentWithNoArgs_ShouldLogErrorAndPrintHelpUsageToSystemOut()
       throws UnsupportedEncodingException {
     // preparation
     final SyncerFactory syncerFactory =
@@ -154,7 +152,7 @@ import static org.mockito.Mockito.when;
   }
 
   @Test
-   void run_WithSyncAsArgumentWithProductsArg_ShouldBuildSyncerAndExecuteSync() {
+  void run_WithSyncAsArgumentWithProductsArg_ShouldBuildSyncerAndExecuteSync() {
     // preparation
     final SphereClient sourceClient = mock(SphereClient.class);
     when(sourceClient.getConfig()).thenReturn(SphereClientConfig.of("foo", "foo", "foo"));
@@ -176,7 +174,7 @@ import static org.mockito.Mockito.when;
   }
 
   @Test
-   void run_WithSyncAsArgumentWithIllegalArgs_ShouldLogErrorAndPrintHelpUsageToSystemOut()
+  void run_WithSyncAsArgumentWithIllegalArgs_ShouldLogErrorAndPrintHelpUsageToSystemOut()
       throws UnsupportedEncodingException {
     // preparation
     final SyncerFactory syncerFactory =
@@ -196,7 +194,7 @@ import static org.mockito.Mockito.when;
   }
 
   @Test
-   void run_WithSyncAsLongArgument_ShouldProcessSyncOption() {
+  void run_WithSyncAsLongArgument_ShouldProcessSyncOption() {
     // preparation
     final SyncerFactory syncerFactory =
         spy(SyncerFactory.of(mock(SphereClient.class), mock(SphereClient.class)));
@@ -207,7 +205,7 @@ import static org.mockito.Mockito.when;
   }
 
   @Test
-   void run_WithSyncAsShortArgument_ShouldProcessSyncOption() {
+  void run_WithSyncAsShortArgument_ShouldProcessSyncOption() {
     // preparation
     final SyncerFactory syncerFactory =
         spy(SyncerFactory.of(mock(SphereClient.class), mock(SphereClient.class)));
@@ -218,7 +216,7 @@ import static org.mockito.Mockito.when;
   }
 
   @Test
-   void run_WithUnknownArgument_ShouldPrintErrorLogAndHelpUsage()
+  void run_WithUnknownArgument_ShouldPrintErrorLogAndHelpUsage()
       throws UnsupportedEncodingException {
     // preparation
     final SyncerFactory syncerFactory =
@@ -232,7 +230,7 @@ import static org.mockito.Mockito.when;
   }
 
   @Test
-   void run_WithHelpAsArgument_ShouldPrintThreeOptionsWithDescriptionsToSystemOut()
+  void run_WithHelpAsArgument_ShouldPrintThreeOptionsWithDescriptionsToSystemOut()
       throws UnsupportedEncodingException {
     // preparation
     final SyncerFactory syncerFactory =
