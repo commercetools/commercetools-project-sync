@@ -1,11 +1,5 @@
 package com.commercetools.project.sync.inventoryentry;
 
-import static com.commercetools.sync.inventories.utils.InventoryReferenceReplacementUtils.replaceInventoriesReferenceIdsWithKeys;
-import static io.sphere.sdk.json.SphereJsonUtils.readObjectFromResource;
-import static java.util.Arrays.asList;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
-
 import com.commercetools.sync.inventories.InventorySync;
 import io.sphere.sdk.client.SphereClient;
 import io.sphere.sdk.expansion.ExpansionPath;
@@ -13,12 +7,19 @@ import io.sphere.sdk.inventory.InventoryEntry;
 import io.sphere.sdk.inventory.InventoryEntryDraft;
 import io.sphere.sdk.inventory.expansion.InventoryEntryExpansionModel;
 import io.sphere.sdk.inventory.queries.InventoryEntryQuery;
-import java.util.List;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class InventoryEntrySyncerTest {
+import java.util.List;
+
+import static com.commercetools.sync.inventories.utils.InventoryReferenceReplacementUtils.replaceInventoriesReferenceIdsWithKeys;
+import static io.sphere.sdk.json.SphereJsonUtils.readObjectFromResource;
+import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+
+class InventoryEntrySyncerTest {
   @Test
-  public void of_ShouldCreateInventoryEntrySyncerInstance() {
+  void of_ShouldCreateInventoryEntrySyncerInstance() {
     // test
     final InventoryEntrySyncer inventorySyncer =
         InventoryEntrySyncer.of(mock(SphereClient.class), mock(SphereClient.class));
@@ -36,7 +37,7 @@ public class InventoryEntrySyncerTest {
   }
 
   @Test
-  public void transformResourcesToDrafts_ShouldReplaceInventoryEntryReferenceIdsWithKeys() {
+  void transformResourcesToDrafts_ShouldReplaceInventoryEntryReferenceIdsWithKeys() {
     // preparation
     final InventoryEntrySyncer inventoryEntrySyncer =
         InventoryEntrySyncer.of(mock(SphereClient.class), mock(SphereClient.class));
