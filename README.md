@@ -16,7 +16,7 @@ Dockerized CLI application which allows to automatically sync different resource
 ## Usage
 ### Prerequisites
  
- - install Java 8
+ - Make sure you have `JDK 8` installed.
  - The following fields are **required** to be set on the following resources (and sub-resources) that should be synced:
     - `Product`
         - `key`
@@ -29,7 +29,7 @@ Dockerized CLI application which allows to automatically sync different resource
     - `Category`
         - `key`         
  
- - set the following environment variables before running the application
+ - Set the following environment variables before running the application
    ```bash
    export SOURCE_PROJECT_KEY = xxxxxxxxxxxxx
    export SOURCE_CLIENT_ID = xxxxxxxxxxxxxxx
