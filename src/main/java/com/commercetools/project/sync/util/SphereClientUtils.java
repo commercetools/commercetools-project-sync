@@ -1,13 +1,12 @@
 package com.commercetools.project.sync.util;
 
+import static java.lang.String.format;
+
 import io.sphere.sdk.client.SphereClient;
 import io.sphere.sdk.client.SphereClientConfig;
-
-import javax.annotation.Nonnull;
 import java.io.InputStream;
 import java.util.Properties;
-
-import static java.lang.String.format;
+import javax.annotation.Nonnull;
 
 public final class SphereClientUtils {
   private static final String CTP_CREDENTIALS_PROPERTIES = "ctp.credentials.properties";
