@@ -93,8 +93,7 @@ class SyncerFactoryTest {
   }
 
   @Test
-  void sync_WithProductsArg_ShouldBuildSyncerAndExecuteSync()
-      throws UnsupportedEncodingException {
+  void sync_WithProductsArg_ShouldBuildSyncerAndExecuteSync() throws UnsupportedEncodingException {
     // preparation
     final SphereClient sourceClient = mock(SphereClient.class);
     when(sourceClient.getConfig()).thenReturn(SphereClientConfig.of("foo", "foo", "foo"));
@@ -174,8 +173,7 @@ class SyncerFactoryTest {
   }
 
   @Test
-  void sync_WithTypesArg_ShouldBuildSyncerAndExecuteSync()
-      throws UnsupportedEncodingException {
+  void sync_WithTypesArg_ShouldBuildSyncerAndExecuteSync() throws UnsupportedEncodingException {
     // preparation
     final SphereClient sourceClient = mock(SphereClient.class);
     when(sourceClient.getConfig()).thenReturn(SphereClientConfig.of("foo", "foo", "foo"));
