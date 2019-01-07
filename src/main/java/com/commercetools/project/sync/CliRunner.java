@@ -1,11 +1,5 @@
 package com.commercetools.project.sync;
 
-import static java.lang.String.format;
-import static org.apache.commons.lang3.StringUtils.isBlank;
-
-import java.util.concurrent.CompletionStage;
-import java.util.function.Supplier;
-import javax.annotation.Nonnull;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
@@ -13,6 +7,15 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+
+import javax.annotation.Nonnull;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
+import java.util.function.Supplier;
+
+import static io.sphere.sdk.utils.CompletableFutureUtils.exceptionallyCompletedFuture;
+import static java.lang.String.format;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 final class CliRunner {
   static final String SYNC_MODULE_OPTION_SHORT = "s";
@@ -49,7 +52,7 @@ final class CliRunner {
     return new CliRunner();
   }
 
-  void run(
+  CompletionStage<Void> run(
       @Nonnull final String[] arguments,
       @Nonnull final Supplier<SyncerFactory> syncerFactorySupplier) {
 
@@ -57,11 +60,15 @@ final class CliRunner {
     final CommandLineParser parser = new DefaultParser();
 
     try {
+
       final CommandLine commandLine = parser.parse(cliOptions, arguments);
-      processCliArguments(commandLine, cliOptions, syncerFactorySupplier);
+      return processCliArguments(commandLine, cliOptions, syncerFactorySupplier);
+
     } catch (final ParseException | IllegalArgumentException exception) {
-      handleIllegalArgumentException(
-          format("Parse error:%n%s", exception.getMessage()), cliOptions);
+
+      handleIllegalArgumentException(format("Parse error:%n%s", exception.getMessage()), cliOptions);
+      return CompletableFuture.completedFuture(null);
+
     }
   }
 
@@ -94,7 +101,7 @@ final class CliRunner {
     return options;
   }
 
-  private static void processCliArguments(
+  private static CompletionStage<Void> processCliArguments(
       @Nonnull final CommandLine commandLine,
       @Nonnull final Options cliOptions,
       @Nonnull final Supplier<SyncerFactory> syncerFactorySupplier) {
@@ -102,26 +109,24 @@ final class CliRunner {
     final Option[] options = commandLine.getOptions();
     if (options.length == 0) {
       handleIllegalArgumentException("Please pass at least 1 option to the CLI.", cliOptions);
+      return CompletableFuture.completedFuture(null);
     } else {
       final Option option = options[0];
       final String optionName = option.getOpt();
       switch (optionName) {
         case SYNC_MODULE_OPTION_SHORT:
-          processSyncOptionAndExecute(commandLine, syncerFactorySupplier.get())
-              .toCompletableFuture()
-              .join();
-          break;
+          return processSyncOptionAndExecute(commandLine, syncerFactorySupplier.get());
         case HELP_OPTION_SHORT:
           printHelpToStdOut(cliOptions);
-          break;
+          return CompletableFuture.completedFuture(null);
         case VERSION_OPTION_SHORT:
           printApplicationVersion();
-          break;
+          return CompletableFuture.completedFuture(null);
         default:
           // Unreachable code since this case is already handled by parser.parse(options,
           // arguments);
           // in the CliRunner#run method.
-          throw new IllegalStateException(format("Unrecognized option: -%s", optionName));
+          return exceptionallyCompletedFuture(new IllegalStateException(format("Unrecognized option: -%s", optionName)));
       }
     }
   }

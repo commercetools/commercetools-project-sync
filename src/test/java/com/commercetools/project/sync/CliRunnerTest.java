@@ -1,5 +1,28 @@
 package com.commercetools.project.sync;
 
+import io.sphere.sdk.categories.queries.CategoryQuery;
+import io.sphere.sdk.client.SphereClient;
+import io.sphere.sdk.client.SphereClientConfig;
+import io.sphere.sdk.inventory.queries.InventoryEntryQuery;
+import io.sphere.sdk.products.queries.ProductQuery;
+import io.sphere.sdk.producttypes.queries.ProductTypeQuery;
+import io.sphere.sdk.queries.PagedQueryResult;
+import io.sphere.sdk.types.queries.TypeQuery;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.mockito.InOrder;
+import org.mockito.Mockito;
+import uk.org.lidalia.slf4jtest.TestLogger;
+import uk.org.lidalia.slf4jtest.TestLoggerFactory;
+
+import javax.annotation.Nonnull;
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
+import java.io.UnsupportedEncodingException;
+import java.util.concurrent.CompletableFuture;
+
 import static com.commercetools.project.sync.CliRunner.APPLICATION_DEFAULT_NAME;
 import static com.commercetools.project.sync.CliRunner.APPLICATION_DEFAULT_VERSION;
 import static com.commercetools.project.sync.CliRunner.HELP_OPTION_DESCRIPTION;
@@ -21,28 +44,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
-
-import io.sphere.sdk.categories.queries.CategoryQuery;
-import io.sphere.sdk.client.SphereClient;
-import io.sphere.sdk.client.SphereClientConfig;
-import io.sphere.sdk.inventory.queries.InventoryEntryQuery;
-import io.sphere.sdk.products.queries.ProductQuery;
-import io.sphere.sdk.producttypes.queries.ProductTypeQuery;
-import io.sphere.sdk.queries.PagedQueryResult;
-import io.sphere.sdk.types.queries.TypeQuery;
-import java.io.ByteArrayOutputStream;
-import java.io.PrintStream;
-import java.io.UnsupportedEncodingException;
-import java.util.concurrent.CompletableFuture;
-import javax.annotation.Nonnull;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
-import org.mockito.InOrder;
-import org.mockito.Mockito;
-import uk.org.lidalia.slf4jtest.TestLogger;
-import uk.org.lidalia.slf4jtest.TestLoggerFactory;
 
 class CliRunnerTest {
   private static final TestLogger testLogger = TestLoggerFactory.getTestLogger(CliRunner.class);
@@ -139,7 +140,7 @@ class CliRunnerTest {
         SyncerFactory.of(mock(SphereClient.class), mock(SphereClient.class));
 
     // test
-    CliRunner.of().run(new String[] {"--version"}, () -> syncerFactory);
+    CliRunner.of().run(new String[] {"--version"}, () -> syncerFactory).toCompletableFuture().join();
 
     assertThat(outputStream.toString("UTF-8")).contains(APPLICATION_DEFAULT_VERSION);
   }
@@ -152,7 +153,7 @@ class CliRunnerTest {
         SyncerFactory.of(mock(SphereClient.class), mock(SphereClient.class));
 
     // test
-    CliRunner.of().run(new String[] {"-s"}, () -> syncerFactory);
+    CliRunner.of().run(new String[] {"-s"}, () -> syncerFactory).toCompletableFuture().join();
 
     assertThat(outputStream.toString("UTF-8"))
         .contains("Parse error:\nMissing argument for option: s");
@@ -174,7 +175,7 @@ class CliRunnerTest {
     final SyncerFactory syncerFactory = spy(SyncerFactory.of(sourceClient, targetClient));
 
     // test
-    CliRunner.of().run(new String[] {"-s", "products"}, () -> syncerFactory);
+    CliRunner.of().run(new String[] {"-s", "products"}, () -> syncerFactory).toCompletableFuture().join();
 
     // assertions
     verify(syncerFactory, times(1)).sync("products");
@@ -190,7 +191,7 @@ class CliRunnerTest {
         spy(SyncerFactory.of(mock(SphereClient.class), mock(SphereClient.class)));
     // test
     final String illegalArg = "illegal";
-    CliRunner.of().run(new String[] {"-s", illegalArg}, () -> syncerFactory);
+    CliRunner.of().run(new String[] {"-s", illegalArg}, () -> syncerFactory).toCompletableFuture().join();
     // Assert error log
     assertThat(outputStream.toString("UTF-8"))
         .contains(
@@ -209,7 +210,7 @@ class CliRunnerTest {
     final SyncerFactory syncerFactory =
         spy(SyncerFactory.of(mock(SphereClient.class), mock(SphereClient.class)));
     // test
-    CliRunner.of().run(new String[] {"-sync", "arg"}, () -> syncerFactory);
+    CliRunner.of().run(new String[] {"-sync", "arg"}, () -> syncerFactory).toCompletableFuture().join();
     // assertions
     verify(syncerFactory, times(1)).sync("arg");
     verify(syncerFactory, never()).syncAll();
@@ -221,7 +222,7 @@ class CliRunnerTest {
     final SyncerFactory syncerFactory =
         spy(SyncerFactory.of(mock(SphereClient.class), mock(SphereClient.class)));
     // test
-    CliRunner.of().run(new String[] {"-s", "arg"}, () -> syncerFactory);
+    CliRunner.of().run(new String[] {"-s", "arg"}, () -> syncerFactory).toCompletableFuture().join();
     // assertions
     verify(syncerFactory, times(1)).sync("arg");
     verify(syncerFactory, never()).syncAll();
@@ -234,7 +235,7 @@ class CliRunnerTest {
     final SyncerFactory syncerFactory =
         spy(SyncerFactory.of(mock(SphereClient.class), mock(SphereClient.class)));
     // test
-    CliRunner.of().run(new String[] {"-u"}, () -> syncerFactory);
+    CliRunner.of().run(new String[] {"-u"}, () -> syncerFactory).toCompletableFuture().join();
     // Assert error log
     assertThat(outputStream.toString("UTF-8")).contains("Parse error:\nUnrecognized option: -u");
     assertOutputStreamContainsHelpUsageWithSpecifiedCliOptions();
@@ -250,7 +251,7 @@ class CliRunnerTest {
         spy(SyncerFactory.of(mock(SphereClient.class), mock(SphereClient.class)));
 
     // test
-    CliRunner.of().run(new String[] {"-h"}, () -> syncerFactory);
+    CliRunner.of().run(new String[] {"-h"}, () -> syncerFactory).toCompletableFuture().join();
 
     // assertions
     assertThat(testLogger.getAllLoggingEvents()).isEmpty();
@@ -277,7 +278,7 @@ class CliRunnerTest {
   }
 
   @Test
-  public void run_WithSyncAsArgumentWithAllArg_ShouldExecuteAllSyncers()
+  void run_WithSyncAsArgumentWithAllArg_ShouldExecuteAllSyncers()
       throws UnsupportedEncodingException {
     // preparation
     final SphereClient sourceClient = mock(SphereClient.class);
@@ -300,7 +301,7 @@ class CliRunnerTest {
     final SyncerFactory syncerFactory = spy(SyncerFactory.of(sourceClient, targetClient));
 
     // test
-    CliRunner.of().run(new String[] {"-s", "all"}, () -> syncerFactory);
+    CliRunner.of().run(new String[] {"-s", "all"}, () -> syncerFactory).toCompletableFuture().join();
 
     // assertions
     verify(syncerFactory, times(1)).syncAll();
@@ -321,7 +322,7 @@ class CliRunnerTest {
   }
 
   @Test
-  public void run_WithSyncAsArgumentWithAllArg_ShouldExecuteAllSyncersInCorrectOrder()
+  void run_WithSyncAsArgumentWithAllArg_ShouldExecuteAllSyncersInCorrectOrder()
       throws UnsupportedEncodingException {
     // preparation
     final SphereClient sourceClient = mock(SphereClient.class);
@@ -344,7 +345,7 @@ class CliRunnerTest {
     final SyncerFactory syncerFactory = spy(SyncerFactory.of(sourceClient, targetClient));
 
     // test
-    CliRunner.of().run(new String[] {"-s", "all"}, () -> syncerFactory);
+    CliRunner.of().run(new String[] {"-s", "all"}, () -> syncerFactory).toCompletableFuture().join();
 
     // assertions
     verify(syncerFactory, times(1)).syncAll();

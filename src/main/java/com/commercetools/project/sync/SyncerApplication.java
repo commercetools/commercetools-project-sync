@@ -11,6 +11,8 @@ public class SyncerApplication {
    * @param args all args
    */
   public static void main(final String[] args) {
-    CliRunner.of().run(args, () -> SyncerFactory.of(CTP_SOURCE_CLIENT, CTP_TARGET_CLIENT));
+    CliRunner.of().run(args, () -> SyncerFactory.of(CTP_SOURCE_CLIENT, CTP_TARGET_CLIENT))
+             .toCompletableFuture()
+             .join();
   }
 }
