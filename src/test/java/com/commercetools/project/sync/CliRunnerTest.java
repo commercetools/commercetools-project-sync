@@ -1,5 +1,28 @@
 package com.commercetools.project.sync;
 
+import io.sphere.sdk.categories.queries.CategoryQuery;
+import io.sphere.sdk.client.SphereClient;
+import io.sphere.sdk.client.SphereClientConfig;
+import io.sphere.sdk.inventory.queries.InventoryEntryQuery;
+import io.sphere.sdk.products.queries.ProductQuery;
+import io.sphere.sdk.producttypes.queries.ProductTypeQuery;
+import io.sphere.sdk.queries.PagedQueryResult;
+import io.sphere.sdk.types.queries.TypeQuery;
+import org.junit.After;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import org.mockito.InOrder;
+import org.mockito.Mockito;
+import uk.org.lidalia.slf4jtest.TestLogger;
+import uk.org.lidalia.slf4jtest.TestLoggerFactory;
+
+import javax.annotation.Nonnull;
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
+import java.io.UnsupportedEncodingException;
+import java.util.concurrent.CompletableFuture;
+
 import static com.commercetools.project.sync.CliRunner.APPLICATION_DEFAULT_NAME;
 import static com.commercetools.project.sync.CliRunner.APPLICATION_DEFAULT_VERSION;
 import static com.commercetools.project.sync.CliRunner.HELP_OPTION_DESCRIPTION;
@@ -19,22 +42,8 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
-
-import io.sphere.sdk.client.SphereClient;
-import io.sphere.sdk.client.SphereClientConfig;
-import io.sphere.sdk.products.queries.ProductQuery;
-import io.sphere.sdk.queries.PagedQueryResult;
-import java.io.ByteArrayOutputStream;
-import java.io.PrintStream;
-import java.io.UnsupportedEncodingException;
-import java.util.concurrent.CompletableFuture;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import uk.org.lidalia.slf4jtest.TestLogger;
-import uk.org.lidalia.slf4jtest.TestLoggerFactory;
 
 public class CliRunnerTest {
   private static final TestLogger testLogger = TestLoggerFactory.getTestLogger(CliRunner.class);
@@ -84,7 +93,7 @@ public class CliRunnerTest {
   }
 
   @Test
-  public void run_WithHelpAsLongArgument_ShouldPrintUsageHelpToSystemOut()
+  public void run_WithHelpAsLongArgument_ShouldPrintUsageHelpToStandardOut()
       throws UnsupportedEncodingException {
     // preparation
     final SyncerFactory syncerFactory =
@@ -98,7 +107,7 @@ public class CliRunnerTest {
   }
 
   @Test
-  public void run_WithHelpAsShortArgument_ShouldPrintUsageHelpToSystemOut()
+  public void run_WithHelpAsShortArgument_ShouldPrintUsageHelpToStandardOut()
       throws UnsupportedEncodingException {
     // preparation
     final SyncerFactory syncerFactory =
@@ -112,7 +121,7 @@ public class CliRunnerTest {
   }
 
   @Test
-  public void run_WithVersionAsShortArgument_ShouldLogApplicationVersionAsInfo()
+  public void run_WithVersionAsShortArgument_ShouldPrintApplicationVersionToStandardOut()
       throws UnsupportedEncodingException {
     // preparation
     final SyncerFactory syncerFactory =
@@ -125,7 +134,7 @@ public class CliRunnerTest {
   }
 
   @Test
-  public void run_WithVersionAsLongArgument_ShouldLogApplicationVersionAsInfo()
+  public void run_WithVersionAsLongArgument_ShouldPrintApplicationVersionToStandardOut()
       throws UnsupportedEncodingException {
     // preparation
     final SyncerFactory syncerFactory =
@@ -170,8 +179,9 @@ public class CliRunnerTest {
     CliRunner.of().run(new String[] {"-s", "products"}, () -> syncerFactory);
 
     // assertions
-    verify(syncerFactory, times(1)).buildSyncer("products");
+    verify(syncerFactory, times(1)).sync("products");
     verify(sourceClient, times(1)).execute(any(ProductQuery.class));
+    verify(syncerFactory, never()).syncAll();
   }
 
   @Test
@@ -191,7 +201,8 @@ public class CliRunnerTest {
                     + " \"--%s\" option!",
                 illegalArg, SYNC_MODULE_OPTION_SHORT, SYNC_MODULE_OPTION_LONG));
     assertOutputStreamContainsHelpUsageWithSpecifiedCliOptions();
-    verify(syncerFactory, times(1)).buildSyncer(illegalArg);
+    verify(syncerFactory, times(1)).sync(illegalArg);
+    verify(syncerFactory, never()).syncAll();
   }
 
   @Test
@@ -202,7 +213,8 @@ public class CliRunnerTest {
     // test
     CliRunner.of().run(new String[] {"-sync", "arg"}, () -> syncerFactory);
     // assertions
-    verify(syncerFactory, times(1)).buildSyncer("arg");
+    verify(syncerFactory, times(1)).sync("arg");
+    verify(syncerFactory, never()).syncAll();
   }
 
   @Test
@@ -213,7 +225,8 @@ public class CliRunnerTest {
     // test
     CliRunner.of().run(new String[] {"-s", "arg"}, () -> syncerFactory);
     // assertions
-    verify(syncerFactory, times(1)).buildSyncer("arg");
+    verify(syncerFactory, times(1)).sync("arg");
+    verify(syncerFactory, never()).syncAll();
   }
 
   @Test
@@ -227,7 +240,8 @@ public class CliRunnerTest {
     // Assert error log
     assertThat(outputStream.toString("UTF-8")).contains("Parse error:\nUnrecognized option: -u");
     assertOutputStreamContainsHelpUsageWithSpecifiedCliOptions();
-    verify(syncerFactory, never()).buildSyncer(any());
+    verify(syncerFactory, never()).sync(any());
+    verify(syncerFactory, never()).syncAll();
   }
 
   @Test
@@ -261,6 +275,107 @@ public class CliRunnerTest {
             format(
                 "-%s,--%s %s",
                 VERSION_OPTION_SHORT, VERSION_OPTION_LONG, VERSION_OPTION_DESCRIPTION));
-    verify(syncerFactory, never()).buildSyncer(any());
+    verify(syncerFactory, never()).sync(any());
+  }
+
+  @Test
+  public void run_WithSyncAsArgumentWithAllArg_ShouldExecuteAllSyncers() throws UnsupportedEncodingException {
+    // preparation
+    final SphereClient sourceClient = mock(SphereClient.class);
+    when(sourceClient.getConfig()).thenReturn(SphereClientConfig.of("foo", "foo", "foo"));
+
+    final SphereClient targetClient = mock(SphereClient.class);
+    when(targetClient.getConfig()).thenReturn(SphereClientConfig.of("bar", "bar", "bar"));
+
+    when(sourceClient.execute(any(ProductTypeQuery.class)))
+        .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
+    when(sourceClient.execute(any(TypeQuery.class)))
+        .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
+    when(sourceClient.execute(any(CategoryQuery.class)))
+        .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
+    when(sourceClient.execute(any(InventoryEntryQuery.class)))
+        .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
+    when(sourceClient.execute(any(ProductQuery.class)))
+        .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
+
+    final SyncerFactory syncerFactory = spy(SyncerFactory.of(sourceClient, targetClient));
+
+    // test
+    CliRunner.of().run(new String[] {"-s", "all"}, () -> syncerFactory);
+
+    // assertions
+    verify(syncerFactory, times(1)).syncAll();
+    verify(sourceClient, times(1)).execute(any(ProductTypeQuery.class));
+    verify(sourceClient, times(1)).execute(any(TypeQuery.class));
+    verify(sourceClient, times(1)).execute(any(CategoryQuery.class));
+    verify(sourceClient, times(1)).execute(any(ProductQuery.class));
+    verify(sourceClient, times(1)).execute(any(InventoryEntryQuery.class));
+
+    verifyInteractionsWithClientAfterSync(sourceClient, 5);
+    assertThat(outputStream.toString("UTF-8")).contains(
+        "Syncing ProductTypes from CTP project with key 'foo' to project with key 'bar' is done.",
+        "Syncing Types from CTP project with key 'foo' to project with key 'bar' is done.",
+        "Syncing Categories from CTP project with key 'foo' to project with key 'bar' is done.",
+        "Syncing Products from CTP project with key 'foo' to project with key 'bar' is done.",
+        "Syncing Inventories from CTP project with key 'foo' to project with key 'bar' is done."
+    );
+  }
+
+  @Test
+  public void run_WithSyncAsArgumentWithAllArg_ShouldExecuteAllSyncersInCorrectOrder() throws UnsupportedEncodingException {
+    // preparation
+    final SphereClient sourceClient = mock(SphereClient.class);
+    when(sourceClient.getConfig()).thenReturn(SphereClientConfig.of("foo", "foo", "foo"));
+
+    final SphereClient targetClient = mock(SphereClient.class);
+    when(targetClient.getConfig()).thenReturn(SphereClientConfig.of("bar", "bar", "bar"));
+
+    when(sourceClient.execute(any(ProductTypeQuery.class)))
+        .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
+    when(sourceClient.execute(any(TypeQuery.class)))
+        .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
+    when(sourceClient.execute(any(CategoryQuery.class)))
+        .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
+    when(sourceClient.execute(any(InventoryEntryQuery.class)))
+        .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
+    when(sourceClient.execute(any(ProductQuery.class)))
+        .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
+
+    final SyncerFactory syncerFactory = spy(SyncerFactory.of(sourceClient, targetClient));
+
+    // test
+    CliRunner.of().run(new String[] {"-s", "all"}, () -> syncerFactory);
+
+    // assertions
+    verify(syncerFactory, times(1)).syncAll();
+
+
+    final InOrder inOrder = Mockito.inOrder(sourceClient);
+
+    inOrder.verify(sourceClient).execute(any(ProductTypeQuery.class));
+    inOrder.verify(sourceClient).execute(any(TypeQuery.class));
+    inOrder.verify(sourceClient).execute(any(CategoryQuery.class));
+    inOrder.verify(sourceClient).execute(any(ProductQuery.class));
+    inOrder.verify(sourceClient).execute(any(InventoryEntryQuery.class));
+
+    final String outputStringWithoutLineBreaks = outputStream.toString("UTF-8").replace("\n", "");
+    verifyInteractionsWithClientAfterSync(sourceClient, 5);
+    assertThat(outputStringWithoutLineBreaks).containsSequence(
+        "Syncing ProductTypes from CTP project with key 'foo' to project with key 'bar' is done.",
+        "Syncing Types from CTP project with key 'foo' to project with key 'bar' is done.",
+        "Syncing Categories from CTP project with key 'foo' to project with key 'bar' is done.",
+        "Syncing Products from CTP project with key 'foo' to project with key 'bar' is done.",
+        "Syncing Inventories from CTP project with key 'foo' to project with key 'bar' is done."
+    );
+  }
+
+  private void verifyInteractionsWithClientAfterSync(@Nonnull final SphereClient client,
+                                                     final int expectedNumberOfGetConfigCalls) {
+
+    // Verify config is accessed for the success message after sync:
+    // " example: Syncing products from CTP project with key 'x' to project with key 'y' is done","
+    verify(client, times(expectedNumberOfGetConfigCalls)).getConfig();
+    verify(client, times(1)).close();
+    verifyNoMoreInteractions(client);
   }
 }
