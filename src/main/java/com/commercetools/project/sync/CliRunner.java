@@ -1,25 +1,5 @@
 package com.commercetools.project.sync;
 
-import static java.lang.String.format;
-import static java.util.Arrays.asList;
-import static org.apache.commons.lang3.StringUtils.isBlank;
-
-import com.commercetools.project.sync.category.CategorySyncer;
-import com.commercetools.project.sync.inventoryentry.InventoryEntrySyncer;
-import com.commercetools.project.sync.product.ProductSyncer;
-import com.commercetools.project.sync.producttype.ProductTypeSyncer;
-import com.commercetools.project.sync.type.TypeSyncer;
-import com.commercetools.sync.commons.BaseSync;
-import com.commercetools.sync.commons.BaseSyncOptions;
-import com.commercetools.sync.commons.helpers.BaseSyncStatistics;
-import io.sphere.sdk.client.SphereClient;
-import io.sphere.sdk.models.Resource;
-import io.sphere.sdk.queries.QueryDsl;
-import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
-import java.util.function.Supplier;
-import javax.annotation.Nonnull;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
@@ -27,8 +7,13 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import javax.annotation.Nonnull;
+import java.util.concurrent.CompletionStage;
+import java.util.function.Supplier;
+
+import static java.lang.String.format;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 final class CliRunner {
   static final String SYNC_MODULE_OPTION_SHORT = "s";
@@ -60,8 +45,6 @@ final class CliRunner {
 
   static final String APPLICATION_DEFAULT_NAME = "commercetools-project-sync";
   static final String APPLICATION_DEFAULT_VERSION = "development-SNAPSHOT";
-
-  private static final Logger LOGGER = LoggerFactory.getLogger(CliRunner.class);
 
   public static CliRunner of() {
     return new CliRunner();
@@ -156,44 +139,9 @@ final class CliRunner {
       @Nonnull final CommandLine commandLine, @Nonnull final SyncerFactory syncerFactory) {
 
     final String syncOptionValue = commandLine.getOptionValue(SYNC_MODULE_OPTION_SHORT);
-    CompletionStage<Void> result;
 
-    if (SYNC_MODULE_OPTION_ALL.equals(syncOptionValue)) {
-      final SphereClient targetClient = syncerFactory.getTargetClient();
-      final SphereClient sourceClient = syncerFactory.getSourceClient();
-
-      final List<CompletableFuture<Void>> typeAndProductTypeSync =
-          asList(
-              ProductTypeSyncer.of(sourceClient, targetClient).sync().toCompletableFuture(),
-              TypeSyncer.of(sourceClient, targetClient).sync().toCompletableFuture());
-
-      result =
-          CompletableFuture.allOf(typeAndProductTypeSync.toArray(new CompletableFuture[0]))
-              .thenCompose(ignored -> CategorySyncer.of(sourceClient, targetClient).sync())
-              .thenCompose(ignored -> ProductSyncer.of(sourceClient, targetClient).sync())
-              .thenCompose(ignored -> InventoryEntrySyncer.of(sourceClient, targetClient).sync());
-    } else {
-      final Syncer<
-              ? extends Resource,
-              ?,
-              ? extends BaseSyncStatistics,
-              ? extends BaseSyncOptions<?, ?>,
-              ? extends QueryDsl<?, ?>,
-              ? extends BaseSync<?, ?, ?>>
-          syncer = syncerFactory.buildSyncer(syncOptionValue);
-      result = syncer.sync();
-    }
-
-    return result.whenComplete(
-        (syncResult, throwable) -> {
-          if (throwable != null) {
-            final String errorMessage = "Failed to execute sync process";
-            System.out.println(errorMessage); // NOPMD
-            LOGGER.error(errorMessage, throwable);
-          }
-          syncerFactory.getSourceClient().close();
-          syncerFactory.getTargetClient().close();
-        });
+    return SYNC_MODULE_OPTION_ALL.equals(syncOptionValue) ?
+        syncerFactory.syncAll() : syncerFactory.sync(syncOptionValue);
   }
 
   private static void printHelpToStdOut(@Nonnull final Options cliOptions) {
