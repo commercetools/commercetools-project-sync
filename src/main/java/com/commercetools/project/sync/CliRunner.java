@@ -4,6 +4,7 @@ import static io.sphere.sdk.utils.CompletableFutureUtils.exceptionallyCompletedF
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.function.Supplier;
@@ -51,6 +52,8 @@ final class CliRunner {
     return new CliRunner();
   }
 
+  @SuppressFBWarnings(
+      "NP_NONNULL_PARAM_VIOLATION") // https://github.com/findbugsproject/findbugs/issues/79
   CompletionStage<Void> run(
       @Nonnull final String[] arguments,
       @Nonnull final Supplier<SyncerFactory> syncerFactorySupplier) {
@@ -100,6 +103,8 @@ final class CliRunner {
     return options;
   }
 
+  @SuppressFBWarnings(
+      "NP_NONNULL_PARAM_VIOLATION") // https://github.com/findbugsproject/findbugs/issues/79
   private static CompletionStage<Void> processCliArguments(
       @Nonnull final CommandLine commandLine,
       @Nonnull final Options cliOptions,

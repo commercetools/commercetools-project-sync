@@ -19,6 +19,7 @@ dependencies {
     implementation "commons-cli:commons-cli:${apacheCliVersion}"
     implementation "org.slf4j:slf4j-api:${slf4jVersion}"
     implementation "org.slf4j:slf4j-simple:${slf4jVersion}"
+    implementation "com.google.code.findbugs:annotations:${findbugsVersion}"
     testImplementation "uk.org.lidalia:slf4j-test:${slf4jTestVersion}"
     testImplementation "org.mockito:mockito-core:${mockitoVersion}"
     testImplementation "org.junit.jupiter:junit-jupiter-api:${jupiterApiVersion}"
