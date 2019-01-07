@@ -1,17 +1,18 @@
 package com.commercetools.project.sync.util;
 
-import static java.lang.String.format;
-
 import io.sphere.sdk.client.SphereClient;
 import io.sphere.sdk.client.SphereClientConfig;
+
+import javax.annotation.Nonnull;
 import java.io.InputStream;
 import java.util.Properties;
-import javax.annotation.Nonnull;
+
+import static java.lang.String.format;
 
 public final class SphereClientUtils {
   private static final String CTP_CREDENTIALS_PROPERTIES = "ctp.credentials.properties";
-  private static final SphereClientConfig CTP_SOURCE_CLIENT_CONFIG = getCtpSourceClientConfig();
-  private static final SphereClientConfig CTP_TARGET_CLIENT_CONFIG = getCtpTargetClientConfig();
+  public static final SphereClientConfig CTP_SOURCE_CLIENT_CONFIG = getCtpSourceClientConfig();
+  public static final SphereClientConfig CTP_TARGET_CLIENT_CONFIG = getCtpTargetClientConfig();
   public static final SphereClient CTP_SOURCE_CLIENT =
       ClientConfigurationUtils.createClient(CTP_SOURCE_CLIENT_CONFIG);
   public static final SphereClient CTP_TARGET_CLIENT =
