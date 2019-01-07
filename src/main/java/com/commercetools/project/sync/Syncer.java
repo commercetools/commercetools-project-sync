@@ -1,9 +1,6 @@
 package com.commercetools.project.sync;
 
-import static com.commercetools.project.sync.util.StatisticsUtils.logStatistics;
-import static com.commercetools.sync.commons.utils.CtpQueryUtils.queryAll;
-import static java.lang.String.format;
-
+import com.commercetools.sync.categories.CategorySync;
 import com.commercetools.sync.commons.BaseSync;
 import com.commercetools.sync.commons.BaseSyncOptions;
 import com.commercetools.sync.commons.helpers.BaseSyncStatistics;
@@ -11,12 +8,17 @@ import com.commercetools.sync.inventories.InventorySync;
 import io.sphere.sdk.client.SphereClient;
 import io.sphere.sdk.models.Resource;
 import io.sphere.sdk.queries.QueryDsl;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.annotation.Nonnull;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
-import javax.annotation.Nonnull;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import static com.commercetools.project.sync.util.StatisticsUtils.logStatistics;
+import static com.commercetools.sync.commons.utils.CtpQueryUtils.queryAll;
+import static java.lang.String.format;
 
 /**
  * Base class of the syncer that handles syncing a resource from a source CTP project to a target
@@ -97,8 +99,11 @@ public abstract class Syncer<
   private String getResourceName() {
 
     if (sync instanceof InventorySync) {
-      // special case, to avoid returning "Inventorys"
       return "Inventories";
+    }
+
+    if (sync instanceof CategorySync) {
+      return "Categories";
     }
 
     final String syncClassName = sync.getClass().getSimpleName();
