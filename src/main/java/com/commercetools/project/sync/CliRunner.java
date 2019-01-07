@@ -1,5 +1,11 @@
 package com.commercetools.project.sync;
 
+import static java.lang.String.format;
+import static org.apache.commons.lang3.StringUtils.isBlank;
+
+import java.util.concurrent.CompletionStage;
+import java.util.function.Supplier;
+import javax.annotation.Nonnull;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
@@ -7,13 +13,6 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-
-import javax.annotation.Nonnull;
-import java.util.concurrent.CompletionStage;
-import java.util.function.Supplier;
-
-import static java.lang.String.format;
-import static org.apache.commons.lang3.StringUtils.isBlank;
 
 final class CliRunner {
   static final String SYNC_MODULE_OPTION_SHORT = "s";
@@ -140,8 +139,9 @@ final class CliRunner {
 
     final String syncOptionValue = commandLine.getOptionValue(SYNC_MODULE_OPTION_SHORT);
 
-    return SYNC_MODULE_OPTION_ALL.equals(syncOptionValue) ?
-        syncerFactory.syncAll() : syncerFactory.sync(syncOptionValue);
+    return SYNC_MODULE_OPTION_ALL.equals(syncOptionValue)
+        ? syncerFactory.syncAll()
+        : syncerFactory.sync(syncOptionValue);
   }
 
   private static void printHelpToStdOut(@Nonnull final Options cliOptions) {

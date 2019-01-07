@@ -1,5 +1,16 @@
 package com.commercetools.project.sync;
 
+import static com.commercetools.project.sync.SyncerFactory.AVAILABLE_OPTIONS;
+import static java.lang.String.format;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
+
 import com.google.common.base.Optional;
 import io.sphere.sdk.categories.queries.CategoryQuery;
 import io.sphere.sdk.client.BadGatewayException;
@@ -11,30 +22,18 @@ import io.sphere.sdk.producttypes.queries.ProductTypeQuery;
 import io.sphere.sdk.queries.PagedQueryResult;
 import io.sphere.sdk.types.queries.TypeQuery;
 import io.sphere.sdk.utils.CompletableFutureUtils;
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
+import java.io.UnsupportedEncodingException;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
+import javax.annotation.Nonnull;
 import org.junit.After;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import uk.org.lidalia.slf4jext.Level;
 import uk.org.lidalia.slf4jtest.TestLogger;
 import uk.org.lidalia.slf4jtest.TestLoggerFactory;
-
-import javax.annotation.Nonnull;
-import java.io.ByteArrayOutputStream;
-import java.io.PrintStream;
-import java.io.UnsupportedEncodingException;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionException;
-
-import static com.commercetools.project.sync.SyncerFactory.AVAILABLE_OPTIONS;
-import static java.lang.String.format;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.when;
 
 public class SyncerFactoryTest {
   private static final TestLogger testLogger = TestLoggerFactory.getTestLogger(CliRunner.class);
@@ -56,9 +55,7 @@ public class SyncerFactoryTest {
   @Test
   public void sync_WithNullOptionValue_ShouldThrowIllegalArgumentException() {
     assertThatThrownBy(
-            () ->
-                SyncerFactory.of(mock(SphereClient.class), mock(SphereClient.class))
-                    .sync(null))
+            () -> SyncerFactory.of(mock(SphereClient.class), mock(SphereClient.class)).sync(null))
         .isExactlyInstanceOf(IllegalArgumentException.class)
         .hasMessageContaining(
             format(
@@ -68,9 +65,7 @@ public class SyncerFactoryTest {
   @Test
   public void sync_WithEmptyOptionValue_ShouldThrowIllegalArgumentException() {
     assertThatThrownBy(
-            () ->
-                SyncerFactory.of(mock(SphereClient.class), mock(SphereClient.class))
-                    .sync(null))
+            () -> SyncerFactory.of(mock(SphereClient.class), mock(SphereClient.class)).sync(null))
         .isExactlyInstanceOf(IllegalArgumentException.class)
         .hasMessageContaining(
             format(
@@ -92,7 +87,8 @@ public class SyncerFactoryTest {
   }
 
   @Test
-  public void sync_WithProductsArg_ShouldBuildSyncerAndExecuteSync() throws UnsupportedEncodingException {
+  public void sync_WithProductsArg_ShouldBuildSyncerAndExecuteSync()
+      throws UnsupportedEncodingException {
     // preparation
     final SphereClient sourceClient = mock(SphereClient.class);
     when(sourceClient.getConfig()).thenReturn(SphereClientConfig.of("foo", "foo", "foo"));
@@ -111,12 +107,15 @@ public class SyncerFactoryTest {
     // assertions
     verify(sourceClient, times(1)).execute(any(ProductQuery.class));
     verifyInteractionsWithClientAfterSync(sourceClient, 1);
-    assertThat(outputStream.toString("UTF-8")).contains("Syncing Products from CTP project with key"
-        + " 'foo' to project with key 'bar' is done.");
+    assertThat(outputStream.toString("UTF-8"))
+        .contains(
+            "Syncing Products from CTP project with key"
+                + " 'foo' to project with key 'bar' is done.");
   }
 
   @Test
-  public void sync_WithCategoriesArg_ShouldBuildSyncerAndExecuteSync() throws UnsupportedEncodingException {
+  public void sync_WithCategoriesArg_ShouldBuildSyncerAndExecuteSync()
+      throws UnsupportedEncodingException {
     // preparation
     final SphereClient sourceClient = mock(SphereClient.class);
     when(sourceClient.getConfig()).thenReturn(SphereClientConfig.of("foo", "foo", "foo"));
@@ -135,12 +134,15 @@ public class SyncerFactoryTest {
     // assertions
     verify(sourceClient, times(1)).execute(any(CategoryQuery.class));
     verifyInteractionsWithClientAfterSync(sourceClient, 1);
-    assertThat(outputStream.toString("UTF-8")).contains("Syncing Categories from CTP project with key"
-        + " 'foo' to project with key 'bar' is done.");
+    assertThat(outputStream.toString("UTF-8"))
+        .contains(
+            "Syncing Categories from CTP project with key"
+                + " 'foo' to project with key 'bar' is done.");
   }
 
   @Test
-  public void sync_WithProductTypesArg_ShouldBuildSyncerAndExecuteSync() throws UnsupportedEncodingException {
+  public void sync_WithProductTypesArg_ShouldBuildSyncerAndExecuteSync()
+      throws UnsupportedEncodingException {
     // preparation
     final SphereClient sourceClient = mock(SphereClient.class);
     when(sourceClient.getConfig()).thenReturn(SphereClientConfig.of("foo", "foo", "foo"));
@@ -159,12 +161,15 @@ public class SyncerFactoryTest {
     // assertions
     verify(sourceClient, times(1)).execute(any(ProductTypeQuery.class));
     verifyInteractionsWithClientAfterSync(sourceClient, 1);
-    assertThat(outputStream.toString("UTF-8")).contains("Syncing ProductTypes from CTP project with key"
-        + " 'foo' to project with key 'bar' is done.");
+    assertThat(outputStream.toString("UTF-8"))
+        .contains(
+            "Syncing ProductTypes from CTP project with key"
+                + " 'foo' to project with key 'bar' is done.");
   }
 
   @Test
-  public void sync_WithTypesArg_ShouldBuildSyncerAndExecuteSync() throws UnsupportedEncodingException {
+  public void sync_WithTypesArg_ShouldBuildSyncerAndExecuteSync()
+      throws UnsupportedEncodingException {
     // preparation
     final SphereClient sourceClient = mock(SphereClient.class);
     when(sourceClient.getConfig()).thenReturn(SphereClientConfig.of("foo", "foo", "foo"));
@@ -183,12 +188,15 @@ public class SyncerFactoryTest {
     // assertions
     verify(sourceClient, times(1)).execute(any(TypeQuery.class));
     verifyInteractionsWithClientAfterSync(sourceClient, 1);
-    assertThat(outputStream.toString("UTF-8")).contains("Syncing Types from CTP project with key"
-        + " 'foo' to project with key 'bar' is done.");
+    assertThat(outputStream.toString("UTF-8"))
+        .contains(
+            "Syncing Types from CTP project with key"
+                + " 'foo' to project with key 'bar' is done.");
   }
 
   @Test
-  public void sync_WithInventoryEntriesArg_ShouldBuildSyncerAndExecuteSync() throws UnsupportedEncodingException {
+  public void sync_WithInventoryEntriesArg_ShouldBuildSyncerAndExecuteSync()
+      throws UnsupportedEncodingException {
     // preparation
     final SphereClient sourceClient = mock(SphereClient.class);
     when(sourceClient.getConfig()).thenReturn(SphereClientConfig.of("foo", "foo", "foo"));
@@ -207,12 +215,15 @@ public class SyncerFactoryTest {
     // assertions
     verify(sourceClient, times(1)).execute(any(InventoryEntryQuery.class));
     verifyInteractionsWithClientAfterSync(sourceClient, 1);
-    assertThat(outputStream.toString("UTF-8")).contains("Syncing Inventories from CTP project with key"
-        + " 'foo' to project with key 'bar' is done.");
+    assertThat(outputStream.toString("UTF-8"))
+        .contains(
+            "Syncing Inventories from CTP project with key"
+                + " 'foo' to project with key 'bar' is done.");
   }
 
   @Test
-  public void sync_WithErrorOnFetch_ShouldLogAndPrintErrorAndCloseClient() throws UnsupportedEncodingException {
+  public void sync_WithErrorOnFetch_ShouldLogAndPrintErrorAndCloseClient()
+      throws UnsupportedEncodingException {
     // preparation
     final SphereClient sourceClient = mock(SphereClient.class);
     when(sourceClient.getConfig()).thenReturn(SphereClientConfig.of("foo", "foo", "foo"));
@@ -281,17 +292,17 @@ public class SyncerFactoryTest {
     verify(sourceClient, times(1)).execute(any(InventoryEntryQuery.class));
     verifyInteractionsWithClientAfterSync(sourceClient, 5);
     final String outputStringWithoutLineBreaks = outputStream.toString("UTF-8").replace("\n", "");
-    assertThat(outputStringWithoutLineBreaks).containsSequence(
-        "Syncing ProductTypes from CTP project with key 'foo' to project with key 'bar' is done.",
-        "Syncing Types from CTP project with key 'foo' to project with key 'bar' is done.",
-        "Syncing Categories from CTP project with key 'foo' to project with key 'bar' is done.",
-        "Syncing Products from CTP project with key 'foo' to project with key 'bar' is done.",
-        "Syncing Inventories from CTP project with key 'foo' to project with key 'bar' is done."
-        );
+    assertThat(outputStringWithoutLineBreaks)
+        .containsSequence(
+            "Syncing ProductTypes from CTP project with key 'foo' to project with key 'bar' is done.",
+            "Syncing Types from CTP project with key 'foo' to project with key 'bar' is done.",
+            "Syncing Categories from CTP project with key 'foo' to project with key 'bar' is done.",
+            "Syncing Products from CTP project with key 'foo' to project with key 'bar' is done.",
+            "Syncing Inventories from CTP project with key 'foo' to project with key 'bar' is done.");
   }
 
-  private void verifyInteractionsWithClientAfterSync(@Nonnull final SphereClient client,
-                                                     final int expectedNumberOfGetConfigCalls) {
+  private void verifyInteractionsWithClientAfterSync(
+      @Nonnull final SphereClient client, final int expectedNumberOfGetConfigCalls) {
 
     // Verify config is accessed for the success message after sync:
     // " example: Syncing products from CTP project with key 'x' to project with key 'y' is done","

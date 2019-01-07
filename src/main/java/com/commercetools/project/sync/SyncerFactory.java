@@ -1,5 +1,16 @@
 package com.commercetools.project.sync;
 
+import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_CATEGORY_SYNC;
+import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_INVENTORY_ENTRY_SYNC;
+import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_LONG;
+import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_PRODUCT_SYNC;
+import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_PRODUCT_TYPE_SYNC;
+import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_SHORT;
+import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_TYPE_SYNC;
+import static java.lang.String.format;
+import static java.util.Arrays.asList;
+import static org.apache.commons.lang3.StringUtils.isBlank;
+
 import com.commercetools.project.sync.category.CategorySyncer;
 import com.commercetools.project.sync.inventoryentry.InventoryEntrySyncer;
 import com.commercetools.project.sync.product.ProductSyncer;
@@ -11,25 +22,13 @@ import com.commercetools.sync.commons.helpers.BaseSyncStatistics;
 import io.sphere.sdk.client.SphereClient;
 import io.sphere.sdk.models.Resource;
 import io.sphere.sdk.queries.QueryDsl;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
-
-import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_CATEGORY_SYNC;
-import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_INVENTORY_ENTRY_SYNC;
-import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_LONG;
-import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_PRODUCT_SYNC;
-import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_PRODUCT_TYPE_SYNC;
-import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_SHORT;
-import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_TYPE_SYNC;
-import static java.lang.String.format;
-import static java.util.Arrays.asList;
-import static org.apache.commons.lang3.StringUtils.isBlank;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 final class SyncerFactory {
 
@@ -68,10 +67,10 @@ final class SyncerFactory {
             TypeSyncer.of(sourceClient, targetClient).sync().toCompletableFuture());
 
     return CompletableFuture.allOf(typeAndProductTypeSync.toArray(new CompletableFuture[0]))
-                            .thenCompose(ignored -> CategorySyncer.of(sourceClient, targetClient).sync())
-                            .thenCompose(ignored -> ProductSyncer.of(sourceClient, targetClient).sync())
-                            .thenCompose(ignored -> InventoryEntrySyncer.of(sourceClient, targetClient).sync())
-                            .whenComplete((syncResult, throwable) -> handleSyncCompletion(throwable));
+        .thenCompose(ignored -> CategorySyncer.of(sourceClient, targetClient).sync())
+        .thenCompose(ignored -> ProductSyncer.of(sourceClient, targetClient).sync())
+        .thenCompose(ignored -> InventoryEntrySyncer.of(sourceClient, targetClient).sync())
+        .whenComplete((syncResult, throwable) -> handleSyncCompletion(throwable));
   }
 
   private void handleSyncCompletion(@Nullable final Throwable throwable) {

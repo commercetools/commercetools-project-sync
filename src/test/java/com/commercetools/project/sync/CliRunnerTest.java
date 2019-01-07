@@ -1,28 +1,5 @@
 package com.commercetools.project.sync;
 
-import io.sphere.sdk.categories.queries.CategoryQuery;
-import io.sphere.sdk.client.SphereClient;
-import io.sphere.sdk.client.SphereClientConfig;
-import io.sphere.sdk.inventory.queries.InventoryEntryQuery;
-import io.sphere.sdk.products.queries.ProductQuery;
-import io.sphere.sdk.producttypes.queries.ProductTypeQuery;
-import io.sphere.sdk.queries.PagedQueryResult;
-import io.sphere.sdk.types.queries.TypeQuery;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.mockito.InOrder;
-import org.mockito.Mockito;
-import uk.org.lidalia.slf4jtest.TestLogger;
-import uk.org.lidalia.slf4jtest.TestLoggerFactory;
-
-import javax.annotation.Nonnull;
-import java.io.ByteArrayOutputStream;
-import java.io.PrintStream;
-import java.io.UnsupportedEncodingException;
-import java.util.concurrent.CompletableFuture;
-
 import static com.commercetools.project.sync.CliRunner.APPLICATION_DEFAULT_NAME;
 import static com.commercetools.project.sync.CliRunner.APPLICATION_DEFAULT_VERSION;
 import static com.commercetools.project.sync.CliRunner.HELP_OPTION_DESCRIPTION;
@@ -44,6 +21,28 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
+
+import io.sphere.sdk.categories.queries.CategoryQuery;
+import io.sphere.sdk.client.SphereClient;
+import io.sphere.sdk.client.SphereClientConfig;
+import io.sphere.sdk.inventory.queries.InventoryEntryQuery;
+import io.sphere.sdk.products.queries.ProductQuery;
+import io.sphere.sdk.producttypes.queries.ProductTypeQuery;
+import io.sphere.sdk.queries.PagedQueryResult;
+import io.sphere.sdk.types.queries.TypeQuery;
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
+import java.io.UnsupportedEncodingException;
+import java.util.concurrent.CompletableFuture;
+import javax.annotation.Nonnull;
+import org.junit.After;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import org.mockito.InOrder;
+import org.mockito.Mockito;
+import uk.org.lidalia.slf4jtest.TestLogger;
+import uk.org.lidalia.slf4jtest.TestLoggerFactory;
 
 public class CliRunnerTest {
   private static final TestLogger testLogger = TestLoggerFactory.getTestLogger(CliRunner.class);
@@ -279,7 +278,8 @@ public class CliRunnerTest {
   }
 
   @Test
-  public void run_WithSyncAsArgumentWithAllArg_ShouldExecuteAllSyncers() throws UnsupportedEncodingException {
+  public void run_WithSyncAsArgumentWithAllArg_ShouldExecuteAllSyncers()
+      throws UnsupportedEncodingException {
     // preparation
     final SphereClient sourceClient = mock(SphereClient.class);
     when(sourceClient.getConfig()).thenReturn(SphereClientConfig.of("foo", "foo", "foo"));
@@ -312,17 +312,18 @@ public class CliRunnerTest {
     verify(sourceClient, times(1)).execute(any(InventoryEntryQuery.class));
 
     verifyInteractionsWithClientAfterSync(sourceClient, 5);
-    assertThat(outputStream.toString("UTF-8")).contains(
-        "Syncing ProductTypes from CTP project with key 'foo' to project with key 'bar' is done.",
-        "Syncing Types from CTP project with key 'foo' to project with key 'bar' is done.",
-        "Syncing Categories from CTP project with key 'foo' to project with key 'bar' is done.",
-        "Syncing Products from CTP project with key 'foo' to project with key 'bar' is done.",
-        "Syncing Inventories from CTP project with key 'foo' to project with key 'bar' is done."
-    );
+    assertThat(outputStream.toString("UTF-8"))
+        .contains(
+            "Syncing ProductTypes from CTP project with key 'foo' to project with key 'bar' is done.",
+            "Syncing Types from CTP project with key 'foo' to project with key 'bar' is done.",
+            "Syncing Categories from CTP project with key 'foo' to project with key 'bar' is done.",
+            "Syncing Products from CTP project with key 'foo' to project with key 'bar' is done.",
+            "Syncing Inventories from CTP project with key 'foo' to project with key 'bar' is done.");
   }
 
   @Test
-  public void run_WithSyncAsArgumentWithAllArg_ShouldExecuteAllSyncersInCorrectOrder() throws UnsupportedEncodingException {
+  public void run_WithSyncAsArgumentWithAllArg_ShouldExecuteAllSyncersInCorrectOrder()
+      throws UnsupportedEncodingException {
     // preparation
     final SphereClient sourceClient = mock(SphereClient.class);
     when(sourceClient.getConfig()).thenReturn(SphereClientConfig.of("foo", "foo", "foo"));
@@ -349,7 +350,6 @@ public class CliRunnerTest {
     // assertions
     verify(syncerFactory, times(1)).syncAll();
 
-
     final InOrder inOrder = Mockito.inOrder(sourceClient);
 
     inOrder.verify(sourceClient).execute(any(ProductTypeQuery.class));
@@ -360,17 +360,17 @@ public class CliRunnerTest {
 
     final String outputStringWithoutLineBreaks = outputStream.toString("UTF-8").replace("\n", "");
     verifyInteractionsWithClientAfterSync(sourceClient, 5);
-    assertThat(outputStringWithoutLineBreaks).containsSequence(
-        "Syncing ProductTypes from CTP project with key 'foo' to project with key 'bar' is done.",
-        "Syncing Types from CTP project with key 'foo' to project with key 'bar' is done.",
-        "Syncing Categories from CTP project with key 'foo' to project with key 'bar' is done.",
-        "Syncing Products from CTP project with key 'foo' to project with key 'bar' is done.",
-        "Syncing Inventories from CTP project with key 'foo' to project with key 'bar' is done."
-    );
+    assertThat(outputStringWithoutLineBreaks)
+        .containsSequence(
+            "Syncing ProductTypes from CTP project with key 'foo' to project with key 'bar' is done.",
+            "Syncing Types from CTP project with key 'foo' to project with key 'bar' is done.",
+            "Syncing Categories from CTP project with key 'foo' to project with key 'bar' is done.",
+            "Syncing Products from CTP project with key 'foo' to project with key 'bar' is done.",
+            "Syncing Inventories from CTP project with key 'foo' to project with key 'bar' is done.");
   }
 
-  private void verifyInteractionsWithClientAfterSync(@Nonnull final SphereClient client,
-                                                     final int expectedNumberOfGetConfigCalls) {
+  private void verifyInteractionsWithClientAfterSync(
+      @Nonnull final SphereClient client, final int expectedNumberOfGetConfigCalls) {
 
     // Verify config is accessed for the success message after sync:
     // " example: Syncing products from CTP project with key 'x' to project with key 'y' is done","
