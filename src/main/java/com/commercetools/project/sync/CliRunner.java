@@ -1,5 +1,13 @@
 package com.commercetools.project.sync;
 
+import static io.sphere.sdk.utils.CompletableFutureUtils.exceptionallyCompletedFuture;
+import static java.lang.String.format;
+import static org.apache.commons.lang3.StringUtils.isBlank;
+
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
+import java.util.function.Supplier;
+import javax.annotation.Nonnull;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
@@ -7,15 +15,6 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-
-import javax.annotation.Nonnull;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
-import java.util.function.Supplier;
-
-import static io.sphere.sdk.utils.CompletableFutureUtils.exceptionallyCompletedFuture;
-import static java.lang.String.format;
-import static org.apache.commons.lang3.StringUtils.isBlank;
 
 final class CliRunner {
   static final String SYNC_MODULE_OPTION_SHORT = "s";
