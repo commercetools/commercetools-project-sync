@@ -1,25 +1,6 @@
 package com.commercetools.project.sync;
 
-import com.commercetools.project.sync.category.CategorySyncer;
-import com.commercetools.project.sync.inventoryentry.InventoryEntrySyncer;
-import com.commercetools.project.sync.product.ProductSyncer;
-import com.commercetools.project.sync.producttype.ProductTypeSyncer;
-import com.commercetools.project.sync.type.TypeSyncer;
-import com.commercetools.sync.commons.BaseSync;
-import com.commercetools.sync.commons.BaseSyncOptions;
-import com.commercetools.sync.commons.helpers.BaseSyncStatistics;
-import io.sphere.sdk.client.SphereClient;
-import io.sphere.sdk.models.Resource;
-import io.sphere.sdk.queries.QueryDsl;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
-
+import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_ALL;
 import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_CATEGORY_SYNC;
 import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_INVENTORY_ENTRY_SYNC;
 import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_LONG;
@@ -31,16 +12,36 @@ import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import com.commercetools.project.sync.category.CategorySyncer;
+import com.commercetools.project.sync.inventoryentry.InventoryEntrySyncer;
+import com.commercetools.project.sync.product.ProductSyncer;
+import com.commercetools.project.sync.producttype.ProductTypeSyncer;
+import com.commercetools.project.sync.type.TypeSyncer;
+import com.commercetools.sync.commons.BaseSync;
+import com.commercetools.sync.commons.BaseSyncOptions;
+import com.commercetools.sync.commons.helpers.BaseSyncStatistics;
+import io.sphere.sdk.client.SphereClient;
+import io.sphere.sdk.models.Resource;
+import io.sphere.sdk.queries.QueryDsl;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 final class SyncerFactory {
 
   static final String AVAILABLE_OPTIONS =
       format(
-          "Please use any of the following options: \"%s\", \"%s\", \"%s\", \"%s\", \"%s\".",
+          "Please use any of the following options: \"%s\", \"%s\", \"%s\", \"%s\", \"%s\" or \"%s\".",
           SYNC_MODULE_OPTION_TYPE_SYNC,
           SYNC_MODULE_OPTION_PRODUCT_TYPE_SYNC,
           SYNC_MODULE_OPTION_CATEGORY_SYNC,
           SYNC_MODULE_OPTION_PRODUCT_SYNC,
-          SYNC_MODULE_OPTION_INVENTORY_ENTRY_SYNC);
+          SYNC_MODULE_OPTION_INVENTORY_ENTRY_SYNC,
+          SYNC_MODULE_OPTION_ALL);
 
   private static final Logger LOGGER = LoggerFactory.getLogger(CliRunner.class);
 
