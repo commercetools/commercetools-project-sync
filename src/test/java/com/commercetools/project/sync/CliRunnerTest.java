@@ -1,5 +1,28 @@
 package com.commercetools.project.sync;
 
+import io.sphere.sdk.categories.queries.CategoryQuery;
+import io.sphere.sdk.client.SphereClient;
+import io.sphere.sdk.client.SphereClientConfig;
+import io.sphere.sdk.inventory.queries.InventoryEntryQuery;
+import io.sphere.sdk.products.queries.ProductQuery;
+import io.sphere.sdk.producttypes.queries.ProductTypeQuery;
+import io.sphere.sdk.queries.PagedQueryResult;
+import io.sphere.sdk.types.queries.TypeQuery;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.mockito.InOrder;
+import org.mockito.Mockito;
+import uk.org.lidalia.slf4jtest.TestLogger;
+import uk.org.lidalia.slf4jtest.TestLoggerFactory;
+
+import javax.annotation.Nonnull;
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
+import java.io.UnsupportedEncodingException;
+import java.util.concurrent.CompletableFuture;
+
 import static com.commercetools.project.sync.CliRunner.APPLICATION_DEFAULT_NAME;
 import static com.commercetools.project.sync.CliRunner.APPLICATION_DEFAULT_VERSION;
 import static com.commercetools.project.sync.CliRunner.HELP_OPTION_DESCRIPTION;
@@ -22,53 +45,30 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
-import io.sphere.sdk.categories.queries.CategoryQuery;
-import io.sphere.sdk.client.SphereClient;
-import io.sphere.sdk.client.SphereClientConfig;
-import io.sphere.sdk.inventory.queries.InventoryEntryQuery;
-import io.sphere.sdk.products.queries.ProductQuery;
-import io.sphere.sdk.producttypes.queries.ProductTypeQuery;
-import io.sphere.sdk.queries.PagedQueryResult;
-import io.sphere.sdk.types.queries.TypeQuery;
-import java.io.ByteArrayOutputStream;
-import java.io.PrintStream;
-import java.io.UnsupportedEncodingException;
-import java.util.concurrent.CompletableFuture;
-import javax.annotation.Nonnull;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.mockito.InOrder;
-import org.mockito.Mockito;
-import uk.org.lidalia.slf4jtest.TestLogger;
-import uk.org.lidalia.slf4jtest.TestLoggerFactory;
-
-public class CliRunnerTest {
+class CliRunnerTest {
   private static final TestLogger testLogger = TestLoggerFactory.getTestLogger(CliRunner.class);
   private static ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
   private static PrintStream originalSystemOut;
 
-  @BeforeClass
-  public static void setupSuite() throws UnsupportedEncodingException {
+  @BeforeAll
+  static void setupSuite() throws UnsupportedEncodingException {
     final PrintStream printStream = new PrintStream(outputStream, false, "UTF-8");
     originalSystemOut = System.out;
     System.setOut(printStream);
   }
 
-  @AfterClass
-  public static void tearDownSuite() {
+  @AfterAll
+  static void tearDownSuite() {
     System.setOut(originalSystemOut);
   }
 
-  @After
-  public void tearDownTest() {
+  @AfterEach
+  void tearDownTest() {
     testLogger.clearAll();
   }
 
   @Test
-  public void run_WithEmptyArgumentList_ShouldLogErrorAndPrintHelp()
-      throws UnsupportedEncodingException {
+  void run_WithEmptyArgumentList_ShouldLogErrorAndPrintHelp() throws UnsupportedEncodingException {
     // preparation
     final SyncerFactory syncerFactory =
         SyncerFactory.of(mock(SphereClient.class), mock(SphereClient.class));
@@ -92,7 +92,7 @@ public class CliRunnerTest {
   }
 
   @Test
-  public void run_WithHelpAsLongArgument_ShouldPrintUsageHelpToStandardOut()
+  void run_WithHelpAsLongArgument_ShouldPrintUsageHelpToStandardOut()
       throws UnsupportedEncodingException {
     // preparation
     final SyncerFactory syncerFactory =
@@ -106,7 +106,7 @@ public class CliRunnerTest {
   }
 
   @Test
-  public void run_WithHelpAsShortArgument_ShouldPrintUsageHelpToStandardOut()
+  void run_WithHelpAsShortArgument_ShouldPrintUsageHelpToStandardOut()
       throws UnsupportedEncodingException {
     // preparation
     final SyncerFactory syncerFactory =
@@ -120,7 +120,7 @@ public class CliRunnerTest {
   }
 
   @Test
-  public void run_WithVersionAsShortArgument_ShouldPrintApplicationVersionToStandardOut()
+  void run_WithVersionAsShortArgument_ShouldPrintApplicationVersionToStandardOut()
       throws UnsupportedEncodingException {
     // preparation
     final SyncerFactory syncerFactory =
@@ -133,7 +133,7 @@ public class CliRunnerTest {
   }
 
   @Test
-  public void run_WithVersionAsLongArgument_ShouldPrintApplicationVersionToStandardOut()
+  void run_WithVersionAsLongArgument_ShouldPrintApplicationVersionToStandardOut()
       throws UnsupportedEncodingException {
     // preparation
     final SyncerFactory syncerFactory =
@@ -146,7 +146,7 @@ public class CliRunnerTest {
   }
 
   @Test
-  public void run_WithSyncAsArgumentWithNoArgs_ShouldLogErrorAndPrintHelpUsageToSystemOut()
+  void run_WithSyncAsArgumentWithNoArgs_ShouldLogErrorAndPrintHelpUsageToSystemOut()
       throws UnsupportedEncodingException {
     // preparation
     final SyncerFactory syncerFactory =
@@ -161,7 +161,7 @@ public class CliRunnerTest {
   }
 
   @Test
-  public void run_WithSyncAsArgumentWithProductsArg_ShouldBuildSyncerAndExecuteSync() {
+  void run_WithSyncAsArgumentWithProductsArg_ShouldBuildSyncerAndExecuteSync() {
     // preparation
     final SphereClient sourceClient = mock(SphereClient.class);
     when(sourceClient.getConfig()).thenReturn(SphereClientConfig.of("foo", "foo", "foo"));
@@ -184,7 +184,7 @@ public class CliRunnerTest {
   }
 
   @Test
-  public void run_WithSyncAsArgumentWithIllegalArgs_ShouldLogErrorAndPrintHelpUsageToSystemOut()
+  void run_WithSyncAsArgumentWithIllegalArgs_ShouldLogErrorAndPrintHelpUsageToSystemOut()
       throws UnsupportedEncodingException {
     // preparation
     final SyncerFactory syncerFactory =
@@ -205,7 +205,7 @@ public class CliRunnerTest {
   }
 
   @Test
-  public void run_WithSyncAsLongArgument_ShouldProcessSyncOption() {
+  void run_WithSyncAsLongArgument_ShouldProcessSyncOption() {
     // preparation
     final SyncerFactory syncerFactory =
         spy(SyncerFactory.of(mock(SphereClient.class), mock(SphereClient.class)));
@@ -217,7 +217,7 @@ public class CliRunnerTest {
   }
 
   @Test
-  public void run_WithSyncAsShortArgument_ShouldProcessSyncOption() {
+  void run_WithSyncAsShortArgument_ShouldProcessSyncOption() {
     // preparation
     final SyncerFactory syncerFactory =
         spy(SyncerFactory.of(mock(SphereClient.class), mock(SphereClient.class)));
@@ -229,7 +229,7 @@ public class CliRunnerTest {
   }
 
   @Test
-  public void run_WithUnknownArgument_ShouldPrintErrorLogAndHelpUsage()
+  void run_WithUnknownArgument_ShouldPrintErrorLogAndHelpUsage()
       throws UnsupportedEncodingException {
     // preparation
     final SyncerFactory syncerFactory =
@@ -244,7 +244,7 @@ public class CliRunnerTest {
   }
 
   @Test
-  public void run_WithHelpAsArgument_ShouldPrintThreeOptionsWithDescriptionsToSystemOut()
+  void run_WithHelpAsArgument_ShouldPrintThreeOptionsWithDescriptionsToSystemOut()
       throws UnsupportedEncodingException {
     // preparation
     final SyncerFactory syncerFactory =

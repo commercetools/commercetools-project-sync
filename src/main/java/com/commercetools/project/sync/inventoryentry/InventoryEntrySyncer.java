@@ -32,10 +32,10 @@ public final class InventoryEntrySyncer
   /** Instantiates a {@link Syncer} instance. */
   private InventoryEntrySyncer(
       @Nonnull final InventorySync inventorySync,
-      @Nonnull final InventoryEntryQuery query,
+      @Nonnull final InventoryEntryQuery inventoryEntryQuery,
       @Nonnull final SphereClient sourceClient,
       @Nonnull final SphereClient targetClient) {
-    super(inventorySync, query, sourceClient, targetClient);
+    super(inventorySync, inventoryEntryQuery, sourceClient, targetClient);
   }
 
   public static InventoryEntrySyncer of(

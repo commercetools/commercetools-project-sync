@@ -13,11 +13,11 @@ import io.sphere.sdk.producttypes.ProductTypeDraft;
 import io.sphere.sdk.producttypes.ProductTypeDraftBuilder;
 import io.sphere.sdk.producttypes.queries.ProductTypeQuery;
 import java.util.List;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class ProductTypeSyncerTest {
+class ProductTypeSyncerTest {
   @Test
-  public void of_ShouldCreateProductTypeSyncerInstance() {
+  void of_ShouldCreateProductTypeSyncerInstance() {
     // test
     final ProductTypeSyncer productTypeSyncer =
         ProductTypeSyncer.of(mock(SphereClient.class), mock(SphereClient.class));
@@ -29,7 +29,7 @@ public class ProductTypeSyncerTest {
   }
 
   @Test
-  public void transformResourcesToDrafts_ShouldConvertResourcesToDrafts() {
+  void transformResourcesToDrafts_ShouldConvertResourcesToDrafts() {
     // preparation
     final ProductTypeSyncer productTypeSyncer =
         ProductTypeSyncer.of(mock(SphereClient.class), mock(SphereClient.class));

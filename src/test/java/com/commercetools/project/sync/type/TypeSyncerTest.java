@@ -13,11 +13,11 @@ import io.sphere.sdk.types.TypeDraft;
 import io.sphere.sdk.types.TypeDraftBuilder;
 import io.sphere.sdk.types.queries.TypeQuery;
 import java.util.List;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class TypeSyncerTest {
+class TypeSyncerTest {
   @Test
-  public void of_ShouldCreateTypeSyncerInstance() {
+  void of_ShouldCreateTypeSyncerInstance() {
     // test
     final TypeSyncer typeSyncer = TypeSyncer.of(mock(SphereClient.class), mock(SphereClient.class));
 
@@ -28,7 +28,7 @@ public class TypeSyncerTest {
   }
 
   @Test
-  public void transformResourcesToDrafts_ShouldConvertResourcesToDrafts() {
+  void transformResourcesToDrafts_ShouldConvertResourcesToDrafts() {
     // preparation
     final TypeSyncer typeSyncer = TypeSyncer.of(mock(SphereClient.class), mock(SphereClient.class));
     final List<Type> typePage =

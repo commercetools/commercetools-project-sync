@@ -28,32 +28,38 @@ import java.io.UnsupportedEncodingException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import javax.annotation.Nonnull;
-import org.junit.After;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import uk.org.lidalia.slf4jext.Level;
 import uk.org.lidalia.slf4jtest.TestLogger;
 import uk.org.lidalia.slf4jtest.TestLoggerFactory;
 
-public class SyncerFactoryTest {
+class SyncerFactoryTest {
   private static final TestLogger testLogger = TestLoggerFactory.getTestLogger(CliRunner.class);
   private static ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
   private static PrintStream originalSystemOut;
 
-  @BeforeClass
-  public static void setupSuite() throws UnsupportedEncodingException {
+  @BeforeAll
+  static void setupSuite() throws UnsupportedEncodingException {
     final PrintStream printStream = new PrintStream(outputStream, false, "UTF-8");
     originalSystemOut = System.out;
     System.setOut(printStream);
   }
 
-  @After
-  public void tearDownTest() {
+  @AfterAll
+  static void tearDownSuite() {
+    System.setOut(originalSystemOut);
+  }
+
+  @AfterEach
+  void tearDownTest() {
     testLogger.clearAll();
   }
 
   @Test
-  public void sync_WithNullOptionValue_ShouldThrowIllegalArgumentException() {
+  void sync_WithNullOptionValue_ShouldThrowIllegalArgumentException() {
     assertThatThrownBy(
             () -> SyncerFactory.of(mock(SphereClient.class), mock(SphereClient.class)).sync(null))
         .isExactlyInstanceOf(IllegalArgumentException.class)
@@ -63,7 +69,7 @@ public class SyncerFactoryTest {
   }
 
   @Test
-  public void sync_WithEmptyOptionValue_ShouldThrowIllegalArgumentException() {
+  void sync_WithEmptyOptionValue_ShouldThrowIllegalArgumentException() {
     assertThatThrownBy(
             () -> SyncerFactory.of(mock(SphereClient.class), mock(SphereClient.class)).sync(null))
         .isExactlyInstanceOf(IllegalArgumentException.class)
@@ -73,7 +79,7 @@ public class SyncerFactoryTest {
   }
 
   @Test
-  public void sync_WithUnknownOptionValue_ShouldThrowIllegalArgumentException() {
+  void sync_WithUnknownOptionValue_ShouldThrowIllegalArgumentException() {
     final String unknownOptionValue = "anyOption";
     assertThatThrownBy(
             () ->
@@ -87,7 +93,7 @@ public class SyncerFactoryTest {
   }
 
   @Test
-  public void sync_WithProductsArg_ShouldBuildSyncerAndExecuteSync()
+  void sync_WithProductsArg_ShouldBuildSyncerAndExecuteSync()
       throws UnsupportedEncodingException {
     // preparation
     final SphereClient sourceClient = mock(SphereClient.class);
@@ -114,7 +120,7 @@ public class SyncerFactoryTest {
   }
 
   @Test
-  public void sync_WithCategoriesArg_ShouldBuildSyncerAndExecuteSync()
+  void sync_WithCategoriesArg_ShouldBuildSyncerAndExecuteSync()
       throws UnsupportedEncodingException {
     // preparation
     final SphereClient sourceClient = mock(SphereClient.class);
@@ -141,7 +147,7 @@ public class SyncerFactoryTest {
   }
 
   @Test
-  public void sync_WithProductTypesArg_ShouldBuildSyncerAndExecuteSync()
+  void sync_WithProductTypesArg_ShouldBuildSyncerAndExecuteSync()
       throws UnsupportedEncodingException {
     // preparation
     final SphereClient sourceClient = mock(SphereClient.class);
@@ -168,7 +174,7 @@ public class SyncerFactoryTest {
   }
 
   @Test
-  public void sync_WithTypesArg_ShouldBuildSyncerAndExecuteSync()
+  void sync_WithTypesArg_ShouldBuildSyncerAndExecuteSync()
       throws UnsupportedEncodingException {
     // preparation
     final SphereClient sourceClient = mock(SphereClient.class);
@@ -195,7 +201,7 @@ public class SyncerFactoryTest {
   }
 
   @Test
-  public void sync_WithInventoryEntriesArg_ShouldBuildSyncerAndExecuteSync()
+  void sync_WithInventoryEntriesArg_ShouldBuildSyncerAndExecuteSync()
       throws UnsupportedEncodingException {
     // preparation
     final SphereClient sourceClient = mock(SphereClient.class);
@@ -222,7 +228,7 @@ public class SyncerFactoryTest {
   }
 
   @Test
-  public void sync_WithErrorOnFetch_ShouldLogAndPrintErrorAndCloseClient()
+  void sync_WithErrorOnFetch_ShouldLogAndPrintErrorAndCloseClient()
       throws UnsupportedEncodingException {
     // preparation
     final SphereClient sourceClient = mock(SphereClient.class);
@@ -260,7 +266,7 @@ public class SyncerFactoryTest {
   }
 
   @Test
-  public void syncAll_ShouldBuildSyncerAndExecuteSync() throws UnsupportedEncodingException {
+  void syncAll_ShouldBuildSyncerAndExecuteSync() throws UnsupportedEncodingException {
     // preparation
     final SphereClient sourceClient = mock(SphereClient.class);
     when(sourceClient.getConfig()).thenReturn(SphereClientConfig.of("foo", "foo", "foo"));

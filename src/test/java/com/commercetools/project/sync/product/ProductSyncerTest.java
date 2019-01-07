@@ -20,12 +20,12 @@ import io.sphere.sdk.products.commands.updateactions.Publish;
 import io.sphere.sdk.products.commands.updateactions.Unpublish;
 import java.util.ArrayList;
 import java.util.List;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class ProductSyncerTest {
+class ProductSyncerTest {
 
   @Test
-  public void of_ShouldCreateProductSyncerInstance() {
+  void of_ShouldCreateProductSyncerInstance() {
     // test
     final ProductSyncer productSyncer =
         ProductSyncer.of(mock(SphereClient.class), mock(SphereClient.class));
@@ -37,7 +37,7 @@ public class ProductSyncerTest {
   }
 
   @Test
-  public void transformResourcesToDrafts_ShouldReplaceProductReferenceIdsWithKeys() {
+  void transformResourcesToDrafts_ShouldReplaceProductReferenceIdsWithKeys() {
     // preparation
     final ProductSyncer productSyncer =
         ProductSyncer.of(mock(SphereClient.class), mock(SphereClient.class));
@@ -55,8 +55,7 @@ public class ProductSyncerTest {
   }
 
   @Test
-  public void
-      appendPublishIfPublished_WithPublishedProductAndEmptyActions_ShouldNotAppendPublish() {
+  void appendPublishIfPublished_WithPublishedProductAndEmptyActions_ShouldNotAppendPublish() {
     final ProductCatalogData masterData = mock(ProductCatalogData.class);
     when(masterData.isPublished()).thenReturn(true);
 
@@ -71,8 +70,7 @@ public class ProductSyncerTest {
   }
 
   @Test
-  public void
-      appendPublishIfPublished_WithPublishedProductAndNonEmptyActions_ShouldAppendPublish() {
+  void appendPublishIfPublished_WithPublishedProductAndNonEmptyActions_ShouldAppendPublish() {
     final ProductCatalogData masterData = mock(ProductCatalogData.class);
     when(masterData.isPublished()).thenReturn(true);
 
@@ -90,8 +88,7 @@ public class ProductSyncerTest {
   }
 
   @Test
-  public void
-      appendPublishIfPublished_WithUnPublishedProductAndEmptyActions_ShouldNotAppendPublish() {
+  void appendPublishIfPublished_WithUnPublishedProductAndEmptyActions_ShouldNotAppendPublish() {
     final ProductCatalogData masterData = mock(ProductCatalogData.class);
     when(masterData.isPublished()).thenReturn(false);
 
@@ -106,8 +103,7 @@ public class ProductSyncerTest {
   }
 
   @Test
-  public void
-      appendPublishIfPublished_WithUnPublishedProductAndNonEmptyActions_ShouldNotAppendPublish() {
+  void appendPublishIfPublished_WithUnPublishedProductAndNonEmptyActions_ShouldNotAppendPublish() {
     final ProductCatalogData masterData = mock(ProductCatalogData.class);
     when(masterData.isPublished()).thenReturn(false);
 
@@ -125,7 +121,7 @@ public class ProductSyncerTest {
   }
 
   @Test
-  public void appendPublishIfPublished_WithPublishedProductAndOnePublish_ShouldNotAppendPublish() {
+  void appendPublishIfPublished_WithPublishedProductAndOnePublish_ShouldNotAppendPublish() {
     final ProductCatalogData masterData = mock(ProductCatalogData.class);
     when(masterData.isPublished()).thenReturn(true);
 
@@ -143,8 +139,7 @@ public class ProductSyncerTest {
   }
 
   @Test
-  public void
-      appendPublishIfPublished_WithUnPublishedProductAndOnePublishAction_ShouldNotAppendPublish() {
+  void appendPublishIfPublished_WithUnPublishedProductAndOnePublishAction_ShouldNotAppendPublish() {
     final ProductCatalogData masterData = mock(ProductCatalogData.class);
     when(masterData.isPublished()).thenReturn(false);
 
@@ -162,8 +157,7 @@ public class ProductSyncerTest {
   }
 
   @Test
-  public void
-      appendPublishIfPublished_WithPublishedProductAndOneUnPublishAction_ShouldNotAppendPublish() {
+  void appendPublishIfPublished_WithPublishedProductAndOneUnPublishAction_ShouldNotAppendPublish() {
     final ProductCatalogData masterData = mock(ProductCatalogData.class);
     when(masterData.isPublished()).thenReturn(true);
 

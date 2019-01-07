@@ -12,11 +12,11 @@ import io.sphere.sdk.categories.Category;
 import io.sphere.sdk.categories.CategoryDraft;
 import io.sphere.sdk.client.SphereClient;
 import java.util.List;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class CategorySyncerTest {
+class CategorySyncerTest {
   @Test
-  public void of_ShouldCreateCategorySyncerInstance() {
+  void of_ShouldCreateCategorySyncerInstance() {
     // test
     final CategorySyncer categorySyncer =
         CategorySyncer.of(mock(SphereClient.class), mock(SphereClient.class));
@@ -28,7 +28,7 @@ public class CategorySyncerTest {
   }
 
   @Test
-  public void transformResourcesToDrafts_ShouldReplaceCategoryReferenceIdsWithKeys() {
+  void transformResourcesToDrafts_ShouldReplaceCategoryReferenceIdsWithKeys() {
     // preparation
     final CategorySyncer categorySyncer =
         CategorySyncer.of(mock(SphereClient.class), mock(SphereClient.class));

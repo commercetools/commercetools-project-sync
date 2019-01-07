@@ -6,17 +6,16 @@ Dockerized CLI application which allows to automatically sync different resource
 
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
+- [Prerequisites](#prerequisites)
 - [Usage](#usage)
-    - [Prerequisites](#prerequisites)
-    - [Examples](#examples)
+- [Examples](#examples)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 
-## Usage
 ### Prerequisites
  
- - install Java 8
+ - Make sure you have `JDK 8` installed.
  - The following fields are **required** to be set on the following resources (and sub-resources) that should be synced:
     - `Product`
         - `key`
@@ -29,7 +28,7 @@ Dockerized CLI application which allows to automatically sync different resource
     - `Category`
         - `key`         
  
- - set the following environment variables before running the application
+ - Set the following environment variables before running the application
    ```bash
    export SOURCE_PROJECT_KEY = xxxxxxxxxxxxx
    export SOURCE_CLIENT_ID = xxxxxxxxxxxxxxx
@@ -38,34 +37,36 @@ Dockerized CLI application which allows to automatically sync different resource
    export TARGET_CLIENT_ID = xxxxxxxxxxxxxxx
    export TARGET_CLIENT_SECRET = xxxxxxxxxxx
    ```
- - Usage
+
+### Usage
+
    ```bash
-   usage: commercetools-sync
-    -h,--help         Print help information to System.out.
-    -s,--sync <arg>   Choose which sync module to run: "types", "productTypes",
-                       "categories", "products" or "inventoryEntries".
+   usage: commercetools-project-sync
+    -h,--help         Print help information.
+    -s,--sync <arg>   Choose which sync module to run: "types", "productTypes", "categories", "products" or
+                      "inventoryEntries".
     -v,--version      Print the version of the application.
    ```
-   
+
 ### Examples   
  - To run the productType sync
    ```bash
-   java -jar build/libs/commercetools-sync.jar -s productTypes
+   java -jar build/libs/commercetools-project-sync.jar -s productTypes
    ```  
     
 - To run the category sync
    ```bash
-   java -jar build/libs/commercetools-sync.jar -s categories
+   java -jar build/libs/commercetools-project-sync.jar -s categories
    ```  
    
 - To run the product sync
    ```bash
-   java -jar build/libs/commercetools-sync.jar -s products
+   java -jar build/libs/commercetools-project-sync.jar -s products
    ```  
     
 - To run the inventoryEntry sync
    ```bash
-   java -jar build/libs/commercetools-sync.jar -s inventoryEntries
+   java -jar build/libs/commercetools-project-sync.jar -s inventoryEntries
    ```     
    
 

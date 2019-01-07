@@ -48,6 +48,7 @@ public final class ProductSyncer
         ProductSyncOptionsBuilder.of(targetClient)
             .errorCallback(LOGGER::error)
             .warningCallback(LOGGER::warn)
+            .beforeUpdateCallback(ProductSyncer::appendPublishIfPublished)
             .build();
 
     final ProductSync productSync = new ProductSync(syncOptions);
@@ -83,23 +84,27 @@ public final class ProductSyncer
       @Nonnull final ProductDraft srcProductDraft,
       @Nonnull final Product targetProduct) {
 
+    if (!updateActions.isEmpty()
+        && targetProduct.getMasterData().isPublished()
+        && doesNotContainPublishOrUnPublishActions(updateActions)) {
+
+      updateActions.add(Publish.of());
+    }
+
+    return updateActions;
+  }
+
+  private static boolean doesNotContainPublishOrUnPublishActions(
+      @Nonnull final List<UpdateAction<Product>> updateActions) {
+
     final Publish publishAction = Publish.of();
     final Unpublish unpublishAction = Unpublish.of();
 
-    // Only if there are new updates and the target product is already published
-    if (!updateActions.isEmpty() && targetProduct.getMasterData().isPublished()) {
-
-      // Only if there is no Publish and Unpublish action in those updates
-      if (updateActions
-          .stream()
-          .noneMatch(
-              action ->
-                  publishAction.getAction().equals(action.getAction())
-                      || unpublishAction.getAction().equals(action.getAction()))) {
-
-        updateActions.add(publishAction);
-      }
-    }
-    return updateActions;
+    return updateActions
+        .stream()
+        .noneMatch(
+            action ->
+                publishAction.getAction().equals(action.getAction())
+                    || unpublishAction.getAction().equals(action.getAction()));
   }
 }

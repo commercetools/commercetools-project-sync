@@ -1,11 +1,5 @@
 package com.commercetools.project.sync;
 
-import static java.lang.String.format;
-import static org.apache.commons.lang3.StringUtils.isBlank;
-
-import java.util.concurrent.CompletionStage;
-import java.util.function.Supplier;
-import javax.annotation.Nonnull;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
@@ -13,6 +7,13 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+
+import javax.annotation.Nonnull;
+import java.util.concurrent.CompletionStage;
+import java.util.function.Supplier;
+
+import static java.lang.String.format;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 final class CliRunner {
   static final String SYNC_MODULE_OPTION_SHORT = "s";
@@ -39,7 +40,7 @@ final class CliRunner {
           SYNC_MODULE_OPTION_PRODUCT_SYNC,
           SYNC_MODULE_OPTION_INVENTORY_ENTRY_SYNC,
           SYNC_MODULE_OPTION_ALL);
-  static final String HELP_OPTION_DESCRIPTION = "Print help information to System.out.";
+  static final String HELP_OPTION_DESCRIPTION = "Print help information.";
   static final String VERSION_OPTION_DESCRIPTION = "Print the version of the application.";
 
   static final String APPLICATION_DEFAULT_NAME = "commercetools-project-sync";

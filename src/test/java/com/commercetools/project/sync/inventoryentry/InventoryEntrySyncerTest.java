@@ -14,11 +14,11 @@ import io.sphere.sdk.inventory.InventoryEntryDraft;
 import io.sphere.sdk.inventory.expansion.InventoryEntryExpansionModel;
 import io.sphere.sdk.inventory.queries.InventoryEntryQuery;
 import java.util.List;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class InventoryEntrySyncerTest {
+class InventoryEntrySyncerTest {
   @Test
-  public void of_ShouldCreateInventoryEntrySyncerInstance() {
+  void of_ShouldCreateInventoryEntrySyncerInstance() {
     // test
     final InventoryEntrySyncer inventorySyncer =
         InventoryEntrySyncer.of(mock(SphereClient.class), mock(SphereClient.class));
@@ -36,7 +36,7 @@ public class InventoryEntrySyncerTest {
   }
 
   @Test
-  public void transformResourcesToDrafts_ShouldReplaceInventoryEntryReferenceIdsWithKeys() {
+  void transformResourcesToDrafts_ShouldReplaceInventoryEntryReferenceIdsWithKeys() {
     // preparation
     final InventoryEntrySyncer inventoryEntrySyncer =
         InventoryEntrySyncer.of(mock(SphereClient.class), mock(SphereClient.class));
