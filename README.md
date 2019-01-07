@@ -43,12 +43,21 @@ Dockerized CLI application which allows to automatically sync different resource
    ```bash
    usage: commercetools-project-sync
     -h,--help         Print help information.
-    -s,--sync <arg>   Choose which sync module to run: "types", "productTypes", "categories", "products" or
-                      "inventoryEntries".
+    -s,--sync <arg>   Choose which sync module to run: "types", "productTypes", "categories", "products", "inventoryEntries" or "all".
     -v,--version      Print the version of the application.
    ```
 
 ### Examples   
+ - To run the all sync modules from a source project to a target project
+   ```bash
+   java -jar build/libs/commercetools-project-sync.jar -s all
+   ```
+   This will run the following sync modules in the given order:
+ 1. `Type` Sync and `ProductType` Sync in parallel.
+ 2. `Category` Sync.
+ 3. `Product` Sync.
+ 4. `InventoryEntry` Sync.
+
  - To run the productType sync
    ```bash
    java -jar build/libs/commercetools-project-sync.jar -s productTypes
