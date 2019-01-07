@@ -1,9 +1,5 @@
 package com.commercetools.project.sync.util;
 
-import static io.sphere.sdk.http.HttpStatusCode.BAD_GATEWAY_502;
-import static io.sphere.sdk.http.HttpStatusCode.GATEWAY_TIMEOUT_504;
-import static io.sphere.sdk.http.HttpStatusCode.SERVICE_UNAVAILABLE_503;
-
 import io.sphere.sdk.client.BlockingSphereClient;
 import io.sphere.sdk.client.QueueSphereClientDecorator;
 import io.sphere.sdk.client.RetrySphereClientDecorator;
@@ -15,17 +11,22 @@ import io.sphere.sdk.http.HttpClient;
 import io.sphere.sdk.retry.RetryAction;
 import io.sphere.sdk.retry.RetryPredicate;
 import io.sphere.sdk.retry.RetryRule;
+import org.asynchttpclient.AsyncHttpClient;
+import org.asynchttpclient.DefaultAsyncHttpClient;
+import org.asynchttpclient.DefaultAsyncHttpClientConfig;
+
+import javax.annotation.Nonnull;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
-import javax.annotation.Nonnull;
-import org.asynchttpclient.AsyncHttpClient;
-import org.asynchttpclient.DefaultAsyncHttpClient;
-import org.asynchttpclient.DefaultAsyncHttpClientConfig;
 
-final class ClientConfigurationUtils {
+import static io.sphere.sdk.http.HttpStatusCode.BAD_GATEWAY_502;
+import static io.sphere.sdk.http.HttpStatusCode.GATEWAY_TIMEOUT_504;
+import static io.sphere.sdk.http.HttpStatusCode.SERVICE_UNAVAILABLE_503;
+
+public final class ClientConfigurationUtils {
   private static final long DEFAULT_TIMEOUT = 30000;
 
   /**
@@ -35,7 +36,7 @@ final class ClientConfigurationUtils {
    * @param clientConfig the client configuration for the client.
    * @return the instantiated {@link BlockingSphereClient}.
    */
-  static SphereClient createClient(@Nonnull final SphereClientConfig clientConfig) {
+  public static SphereClient createClient(@Nonnull final SphereClientConfig clientConfig) {
 
     final HttpClient httpClient = getHttpClient();
     final SphereAccessTokenSupplier tokenSupplier =
