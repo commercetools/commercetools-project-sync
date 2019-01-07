@@ -35,7 +35,7 @@ final class CliRunner {
 
   static final String SYNC_MODULE_OPTION_DESCRIPTION =
       format(
-          "Choose which sync module to run: \"%s\", \"%s\", \"%s\", \"%s\", \"%s\" or \"%s\"",
+          "Choose which sync module to run: \"%s\", \"%s\", \"%s\", \"%s\", \"%s\" or \"%s\".",
           SYNC_MODULE_OPTION_TYPE_SYNC,
           SYNC_MODULE_OPTION_PRODUCT_TYPE_SYNC,
           SYNC_MODULE_OPTION_CATEGORY_SYNC,
