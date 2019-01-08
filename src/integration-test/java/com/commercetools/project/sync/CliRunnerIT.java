@@ -77,6 +77,14 @@ class CliRunnerIT {
     deleteTestData(targetClient);
   }
 
+  static void deleteTestData(@Nonnull final SphereClient client) {
+    queryAndExecute(client, CategoryQuery.of(), CategoryDeleteCommand::of);
+    queryAndExecute(client, ProductQuery.of(), ProductDeleteCommand::of);
+    queryAndExecute(client, ProductTypeQuery.of(), ProductTypeDeleteCommand::of);
+    queryAndExecute(client, TypeQuery.of(), TypeDeleteCommand::of);
+    queryAndExecute(client, InventoryEntryQuery.of(), InventoryEntryDeleteCommand::of);
+  }
+
   @AfterAll
   static void tearDownSuite() {
     System.setOut(originalSystemOut);
@@ -239,13 +247,5 @@ class CliRunnerIT {
         .execute(InventoryEntryCreateCommand.of(inventoryEntryDraft))
         .toCompletableFuture()
         .join();
-  }
-
-  static void deleteTestData(@Nonnull final SphereClient client) {
-    queryAndExecute(client, CategoryQuery.of(), CategoryDeleteCommand::of);
-    queryAndExecute(client, ProductQuery.of(), ProductDeleteCommand::of);
-    queryAndExecute(client, ProductTypeQuery.of(), ProductTypeDeleteCommand::of);
-    queryAndExecute(client, TypeQuery.of(), TypeDeleteCommand::of);
-    queryAndExecute(client, InventoryEntryQuery.of(), InventoryEntryDeleteCommand::of);
   }
 }
