@@ -99,115 +99,117 @@ class CliRunnerIT {
   void run_WithSyncAsArgumentWithAllArg_ShouldExecuteAllSyncers()
       throws UnsupportedEncodingException {
     // preparation
-    final SphereClient sourceClient = createClient(CTP_SOURCE_CLIENT_CONFIG);
-    final SphereClient targetClient = createClient(CTP_TARGET_CLIENT_CONFIG);
-
     final String resourceKey = "foo";
-    setupTestData(sourceClient, resourceKey);
+    try (final SphereClient targetClient = createClient(CTP_TARGET_CLIENT_CONFIG)) {
+      try (final SphereClient sourceClient = createClient(CTP_SOURCE_CLIENT_CONFIG)) {
+        setupTestData(sourceClient, resourceKey);
 
-    final SyncerFactory syncerFactory = SyncerFactory.of(sourceClient, targetClient);
+        final SyncerFactory syncerFactory = SyncerFactory.of(sourceClient, targetClient);
 
-    // test
-    CliRunner.of()
-        .run(new String[] {"-s", "all"}, () -> syncerFactory)
-        .toCompletableFuture()
-        .join();
+        // test
+        CliRunner.of()
+            .run(new String[] {"-s", "all"}, () -> syncerFactory)
+            .toCompletableFuture()
+            .join();
+      }
+    }
 
     // create clients again (for assertions and cleanup), since the run method closes the clients
     // after execution
     // is done.
-    final SphereClient postSourceClient = createClient(CTP_SOURCE_CLIENT_CONFIG);
-    final SphereClient postTargetClient = createClient(CTP_TARGET_CLIENT_CONFIG);
+    try (final SphereClient postSourceClient = createClient(CTP_SOURCE_CLIENT_CONFIG)) {
+      try (final SphereClient postTargetClient = createClient(CTP_TARGET_CLIENT_CONFIG)) {
+        // assertions
+        assertThat(outputStream.toString("UTF-8"))
+            .contains(
+                format(
+                    "Syncing ProductTypes from CTP project with key '%s' to project with key '%s' is done.",
+                    postSourceClient.getConfig().getProjectKey(),
+                    postTargetClient.getConfig().getProjectKey()),
+                format(
+                    "Syncing Types from CTP project with key '%s' to project with key '%s' is done.",
+                    postSourceClient.getConfig().getProjectKey(),
+                    postTargetClient.getConfig().getProjectKey()),
+                format(
+                    "Syncing Categories from CTP project with key '%s' to project with key '%s' is done.",
+                    postSourceClient.getConfig().getProjectKey(),
+                    postTargetClient.getConfig().getProjectKey()),
+                format(
+                    "Syncing Products from CTP project with key '%s' to project with key '%s' is done.",
+                    postSourceClient.getConfig().getProjectKey(),
+                    postTargetClient.getConfig().getProjectKey()),
+                format(
+                    "Syncing Inventories from CTP project with key '%s' to project with key '%s' is done.",
+                    postSourceClient.getConfig().getProjectKey(),
+                    postTargetClient.getConfig().getProjectKey()));
 
-    // assertions
-    assertThat(outputStream.toString("UTF-8"))
-        .contains(
-            format(
-                "Syncing ProductTypes from CTP project with key '%s' to project with key '%s' is done.",
-                postSourceClient.getConfig().getProjectKey(),
-                postTargetClient.getConfig().getProjectKey()),
-            format(
-                "Syncing Types from CTP project with key '%s' to project with key '%s' is done.",
-                postSourceClient.getConfig().getProjectKey(),
-                postTargetClient.getConfig().getProjectKey()),
-            format(
-                "Syncing Categories from CTP project with key '%s' to project with key '%s' is done.",
-                postSourceClient.getConfig().getProjectKey(),
-                postTargetClient.getConfig().getProjectKey()),
-            format(
-                "Syncing Products from CTP project with key '%s' to project with key '%s' is done.",
-                postSourceClient.getConfig().getProjectKey(),
-                postTargetClient.getConfig().getProjectKey()),
-            format(
-                "Syncing Inventories from CTP project with key '%s' to project with key '%s' is done.",
-                postSourceClient.getConfig().getProjectKey(),
-                postTargetClient.getConfig().getProjectKey()));
+        final PagedQueryResult<ProductType> productTypeQueryResult =
+            postTargetClient
+                .execute(ProductTypeQuery.of().byKey(resourceKey))
+                .toCompletableFuture()
+                .join();
 
-    final PagedQueryResult<ProductType> productTypeQueryResult =
-        postTargetClient
-            .execute(ProductTypeQuery.of().byKey(resourceKey))
-            .toCompletableFuture()
-            .join();
+        assertThat(productTypeQueryResult.getResults())
+            .hasSize(1)
+            .hasOnlyOneElementSatisfying(
+                productType -> assertThat(productType.getKey()).isEqualTo(resourceKey));
 
-    assertThat(productTypeQueryResult.getResults())
-        .hasSize(1)
-        .hasOnlyOneElementSatisfying(
-            productType -> assertThat(productType.getKey()).isEqualTo(resourceKey));
+        final String queryPredicate = format("key=\"%s\"", resourceKey);
 
-    final String queryPredicate = format("key=\"%s\"", resourceKey);
+        final PagedQueryResult<Type> typeQueryResult =
+            postTargetClient
+                .execute(TypeQuery.of().withPredicates(QueryPredicate.of(queryPredicate)))
+                .toCompletableFuture()
+                .join();
 
-    final PagedQueryResult<Type> typeQueryResult =
-        postTargetClient
-            .execute(TypeQuery.of().withPredicates(QueryPredicate.of(queryPredicate)))
-            .toCompletableFuture()
-            .join();
+        assertThat(typeQueryResult.getResults())
+            .hasSize(1)
+            .hasOnlyOneElementSatisfying(type -> assertThat(type.getKey()).isEqualTo(resourceKey));
 
-    assertThat(typeQueryResult.getResults())
-        .hasSize(1)
-        .hasOnlyOneElementSatisfying(type -> assertThat(type.getKey()).isEqualTo(resourceKey));
+        final PagedQueryResult<Category> categoryQueryResult =
+            postTargetClient
+                .execute(CategoryQuery.of().withPredicates(QueryPredicate.of(queryPredicate)))
+                .toCompletableFuture()
+                .join();
 
-    final PagedQueryResult<Category> categoryQueryResult =
-        postTargetClient
-            .execute(CategoryQuery.of().withPredicates(QueryPredicate.of(queryPredicate)))
-            .toCompletableFuture()
-            .join();
+        assertThat(categoryQueryResult.getResults())
+            .hasSize(1)
+            .hasOnlyOneElementSatisfying(
+                category -> assertThat(category.getKey()).isEqualTo(resourceKey));
 
-    assertThat(categoryQueryResult.getResults())
-        .hasSize(1)
-        .hasOnlyOneElementSatisfying(
-            category -> assertThat(category.getKey()).isEqualTo(resourceKey));
+        final PagedQueryResult<Product> productQueryResult =
+            postTargetClient
+                .execute(ProductQuery.of().withPredicates(QueryPredicate.of(queryPredicate)))
+                .toCompletableFuture()
+                .join();
 
-    final PagedQueryResult<Product> productQueryResult =
-        postTargetClient
-            .execute(ProductQuery.of().withPredicates(QueryPredicate.of(queryPredicate)))
-            .toCompletableFuture()
-            .join();
+        assertThat(productQueryResult.getResults())
+            .hasSize(1)
+            .hasOnlyOneElementSatisfying(
+                product -> {
+                  assertThat(product.getKey()).isEqualTo(resourceKey);
+                  final ProductVariant stagedMasterVariant =
+                      product.getMasterData().getStaged().getMasterVariant();
+                  assertThat(stagedMasterVariant.getKey()).isEqualTo(resourceKey);
+                  assertThat(stagedMasterVariant.getSku()).isEqualTo(resourceKey);
+                });
 
-    assertThat(productQueryResult.getResults())
-        .hasSize(1)
-        .hasOnlyOneElementSatisfying(
-            product -> {
-              assertThat(product.getKey()).isEqualTo(resourceKey);
-              final ProductVariant stagedMasterVariant =
-                  product.getMasterData().getStaged().getMasterVariant();
-              assertThat(stagedMasterVariant.getKey()).isEqualTo(resourceKey);
-              assertThat(stagedMasterVariant.getSku()).isEqualTo(resourceKey);
-            });
+        final PagedQueryResult<InventoryEntry> inventoryEntryQueryResult =
+            postTargetClient
+                .execute(
+                    InventoryEntryQuery.of()
+                        .withPredicates(QueryPredicate.of(format("sku=\"%s\"", resourceKey))))
+                .toCompletableFuture()
+                .join();
 
-    final PagedQueryResult<InventoryEntry> inventoryEntryQueryResult =
-        postTargetClient
-            .execute(
-                InventoryEntryQuery.of()
-                    .withPredicates(QueryPredicate.of(format("sku=\"%s\"", resourceKey))))
-            .toCompletableFuture()
-            .join();
+        assertThat(inventoryEntryQueryResult.getResults())
+            .hasSize(1)
+            .hasOnlyOneElementSatisfying(
+                inventoryEntry -> assertThat(inventoryEntry.getSku()).isEqualTo(resourceKey));
 
-    assertThat(inventoryEntryQueryResult.getResults())
-        .hasSize(1)
-        .hasOnlyOneElementSatisfying(
-            inventoryEntry -> assertThat(inventoryEntry.getSku()).isEqualTo(resourceKey));
-
-    deleteTestData(postSourceClient, postTargetClient);
+        deleteTestData(postSourceClient, postTargetClient);
+      }
+    }
   }
 
   static void setupTestData(@Nonnull final SphereClient client, @Nonnull final String resourceKey) {
