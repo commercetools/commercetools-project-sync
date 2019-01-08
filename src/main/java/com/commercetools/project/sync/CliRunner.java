@@ -69,7 +69,7 @@ final class CliRunner {
     } catch (final ParseException | IllegalArgumentException exception) {
 
       handleIllegalArgumentException(
-          format("Parse error:%n%s", exception.getMessage()), cliOptions);
+          format("Error:%n%s", exception.getMessage()), cliOptions);
       return CompletableFuture.completedFuture(null);
     }
   }

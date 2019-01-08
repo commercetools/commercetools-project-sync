@@ -158,7 +158,7 @@ class CliRunnerTest {
     CliRunner.of().run(new String[] {"-s"}, () -> syncerFactory).toCompletableFuture().join();
 
     assertThat(outputStream.toString("UTF-8"))
-        .contains("Parse error:\nMissing argument for option: s");
+        .contains("Error:\nMissing argument for option: s");
     assertOutputStreamContainsHelpUsageWithSpecifiedCliOptions();
   }
 
@@ -204,7 +204,7 @@ class CliRunnerTest {
     assertThat(outputStream.toString("UTF-8"))
         .contains(
             format(
-                "Parse error:%nUnknown argument \"%s\" supplied to \"-%s\" or"
+                "Error:%nUnknown argument \"%s\" supplied to \"-%s\" or"
                     + " \"--%s\" option!",
                 illegalArg, SYNC_MODULE_OPTION_SHORT, SYNC_MODULE_OPTION_LONG));
     assertOutputStreamContainsHelpUsageWithSpecifiedCliOptions();
@@ -251,7 +251,7 @@ class CliRunnerTest {
     // test
     CliRunner.of().run(new String[] {"-u"}, () -> syncerFactory).toCompletableFuture().join();
     // Assert error log
-    assertThat(outputStream.toString("UTF-8")).contains("Parse error:\nUnrecognized option: -u");
+    assertThat(outputStream.toString("UTF-8")).contains("Error:\nUnrecognized option: -u");
     assertOutputStreamContainsHelpUsageWithSpecifiedCliOptions();
     verify(syncerFactory, never()).sync(any());
     verify(syncerFactory, never()).syncAll();
