@@ -5,14 +5,15 @@ import io.sphere.sdk.client.SphereClient;
 import io.sphere.sdk.client.SphereRequest;
 import io.sphere.sdk.models.Resource;
 import io.sphere.sdk.queries.QueryDsl;
+
+import javax.annotation.Nonnull;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import javax.annotation.Nonnull;
 
-public final class ItUtils {
+public final class QueryUtils {
   /**
    * Applies the {@code resourceToRequestMapper} function on each page, resulting from the {@code
    * query} executed by the {@code ctpClient}, to map each resource to a {@link SphereRequest} and
@@ -62,5 +63,5 @@ public final class ItUtils {
     CtpQueryUtils.queryAll(ctpClient, query, pageConsumer).toCompletableFuture().join();
   }
 
-  private ItUtils() {}
+  private QueryUtils() {}
 }
