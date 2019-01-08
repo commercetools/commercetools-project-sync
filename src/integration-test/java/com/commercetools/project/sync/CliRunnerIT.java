@@ -1,7 +1,7 @@
 package com.commercetools.project.sync;
 
 import static com.commercetools.project.sync.util.ClientConfigurationUtils.createClient;
-import static com.commercetools.project.sync.util.ItUtils.queryAndExecute;
+import static com.commercetools.project.sync.util.QueryUtils.queryAndExecute;
 import static com.commercetools.project.sync.util.SphereClientUtils.CTP_SOURCE_CLIENT_CONFIG;
 import static com.commercetools.project.sync.util.SphereClientUtils.CTP_TARGET_CLIENT_CONFIG;
 import static io.sphere.sdk.models.LocalizedString.ofEnglish;
