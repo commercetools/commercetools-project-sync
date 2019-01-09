@@ -35,7 +35,7 @@ final class CliRunner {
 
   static final String SYNC_MODULE_OPTION_DESCRIPTION =
       format(
-          "Choose which sync module to run: \"%s\", \"%s\", \"%s\", \"%s\", \"%s\" or \"%s\".",
+          "Choose one of the following modules to run: \"%s\", \"%s\", \"%s\", \"%s\", \"%s\" or \"%s\".",
           SYNC_MODULE_OPTION_TYPE_SYNC,
           SYNC_MODULE_OPTION_PRODUCT_TYPE_SYNC,
           SYNC_MODULE_OPTION_CATEGORY_SYNC,
@@ -68,8 +68,7 @@ final class CliRunner {
 
     } catch (final ParseException | IllegalArgumentException exception) {
 
-      handleIllegalArgumentException(
-          format("Error:%n%s", exception.getMessage()), cliOptions);
+      handleIllegalArgumentException(format("Error:%n%s", exception.getMessage()), cliOptions);
       return CompletableFuture.completedFuture(null);
     }
   }

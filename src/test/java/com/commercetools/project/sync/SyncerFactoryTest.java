@@ -1,6 +1,6 @@
 package com.commercetools.project.sync;
 
-import static com.commercetools.project.sync.SyncerFactory.AVAILABLE_OPTIONS;
+import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_DESCRIPTION;
 import static java.lang.String.format;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -65,7 +65,8 @@ class SyncerFactoryTest {
         .isExactlyInstanceOf(IllegalArgumentException.class)
         .hasMessageContaining(
             format(
-                "Blank argument supplied to \"-s\" or \"--sync\" option! %s", AVAILABLE_OPTIONS));
+                "Blank argument supplied to \"-s\" or \"--sync\" option! %s",
+                SYNC_MODULE_OPTION_DESCRIPTION));
   }
 
   @Test
@@ -75,7 +76,8 @@ class SyncerFactoryTest {
         .isExactlyInstanceOf(IllegalArgumentException.class)
         .hasMessageContaining(
             format(
-                "Blank argument supplied to \"-s\" or \"--sync\" option! %s", AVAILABLE_OPTIONS));
+                "Blank argument supplied to \"-s\" or \"--sync\" option! %s",
+                SYNC_MODULE_OPTION_DESCRIPTION));
   }
 
   @Test
@@ -89,7 +91,7 @@ class SyncerFactoryTest {
         .hasMessageContaining(
             format(
                 "Unknown argument \"%s\" supplied to \"-s\" or \"--sync\" option! %s",
-                unknownOptionValue, AVAILABLE_OPTIONS));
+                unknownOptionValue, SYNC_MODULE_OPTION_DESCRIPTION));
   }
 
   @Test

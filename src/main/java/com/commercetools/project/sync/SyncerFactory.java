@@ -1,7 +1,7 @@
 package com.commercetools.project.sync;
 
-import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_ALL;
 import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_CATEGORY_SYNC;
+import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_DESCRIPTION;
 import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_INVENTORY_ENTRY_SYNC;
 import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_LONG;
 import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_PRODUCT_SYNC;
@@ -32,17 +32,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 final class SyncerFactory {
-
-  static final String AVAILABLE_OPTIONS =
-      format(
-          "Please use any of the following options: \"%s\", \"%s\", \"%s\", \"%s\", \"%s\" or \"%s\".",
-          SYNC_MODULE_OPTION_TYPE_SYNC,
-          SYNC_MODULE_OPTION_PRODUCT_TYPE_SYNC,
-          SYNC_MODULE_OPTION_CATEGORY_SYNC,
-          SYNC_MODULE_OPTION_PRODUCT_SYNC,
-          SYNC_MODULE_OPTION_INVENTORY_ENTRY_SYNC,
-          SYNC_MODULE_OPTION_ALL);
-
   private static final Logger LOGGER = LoggerFactory.getLogger(CliRunner.class);
 
   private SphereClient targetClient;
@@ -92,7 +81,7 @@ final class SyncerFactory {
       final String errorMessage =
           format(
               "Blank argument supplied to \"-%s\" or \"--%s\" option! %s",
-              SYNC_MODULE_OPTION_SHORT, SYNC_MODULE_OPTION_LONG, AVAILABLE_OPTIONS);
+              SYNC_MODULE_OPTION_SHORT, SYNC_MODULE_OPTION_LONG, SYNC_MODULE_OPTION_DESCRIPTION);
       throw new IllegalArgumentException(errorMessage);
     }
 
@@ -143,7 +132,7 @@ final class SyncerFactory {
                 syncOptionValue,
                 SYNC_MODULE_OPTION_SHORT,
                 SYNC_MODULE_OPTION_LONG,
-                AVAILABLE_OPTIONS);
+                SYNC_MODULE_OPTION_DESCRIPTION);
         throw new IllegalArgumentException(errorMessage);
     }
   }

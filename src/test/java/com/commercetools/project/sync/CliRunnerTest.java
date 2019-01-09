@@ -157,8 +157,7 @@ class CliRunnerTest {
     // test
     CliRunner.of().run(new String[] {"-s"}, () -> syncerFactory).toCompletableFuture().join();
 
-    assertThat(outputStream.toString("UTF-8"))
-        .contains("Error:\nMissing argument for option: s");
+    assertThat(outputStream.toString("UTF-8")).contains("Error:\nMissing argument for option: s");
     assertOutputStreamContainsHelpUsageWithSpecifiedCliOptions();
   }
 
@@ -204,8 +203,7 @@ class CliRunnerTest {
     assertThat(outputStream.toString("UTF-8"))
         .contains(
             format(
-                "Error:%nUnknown argument \"%s\" supplied to \"-%s\" or"
-                    + " \"--%s\" option!",
+                "Error:%nUnknown argument \"%s\" supplied to \"-%s\" or" + " \"--%s\" option!",
                 illegalArg, SYNC_MODULE_OPTION_SHORT, SYNC_MODULE_OPTION_LONG));
     assertOutputStreamContainsHelpUsageWithSpecifiedCliOptions();
     verify(syncerFactory, times(1)).sync(illegalArg);

@@ -43,7 +43,7 @@ Dockerized CLI application which allows to automatically sync different resource
    ```bash
    usage: commercetools-project-sync
     -h,--help         Print help information.
-    -s,--sync <arg>   Choose which sync module to run: "types", "productTypes", "categories", "products", "inventoryEntries" or "all".
+    -s,--sync <arg>   Choose one of the following modules to run: "types", "productTypes", "categories", "products", "inventoryEntries" or "all" (will run all the modules).
     -v,--version      Print the version of the application.
    ```
 
