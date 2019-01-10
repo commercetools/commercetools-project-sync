@@ -7,7 +7,6 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
-import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -16,6 +15,8 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 final class CliRunner {
   static final String SYNC_MODULE_OPTION_SHORT = "s";
@@ -48,30 +49,55 @@ final class CliRunner {
   static final String APPLICATION_DEFAULT_NAME = "commercetools-project-sync";
   static final String APPLICATION_DEFAULT_VERSION = "development-SNAPSHOT";
 
+  private static final Logger LOGGER = LoggerFactory.getLogger(CliRunner.class);
+
+  @Nonnull
   public static CliRunner of() {
     return new CliRunner();
   }
 
+  @Nonnull
   @SuppressFBWarnings(
       "NP_NONNULL_PARAM_VIOLATION") // https://github.com/findbugsproject/findbugs/issues/79
   CompletionStage<Void> run(
       @Nonnull final String[] arguments, @Nonnull final SyncerFactory syncerFactory) {
 
     final Options cliOptions = buildCliOptions();
-    final CommandLineParser parser = new DefaultParser();
 
-    try {
-
-      final CommandLine commandLine = parser.parse(cliOptions, arguments);
-      return processCliArguments(commandLine, cliOptions, syncerFactorySupplier);
-
-    } catch (final ParseException | IllegalArgumentException exception) {
-
-      handleIllegalArgumentException(format("Error:%n%s", exception.getMessage()), cliOptions);
-      return CompletableFuture.completedFuture(null);
-    }
+    return parseAndProcess(arguments, syncerFactory, cliOptions, new DefaultParser())
+        .exceptionally(
+            exception -> {
+              handleCompletion(exception);
+              return null;
+            });
   }
 
+  private void handleCompletion(@Nonnull final Throwable throwable) {
+    final String errorMessage = "Failed to run sync process.";
+
+    System.out.println(errorMessage); // NOPMD
+    throwable.printStackTrace(System.out); // NOPMD
+
+    LOGGER.error(errorMessage, throwable);
+  }
+
+  @Nonnull
+  private CompletionStage<Void> parseAndProcess(
+      @Nonnull final String[] arguments,
+      @Nonnull final SyncerFactory syncerFactory,
+      @Nonnull final Options cliOptions,
+      @Nonnull final CommandLineParser parser) {
+    CommandLine commandLine;
+    try {
+      commandLine = parser.parse(cliOptions, arguments);
+    } catch (final ParseException | IllegalArgumentException exception) {
+      return exceptionallyCompletedFuture(exception);
+    }
+
+    return processCliArguments(commandLine, cliOptions, syncerFactory);
+  }
+
+  @Nonnull
   private static Options buildCliOptions() {
     final Options options = new Options();
 
@@ -109,10 +135,14 @@ final class CliRunner {
       @Nonnull final SyncerFactory syncerFactory) {
 
     final Option[] options = commandLine.getOptions();
+
     if (options.length == 0) {
-      handleIllegalArgumentException("Please pass at least 1 option to the CLI.", cliOptions);
-      return CompletableFuture.completedFuture(null);
+
+      return exceptionallyCompletedFuture(
+          new IllegalArgumentException("Please pass at least 1 option to the CLI."));
+
     } else {
+
       final Option option = options[0];
       final String optionName = option.getOpt();
       switch (optionName) {
@@ -132,13 +162,6 @@ final class CliRunner {
               new IllegalStateException(format("Unrecognized option: -%s", optionName)));
       }
     }
-  }
-
-  private static void handleIllegalArgumentException(
-      @Nonnull final String errorMessage, @Nonnull final Options cliOptions) {
-
-    System.out.println(errorMessage); // NOPMD
-    printHelpToStdOut(cliOptions);
   }
 
   @Nonnull
