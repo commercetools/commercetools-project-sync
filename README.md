@@ -85,6 +85,11 @@ The CLI will log the following events:
  3. `Product` Sync.
  4. `InventoryEntry` Sync.
 
+ - To run the type sync
+   ```bash
+   java -jar build/libs/commercetools-project-sync.jar -s types
+   ```  
+
  - To run the productType sync
    ```bash
    java -jar build/libs/commercetools-project-sync.jar -s productTypes
