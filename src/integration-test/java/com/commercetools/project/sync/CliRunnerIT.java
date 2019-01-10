@@ -4,6 +4,7 @@ import static com.commercetools.project.sync.util.ClientConfigurationUtils.creat
 import static com.commercetools.project.sync.util.QueryUtils.queryAndExecute;
 import static com.commercetools.project.sync.util.SphereClientUtils.CTP_SOURCE_CLIENT_CONFIG;
 import static com.commercetools.project.sync.util.SphereClientUtils.CTP_TARGET_CLIENT_CONFIG;
+import static com.commercetools.project.sync.util.TestUtils.assertAllSyncersLoggingEvents;
 import static io.sphere.sdk.models.LocalizedString.ofEnglish;
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
@@ -45,11 +46,7 @@ import io.sphere.sdk.types.TypeDraftBuilder;
 import io.sphere.sdk.types.commands.TypeCreateCommand;
 import io.sphere.sdk.types.commands.TypeDeleteCommand;
 import io.sphere.sdk.types.queries.TypeQuery;
-import java.io.ByteArrayOutputStream;
-import java.io.PrintStream;
-import java.io.UnsupportedEncodingException;
 import javax.annotation.Nonnull;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -57,16 +54,10 @@ import uk.org.lidalia.slf4jtest.TestLogger;
 import uk.org.lidalia.slf4jtest.TestLoggerFactory;
 
 class CliRunnerIT {
-  private static final TestLogger testLogger = TestLoggerFactory.getTestLogger(CliRunner.class);
-  private static ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-  private static PrintStream originalSystemOut;
+  private static final TestLogger testLogger = TestLoggerFactory.getTestLogger(Syncer.class);
 
   @BeforeAll
-  static void setupSuite() throws UnsupportedEncodingException {
-    final PrintStream printStream = new PrintStream(outputStream, false, "UTF-8");
-    originalSystemOut = System.out;
-    System.setOut(printStream);
-
+  static void setupSuite() {
     deleteTestData(createClient(CTP_SOURCE_CLIENT_CONFIG), createClient(CTP_TARGET_CLIENT_CONFIG));
   }
 
@@ -85,19 +76,13 @@ class CliRunnerIT {
     queryAndExecute(client, InventoryEntryQuery.of(), InventoryEntryDeleteCommand::of);
   }
 
-  @AfterAll
-  static void tearDownSuite() {
-    System.setOut(originalSystemOut);
-  }
-
   @AfterEach
   void tearDownTest() {
     testLogger.clearAll();
   }
 
   @Test
-  void run_WithSyncAsArgumentWithAllArg_ShouldExecuteAllSyncers()
-      throws UnsupportedEncodingException {
+  void run_WithSyncAsArgumentWithAllArg_ShouldExecuteAllSyncers() {
     // preparation
     final String resourceKey = "foo";
     try (final SphereClient targetClient = createClient(CTP_TARGET_CLIENT_CONFIG)) {
@@ -118,28 +103,7 @@ class CliRunnerIT {
     try (final SphereClient postSourceClient = createClient(CTP_SOURCE_CLIENT_CONFIG)) {
       try (final SphereClient postTargetClient = createClient(CTP_TARGET_CLIENT_CONFIG)) {
         // assertions
-        assertThat(outputStream.toString("UTF-8"))
-            .contains(
-                format(
-                    "Syncing ProductTypes from CTP project with key '%s' to project with key '%s' is done.",
-                    postSourceClient.getConfig().getProjectKey(),
-                    postTargetClient.getConfig().getProjectKey()),
-                format(
-                    "Syncing Types from CTP project with key '%s' to project with key '%s' is done.",
-                    postSourceClient.getConfig().getProjectKey(),
-                    postTargetClient.getConfig().getProjectKey()),
-                format(
-                    "Syncing Categories from CTP project with key '%s' to project with key '%s' is done.",
-                    postSourceClient.getConfig().getProjectKey(),
-                    postTargetClient.getConfig().getProjectKey()),
-                format(
-                    "Syncing Products from CTP project with key '%s' to project with key '%s' is done.",
-                    postSourceClient.getConfig().getProjectKey(),
-                    postTargetClient.getConfig().getProjectKey()),
-                format(
-                    "Syncing Inventories from CTP project with key '%s' to project with key '%s' is done.",
-                    postSourceClient.getConfig().getProjectKey(),
-                    postTargetClient.getConfig().getProjectKey()));
+        assertAllSyncersLoggingEvents(testLogger, 1);
 
         final PagedQueryResult<ProductType> productTypeQueryResult =
             postTargetClient

@@ -1,6 +1,7 @@
 package com.commercetools.project.sync;
 
 import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_DESCRIPTION;
+import static com.commercetools.project.sync.util.TestUtils.assertAllSyncersLoggingEvents;
 import static java.lang.String.format;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -361,109 +362,7 @@ class SyncerFactoryTest {
     verify(sourceClient, times(1)).execute(any(ProductQuery.class));
     verify(sourceClient, times(1)).execute(any(InventoryEntryQuery.class));
     verifyInteractionsWithClientAfterSync(sourceClient);
-
-    final Condition<LoggingEvent> typesStartLog =
-        new Condition<>(
-            loggingEvent ->
-                Level.INFO.equals(loggingEvent.getLevel())
-                    && loggingEvent.getMessage().contains("Starting TypeSync"),
-            "types start log");
-
-    final Condition<LoggingEvent> typesStatisticsLog =
-        new Condition<>(
-            loggingEvent ->
-                Level.INFO.equals(loggingEvent.getLevel())
-                    && loggingEvent
-                        .getMessage()
-                        .contains(
-                            "Summary: 0 types were processed in total (0 created, 0 updated "
-                                + "and 0 failed to sync)."),
-            "statistics log");
-
-    final Condition<LoggingEvent> productTypesStartLog =
-        new Condition<>(
-            loggingEvent ->
-                Level.INFO.equals(loggingEvent.getLevel())
-                    && loggingEvent.getMessage().contains("Starting ProductTypeSync"),
-            "ProductTypes start log");
-
-    final Condition<LoggingEvent> productTypesStatisticsLog =
-        new Condition<>(
-            loggingEvent ->
-                Level.INFO.equals(loggingEvent.getLevel())
-                    && loggingEvent
-                        .getMessage()
-                        .contains(
-                            "Summary: 0 product types were processed in total (0 created, 0 updated "
-                                + "and 0 failed to sync)."),
-            "statistics log");
-
-    final Condition<LoggingEvent> categoriesStartLog =
-        new Condition<>(
-            loggingEvent ->
-                Level.INFO.equals(loggingEvent.getLevel())
-                    && loggingEvent.getMessage().contains("Starting CategorySync"),
-            "categories start log");
-
-    final Condition<LoggingEvent> categoriesStatisticsLog =
-        new Condition<>(
-            loggingEvent ->
-                Level.INFO.equals(loggingEvent.getLevel())
-                    && loggingEvent
-                        .getMessage()
-                        .contains(
-                            "Summary: 0 categories were processed in total (0 created, 0 updated, "
-                                + "0 failed to sync and 0 categories with a missing parent)."),
-            "statistics log");
-
-    final Condition<LoggingEvent> productsStartLog =
-        new Condition<>(
-            loggingEvent ->
-                Level.INFO.equals(loggingEvent.getLevel())
-                    && loggingEvent.getMessage().contains("Starting ProductSync"),
-            "products start log");
-
-    final Condition<LoggingEvent> productsStatisticsLog =
-        new Condition<>(
-            loggingEvent ->
-                Level.INFO.equals(loggingEvent.getLevel())
-                    && loggingEvent
-                        .getMessage()
-                        .contains(
-                            "Summary: 0 products were processed in total (0 created, 0 updated "
-                                + "and 0 failed to sync)."),
-            "statistics log");
-
-    final Condition<LoggingEvent> inventoriesStartLog =
-        new Condition<>(
-            loggingEvent ->
-                Level.INFO.equals(loggingEvent.getLevel())
-                    && loggingEvent.getMessage().contains("Starting InventorySync"),
-            "inventories start log");
-
-    final Condition<LoggingEvent> inventoriesStatisticsLog =
-        new Condition<>(
-            loggingEvent ->
-                Level.INFO.equals(loggingEvent.getLevel())
-                    && loggingEvent
-                        .getMessage()
-                        .contains(
-                            "Summary: 0 inventory entries were processed in total (0 created, 0 updated "
-                                + "and 0 failed to sync)."),
-            "statistics log");
-
-    assertThat(testLogger.getAllLoggingEvents())
-        .hasSize(10)
-        .haveExactly(1, typesStartLog)
-        .haveExactly(1, productTypesStartLog)
-        .haveExactly(1, categoriesStartLog)
-        .haveExactly(1, productsStartLog)
-        .haveExactly(1, inventoriesStartLog)
-        .haveExactly(1, typesStatisticsLog)
-        .haveExactly(1, productTypesStatisticsLog)
-        .haveExactly(1, categoriesStatisticsLog)
-        .haveExactly(1, productsStatisticsLog)
-        .haveExactly(1, inventoriesStatisticsLog);
+    assertAllSyncersLoggingEvents(testLogger, 0);
   }
 
   private void verifyInteractionsWithClientAfterSync(@Nonnull final SphereClient client) {
