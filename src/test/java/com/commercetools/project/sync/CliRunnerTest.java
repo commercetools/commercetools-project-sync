@@ -349,15 +349,10 @@ class CliRunnerTest {
     inOrder.verify(sourceClient).execute(any(ProductQuery.class));
     inOrder.verify(sourceClient).execute(any(InventoryEntryQuery.class));
 
-    verifyInteractionsWithClientAfterSync(sourceClient, 5);
+    verifyInteractionsWithClientAfterSync(sourceClient);
   }
 
-  private void verifyInteractionsWithClientAfterSync(
-      @Nonnull final SphereClient client, final int expectedNumberOfGetConfigCalls) {
-
-    // Verify config is accessed for the success message after sync:
-    // " example: Syncing products from CTP project with key 'x' to project with key 'y' is done","
-    verify(client, times(expectedNumberOfGetConfigCalls)).getConfig();
+  private void verifyInteractionsWithClientAfterSync(@Nonnull final SphereClient client) {
     verify(client, times(1)).close();
     verifyNoMoreInteractions(client);
   }
