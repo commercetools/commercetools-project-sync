@@ -57,10 +57,7 @@ final class CliRunner {
   }
 
   @Nonnull
-  @SuppressFBWarnings(
-      "NP_NONNULL_PARAM_VIOLATION") // https://github.com/findbugsproject/findbugs/issues/79
-  CompletionStage<Void> run(
-      @Nonnull final String[] arguments, @Nonnull final SyncerFactory syncerFactory) {
+  Void run(@Nonnull final String[] arguments, @Nonnull final SyncerFactory syncerFactory) {
 
     final Options cliOptions = buildCliOptions();
 
@@ -69,7 +66,9 @@ final class CliRunner {
             exception -> {
               handleCompletion(exception);
               return null;
-            });
+            })
+        .toCompletableFuture()
+        .join();
   }
 
   private void handleCompletion(@Nonnull final Throwable throwable) {

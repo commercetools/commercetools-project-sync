@@ -108,7 +108,7 @@ class CliRunnerIT {
             SyncerFactory.of(() -> sourceClient, () -> targetClient);
 
         // test
-        CliRunner.of().run(new String[] {"-s", "all"}, syncerFactory).toCompletableFuture().join();
+        CliRunner.of().run(new String[] {"-s", "all"}, syncerFactory);
       }
     }
 

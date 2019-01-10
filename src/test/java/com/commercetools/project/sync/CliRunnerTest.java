@@ -77,7 +77,7 @@ class CliRunnerTest {
         SyncerFactory.of(() -> mock(SphereClient.class), () -> mock(SphereClient.class));
 
     // test
-    CliRunner.of().run(new String[] {}, syncerFactory).toCompletableFuture().join();
+    CliRunner.of().run(new String[] {}, syncerFactory);
 
     // assertion
     assertThat(outputStream.toString("UTF-8")).contains("Failed to run sync process.");
@@ -105,7 +105,7 @@ class CliRunnerTest {
         SyncerFactory.of(() -> mock(SphereClient.class), () -> mock(SphereClient.class));
 
     // test
-    CliRunner.of().run(new String[] {"-help"}, syncerFactory).toCompletableFuture().join();
+    CliRunner.of().run(new String[] {"-help"}, syncerFactory);
 
     assertThat(testLogger.getAllLoggingEvents()).isEmpty();
     assertOutputStreamContainsHelpUsageWithSpecifiedCliOptions();
@@ -128,7 +128,7 @@ class CliRunnerTest {
         SyncerFactory.of(() -> mock(SphereClient.class), () -> mock(SphereClient.class));
 
     // test
-    CliRunner.of().run(new String[] {"-h"}, syncerFactory).toCompletableFuture().join();
+    CliRunner.of().run(new String[] {"-h"}, syncerFactory);
 
     assertThat(testLogger.getAllLoggingEvents()).isEmpty();
     assertOutputStreamContainsHelpUsageWithSpecifiedCliOptions();
@@ -142,7 +142,7 @@ class CliRunnerTest {
         SyncerFactory.of(() -> mock(SphereClient.class), () -> mock(SphereClient.class));
 
     // test
-    CliRunner.of().run(new String[] {"-v"}, syncerFactory).toCompletableFuture().join();
+    CliRunner.of().run(new String[] {"-v"}, syncerFactory);
 
     assertThat(testLogger.getAllLoggingEvents()).isEmpty();
     assertThat(outputStream.toString("UTF-8")).contains(APPLICATION_DEFAULT_VERSION);
@@ -156,7 +156,7 @@ class CliRunnerTest {
         SyncerFactory.of(() -> mock(SphereClient.class), () -> mock(SphereClient.class));
 
     // test
-    CliRunner.of().run(new String[] {"--version"}, syncerFactory).toCompletableFuture().join();
+    CliRunner.of().run(new String[] {"--version"}, syncerFactory);
 
     assertThat(testLogger.getAllLoggingEvents()).isEmpty();
     assertThat(outputStream.toString("UTF-8")).contains(APPLICATION_DEFAULT_VERSION);
@@ -170,7 +170,7 @@ class CliRunnerTest {
         SyncerFactory.of(() -> mock(SphereClient.class), () -> mock(SphereClient.class));
 
     // test
-    CliRunner.of().run(new String[] {"-s"}, syncerFactory).toCompletableFuture().join();
+    CliRunner.of().run(new String[] {"-s"}, syncerFactory);
 
     // assertion
     assertThat(outputStream.toString("UTF-8")).contains("Failed to run sync process.");
@@ -205,7 +205,7 @@ class CliRunnerTest {
         spy(SyncerFactory.of(() -> sourceClient, () -> targetClient));
 
     // test
-    CliRunner.of().run(new String[] {"-s", "products"}, syncerFactory).toCompletableFuture().join();
+    CliRunner.of().run(new String[] {"-s", "products"}, syncerFactory);
 
     // assertions
     verify(syncerFactory, times(1)).sync("products");
@@ -269,10 +269,7 @@ class CliRunnerTest {
         spy(SyncerFactory.of(() -> sourceClient, () -> targetClient));
 
     // test
-    CliRunner.of()
-        .run(new String[] {"--sync", "products"}, syncerFactory)
-        .toCompletableFuture()
-        .join();
+    CliRunner.of().run(new String[] {"--sync", "products"}, syncerFactory);
 
     // assertions
     verify(syncerFactory, times(1)).sync("products");
@@ -286,7 +283,7 @@ class CliRunnerTest {
     final SyncerFactory syncerFactory =
         spy(SyncerFactory.of(() -> mock(SphereClient.class), () -> mock(SphereClient.class)));
     // test
-    CliRunner.of().run(new String[] {"-u"}, syncerFactory).toCompletableFuture().join();
+    CliRunner.of().run(new String[] {"-u"}, syncerFactory);
 
     // Assert error log
     verify(syncerFactory, never()).sync(any());
@@ -315,7 +312,7 @@ class CliRunnerTest {
         spy(SyncerFactory.of(() -> mock(SphereClient.class), () -> mock(SphereClient.class)));
 
     // test
-    CliRunner.of().run(new String[] {"-h"}, syncerFactory).toCompletableFuture().join();
+    CliRunner.of().run(new String[] {"-h"}, syncerFactory);
 
     // assertions
     assertThat(testLogger.getAllLoggingEvents()).isEmpty();
@@ -366,7 +363,7 @@ class CliRunnerTest {
         spy(SyncerFactory.of(() -> sourceClient, () -> targetClient));
 
     // test
-    CliRunner.of().run(new String[] {"-s", "all"}, syncerFactory).toCompletableFuture().join();
+    CliRunner.of().run(new String[] {"-s", "all"}, syncerFactory);
 
     // assertions
     verify(syncerFactory, times(1)).syncAll();
@@ -411,7 +408,7 @@ class CliRunnerTest {
         spy(SyncerFactory.of(() -> sourceClient, () -> targetClient));
 
     // test
-    CliRunner.of().run(new String[] {"-s", "all"}, syncerFactory).toCompletableFuture().join();
+    CliRunner.of().run(new String[] {"-s", "all"}, syncerFactory);
 
     // assertions
     verify(syncerFactory, times(1)).syncAll();
