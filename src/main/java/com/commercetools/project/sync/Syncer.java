@@ -4,11 +4,9 @@ import static com.commercetools.project.sync.util.StatisticsUtils.logStatistics;
 import static com.commercetools.sync.commons.utils.CtpQueryUtils.queryAll;
 import static java.lang.String.format;
 
-import com.commercetools.sync.categories.CategorySync;
 import com.commercetools.sync.commons.BaseSync;
 import com.commercetools.sync.commons.BaseSyncOptions;
 import com.commercetools.sync.commons.helpers.BaseSyncStatistics;
-import com.commercetools.sync.inventories.InventorySync;
 import io.sphere.sdk.client.SphereClient;
 import io.sphere.sdk.models.Resource;
 import io.sphere.sdk.queries.QueryDsl;
@@ -86,30 +84,7 @@ public abstract class Syncer<
               if (LOGGER.isInfoEnabled()) {
                 logStatistics(sync.getStatistics(), LOGGER);
               }
-              final String successMessage =
-                  format(
-                      "%nSyncing %s from CTP project with key '%s' to project with key '%s' is done.%n",
-                      getResourceName(),
-                      sourceClient.getConfig().getProjectKey(),
-                      targetClient.getConfig().getProjectKey());
-              System.out.println(successMessage); // NOPMD
             });
-  }
-
-  @Nonnull
-  private String getResourceName() {
-
-    if (sync instanceof InventorySync) {
-      return "Inventories";
-    }
-
-    if (sync instanceof CategorySync) {
-      return "Categories";
-    }
-
-    final String syncClassName = sync.getClass().getSimpleName();
-    // e.g. productTypeSync -> productTypes, productSync -> products
-    return syncClassName.replace("Sync", "s");
   }
 
   /**

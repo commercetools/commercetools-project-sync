@@ -37,7 +37,6 @@ import java.io.UnsupportedEncodingException;
 import java.util.concurrent.CompletableFuture;
 import javax.annotation.Nonnull;
 import org.apache.commons.cli.MissingArgumentException;
-import org.apache.commons.cli.UnrecognizedOptionException;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -71,7 +70,7 @@ class CliRunnerTest {
   }
 
   @Test
-  void run_WithEmptyArgumentList_ShouldLogAndPrintError() throws UnsupportedEncodingException {
+  void run_WithEmptyArgumentList_ShouldFailAndLogError() {
     // preparation
     final SyncerFactory syncerFactory =
         SyncerFactory.of(() -> mock(SphereClient.class), () -> mock(SphereClient.class));
@@ -80,9 +79,6 @@ class CliRunnerTest {
     CliRunner.of().run(new String[] {}, syncerFactory);
 
     // assertion
-    assertThat(outputStream.toString("UTF-8")).contains("Failed to run sync process.");
-    assertThat(outputStream.toString("UTF-8"))
-        .contains("Please pass at least 1 option to the CLI.");
     assertThat(testLogger.getAllLoggingEvents())
         .hasSize(1)
         .hasOnlyOneElementSatisfying(
@@ -94,6 +90,8 @@ class CliRunnerTest {
               assertThat(actualThrowableOpt.isPresent()).isTrue();
               final Throwable actualThrowable = actualThrowableOpt.get();
               assertThat(actualThrowable).isExactlyInstanceOf(IllegalArgumentException.class);
+              assertThat(actualThrowable.getMessage())
+                  .contains("Please pass at least 1 option to the CLI.");
             });
   }
 
@@ -107,7 +105,6 @@ class CliRunnerTest {
     // test
     CliRunner.of().run(new String[] {"-help"}, syncerFactory);
 
-    assertThat(testLogger.getAllLoggingEvents()).isEmpty();
     assertOutputStreamContainsHelpUsageWithSpecifiedCliOptions();
   }
 
@@ -130,7 +127,6 @@ class CliRunnerTest {
     // test
     CliRunner.of().run(new String[] {"-h"}, syncerFactory);
 
-    assertThat(testLogger.getAllLoggingEvents()).isEmpty();
     assertOutputStreamContainsHelpUsageWithSpecifiedCliOptions();
   }
 
@@ -144,7 +140,6 @@ class CliRunnerTest {
     // test
     CliRunner.of().run(new String[] {"-v"}, syncerFactory);
 
-    assertThat(testLogger.getAllLoggingEvents()).isEmpty();
     assertThat(outputStream.toString("UTF-8")).contains(APPLICATION_DEFAULT_VERSION);
   }
 
@@ -158,13 +153,11 @@ class CliRunnerTest {
     // test
     CliRunner.of().run(new String[] {"--version"}, syncerFactory);
 
-    assertThat(testLogger.getAllLoggingEvents()).isEmpty();
     assertThat(outputStream.toString("UTF-8")).contains(APPLICATION_DEFAULT_VERSION);
   }
 
   @Test
-  void run_WithSyncAsArgumentWithNoArgs_ShouldLogErrorAndPrintToStandardOut()
-      throws UnsupportedEncodingException {
+  void run_WithSyncAsArgumentWithNoArgs_ShouldFailAndLogError() {
     // preparation
     final SyncerFactory syncerFactory =
         SyncerFactory.of(() -> mock(SphereClient.class), () -> mock(SphereClient.class));
@@ -173,8 +166,6 @@ class CliRunnerTest {
     CliRunner.of().run(new String[] {"-s"}, syncerFactory);
 
     // assertion
-    assertThat(outputStream.toString("UTF-8")).contains("Failed to run sync process.");
-    assertThat(outputStream.toString("UTF-8")).contains("Missing argument for option: s");
     assertThat(testLogger.getAllLoggingEvents())
         .hasSize(1)
         .hasOnlyOneElementSatisfying(
@@ -186,6 +177,7 @@ class CliRunnerTest {
               assertThat(actualThrowableOpt.isPresent()).isTrue();
               final Throwable actualThrowable = actualThrowableOpt.get();
               assertThat(actualThrowable).isExactlyInstanceOf(MissingArgumentException.class);
+              assertThat(actualThrowable.getMessage()).contains("Missing argument for option: s");
             });
   }
 
@@ -214,46 +206,6 @@ class CliRunnerTest {
   }
 
   @Test
-  void run_WithSyncAsArgumentWithIllegalArgs_ShouldLogErrorAndPrintToStandardOut()
-      throws UnsupportedEncodingException {
-    // preparation
-    final SyncerFactory syncerFactory =
-        spy(SyncerFactory.of(() -> mock(SphereClient.class), () -> mock(SphereClient.class)));
-
-    // test
-    final String illegalArg = "illegal";
-    CliRunner.of().run(new String[] {"-s", illegalArg}, syncerFactory);
-
-    // Assert error log
-    final String expectedErrorMessage =
-        format(
-            "Unknown argument \"%s\" supplied to \"-%s\" or" + " \"--%s\" option! %s",
-            illegalArg,
-            SYNC_MODULE_OPTION_SHORT,
-            SYNC_MODULE_OPTION_LONG,
-            SYNC_MODULE_OPTION_DESCRIPTION);
-
-    // assertion
-
-    verify(syncerFactory, times(1)).sync(illegalArg);
-    verify(syncerFactory, never()).syncAll();
-    assertThat(outputStream.toString("UTF-8")).contains("Failed to run sync process.");
-    assertThat(outputStream.toString("UTF-8")).contains(expectedErrorMessage);
-    assertThat(testLogger.getAllLoggingEvents())
-        .hasSize(1)
-        .hasOnlyOneElementSatisfying(
-            loggingEvent -> {
-              assertThat(loggingEvent.getLevel()).isEqualTo(Level.ERROR);
-              assertThat(loggingEvent.getMessage()).contains("Failed to run sync process.");
-              final Optional<Throwable> actualThrowableOpt = loggingEvent.getThrowable();
-              assertThat(actualThrowableOpt).isNotNull();
-              assertThat(actualThrowableOpt.isPresent()).isTrue();
-              final Throwable actualThrowable = actualThrowableOpt.get();
-              assertThat(actualThrowable).isExactlyInstanceOf(IllegalArgumentException.class);
-            });
-  }
-
-  @Test
   void run_WithSyncAsLongArgument_ShouldProcessSyncOption() {
     // preparation
     final SphereClient sourceClient = mock(SphereClient.class);
@@ -278,7 +230,7 @@ class CliRunnerTest {
   }
 
   @Test
-  void run_WithUnknownArgument_ShouldPrintAndLogError() throws UnsupportedEncodingException {
+  void run_WithUnknownArgument_ShouldPrintAndLogError() {
     // preparation
     final SyncerFactory syncerFactory =
         spy(SyncerFactory.of(() -> mock(SphereClient.class), () -> mock(SphereClient.class)));
@@ -288,20 +240,6 @@ class CliRunnerTest {
     // Assert error log
     verify(syncerFactory, never()).sync(any());
     verify(syncerFactory, never()).syncAll();
-    assertThat(outputStream.toString("UTF-8")).contains("Failed to run sync process.");
-    assertThat(outputStream.toString("UTF-8")).contains("Unrecognized option: -u");
-    assertThat(testLogger.getAllLoggingEvents())
-        .hasSize(1)
-        .hasOnlyOneElementSatisfying(
-            loggingEvent -> {
-              assertThat(loggingEvent.getLevel()).isEqualTo(Level.ERROR);
-              assertThat(loggingEvent.getMessage()).contains("Failed to run sync process.");
-              final Optional<Throwable> actualThrowableOpt = loggingEvent.getThrowable();
-              assertThat(actualThrowableOpt).isNotNull();
-              assertThat(actualThrowableOpt.isPresent()).isTrue();
-              final Throwable actualThrowable = actualThrowableOpt.get();
-              assertThat(actualThrowable).isExactlyInstanceOf(UnrecognizedOptionException.class);
-            });
   }
 
   @Test
@@ -372,20 +310,10 @@ class CliRunnerTest {
     verify(sourceClient, times(1)).execute(any(CategoryQuery.class));
     verify(sourceClient, times(1)).execute(any(ProductQuery.class));
     verify(sourceClient, times(1)).execute(any(InventoryEntryQuery.class));
-
-    verifyInteractionsWithClientAfterSync(sourceClient, 5);
-    assertThat(outputStream.toString("UTF-8"))
-        .contains(
-            "Syncing ProductTypes from CTP project with key 'foo' to project with key 'bar' is done.",
-            "Syncing Types from CTP project with key 'foo' to project with key 'bar' is done.",
-            "Syncing Categories from CTP project with key 'foo' to project with key 'bar' is done.",
-            "Syncing Products from CTP project with key 'foo' to project with key 'bar' is done.",
-            "Syncing Inventories from CTP project with key 'foo' to project with key 'bar' is done.");
   }
 
   @Test
-  void run_WithSyncAsArgumentWithAllArg_ShouldExecuteAllSyncersInCorrectOrder()
-      throws UnsupportedEncodingException {
+  void run_WithSyncAsArgumentWithAllArg_ShouldExecuteAllSyncersInCorrectOrder() {
     // preparation
     final SphereClient sourceClient = mock(SphereClient.class);
     when(sourceClient.getConfig()).thenReturn(SphereClientConfig.of("foo", "foo", "foo"));
@@ -421,15 +349,7 @@ class CliRunnerTest {
     inOrder.verify(sourceClient).execute(any(ProductQuery.class));
     inOrder.verify(sourceClient).execute(any(InventoryEntryQuery.class));
 
-    final String outputStringWithoutLineBreaks = outputStream.toString("UTF-8").replace("\n", "");
     verifyInteractionsWithClientAfterSync(sourceClient, 5);
-    assertThat(outputStringWithoutLineBreaks)
-        .containsSequence(
-            "Syncing ProductTypes from CTP project with key 'foo' to project with key 'bar' is done.",
-            "Syncing Types from CTP project with key 'foo' to project with key 'bar' is done.",
-            "Syncing Categories from CTP project with key 'foo' to project with key 'bar' is done.",
-            "Syncing Products from CTP project with key 'foo' to project with key 'bar' is done.",
-            "Syncing Inventories from CTP project with key 'foo' to project with key 'bar' is done.");
   }
 
   private void verifyInteractionsWithClientAfterSync(

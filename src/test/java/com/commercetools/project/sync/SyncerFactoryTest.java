@@ -20,16 +20,11 @@ import io.sphere.sdk.producttypes.queries.ProductTypeQuery;
 import io.sphere.sdk.queries.PagedQueryResult;
 import io.sphere.sdk.types.queries.TypeQuery;
 import io.sphere.sdk.utils.CompletableFutureUtils;
-import java.io.ByteArrayOutputStream;
-import java.io.PrintStream;
-import java.io.UnsupportedEncodingException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import javax.annotation.Nonnull;
 import org.assertj.core.api.Condition;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import uk.org.lidalia.slf4jext.Level;
 import uk.org.lidalia.slf4jtest.LoggingEvent;
@@ -38,20 +33,6 @@ import uk.org.lidalia.slf4jtest.TestLoggerFactory;
 
 class SyncerFactoryTest {
   private static final TestLogger testLogger = TestLoggerFactory.getTestLogger(Syncer.class);
-  private static ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-  private static PrintStream originalSystemOut;
-
-  @BeforeAll
-  static void setupSuite() throws UnsupportedEncodingException {
-    final PrintStream printStream = new PrintStream(outputStream, false, "UTF-8");
-    originalSystemOut = System.out;
-    System.setOut(printStream);
-  }
-
-  @AfterAll
-  static void tearDownSuite() {
-    System.setOut(originalSystemOut);
-  }
 
   @AfterEach
   void tearDownTest() {
@@ -100,7 +81,7 @@ class SyncerFactoryTest {
   }
 
   @Test
-  void sync_WithProductsArg_ShouldBuildSyncerAndExecuteSync() throws UnsupportedEncodingException {
+  void sync_WithProductsArg_ShouldBuildSyncerAndExecuteSync() {
     // preparation
     final SphereClient sourceClient = mock(SphereClient.class);
     when(sourceClient.getConfig()).thenReturn(SphereClientConfig.of("foo", "foo", "foo"));
@@ -118,7 +99,7 @@ class SyncerFactoryTest {
 
     // assertions
     verify(sourceClient, times(1)).execute(any(ProductQuery.class));
-    verifyInteractionsWithClientAfterSync(sourceClient, 1);
+    verifyInteractionsWithClientAfterSync(sourceClient);
 
     final Condition<LoggingEvent> startLog =
         new Condition<>(
@@ -142,16 +123,10 @@ class SyncerFactoryTest {
         .hasSize(2)
         .haveExactly(1, startLog)
         .haveExactly(1, statisticsLog);
-
-    assertThat(outputStream.toString("UTF-8"))
-        .contains(
-            "Syncing Products from CTP project with key"
-                + " 'foo' to project with key 'bar' is done.");
   }
 
   @Test
-  void sync_WithCategoriesArg_ShouldBuildSyncerAndExecuteSync()
-      throws UnsupportedEncodingException {
+  void sync_WithCategoriesArg_ShouldBuildSyncerAndExecuteSync() {
     // preparation
     final SphereClient sourceClient = mock(SphereClient.class);
     when(sourceClient.getConfig()).thenReturn(SphereClientConfig.of("foo", "foo", "foo"));
@@ -169,7 +144,7 @@ class SyncerFactoryTest {
 
     // assertions
     verify(sourceClient, times(1)).execute(any(CategoryQuery.class));
-    verifyInteractionsWithClientAfterSync(sourceClient, 1);
+    verifyInteractionsWithClientAfterSync(sourceClient);
 
     final Condition<LoggingEvent> startLog =
         new Condition<>(
@@ -193,16 +168,10 @@ class SyncerFactoryTest {
         .hasSize(2)
         .haveExactly(1, startLog)
         .haveExactly(1, statisticsLog);
-
-    assertThat(outputStream.toString("UTF-8"))
-        .contains(
-            "Syncing Categories from CTP project with key"
-                + " 'foo' to project with key 'bar' is done.");
   }
 
   @Test
-  void sync_WithProductTypesArg_ShouldBuildSyncerAndExecuteSync()
-      throws UnsupportedEncodingException {
+  void sync_WithProductTypesArg_ShouldBuildSyncerAndExecuteSync() {
     // preparation
     final SphereClient sourceClient = mock(SphereClient.class);
     when(sourceClient.getConfig()).thenReturn(SphereClientConfig.of("foo", "foo", "foo"));
@@ -220,7 +189,7 @@ class SyncerFactoryTest {
 
     // assertions
     verify(sourceClient, times(1)).execute(any(ProductTypeQuery.class));
-    verifyInteractionsWithClientAfterSync(sourceClient, 1);
+    verifyInteractionsWithClientAfterSync(sourceClient);
 
     final Condition<LoggingEvent> startLog =
         new Condition<>(
@@ -244,15 +213,10 @@ class SyncerFactoryTest {
         .hasSize(2)
         .haveExactly(1, startLog)
         .haveExactly(1, statisticsLog);
-
-    assertThat(outputStream.toString("UTF-8"))
-        .contains(
-            "Syncing ProductTypes from CTP project with key"
-                + " 'foo' to project with key 'bar' is done.");
   }
 
   @Test
-  void sync_WithTypesArg_ShouldBuildSyncerAndExecuteSync() throws UnsupportedEncodingException {
+  void sync_WithTypesArg_ShouldBuildSyncerAndExecuteSync() {
     // preparation
     final SphereClient sourceClient = mock(SphereClient.class);
     when(sourceClient.getConfig()).thenReturn(SphereClientConfig.of("foo", "foo", "foo"));
@@ -270,7 +234,7 @@ class SyncerFactoryTest {
 
     // assertions
     verify(sourceClient, times(1)).execute(any(TypeQuery.class));
-    verifyInteractionsWithClientAfterSync(sourceClient, 1);
+    verifyInteractionsWithClientAfterSync(sourceClient);
 
     final Condition<LoggingEvent> startLog =
         new Condition<>(
@@ -294,16 +258,10 @@ class SyncerFactoryTest {
         .hasSize(2)
         .haveExactly(1, startLog)
         .haveExactly(1, statisticsLog);
-
-    assertThat(outputStream.toString("UTF-8"))
-        .contains(
-            "Syncing Types from CTP project with key"
-                + " 'foo' to project with key 'bar' is done.");
   }
 
   @Test
-  void sync_WithInventoryEntriesArg_ShouldBuildSyncerAndExecuteSync()
-      throws UnsupportedEncodingException {
+  void sync_WithInventoryEntriesArg_ShouldBuildSyncerAndExecuteSync() {
     // preparation
     final SphereClient sourceClient = mock(SphereClient.class);
     when(sourceClient.getConfig()).thenReturn(SphereClientConfig.of("foo", "foo", "foo"));
@@ -321,7 +279,7 @@ class SyncerFactoryTest {
 
     // assertions
     verify(sourceClient, times(1)).execute(any(InventoryEntryQuery.class));
-    verifyInteractionsWithClientAfterSync(sourceClient, 1);
+    verifyInteractionsWithClientAfterSync(sourceClient);
 
     final Condition<LoggingEvent> startLog =
         new Condition<>(
@@ -345,11 +303,6 @@ class SyncerFactoryTest {
         .hasSize(2)
         .haveExactly(1, startLog)
         .haveExactly(1, statisticsLog);
-
-    assertThat(outputStream.toString("UTF-8"))
-        .contains(
-            "Syncing Inventories from CTP project with key"
-                + " 'foo' to project with key 'bar' is done.");
   }
 
   @Test
@@ -372,12 +325,12 @@ class SyncerFactoryTest {
 
     // assertions
     verify(sourceClient, times(1)).execute(any(InventoryEntryQuery.class));
-    verifyInteractionsWithClientAfterSync(sourceClient, 0);
+    verifyInteractionsWithClientAfterSync(sourceClient);
     assertThat(result).hasFailedWithThrowableThat().isExactlyInstanceOf(BadGatewayException.class);
   }
 
   @Test
-  void syncAll_ShouldBuildSyncerAndExecuteSync() throws UnsupportedEncodingException {
+  void syncAll_ShouldBuildSyncerAndExecuteSync() {
     // preparation
     final SphereClient sourceClient = mock(SphereClient.class);
     when(sourceClient.getConfig()).thenReturn(SphereClientConfig.of("foo", "foo", "foo"));
@@ -407,8 +360,7 @@ class SyncerFactoryTest {
     verify(sourceClient, times(1)).execute(any(CategoryQuery.class));
     verify(sourceClient, times(1)).execute(any(ProductQuery.class));
     verify(sourceClient, times(1)).execute(any(InventoryEntryQuery.class));
-    verifyInteractionsWithClientAfterSync(sourceClient, 5);
-    final String outputStringWithoutLineBreaks = outputStream.toString("UTF-8").replace("\n", "");
+    verifyInteractionsWithClientAfterSync(sourceClient);
 
     final Condition<LoggingEvent> typesStartLog =
         new Condition<>(
@@ -512,22 +464,12 @@ class SyncerFactoryTest {
         .haveExactly(1, categoriesStatisticsLog)
         .haveExactly(1, productsStatisticsLog)
         .haveExactly(1, inventoriesStatisticsLog);
-
-    assertThat(outputStringWithoutLineBreaks)
-        .containsSequence(
-            "Syncing ProductTypes from CTP project with key 'foo' to project with key 'bar' is done.",
-            "Syncing Types from CTP project with key 'foo' to project with key 'bar' is done.",
-            "Syncing Categories from CTP project with key 'foo' to project with key 'bar' is done.",
-            "Syncing Products from CTP project with key 'foo' to project with key 'bar' is done.",
-            "Syncing Inventories from CTP project with key 'foo' to project with key 'bar' is done.");
   }
 
-  private void verifyInteractionsWithClientAfterSync(
-      @Nonnull final SphereClient client, final int expectedNumberOfGetConfigCalls) {
+  private void verifyInteractionsWithClientAfterSync(@Nonnull final SphereClient client) {
 
     // Verify config is accessed for the success message after sync:
     // " example: Syncing products from CTP project with key 'x' to project with key 'y' is done","
-    verify(client, times(expectedNumberOfGetConfigCalls)).getConfig();
     verify(client, times(1)).close();
     verifyNoMoreInteractions(client);
   }

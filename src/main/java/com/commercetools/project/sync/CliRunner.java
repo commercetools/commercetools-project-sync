@@ -64,20 +64,11 @@ final class CliRunner {
     parseAndProcess(arguments, syncerFactory, cliOptions, new DefaultParser())
         .exceptionally(
             exception -> {
-              handleCompletion(exception);
+              LOGGER.error("Failed to run sync process.", exception);
               return null;
             })
         .toCompletableFuture()
         .join();
-  }
-
-  private void handleCompletion(@Nonnull final Throwable throwable) {
-    final String errorMessage = "Failed to run sync process.";
-
-    System.out.println(errorMessage); // NOPMD
-    throwable.printStackTrace(System.out); // NOPMD
-
-    LOGGER.error(errorMessage, throwable);
   }
 
   @Nonnull
