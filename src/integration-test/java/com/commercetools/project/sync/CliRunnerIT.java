@@ -104,13 +104,11 @@ class CliRunnerIT {
       try (final SphereClient sourceClient = createClient(CTP_SOURCE_CLIENT_CONFIG)) {
         setupTestData(sourceClient, resourceKey);
 
-        final SyncerFactory syncerFactory = SyncerFactory.of(sourceClient, targetClient);
+        final SyncerFactory syncerFactory =
+            SyncerFactory.of(() -> sourceClient, () -> targetClient);
 
         // test
-        CliRunner.of()
-            .run(new String[] {"-s", "all"}, () -> syncerFactory)
-            .toCompletableFuture()
-            .join();
+        CliRunner.of().run(new String[] {"-s", "all"}, syncerFactory).toCompletableFuture().join();
       }
     }
 

@@ -106,7 +106,7 @@ class SyncerFactoryTest {
     when(sourceClient.execute(any(ProductQuery.class)))
         .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
 
-    final SyncerFactory syncerFactory = SyncerFactory.of(sourceClient, targetClient);
+    final SyncerFactory syncerFactory = SyncerFactory.of(() -> sourceClient, () -> targetClient);
 
     // test
     syncerFactory.sync("products");
@@ -133,7 +133,7 @@ class SyncerFactoryTest {
     when(sourceClient.execute(any(CategoryQuery.class)))
         .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
 
-    final SyncerFactory syncerFactory = SyncerFactory.of(sourceClient, targetClient);
+    final SyncerFactory syncerFactory = SyncerFactory.of(() -> sourceClient, () -> targetClient);
 
     // test
     syncerFactory.sync("categories");

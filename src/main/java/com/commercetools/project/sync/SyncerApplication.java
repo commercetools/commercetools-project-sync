@@ -12,7 +12,7 @@ public class SyncerApplication {
    */
   public static void main(final String[] args) {
     CliRunner.of()
-        .run(args, () -> SyncerFactory.of(CTP_SOURCE_CLIENT, CTP_TARGET_CLIENT))
+        .run(args, SyncerFactory.of(() -> CTP_SOURCE_CLIENT, () -> CTP_TARGET_CLIENT))
         .toCompletableFuture()
         .join();
   }

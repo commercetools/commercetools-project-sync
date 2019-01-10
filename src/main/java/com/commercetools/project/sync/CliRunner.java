@@ -55,8 +55,7 @@ final class CliRunner {
   @SuppressFBWarnings(
       "NP_NONNULL_PARAM_VIOLATION") // https://github.com/findbugsproject/findbugs/issues/79
   CompletionStage<Void> run(
-      @Nonnull final String[] arguments,
-      @Nonnull final Supplier<SyncerFactory> syncerFactorySupplier) {
+      @Nonnull final String[] arguments, @Nonnull final SyncerFactory syncerFactory) {
 
     final Options cliOptions = buildCliOptions();
     final CommandLineParser parser = new DefaultParser();
@@ -107,7 +106,7 @@ final class CliRunner {
   private static CompletionStage<Void> processCliArguments(
       @Nonnull final CommandLine commandLine,
       @Nonnull final Options cliOptions,
-      @Nonnull final Supplier<SyncerFactory> syncerFactorySupplier) {
+      @Nonnull final SyncerFactory syncerFactory) {
 
     final Option[] options = commandLine.getOptions();
     if (options.length == 0) {
@@ -118,7 +117,7 @@ final class CliRunner {
       final String optionName = option.getOpt();
       switch (optionName) {
         case SYNC_MODULE_OPTION_SHORT:
-          return processSyncOptionAndExecute(commandLine, syncerFactorySupplier.get());
+          return processSyncOptionAndExecute(commandLine, syncerFactory);
         case HELP_OPTION_SHORT:
           printHelpToStdOut(cliOptions);
           return CompletableFuture.completedFuture(null);

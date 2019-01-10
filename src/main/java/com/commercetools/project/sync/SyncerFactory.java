@@ -8,6 +8,7 @@ import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_PRODUC
 import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_PRODUCT_TYPE_SYNC;
 import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_SHORT;
 import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_TYPE_SYNC;
+import static io.sphere.sdk.utils.CompletableFutureUtils.exceptionallyCompletedFuture;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -26,31 +27,33 @@ import io.sphere.sdk.queries.QueryDsl;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
+import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 final class SyncerFactory {
-  private static final Logger LOGGER = LoggerFactory.getLogger(CliRunner.class);
-
-  private SphereClient targetClient;
-  private SphereClient sourceClient;
+  private Supplier<SphereClient> targetClientSupplier;
+  private Supplier<SphereClient> sourceClientSupplier;
 
   private SyncerFactory(
-      @Nonnull final SphereClient sourceClient, @Nonnull final SphereClient targetClient) {
-    this.targetClient = targetClient;
-    this.sourceClient = sourceClient;
+      @Nonnull final Supplier<SphereClient> sourceClient,
+      @Nonnull final Supplier<SphereClient> targetClient) {
+    this.targetClientSupplier = targetClient;
+    this.sourceClientSupplier = sourceClient;
   }
 
   @Nonnull
   public static SyncerFactory of(
-      @Nonnull final SphereClient sourceClient, @Nonnull final SphereClient targetClient) {
+      @Nonnull final Supplier<SphereClient> sourceClient,
+      @Nonnull final Supplier<SphereClient> targetClient) {
     return new SyncerFactory(sourceClient, targetClient);
   }
 
   @Nonnull
-  public CompletableFuture<Void> syncAll() {
+  CompletableFuture<Void> syncAll() {
+
+    final SphereClient sourceClient = sourceClientSupplier.get();
+    final SphereClient targetClient = targetClientSupplier.get();
 
     final List<CompletableFuture<Void>> typeAndProductTypeSync =
         asList(
@@ -61,47 +64,51 @@ final class SyncerFactory {
         .thenCompose(ignored -> CategorySyncer.of(sourceClient, targetClient).sync())
         .thenCompose(ignored -> ProductSyncer.of(sourceClient, targetClient).sync())
         .thenCompose(ignored -> InventoryEntrySyncer.of(sourceClient, targetClient).sync())
-        .whenComplete((syncResult, throwable) -> handleSyncCompletion(throwable));
+        .whenComplete((syncResult, throwable) -> closeClients());
   }
 
-  private void handleSyncCompletion(@Nullable final Throwable throwable) {
-    if (throwable != null) {
-      final String errorMessage = "Failed to execute sync process";
-      System.out.println(errorMessage); // NOPMD
-      LOGGER.error(errorMessage, throwable);
-    }
-    sourceClient.close();
-    targetClient.close();
+  private void closeClients() {
+    sourceClientSupplier.get().close();
+    targetClientSupplier.get().close();
   }
 
   @Nonnull
-  public CompletionStage<Void> sync(@Nullable final String syncOptionValue) {
+  CompletionStage<Void> sync(@Nullable final String syncOptionValue) {
 
     if (isBlank(syncOptionValue)) {
       final String errorMessage =
           format(
               "Blank argument supplied to \"-%s\" or \"--%s\" option! %s",
               SYNC_MODULE_OPTION_SHORT, SYNC_MODULE_OPTION_LONG, SYNC_MODULE_OPTION_DESCRIPTION);
-      throw new IllegalArgumentException(errorMessage);
+
+      return exceptionallyCompletedFuture(new IllegalArgumentException(errorMessage));
     }
 
-    return buildSyncer(syncOptionValue)
-        .sync()
-        .whenComplete((syncResult, throwable) -> handleSyncCompletion(throwable));
+    Syncer<
+            ? extends Resource,
+            ?,
+            ? extends BaseSyncStatistics,
+            ? extends BaseSyncOptions<?, ?>,
+            ? extends QueryDsl<?, ?>,
+            ? extends BaseSync<?, ?, ?>>
+        syncer;
+
+    try {
+      syncer = buildSyncer(syncOptionValue);
+    } catch (IllegalArgumentException exception) {
+
+      return exceptionallyCompletedFuture(exception);
+    }
+
+    return syncer.sync().whenComplete((syncResult, throwable) -> closeClients());
   }
 
   /**
-   * Builds an instance of {@link Syncer} corresponding to the passed option value. Acceptable
-   * values are either "products" or "productTypes" or "categories" or "inventoryEntries" or
-   * "types". Other cases, would cause an {@link IllegalArgumentException} to be thrown.
+   * Builds an instance of {@link Syncer} corresponding to the passed option value.
    *
-   * @param syncOptionValue the string value passed to the sync option. Acceptable values are either
-   *     "products" or "productTypes" or "categories" or "inventoryEntries" or "types". Other cases,
-   *     would cause an {@link IllegalArgumentException} to be thrown.
+   * @param syncOptionValue the string value passed to the sync option.
    * @return The instance of the syncer corresponding to the passed option value.
-   * @throws IllegalArgumentException if a wrong option value is passed to the sync option. (Wrong
-   *     values are anything other than "types" or "products" or "categories" or "productTypes" or
-   *     "inventoryEntries".
+   * @throws IllegalArgumentException if a wrong option value is passed to the sync option.
    */
   @Nonnull
   private Syncer<
@@ -116,15 +123,15 @@ final class SyncerFactory {
     final String trimmedValue = syncOptionValue.trim();
     switch (trimmedValue) {
       case SYNC_MODULE_OPTION_PRODUCT_TYPE_SYNC:
-        return ProductTypeSyncer.of(sourceClient, targetClient);
+        return ProductTypeSyncer.of(sourceClientSupplier.get(), targetClientSupplier.get());
       case SYNC_MODULE_OPTION_CATEGORY_SYNC:
-        return CategorySyncer.of(sourceClient, targetClient);
+        return CategorySyncer.of(sourceClientSupplier.get(), targetClientSupplier.get());
       case SYNC_MODULE_OPTION_PRODUCT_SYNC:
-        return ProductSyncer.of(sourceClient, targetClient);
+        return ProductSyncer.of(sourceClientSupplier.get(), targetClientSupplier.get());
       case SYNC_MODULE_OPTION_INVENTORY_ENTRY_SYNC:
-        return InventoryEntrySyncer.of(sourceClient, targetClient);
+        return InventoryEntrySyncer.of(sourceClientSupplier.get(), targetClientSupplier.get());
       case SYNC_MODULE_OPTION_TYPE_SYNC:
-        return TypeSyncer.of(sourceClient, targetClient);
+        return TypeSyncer.of(sourceClientSupplier.get(), targetClientSupplier.get());
       default:
         final String errorMessage =
             format(

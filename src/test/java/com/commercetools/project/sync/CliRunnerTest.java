@@ -70,10 +70,10 @@ class CliRunnerTest {
   void run_WithEmptyArgumentList_ShouldLogErrorAndPrintHelp() throws UnsupportedEncodingException {
     // preparation
     final SyncerFactory syncerFactory =
-        SyncerFactory.of(mock(SphereClient.class), mock(SphereClient.class));
+        SyncerFactory.of(() -> mock(SphereClient.class), () -> mock(SphereClient.class));
 
     // test
-    CliRunner.of().run(new String[] {}, () -> syncerFactory);
+    CliRunner.of().run(new String[] {}, syncerFactory).toCompletableFuture().join();
 
     // Assert error log
     assertThat(outputStream.toString("UTF-8"))
@@ -95,10 +95,10 @@ class CliRunnerTest {
       throws UnsupportedEncodingException {
     // preparation
     final SyncerFactory syncerFactory =
-        SyncerFactory.of(mock(SphereClient.class), mock(SphereClient.class));
+        SyncerFactory.of(() -> mock(SphereClient.class), () -> mock(SphereClient.class));
 
     // test
-    CliRunner.of().run(new String[] {"-help"}, () -> syncerFactory);
+    CliRunner.of().run(new String[] {"-help"}, syncerFactory).toCompletableFuture().join();
 
     assertThat(testLogger.getAllLoggingEvents()).isEmpty();
     assertOutputStreamContainsHelpUsageWithSpecifiedCliOptions();
@@ -109,10 +109,10 @@ class CliRunnerTest {
       throws UnsupportedEncodingException {
     // preparation
     final SyncerFactory syncerFactory =
-        SyncerFactory.of(mock(SphereClient.class), mock(SphereClient.class));
+        SyncerFactory.of(() -> mock(SphereClient.class), () -> mock(SphereClient.class));
 
     // test
-    CliRunner.of().run(new String[] {"-h"}, () -> syncerFactory);
+    CliRunner.of().run(new String[] {"-h"}, syncerFactory).toCompletableFuture().join();
 
     assertThat(testLogger.getAllLoggingEvents()).isEmpty();
     assertOutputStreamContainsHelpUsageWithSpecifiedCliOptions();
@@ -123,10 +123,10 @@ class CliRunnerTest {
       throws UnsupportedEncodingException {
     // preparation
     final SyncerFactory syncerFactory =
-        SyncerFactory.of(mock(SphereClient.class), mock(SphereClient.class));
+        SyncerFactory.of(() -> mock(SphereClient.class), () -> mock(SphereClient.class));
 
     // test
-    CliRunner.of().run(new String[] {"-v"}, () -> syncerFactory);
+    CliRunner.of().run(new String[] {"-v"}, syncerFactory).toCompletableFuture().join();
 
     assertThat(outputStream.toString("UTF-8")).contains(APPLICATION_DEFAULT_VERSION);
   }
@@ -136,7 +136,7 @@ class CliRunnerTest {
       throws UnsupportedEncodingException {
     // preparation
     final SyncerFactory syncerFactory =
-        SyncerFactory.of(mock(SphereClient.class), mock(SphereClient.class));
+        SyncerFactory.of(() -> mock(SphereClient.class), () -> mock(SphereClient.class));
 
     // test
     CliRunner.of()
@@ -152,7 +152,7 @@ class CliRunnerTest {
       throws UnsupportedEncodingException {
     // preparation
     final SyncerFactory syncerFactory =
-        SyncerFactory.of(mock(SphereClient.class), mock(SphereClient.class));
+        SyncerFactory.of(() -> mock(SphereClient.class), () -> mock(SphereClient.class));
 
     // test
     CliRunner.of().run(new String[] {"-s"}, () -> syncerFactory).toCompletableFuture().join();
@@ -173,7 +173,8 @@ class CliRunnerTest {
     when(sourceClient.execute(any(ProductQuery.class)))
         .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
 
-    final SyncerFactory syncerFactory = spy(SyncerFactory.of(sourceClient, targetClient));
+    final SyncerFactory syncerFactory =
+        spy(SyncerFactory.of(() -> sourceClient, () -> targetClient));
 
     // test
     CliRunner.of()
@@ -192,7 +193,8 @@ class CliRunnerTest {
       throws UnsupportedEncodingException {
     // preparation
     final SyncerFactory syncerFactory =
-        spy(SyncerFactory.of(mock(SphereClient.class), mock(SphereClient.class)));
+        spy(SyncerFactory.of(() -> mock(SphereClient.class), () -> mock(SphereClient.class)));
+
     // test
     final String illegalArg = "illegal";
     CliRunner.of()
@@ -229,7 +231,8 @@ class CliRunnerTest {
   void run_WithSyncAsShortArgument_ShouldProcessSyncOption() {
     // preparation
     final SyncerFactory syncerFactory =
-        spy(SyncerFactory.of(mock(SphereClient.class), mock(SphereClient.class)));
+        spy(SyncerFactory.of(() -> sourceClient, () -> targetClient));
+
     // test
     CliRunner.of()
         .run(new String[] {"-s", "arg"}, () -> syncerFactory)
@@ -245,7 +248,7 @@ class CliRunnerTest {
       throws UnsupportedEncodingException {
     // preparation
     final SyncerFactory syncerFactory =
-        spy(SyncerFactory.of(mock(SphereClient.class), mock(SphereClient.class)));
+        spy(SyncerFactory.of(() -> mock(SphereClient.class), () -> mock(SphereClient.class)));
     // test
     CliRunner.of().run(new String[] {"-u"}, () -> syncerFactory).toCompletableFuture().join();
     // Assert error log
@@ -260,7 +263,7 @@ class CliRunnerTest {
       throws UnsupportedEncodingException {
     // preparation
     final SyncerFactory syncerFactory =
-        spy(SyncerFactory.of(mock(SphereClient.class), mock(SphereClient.class)));
+        spy(SyncerFactory.of(() -> mock(SphereClient.class), () -> mock(SphereClient.class)));
 
     // test
     CliRunner.of().run(new String[] {"-h"}, () -> syncerFactory).toCompletableFuture().join();
@@ -310,7 +313,8 @@ class CliRunnerTest {
     when(sourceClient.execute(any(ProductQuery.class)))
         .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
 
-    final SyncerFactory syncerFactory = spy(SyncerFactory.of(sourceClient, targetClient));
+    final SyncerFactory syncerFactory =
+        spy(SyncerFactory.of(() -> sourceClient, () -> targetClient));
 
     // test
     CliRunner.of()
@@ -357,7 +361,8 @@ class CliRunnerTest {
     when(sourceClient.execute(any(ProductQuery.class)))
         .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
 
-    final SyncerFactory syncerFactory = spy(SyncerFactory.of(sourceClient, targetClient));
+    final SyncerFactory syncerFactory =
+        spy(SyncerFactory.of(() -> sourceClient, () -> targetClient));
 
     // test
     CliRunner.of()
