@@ -9,6 +9,17 @@ shadowJar {
         attributes 'Description': rootProject.description
     }
     doLast {
+        println "Packaged shadowJar to ${destinationDir}/${archiveName}"
+    }
+}
+
+jar {
+    manifest {
+        attributes 'Implementation-Title': rootProject.name
+        attributes 'Implementation-Version': rootProject.version
+        attributes 'Description': rootProject.description
+    }
+    doLast {
         println "Packaged JAR to ${destinationDir}/${archiveName}"
     }
 }
