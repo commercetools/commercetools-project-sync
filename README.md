@@ -10,9 +10,6 @@ Dockerized CLI application which allows to automatically sync different resource
 
 - [Prerequisites](#prerequisites)
 - [Usage](#usage)
-- [Logging](#logging)
-    - [Printing to `Standard Out`](#printing-to-standard-out)
-    - [Logging](#logging-1)
 - [Examples](#examples)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
@@ -51,28 +48,6 @@ Dockerized CLI application which allows to automatically sync different resource
     -s,--sync <arg>   Choose one of the following modules to run: "types", "productTypes", "categories", "products", "inventoryEntries" or "all" (will run all the modules).
     -v,--version      Print the version of the application.
    ```
-   
-### Logging
-
-##### Printing to `Standard Out`
-The CLI application will only print to standard out on the occurrence of 2 events:
-
-- On successful completion of each sync process. 
-
-    For example, on the completion of the product sync, the CLI will output this to standard out:
-    ```
-    Syncing products from CTP project with key 'foo' to project with key 'bar' is done.
-    ```
-- On errors whether on supplying options to the CLI or errors that could terminate a sync process.
-
-##### Logging
-The CLI will log the following events:
-
-- The previously mentioned events (printed to standard out) with severity `INFO` and `ERROR` respectively.
-- Before starting a sync process 
-- The statistics of a sync process once it's done.
-- The events triggered by an `errorCallback` or a `warningCallback` of a sync process.
-      
 
 ### Examples   
  - To run the all sync modules from a source project to a target project
