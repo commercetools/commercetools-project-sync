@@ -57,11 +57,11 @@ final class CliRunner {
   }
 
   @Nonnull
-  Void run(@Nonnull final String[] arguments, @Nonnull final SyncerFactory syncerFactory) {
+  void run(@Nonnull final String[] arguments, @Nonnull final SyncerFactory syncerFactory) {
 
     final Options cliOptions = buildCliOptions();
 
-    return parseAndProcess(arguments, syncerFactory, cliOptions, new DefaultParser())
+    parseAndProcess(arguments, syncerFactory, cliOptions, new DefaultParser())
         .exceptionally(
             exception -> {
               handleCompletion(exception);
