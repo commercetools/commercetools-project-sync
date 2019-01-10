@@ -83,7 +83,9 @@ public abstract class Syncer<
     return queryAll(sourceClient, query, this::syncPage)
         .thenAccept(
             ignoredResult -> {
-              logStatistics(sync.getStatistics(), LOGGER);
+              if (LOGGER.isInfoEnabled()) {
+                logStatistics(sync.getStatistics(), LOGGER);
+              }
               final String successMessage =
                   format(
                       "%nSyncing %s from CTP project with key '%s' to project with key '%s' is done.%n",
