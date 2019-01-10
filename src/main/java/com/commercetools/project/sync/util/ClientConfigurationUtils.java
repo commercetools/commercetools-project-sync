@@ -25,7 +25,7 @@ import org.asynchttpclient.AsyncHttpClient;
 import org.asynchttpclient.DefaultAsyncHttpClient;
 import org.asynchttpclient.DefaultAsyncHttpClientConfig;
 
-final class ClientConfigurationUtils {
+public final class ClientConfigurationUtils {
   private static final long DEFAULT_TIMEOUT = 30000;
 
   /**
@@ -35,7 +35,7 @@ final class ClientConfigurationUtils {
    * @param clientConfig the client configuration for the client.
    * @return the instantiated {@link BlockingSphereClient}.
    */
-  static SphereClient createClient(@Nonnull final SphereClientConfig clientConfig) {
+  public static SphereClient createClient(@Nonnull final SphereClientConfig clientConfig) {
 
     final HttpClient httpClient = getHttpClient();
     final SphereAccessTokenSupplier tokenSupplier =

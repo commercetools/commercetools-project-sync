@@ -1,10 +1,12 @@
 package com.commercetools.project.sync;
 
+import static io.sphere.sdk.utils.CompletableFutureUtils.exceptionallyCompletedFuture;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
-import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -13,6 +15,8 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 final class CliRunner {
   static final String SYNC_MODULE_OPTION_SHORT = "s";
@@ -28,41 +32,62 @@ final class CliRunner {
   static final String SYNC_MODULE_OPTION_CATEGORY_SYNC = "categories";
   static final String SYNC_MODULE_OPTION_PRODUCT_SYNC = "products";
   static final String SYNC_MODULE_OPTION_INVENTORY_ENTRY_SYNC = "inventoryEntries";
+  static final String SYNC_MODULE_OPTION_ALL = "all";
 
   static final String SYNC_MODULE_OPTION_DESCRIPTION =
       format(
-          "Choose which sync module to run: \"%s\", \"%s\", \"%s\", \"%s\" or \"%s\".",
+          "Choose one of the following modules to run: \"%s\", \"%s\", \"%s\", \"%s\", \"%s\" or \"%s\".",
           SYNC_MODULE_OPTION_TYPE_SYNC,
           SYNC_MODULE_OPTION_PRODUCT_TYPE_SYNC,
           SYNC_MODULE_OPTION_CATEGORY_SYNC,
           SYNC_MODULE_OPTION_PRODUCT_SYNC,
-          SYNC_MODULE_OPTION_INVENTORY_ENTRY_SYNC);
+          SYNC_MODULE_OPTION_INVENTORY_ENTRY_SYNC,
+          SYNC_MODULE_OPTION_ALL);
   static final String HELP_OPTION_DESCRIPTION = "Print help information.";
   static final String VERSION_OPTION_DESCRIPTION = "Print the version of the application.";
 
   static final String APPLICATION_DEFAULT_NAME = "commercetools-project-sync";
   static final String APPLICATION_DEFAULT_VERSION = "development-SNAPSHOT";
 
+  private static final Logger LOGGER = LoggerFactory.getLogger(CliRunner.class);
+
+  @Nonnull
   public static CliRunner of() {
     return new CliRunner();
   }
 
-  void run(
-      @Nonnull final String[] arguments,
-      @Nonnull final Supplier<SyncerFactory> syncerFactorySupplier) {
+  @Nonnull
+  void run(@Nonnull final String[] arguments, @Nonnull final SyncerFactory syncerFactory) {
 
     final Options cliOptions = buildCliOptions();
-    final CommandLineParser parser = new DefaultParser();
 
-    try {
-      final CommandLine commandLine = parser.parse(cliOptions, arguments);
-      processCliArguments(commandLine, cliOptions, syncerFactorySupplier);
-    } catch (final ParseException | IllegalArgumentException exception) {
-      handleIllegalArgumentException(
-          format("Parse error:%n%s", exception.getMessage()), cliOptions);
-    }
+    parseAndProcess(arguments, syncerFactory, cliOptions, new DefaultParser())
+        .exceptionally(
+            exception -> {
+              LOGGER.error("Failed to run sync process.", exception);
+              return null;
+            })
+        .toCompletableFuture()
+        .join();
   }
 
+  @Nonnull
+  private CompletionStage<Void> parseAndProcess(
+      @Nonnull final String[] arguments,
+      @Nonnull final SyncerFactory syncerFactory,
+      @Nonnull final Options cliOptions,
+      @Nonnull final CommandLineParser parser) {
+    CommandLine commandLine;
+    try {
+      commandLine = parser.parse(cliOptions, arguments);
+    } catch (final ParseException | IllegalArgumentException exception) {
+      return exceptionallyCompletedFuture(exception);
+    }
+
+    return processCliArguments(commandLine, cliOptions, syncerFactory);
+  }
+
+  @Nonnull
   private static Options buildCliOptions() {
     final Options options = new Options();
 
@@ -92,53 +117,52 @@ final class CliRunner {
     return options;
   }
 
-  private static void processCliArguments(
+  @SuppressFBWarnings(
+      "NP_NONNULL_PARAM_VIOLATION") // https://github.com/findbugsproject/findbugs/issues/79
+  private static CompletionStage<Void> processCliArguments(
       @Nonnull final CommandLine commandLine,
       @Nonnull final Options cliOptions,
-      @Nonnull final Supplier<SyncerFactory> syncerFactorySupplier) {
+      @Nonnull final SyncerFactory syncerFactory) {
 
     final Option[] options = commandLine.getOptions();
+
     if (options.length == 0) {
-      handleIllegalArgumentException("Please pass at least 1 option to the CLI.", cliOptions);
+
+      return exceptionallyCompletedFuture(
+          new IllegalArgumentException("Please pass at least 1 option to the CLI."));
+
     } else {
+
       final Option option = options[0];
       final String optionName = option.getOpt();
       switch (optionName) {
         case SYNC_MODULE_OPTION_SHORT:
-          processSyncOptionAndExecute(commandLine, syncerFactorySupplier.get())
-              .toCompletableFuture()
-              .join();
-          break;
+          return processSyncOptionAndExecute(commandLine, syncerFactory);
         case HELP_OPTION_SHORT:
           printHelpToStdOut(cliOptions);
-          break;
+          return CompletableFuture.completedFuture(null);
         case VERSION_OPTION_SHORT:
           printApplicationVersion();
-          break;
+          return CompletableFuture.completedFuture(null);
         default:
           // Unreachable code since this case is already handled by parser.parse(options,
           // arguments);
           // in the CliRunner#run method.
-          throw new IllegalStateException(format("Unrecognized option: -%s", optionName));
+          return exceptionallyCompletedFuture(
+              new IllegalStateException(format("Unrecognized option: -%s", optionName)));
       }
     }
   }
 
-  private static void handleIllegalArgumentException(
-      @Nonnull final String errorMessage, @Nonnull final Options cliOptions) {
-
-    System.out.println(errorMessage); // NOPMD
-    printHelpToStdOut(cliOptions);
-  }
-
   @Nonnull
-  private static CompletionStage processSyncOptionAndExecute(
+  private static CompletionStage<Void> processSyncOptionAndExecute(
       @Nonnull final CommandLine commandLine, @Nonnull final SyncerFactory syncerFactory) {
 
     final String syncOptionValue = commandLine.getOptionValue(SYNC_MODULE_OPTION_SHORT);
-    final Syncer syncer = syncerFactory.buildSyncer(syncOptionValue);
 
-    return syncer.sync();
+    return SYNC_MODULE_OPTION_ALL.equals(syncOptionValue)
+        ? syncerFactory.syncAll()
+        : syncerFactory.sync(syncOptionValue);
   }
 
   private static void printHelpToStdOut(@Nonnull final Options cliOptions) {

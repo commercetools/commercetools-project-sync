@@ -6,7 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import javax.annotation.Nonnull;
 import org.slf4j.Logger;
 
-public class StatisticsUtils {
+public final class StatisticsUtils {
 
   /**
    * Builds a JSON String that represents the fields of the supplied instance of {@link
@@ -39,4 +39,6 @@ public class StatisticsUtils {
     final ObjectMapper mapper = new ObjectMapper();
     return mapper.writeValueAsString(statistics);
   }
+
+  private StatisticsUtils() {}
 }

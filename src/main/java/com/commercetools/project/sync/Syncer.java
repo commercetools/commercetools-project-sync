@@ -72,29 +72,18 @@ public abstract class Syncer<
    * @return completion stage containing no result after the execution of the sync process and
    *     logging the result.
    */
-  CompletionStage<Void> sync() {
-    LOGGER.info("Starting sync..");
+  public CompletionStage<Void> sync() {
+
+    if (LOGGER.isInfoEnabled()) {
+      LOGGER.info(format("Starting %s..", sync.getClass().getSimpleName()));
+    }
+
     return queryAll(sourceClient, query, this::syncPage)
         .thenAccept(
             ignoredResult -> {
-              logStatistics(sync.getStatistics(), LOGGER);
-              final String successMessage =
-                  format(
-                      "Syncing from CTP project '%s' to project '%s' is done.%n",
-                      sourceClient.getConfig().getProjectKey(),
-                      targetClient.getConfig().getProjectKey());
-              System.out.println(successMessage); // NOPMD
-            })
-        .whenComplete(
-            (result, throwable) -> {
-              if (throwable != null) {
-                final String errorMessage =
-                    "Failed to sync from CTP project '%s' to project '%s'. ";
-                System.out.println(errorMessage); // NOPMD
-                LOGGER.error(errorMessage, throwable);
+              if (LOGGER.isInfoEnabled()) {
+                logStatistics(sync.getStatistics(), LOGGER);
               }
-              sourceClient.close();
-              targetClient.close();
             });
   }
 
