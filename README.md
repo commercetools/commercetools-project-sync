@@ -10,6 +10,9 @@ Dockerized CLI application which allows to automatically sync different resource
 
 - [Prerequisites](#prerequisites)
 - [Usage](#usage)
+  - [Running the Docker Image](#running-the-docker-image)
+    - [Download](#download)
+    - [Run](#run)
 - [Examples](#examples)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
