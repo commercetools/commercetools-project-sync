@@ -16,5 +16,5 @@ cache:
 after_success:
   - bash <(curl -s https://codecov.io/bash)
   - ./gradlew shadowJar --daemon || travis_terminate 1
-  - ./gradlew dockerPushImage -Dbuild.version=$TRAVIS_COMMIT --daemon || travis_terminate 1
-  - ./gradlew dockerPushImage -Dbuild.version=$TRAVIS_BRANCH --daemon || travis_terminate 1
+  - test $TRAVIS_BRANCH = "master" && ./gradlew dockerPushImage -Dbuild.version=latest --daemon || travis_terminate 1
+  - test -z $TRAVIS_TAG && ./gradlew dockerPushImage -Dbuild.version=$TRAVIS_TAG --daemon || travis_terminate 1
