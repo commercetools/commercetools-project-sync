@@ -7,7 +7,7 @@ ext {
     pmdVersion = '5.6.1'
     jacocoVersion = '0.7.9'
     findbugsVersion = '3.0.1'
-    commercetoolsSyncJava='1.1.0'
+    commercetoolsSyncJava='1.1.1'
     apacheCliVersion = '1.4'
     jupiterApiVersion = '5.3.2'
 }

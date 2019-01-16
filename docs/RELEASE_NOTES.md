@@ -36,3 +36,16 @@ are breaking changes. If there are, then a migration guide should be provided.
  - **Category Sync** - First version of the tool.
  - **Product Sync** - First version of the tool.
  -->
+ 
+ ### 1.1.0 - Jan 16, 2019
+  [Commits](https://github.com/commercetools/commercetools-project-sync/commits/1.1.0) |
+  [Docker Image](https://hub.docker.com/r/commercetools/commercetools-project-sync/)
+   
+  **Enhancements** (1)
+   - **Common** - Bump commercetools-sync-java library to `1.1.1`.
+ 
+ ### 1.0.0 - Jan 11, 2019
+ [Commits](https://github.com/commercetools/commercetools-project-sync/commits/1.0.0) |
+ [Docker Image](https://hub.docker.com/r/commercetools/commercetools-project-sync/)
+  
+  **First public release**.

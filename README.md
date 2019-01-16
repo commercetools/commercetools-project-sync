@@ -57,19 +57,26 @@ Dockerized CLI application which allows to automatically sync different resource
 ##### Download
 
    ```bash
-docker pull commercetools/commercetools-project-sync:1.0.0
+docker pull commercetools/commercetools-project-sync:1.1.0
    ```
 ##### Run
 
-   ```bash
-docker run commercetools/commercetools-project-sync:1.0.0
-   ```
+```bash
+docker run \
+-e SOURCE_PROJECT_KEY=xxxx \
+-e SOURCE_CLIENT_ID=xxxx \
+-e SOURCE_CLIENT_SECRET=xxxx \
+-e TARGET_PROJECT_KEY=xxxx \
+-e TARGET_CLIENT_ID=xxxx \
+-e TARGET_CLIENT_SECRET=xxxx \
+commercetools/commercetools-project-sync:1.1.0 -s all
+```
   
 
 ### Examples   
  - To run the all sync modules from a source project to a target project
    ```bash
-   docker run commercetools/commercetools-project-sync:1.0.0 -s all
+   docker run commercetools/commercetools-project-sync:1.1.0 -s all
    ```
    This will run the following sync modules in the given order:
  1. `Type` Sync and `ProductType` Sync in parallel.
@@ -79,27 +86,27 @@ docker run commercetools/commercetools-project-sync:1.0.0
 
  - To run the type sync
    ```bash
-   docker run commercetools/commercetools-project-sync:1.0.0 -s types
+   docker run commercetools/commercetools-project-sync:1.1.0 -s types
    ```  
 
  - To run the productType sync
    ```bash
-   docker run commercetools/commercetools-project-sync:1.0.0 -s productTypes
+   docker run commercetools/commercetools-project-sync:1.1.0 -s productTypes
    ```  
     
 - To run the category sync
    ```bash
-   docker run commercetools/commercetools-project-sync:1.0.0 -s categories
+   docker run commercetools/commercetools-project-sync:1.1.0 -s categories
    ```  
    
 - To run the product sync
    ```bash
-   docker run commercetools/commercetools-project-sync:1.0.0 -s products
+   docker run commercetools/commercetools-project-sync:1.1.0 -s products
    ```  
     
 - To run the inventoryEntry sync
    ```bash
-   docker run commercetools/commercetools-project-sync:1.0.0 -s inventoryEntries
+   docker run commercetools/commercetools-project-sync:1.1.0 -s inventoryEntries
    ```     
    
 
