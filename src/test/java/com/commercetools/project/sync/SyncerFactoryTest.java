@@ -100,7 +100,7 @@ class SyncerFactoryTest {
 
     // assertions
     verify(sourceClient, times(1)).execute(any(ProductQuery.class));
-    verifyInteractionsWithClientAfterSync(sourceClient);
+    verifyInteractionsWithClientAfterSync(sourceClient, 1);
 
     final Condition<LoggingEvent> startLog =
         new Condition<>(
@@ -145,7 +145,7 @@ class SyncerFactoryTest {
 
     // assertions
     verify(sourceClient, times(1)).execute(any(CategoryQuery.class));
-    verifyInteractionsWithClientAfterSync(sourceClient);
+    verifyInteractionsWithClientAfterSync(sourceClient, 1);
 
     final Condition<LoggingEvent> startLog =
         new Condition<>(
@@ -190,7 +190,7 @@ class SyncerFactoryTest {
 
     // assertions
     verify(sourceClient, times(1)).execute(any(ProductTypeQuery.class));
-    verifyInteractionsWithClientAfterSync(sourceClient);
+    verifyInteractionsWithClientAfterSync(sourceClient, 1);
 
     final Condition<LoggingEvent> startLog =
         new Condition<>(
@@ -235,7 +235,7 @@ class SyncerFactoryTest {
 
     // assertions
     verify(sourceClient, times(1)).execute(any(TypeQuery.class));
-    verifyInteractionsWithClientAfterSync(sourceClient);
+    verifyInteractionsWithClientAfterSync(sourceClient, 1);
 
     final Condition<LoggingEvent> startLog =
         new Condition<>(
@@ -280,7 +280,7 @@ class SyncerFactoryTest {
 
     // assertions
     verify(sourceClient, times(1)).execute(any(InventoryEntryQuery.class));
-    verifyInteractionsWithClientAfterSync(sourceClient);
+    verifyInteractionsWithClientAfterSync(sourceClient, 1);
 
     final Condition<LoggingEvent> startLog =
         new Condition<>(
@@ -326,7 +326,7 @@ class SyncerFactoryTest {
 
     // assertions
     verify(sourceClient, times(1)).execute(any(InventoryEntryQuery.class));
-    verifyInteractionsWithClientAfterSync(sourceClient);
+    verifyInteractionsWithClientAfterSync(sourceClient, 1);
     assertThat(result).hasFailedWithThrowableThat().isExactlyInstanceOf(BadGatewayException.class);
   }
 
@@ -361,15 +361,17 @@ class SyncerFactoryTest {
     verify(sourceClient, times(1)).execute(any(CategoryQuery.class));
     verify(sourceClient, times(1)).execute(any(ProductQuery.class));
     verify(sourceClient, times(1)).execute(any(InventoryEntryQuery.class));
-    verifyInteractionsWithClientAfterSync(sourceClient);
+    verifyInteractionsWithClientAfterSync(sourceClient, 5);
     assertAllSyncersLoggingEvents(testLogger, 0);
   }
 
-  private void verifyInteractionsWithClientAfterSync(@Nonnull final SphereClient client) {
+  private void verifyInteractionsWithClientAfterSync(
+      @Nonnull final SphereClient client, final int numberOfGetConfigInvocations) {
 
     // Verify config is accessed for the success message after sync:
     // " example: Syncing products from CTP project with key 'x' to project with key 'y' is done","
     verify(client, times(1)).close();
+    verify(client, times(numberOfGetConfigInvocations)).getConfig();
     verifyNoMoreInteractions(client);
   }
 }

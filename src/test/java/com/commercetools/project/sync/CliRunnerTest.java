@@ -349,11 +349,13 @@ class CliRunnerTest {
     inOrder.verify(sourceClient).execute(any(ProductQuery.class));
     inOrder.verify(sourceClient).execute(any(InventoryEntryQuery.class));
 
-    verifyInteractionsWithClientAfterSync(sourceClient);
+    verifyInteractionsWithClientAfterSync(sourceClient, 5);
   }
 
-  private void verifyInteractionsWithClientAfterSync(@Nonnull final SphereClient client) {
+  private void verifyInteractionsWithClientAfterSync(
+      @Nonnull final SphereClient client, final int numberOfGetConfigInvocations) {
     verify(client, times(1)).close();
+    verify(client, times(numberOfGetConfigInvocations)).getConfig();
     verifyNoMoreInteractions(client);
   }
 }

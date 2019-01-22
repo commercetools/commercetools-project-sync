@@ -75,7 +75,12 @@ public abstract class Syncer<
   public CompletionStage<Void> sync() {
 
     if (LOGGER.isInfoEnabled()) {
-      LOGGER.info(format("Starting %s..", sync.getClass().getSimpleName()));
+      LOGGER.info(
+          format(
+              "Starting %s from CTP project with key '%s' to project with key '%s'",
+              sync.getClass().getSimpleName(),
+              sourceClient.getConfig().getProjectKey(),
+              targetClient.getConfig().getProjectKey()));
     }
 
     return queryAll(sourceClient, query, this::syncPage)
