@@ -18,7 +18,7 @@ import java.util.Optional;
 import java.util.concurrent.CompletionStage;
 import java.util.stream.Stream;
 
-import static com.commercetools.project.sync.CliRunner.APPLICATION_DEFAULT_NAME;
+import static com.commercetools.project.sync.util.SyncUtils.getApplicationName;
 import static java.lang.String.format;
 
 public class CustomObjectServiceImpl implements CustomObjectService {
@@ -52,7 +52,7 @@ public class CustomObjectServiceImpl implements CustomObjectService {
 
     final CustomObjectDraft<String> currentTimestampDraft =
         CustomObjectDraft.ofUnversionedUpsert(
-            format("%s.%s", APPLICATION_DEFAULT_NAME, TIMESTAMP_GENERATOR_CONTAINER_POSTFIX),
+            format("%s.%s", getApplicationName(), TIMESTAMP_GENERATOR_CONTAINER_POSTFIX),
             TIMESTAMP_GENERATOR_KEY,
             TIMESTAMP_GENERATOR_VALUE,
             String.class);
@@ -101,7 +101,7 @@ public class CustomObjectServiceImpl implements CustomObjectService {
   private String buildLastSyncTimestampContainerName(@Nonnull final String syncModuleName) {
 
     final String syncModuleNameWithLowerCasedFirstChar = lowerCaseFirstChar(syncModuleName);
-    return format("%s.%s", APPLICATION_DEFAULT_NAME, syncModuleNameWithLowerCasedFirstChar);
+    return format("%s.%s", getApplicationName(), syncModuleNameWithLowerCasedFirstChar);
   }
 
   @Nonnull

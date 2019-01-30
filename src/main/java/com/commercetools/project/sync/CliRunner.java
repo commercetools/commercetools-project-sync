@@ -1,13 +1,6 @@
 package com.commercetools.project.sync;
 
-import static io.sphere.sdk.utils.CompletableFutureUtils.exceptionallyCompletedFuture;
-import static java.lang.String.format;
-import static org.apache.commons.lang3.StringUtils.isBlank;
-
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
-import javax.annotation.Nonnull;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
@@ -17,6 +10,15 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.annotation.Nonnull;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
+
+import static com.commercetools.project.sync.util.SyncUtils.getApplicationName;
+import static com.commercetools.project.sync.util.SyncUtils.getApplicationVersion;
+import static io.sphere.sdk.utils.CompletableFutureUtils.exceptionallyCompletedFuture;
+import static java.lang.String.format;
 
 final class CliRunner {
   static final String SYNC_MODULE_OPTION_SHORT = "s";
@@ -45,9 +47,6 @@ final class CliRunner {
           SYNC_MODULE_OPTION_ALL);
   static final String HELP_OPTION_DESCRIPTION = "Print help information.";
   static final String VERSION_OPTION_DESCRIPTION = "Print the version of the application.";
-
-  static final String APPLICATION_DEFAULT_NAME = "commercetools-project-sync";
-  static final String APPLICATION_DEFAULT_VERSION = "development-SNAPSHOT";
 
   private static final Logger LOGGER = LoggerFactory.getLogger(CliRunner.class);
 
@@ -170,23 +169,9 @@ final class CliRunner {
     formatter.printHelp(getApplicationName(), cliOptions);
   }
 
-  @Nonnull
-  private static String getApplicationName() {
-    final String implementationTitle =
-        SyncerApplication.class.getPackage().getImplementationTitle();
-    return isBlank(implementationTitle) ? APPLICATION_DEFAULT_NAME : implementationTitle;
-  }
-
   private static void printApplicationVersion() {
     final String implementationVersion = getApplicationVersion();
     System.out.println(implementationVersion); // NOPMD
-  }
-
-  @Nonnull
-  private static String getApplicationVersion() {
-    final String implementationVersion =
-        SyncerApplication.class.getPackage().getImplementationVersion();
-    return isBlank(implementationVersion) ? APPLICATION_DEFAULT_VERSION : implementationVersion;
   }
 
   private CliRunner() {}

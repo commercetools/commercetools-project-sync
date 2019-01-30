@@ -1,6 +1,6 @@
 package com.commercetools.project.sync.model;
 
-import com.commercetools.project.sync.CliRunner;
+import com.commercetools.project.sync.util.SyncUtils;
 import com.commercetools.sync.commons.helpers.BaseSyncStatistics;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
@@ -43,7 +43,7 @@ public class LastSyncCustomObject {
       @Nonnull final BaseSyncStatistics statistics,
       final long lastSyncDurationInSeconds) {
     return new LastSyncCustomObject(
-        timestamp, statistics, CliRunner.getApplicationVersion(), lastSyncDurationInSeconds);
+        timestamp, statistics, SyncUtils.getApplicationVersion(), lastSyncDurationInSeconds);
   }
 
   public ZonedDateTime getLastSyncTimestamp() {
