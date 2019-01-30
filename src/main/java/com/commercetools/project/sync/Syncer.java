@@ -190,7 +190,7 @@ public abstract class Syncer<
     final LastSyncCustomObject lastSyncCustomObject =
         LastSyncCustomObject.of(newLastSyncTimestamp, sync.getStatistics(), syncDurationInMillis);
 
-    return customObjectService.persistLastSyncTimestamp(
+    return customObjectService.persistLastSyncCustomObject(
         sourceProjectKey, syncModuleName, lastSyncCustomObject);
   }
 
