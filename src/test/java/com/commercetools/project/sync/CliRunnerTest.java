@@ -1,7 +1,5 @@
 package com.commercetools.project.sync;
 
-import static com.commercetools.project.sync.CliRunner.APPLICATION_DEFAULT_NAME;
-import static com.commercetools.project.sync.CliRunner.APPLICATION_DEFAULT_VERSION;
 import static com.commercetools.project.sync.CliRunner.HELP_OPTION_DESCRIPTION;
 import static com.commercetools.project.sync.CliRunner.HELP_OPTION_LONG;
 import static com.commercetools.project.sync.CliRunner.HELP_OPTION_SHORT;
@@ -11,6 +9,8 @@ import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_SHORT;
 import static com.commercetools.project.sync.CliRunner.VERSION_OPTION_DESCRIPTION;
 import static com.commercetools.project.sync.CliRunner.VERSION_OPTION_LONG;
 import static com.commercetools.project.sync.CliRunner.VERSION_OPTION_SHORT;
+import static com.commercetools.project.sync.util.SyncUtils.APPLICATION_DEFAULT_NAME;
+import static com.commercetools.project.sync.util.SyncUtils.APPLICATION_DEFAULT_VERSION;
 import static java.lang.String.format;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;

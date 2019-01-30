@@ -1,5 +1,10 @@
 package com.commercetools.project.sync;
 
+import static com.commercetools.project.sync.util.StatisticsUtils.logStatistics;
+import static com.commercetools.project.sync.util.SyncUtils.getSyncModuleName;
+import static com.commercetools.sync.commons.utils.CtpQueryUtils.queryAll;
+import static java.lang.String.format;
+
 import com.commercetools.project.sync.model.LastSyncCustomObject;
 import com.commercetools.project.sync.service.CustomObjectService;
 import com.commercetools.sync.commons.BaseSync;
@@ -10,19 +15,13 @@ import io.sphere.sdk.customobjects.CustomObject;
 import io.sphere.sdk.models.Resource;
 import io.sphere.sdk.queries.QueryDsl;
 import io.sphere.sdk.queries.QueryPredicate;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.annotation.Nonnull;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
-
-import static com.commercetools.project.sync.util.StatisticsUtils.logStatistics;
-import static com.commercetools.project.sync.util.SyncUtils.getSyncModuleName;
-import static com.commercetools.sync.commons.utils.CtpQueryUtils.queryAll;
-import static java.lang.String.format;
+import javax.annotation.Nonnull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Base class of the syncer that handles syncing a resource from a source CTP project to a target

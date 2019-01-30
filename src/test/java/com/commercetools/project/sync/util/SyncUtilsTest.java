@@ -1,15 +1,15 @@
 package com.commercetools.project.sync.util;
 
-import com.commercetools.sync.products.ProductSync;
-import com.commercetools.sync.types.TypeSync;
-import org.junit.jupiter.api.Test;
-
 import static com.commercetools.project.sync.util.SyncUtils.APPLICATION_DEFAULT_NAME;
 import static com.commercetools.project.sync.util.SyncUtils.APPLICATION_DEFAULT_VERSION;
 import static com.commercetools.project.sync.util.SyncUtils.getApplicationName;
 import static com.commercetools.project.sync.util.SyncUtils.getApplicationVersion;
 import static com.commercetools.project.sync.util.SyncUtils.getSyncModuleName;
 import static org.assertj.core.api.Assertions.assertThat;
+
+import com.commercetools.sync.products.ProductSync;
+import com.commercetools.sync.types.TypeSync;
+import org.junit.jupiter.api.Test;
 
 class SyncUtilsTest {
 
