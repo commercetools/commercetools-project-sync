@@ -1,6 +1,8 @@
 package com.commercetools.project.sync.type;
 
 import com.commercetools.project.sync.Syncer;
+import com.commercetools.project.sync.service.CustomObjectService;
+import com.commercetools.project.sync.service.impl.CustomObjectServiceImpl;
 import com.commercetools.sync.types.TypeSync;
 import com.commercetools.sync.types.TypeSyncOptions;
 import com.commercetools.sync.types.TypeSyncOptionsBuilder;
@@ -10,11 +12,12 @@ import io.sphere.sdk.types.Type;
 import io.sphere.sdk.types.TypeDraft;
 import io.sphere.sdk.types.TypeDraftBuilder;
 import io.sphere.sdk.types.queries.TypeQuery;
-import java.util.List;
-import java.util.stream.Collectors;
-import javax.annotation.Nonnull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.annotation.Nonnull;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public final class TypeSyncer
     extends Syncer<Type, TypeDraft, TypeSyncStatistics, TypeSyncOptions, TypeQuery, TypeSync> {
@@ -24,10 +27,10 @@ public final class TypeSyncer
   /** Instantiates a {@link Syncer} instance. */
   private TypeSyncer(
       @Nonnull final TypeSync typeSync,
-      @Nonnull final TypeQuery query,
       @Nonnull final SphereClient sourceClient,
-      @Nonnull final SphereClient targetClient) {
-    super(typeSync, query, sourceClient, targetClient);
+      @Nonnull final SphereClient targetClient,
+      @Nonnull final CustomObjectService customObjectService) {
+    super(typeSync, sourceClient, targetClient, customObjectService);
   }
 
   @Nonnull
@@ -42,7 +45,15 @@ public final class TypeSyncer
 
     final TypeSync typeSync = new TypeSync(syncOptions);
 
-    return new TypeSyncer(typeSync, TypeQuery.of(), sourceClient, targetClient);
+    final CustomObjectService customObjectService = new CustomObjectServiceImpl(targetClient);
+
+    return new TypeSyncer(typeSync, sourceClient, targetClient, customObjectService);
+  }
+
+  @Nonnull
+  @Override
+  public TypeQuery getQuery() {
+    return TypeQuery.of();
   }
 
   @Nonnull

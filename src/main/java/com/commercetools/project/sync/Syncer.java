@@ -1,21 +1,28 @@
 package com.commercetools.project.sync;
 
-import static com.commercetools.project.sync.util.StatisticsUtils.logStatistics;
-import static com.commercetools.sync.commons.utils.CtpQueryUtils.queryAll;
-import static java.lang.String.format;
-
+import com.commercetools.project.sync.model.LastSyncCustomObject;
+import com.commercetools.project.sync.service.CustomObjectService;
 import com.commercetools.sync.commons.BaseSync;
 import com.commercetools.sync.commons.BaseSyncOptions;
 import com.commercetools.sync.commons.helpers.BaseSyncStatistics;
 import io.sphere.sdk.client.SphereClient;
+import io.sphere.sdk.customobjects.CustomObject;
 import io.sphere.sdk.models.Resource;
 import io.sphere.sdk.queries.QueryDsl;
+import io.sphere.sdk.queries.QueryPredicate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.annotation.Nonnull;
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
-import javax.annotation.Nonnull;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import static com.commercetools.project.sync.util.StatisticsUtils.logStatistics;
+import static com.commercetools.project.sync.util.SyncUtils.getSyncModuleName;
+import static com.commercetools.sync.commons.utils.CtpQueryUtils.queryAll;
+import static java.lang.String.format;
 
 /**
  * Base class of the syncer that handles syncing a resource from a source CTP project to a target
@@ -47,43 +54,66 @@ public abstract class Syncer<
     B extends BaseSync<S, U, V>> {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(Syncer.class);
+
+  private final B sync;
   private final SphereClient sourceClient;
   private final SphereClient targetClient;
-  private final B sync;
-  private final C query;
+  private final CustomObjectService customObjectService;
 
+  /**
+   * Instantiates a {@link Syncer} which is used to sync resources from a source to a target
+   * commercetools project.
+   *
+   * @param sync The sync module that is used for syncing the transformed drafts to the target
+   *     project.
+   * @param sourceClient the client used for querying data from the source commercetools project.
+   * @param targetClient the client used for syncing the transformed drafts into the target
+   *     commercetools project.
+   * @param customObjectService service that is used for fetching and persisting the last sync
+   *     timestamp for delta syncing.
+   */
   public Syncer(
       @Nonnull final B sync,
-      @Nonnull final C query,
       @Nonnull final SphereClient sourceClient,
-      @Nonnull final SphereClient targetClient) {
+      @Nonnull final SphereClient targetClient,
+      @Nonnull final CustomObjectService customObjectService) {
     this.sync = sync;
-    this.query = query;
     this.sourceClient = sourceClient;
     this.targetClient = targetClient;
+    this.customObjectService = customObjectService;
   }
 
   /**
-   * Fetches the {@code CTP_SOURCE_CLIENT} project resources of type {@code T} with all needed
-   * references expanded and treats each page as a batch to the sync process. Then executes the sync
-   * process of all pages in parallel. It then returns a completion stage containing no result after
-   * the execution of the sync process and logging the result.
+   * Fetches the sourceClient's project resources of type {@code T} with all needed references
+   * expanded and treats each page as a batch to the sync process. Then executes the sync process of
+   * all pages in parallel. It then returns a completion stage containing no result after the
+   * execution of the sync process and logging the result.
+   *
+   * <p>Note: The method checks if there was a last sync time stamp persisted as a custom object in
+   * the target project for this specific source project and sync module. If there is, it will sync
+   * only the resources which were modified after the last sync time stamp and before the start of
+   * this sync.
    *
    * @return completion stage containing no result after the execution of the sync process and
    *     logging the result.
    */
   public CompletionStage<Void> sync() {
 
+    final String sourceProjectKey = sourceClient.getConfig().getProjectKey();
+    final String syncModuleName = getSyncModuleName(sync.getClass());
     if (LOGGER.isInfoEnabled()) {
+      final String targetProjectKey = targetClient.getConfig().getProjectKey();
       LOGGER.info(
           format(
               "Starting %s from CTP project with key '%s' to project with key '%s'",
-              sync.getClass().getSimpleName(),
-              sourceClient.getConfig().getProjectKey(),
-              targetClient.getConfig().getProjectKey()));
+              syncModuleName, sourceProjectKey, targetProjectKey));
     }
 
-    return queryAll(sourceClient, query, this::syncPage)
+    return customObjectService
+        .getCurrentCtpTimestamp()
+        .thenCompose(
+            currentCtpTimestamp ->
+                syncResourcesSinceLastSync(sourceProjectKey, syncModuleName, currentCtpTimestamp))
         .thenAccept(
             ignoredResult -> {
               if (LOGGER.isInfoEnabled()) {
@@ -92,12 +122,85 @@ public abstract class Syncer<
             });
   }
 
+  @Nonnull
+  private CompletionStage<CustomObject<LastSyncCustomObject>> syncResourcesSinceLastSync(
+      @Nonnull final String sourceProjectKey,
+      @Nonnull final String syncModuleName,
+      @Nonnull final ZonedDateTime currentCtpTimestamp) {
+
+    return getQueryOfResourcesSinceLastSync(sourceProjectKey, syncModuleName, currentCtpTimestamp)
+        .thenCompose(this::sync)
+        .thenCompose(
+            syncDurationInMillis ->
+                persistNewLastSyncTimestamp(
+                    sourceProjectKey, syncModuleName, currentCtpTimestamp, syncDurationInMillis));
+  }
+
+  @Nonnull
+  private CompletionStage<C> getQueryOfResourcesSinceLastSync(
+      @Nonnull final String sourceProjectKey,
+      @Nonnull final String syncModuleName,
+      @Nonnull final ZonedDateTime currentSyncStartTimestamp) {
+
+    return customObjectService
+        .getLastSyncCustomObject(sourceProjectKey, syncModuleName)
+        .thenApply(
+            customObjectOptional ->
+                customObjectOptional
+                    .map(CustomObject::getValue)
+                    .map(LastSyncCustomObject::getLastSyncTimestamp)
+                    .map(
+                        lastSyncTimestamp ->
+                            getQueryWithTimeBoundedPredicate(
+                                lastSyncTimestamp, currentSyncStartTimestamp))
+                    // If there is no last sync custom object, use base query to get all resources
+                    .orElseGet(this::getQuery));
+  }
+
+  @Nonnull
+  private C getQueryWithTimeBoundedPredicate(
+      @Nonnull final ZonedDateTime lowerBound, @Nonnull final ZonedDateTime upperBound) {
+
+    final QueryPredicate<T> queryPredicate =
+        QueryPredicate.of(
+            format(
+                "lastModifiedAt >= \"%s\" AND lastModifiedAt <= \"%s\"", lowerBound, upperBound));
+    return getQuery().plusPredicates(queryPredicate);
+  }
+
+  @Nonnull
+  private CompletionStage<Long> sync(@Nonnull final C queryResourcesSinceLastSync) {
+
+    final long timeBeforeSync = System.currentTimeMillis();
+    return queryAll(sourceClient, queryResourcesSinceLastSync, this::syncPage)
+        .thenApply(
+            ignoredResult -> {
+              final long timeAfterSync = System.currentTimeMillis();
+              return timeAfterSync - timeBeforeSync;
+            });
+  }
+
+  @Nonnull
+  private CompletionStage<CustomObject<LastSyncCustomObject>> persistNewLastSyncTimestamp(
+      @Nonnull final String sourceProjectKey,
+      @Nonnull final String syncModuleName,
+      @Nonnull final ZonedDateTime newLastSyncTimestamp,
+      final long syncDurationInMillis) {
+
+    final LastSyncCustomObject lastSyncCustomObject =
+        LastSyncCustomObject.of(newLastSyncTimestamp, sync.getStatistics(), syncDurationInMillis);
+
+    return customObjectService.persistLastSyncTimestamp(
+        sourceProjectKey, syncModuleName, lastSyncCustomObject);
+  }
+
   /**
    * Given a {@link List} representing a page of resources of type {@code T}, this method creates a
    * {@link CompletableFuture} of each sync process on the given page as a batch.
    */
   @Nonnull
   private U syncPage(@Nonnull final List<T> page) {
+
     final List<S> draftsWithKeysInReferences = transformResourcesToDrafts(page);
     return sync.sync(draftsWithKeysInReferences).toCompletableFuture().join();
   }
@@ -112,11 +215,10 @@ public abstract class Syncer<
   @Nonnull
   protected abstract List<S> transformResourcesToDrafts(@Nonnull final List<T> page);
 
+  @Nonnull
+  public abstract C getQuery();
+
   public B getSync() {
     return sync;
-  }
-
-  public C getQuery() {
-    return query;
   }
 }

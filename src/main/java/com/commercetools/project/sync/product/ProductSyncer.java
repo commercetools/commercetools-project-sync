@@ -1,9 +1,8 @@
 package com.commercetools.project.sync.product;
 
-import static com.commercetools.sync.products.utils.ProductReferenceReplacementUtils.buildProductQuery;
-import static com.commercetools.sync.products.utils.ProductReferenceReplacementUtils.replaceProductsReferenceIdsWithKeys;
-
 import com.commercetools.project.sync.Syncer;
+import com.commercetools.project.sync.service.CustomObjectService;
+import com.commercetools.project.sync.service.impl.CustomObjectServiceImpl;
 import com.commercetools.sync.products.ProductSync;
 import com.commercetools.sync.products.ProductSyncOptions;
 import com.commercetools.sync.products.ProductSyncOptionsBuilder;
@@ -15,10 +14,14 @@ import io.sphere.sdk.products.ProductDraft;
 import io.sphere.sdk.products.commands.updateactions.Publish;
 import io.sphere.sdk.products.commands.updateactions.Unpublish;
 import io.sphere.sdk.products.queries.ProductQuery;
-import java.util.List;
-import javax.annotation.Nonnull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.annotation.Nonnull;
+import java.util.List;
+
+import static com.commercetools.sync.products.utils.ProductReferenceReplacementUtils.buildProductQuery;
+import static com.commercetools.sync.products.utils.ProductReferenceReplacementUtils.replaceProductsReferenceIdsWithKeys;
 
 public final class ProductSyncer
     extends Syncer<
@@ -34,10 +37,10 @@ public final class ProductSyncer
   /** Instantiates a {@link Syncer} instance. */
   private ProductSyncer(
       @Nonnull final ProductSync productSync,
-      @Nonnull final ProductQuery productQuery,
       @Nonnull final SphereClient sourceClient,
-      @Nonnull final SphereClient targetClient) {
-    super(productSync, productQuery, sourceClient, targetClient);
+      @Nonnull final SphereClient targetClient,
+      @Nonnull final CustomObjectService customObjectService) {
+    super(productSync, sourceClient, targetClient, customObjectService);
   }
 
   @Nonnull
@@ -53,7 +56,9 @@ public final class ProductSyncer
 
     final ProductSync productSync = new ProductSync(syncOptions);
 
-    return new ProductSyncer(productSync, buildProductQuery(), sourceClient, targetClient);
+    final CustomObjectService customObjectService = new CustomObjectServiceImpl(targetClient);
+
+    return new ProductSyncer(productSync, sourceClient, targetClient, customObjectService);
     // TODO: Instead of reference expansion, we could cache all keys and replace references
     // manually.
   }
@@ -62,6 +67,12 @@ public final class ProductSyncer
   @Nonnull
   protected List<ProductDraft> transformResourcesToDrafts(@Nonnull final List<Product> page) {
     return replaceProductsReferenceIdsWithKeys(page);
+  }
+
+  @Nonnull
+  @Override
+  public ProductQuery getQuery() {
+    return buildProductQuery();
   }
 
   /**

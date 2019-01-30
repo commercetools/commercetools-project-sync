@@ -1,6 +1,8 @@
 package com.commercetools.project.sync.producttype;
 
 import com.commercetools.project.sync.Syncer;
+import com.commercetools.project.sync.service.CustomObjectService;
+import com.commercetools.project.sync.service.impl.CustomObjectServiceImpl;
 import com.commercetools.sync.producttypes.ProductTypeSync;
 import com.commercetools.sync.producttypes.ProductTypeSyncOptions;
 import com.commercetools.sync.producttypes.ProductTypeSyncOptionsBuilder;
@@ -10,11 +12,12 @@ import io.sphere.sdk.producttypes.ProductType;
 import io.sphere.sdk.producttypes.ProductTypeDraft;
 import io.sphere.sdk.producttypes.ProductTypeDraftBuilder;
 import io.sphere.sdk.producttypes.queries.ProductTypeQuery;
-import java.util.List;
-import java.util.stream.Collectors;
-import javax.annotation.Nonnull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.annotation.Nonnull;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public final class ProductTypeSyncer
     extends Syncer<
@@ -30,10 +33,10 @@ public final class ProductTypeSyncer
   /** Instantiates a {@link Syncer} instance. */
   private ProductTypeSyncer(
       @Nonnull final ProductTypeSync productTypeSync,
-      @Nonnull final ProductTypeQuery query,
       @Nonnull final SphereClient sourceClient,
-      @Nonnull final SphereClient targetClient) {
-    super(productTypeSync, query, sourceClient, targetClient);
+      @Nonnull final SphereClient targetClient,
+      @Nonnull final CustomObjectService customObjectService) {
+    super(productTypeSync, sourceClient, targetClient, customObjectService);
   }
 
   @Nonnull
@@ -48,8 +51,9 @@ public final class ProductTypeSyncer
 
     final ProductTypeSync productTypeSync = new ProductTypeSync(syncOptions);
 
-    return new ProductTypeSyncer(
-        productTypeSync, ProductTypeQuery.of(), sourceClient, targetClient);
+    final CustomObjectService customObjectService = new CustomObjectServiceImpl(targetClient);
+
+    return new ProductTypeSyncer(productTypeSync, sourceClient, targetClient, customObjectService);
   }
 
   @Nonnull
@@ -59,5 +63,11 @@ public final class ProductTypeSyncer
     return page.stream()
         .map(productType -> ProductTypeDraftBuilder.of(productType).build())
         .collect(Collectors.toList());
+  }
+
+  @Nonnull
+  @Override
+  public ProductTypeQuery getQuery() {
+    return ProductTypeQuery.of();
   }
 }
