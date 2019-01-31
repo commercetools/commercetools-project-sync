@@ -3,8 +3,9 @@ package com.commercetools.project.sync.model;
 import com.commercetools.project.sync.util.SyncUtils;
 import com.commercetools.sync.commons.helpers.BaseSyncStatistics;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import java.time.ZonedDateTime;
+
 import javax.annotation.Nonnull;
+import java.time.ZonedDateTime;
 
 public class LastSyncCustomObject {
 
@@ -74,5 +75,10 @@ public class LastSyncCustomObject {
 
   public void setLastSyncDurationInMillis(final long lastSyncDurationInMillis) {
     this.lastSyncDurationInMillis = lastSyncDurationInMillis;
+  }
+
+  public <T extends BaseSyncStatistics> void setLastSyncStatistics(
+      @Nonnull final T lastSyncStatistics) {
+    this.lastSyncStatistics = lastSyncStatistics;
   }
 }
