@@ -171,7 +171,7 @@ class CliRunnerIT {
             .hasOnlyOneElementSatisfying(
                 inventoryEntry -> assertThat(inventoryEntry.getSku()).isEqualTo(resourceKey));
 
-        deleteTestData(postSourceClient, postTargetClient);
+        cleanUpProjects(postSourceClient, postTargetClient);
       }
     }
   }
