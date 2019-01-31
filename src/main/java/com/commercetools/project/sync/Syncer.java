@@ -186,7 +186,7 @@ public abstract class Syncer<
       @Nonnull final ZonedDateTime newLastSyncTimestamp,
       final long syncDurationInMillis) {
 
-    final LastSyncCustomObject lastSyncCustomObject =
+    final LastSyncCustomObject<U> lastSyncCustomObject =
         LastSyncCustomObject.of(newLastSyncTimestamp, sync.getStatistics(), syncDurationInMillis);
 
     return customObjectService.persistLastSyncCustomObject(

@@ -157,9 +157,10 @@ public final class TestUtils {
 
   public static void stubClientsCustomObjectService(@Nonnull final SphereClient client) {
 
-    final CustomObject<LastSyncCustomObject> customObject = mock(CustomObject.class);
+    final CustomObject<LastSyncCustomObject<ProductSyncStatistics>> customObject =
+        mock(CustomObject.class);
 
-    final LastSyncCustomObject lastSyncCustomObject =
+    final LastSyncCustomObject<ProductSyncStatistics> lastSyncCustomObject =
         LastSyncCustomObject.of(ZonedDateTime.now(), new ProductSyncStatistics(), 100);
 
     when(customObject.getLastModifiedAt()).thenReturn(ZonedDateTime.now());
@@ -168,8 +169,8 @@ public final class TestUtils {
     when(client.execute(any(CustomObjectUpsertCommand.class)))
         .thenReturn(CompletableFuture.completedFuture(customObject));
 
-    final PagedQueryResult<CustomObject<LastSyncCustomObject>> queriedCustomObjects =
-        spy(PagedQueryResult.empty());
+    final PagedQueryResult<CustomObject<LastSyncCustomObject<ProductSyncStatistics>>>
+        queriedCustomObjects = spy(PagedQueryResult.empty());
     when(queriedCustomObjects.getResults()).thenReturn(singletonList(customObject));
 
     when(client.execute(any(CustomObjectQuery.class)))

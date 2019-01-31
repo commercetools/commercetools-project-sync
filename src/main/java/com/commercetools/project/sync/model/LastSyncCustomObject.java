@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.time.ZonedDateTime;
 import javax.annotation.Nonnull;
 
-public class LastSyncCustomObject {
+public class LastSyncCustomObject<T extends BaseSyncStatistics> {
 
   @JsonIgnoreProperties({
     "latestBatchStartTime",
@@ -17,7 +17,7 @@ public class LastSyncCustomObject {
     "latestBatchProcessingTimeInMillis",
     "latestBatchHumanReadableProcessingTime"
   })
-  private BaseSyncStatistics lastSyncStatistics;
+  private T lastSyncStatistics;
 
   private ZonedDateTime lastSyncTimestamp;
   private String applicationVersion;
@@ -25,9 +25,10 @@ public class LastSyncCustomObject {
 
   private LastSyncCustomObject(
       @Nonnull final ZonedDateTime lastSyncTimestamp,
-      @Nonnull final BaseSyncStatistics lastSyncStatistics,
+      @Nonnull final T lastSyncStatistics,
       @Nonnull final String applicationVersion,
       final long lastSyncDurationInMillis) {
+
     this.lastSyncTimestamp = lastSyncTimestamp;
     this.lastSyncStatistics = lastSyncStatistics;
     this.applicationVersion = applicationVersion;
@@ -37,11 +38,12 @@ public class LastSyncCustomObject {
   public LastSyncCustomObject() {}
 
   @Nonnull
-  public static LastSyncCustomObject of(
+  public static <T extends BaseSyncStatistics> LastSyncCustomObject<T> of(
       @Nonnull final ZonedDateTime lastSyncTimestamp,
-      @Nonnull final BaseSyncStatistics lastSyncStatistics,
+      @Nonnull final T lastSyncStatistics,
       final long lastSyncDurationInSeconds) {
-    return new LastSyncCustomObject(
+
+    return new LastSyncCustomObject<>(
         lastSyncTimestamp,
         lastSyncStatistics,
         SyncUtils.getApplicationVersion(),
@@ -52,7 +54,7 @@ public class LastSyncCustomObject {
     return lastSyncTimestamp;
   }
 
-  public BaseSyncStatistics getLastSyncStatistics() {
+  public T getLastSyncStatistics() {
     return lastSyncStatistics;
   }
 
@@ -76,8 +78,7 @@ public class LastSyncCustomObject {
     this.lastSyncDurationInMillis = lastSyncDurationInMillis;
   }
 
-  public <T extends BaseSyncStatistics> void setLastSyncStatistics(
-      @Nonnull final T lastSyncStatistics) {
+  public void setLastSyncStatistics(@Nonnull final T lastSyncStatistics) {
     this.lastSyncStatistics = lastSyncStatistics;
   }
 }
