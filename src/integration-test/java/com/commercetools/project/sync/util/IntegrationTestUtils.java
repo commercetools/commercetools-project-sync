@@ -28,7 +28,7 @@ public final class IntegrationTestUtils {
    * @param ctpClient the client to delete the custom objects from.
    */
   public static void deleteLastSyncCustomObjects(
-      @Nonnull final SphereClient ctpClient, @Nonnull final String targetProjectKey) {
+      @Nonnull final SphereClient ctpClient, @Nonnull final String sourceProjectKey) {
 
     // 1. First query for the time generator custom object
     final QueryPredicate<CustomObject<String>> timeGeneratorPredicate =
@@ -57,7 +57,7 @@ public final class IntegrationTestUtils {
 
     // 2. Then query for the lastSync custom objects
     final QueryPredicate<CustomObject<LastSyncCustomObject>> lastSyncPredicate =
-        QueryPredicate.of(format("key=\"%s\"", targetProjectKey));
+        QueryPredicate.of(format("key=\"%s\"", sourceProjectKey));
 
     final CustomObjectQuery<LastSyncCustomObject> lastSyncCustomObjectQuery =
         CustomObjectQuery.of(LastSyncCustomObject.class).plusPredicates(lastSyncPredicate);

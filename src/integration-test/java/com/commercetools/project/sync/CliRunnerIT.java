@@ -59,23 +59,23 @@ class CliRunnerIT {
 
   @BeforeAll
   static void setupSuite() {
-    deleteTestData(createClient(CTP_SOURCE_CLIENT_CONFIG), createClient(CTP_TARGET_CLIENT_CONFIG));
+    cleanUpProjects(createClient(CTP_SOURCE_CLIENT_CONFIG), createClient(CTP_TARGET_CLIENT_CONFIG));
   }
 
-  private static void deleteTestData(
+  private static void cleanUpProjects(
       @Nonnull final SphereClient sourceClient, @Nonnull final SphereClient targetClient) {
 
-    deleteTestData(sourceClient);
-    deleteTestData(targetClient);
+    deleteProjectData(sourceClient);
+    deleteProjectData(targetClient);
+    deleteLastSyncCustomObjects(targetClient, sourceClient.getConfig().getProjectKey());
   }
 
-  static void deleteTestData(@Nonnull final SphereClient client) {
+  private static void deleteProjectData(@Nonnull final SphereClient client) {
     queryAndExecute(client, CategoryQuery.of(), CategoryDeleteCommand::of);
     queryAndExecute(client, ProductQuery.of(), ProductDeleteCommand::of);
     queryAndExecute(client, ProductTypeQuery.of(), ProductTypeDeleteCommand::of);
     queryAndExecute(client, TypeQuery.of(), TypeDeleteCommand::of);
     queryAndExecute(client, InventoryEntryQuery.of(), InventoryEntryDeleteCommand::of);
-    deleteLastSyncCustomObjects(client);
   }
 
   @AfterEach
