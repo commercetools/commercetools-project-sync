@@ -2,13 +2,14 @@ package com.commercetools.project.sync;
 
 import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_DESCRIPTION;
 import static com.commercetools.project.sync.util.TestUtils.assertAllSyncersLoggingEvents;
+import static com.commercetools.project.sync.util.TestUtils.stubClientsCustomObjectService;
+import static com.commercetools.project.sync.util.TestUtils.verifyInteractionsWithClientAfterSync;
 import static java.lang.String.format;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import io.sphere.sdk.categories.queries.CategoryQuery;
@@ -23,7 +24,6 @@ import io.sphere.sdk.types.queries.TypeQuery;
 import io.sphere.sdk.utils.CompletableFutureUtils;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
-import javax.annotation.Nonnull;
 import org.assertj.core.api.Condition;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -95,6 +95,8 @@ class SyncerFactoryTest {
 
     final SyncerFactory syncerFactory = SyncerFactory.of(() -> sourceClient, () -> targetClient);
 
+    stubClientsCustomObjectService(targetClient);
+
     // test
     syncerFactory.sync("products");
 
@@ -139,6 +141,8 @@ class SyncerFactoryTest {
         .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
 
     final SyncerFactory syncerFactory = SyncerFactory.of(() -> sourceClient, () -> targetClient);
+
+    stubClientsCustomObjectService(targetClient);
 
     // test
     syncerFactory.sync("categories");
@@ -185,6 +189,8 @@ class SyncerFactoryTest {
 
     final SyncerFactory syncerFactory = SyncerFactory.of(() -> sourceClient, () -> targetClient);
 
+    stubClientsCustomObjectService(targetClient);
+
     // test
     syncerFactory.sync("productTypes");
 
@@ -227,6 +233,8 @@ class SyncerFactoryTest {
 
     when(sourceClient.execute(any(TypeQuery.class)))
         .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
+
+    stubClientsCustomObjectService(targetClient);
 
     final SyncerFactory syncerFactory = SyncerFactory.of(() -> sourceClient, () -> targetClient);
 
@@ -272,6 +280,8 @@ class SyncerFactoryTest {
 
     when(sourceClient.execute(any(InventoryEntryQuery.class)))
         .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
+
+    stubClientsCustomObjectService(targetClient);
 
     final SyncerFactory syncerFactory = SyncerFactory.of(() -> sourceClient, () -> targetClient);
 
@@ -319,6 +329,8 @@ class SyncerFactoryTest {
     when(sourceClient.execute(any(InventoryEntryQuery.class)))
         .thenReturn(CompletableFutureUtils.exceptionallyCompletedFuture(badGatewayException));
 
+    stubClientsCustomObjectService(targetClient);
+
     final SyncerFactory syncerFactory = SyncerFactory.of(() -> sourceClient, () -> targetClient);
 
     // test
@@ -350,6 +362,8 @@ class SyncerFactoryTest {
     when(sourceClient.execute(any(ProductQuery.class)))
         .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
 
+    stubClientsCustomObjectService(targetClient);
+
     final SyncerFactory syncerFactory = SyncerFactory.of(() -> sourceClient, () -> targetClient);
 
     // test
@@ -363,15 +377,5 @@ class SyncerFactoryTest {
     verify(sourceClient, times(1)).execute(any(InventoryEntryQuery.class));
     verifyInteractionsWithClientAfterSync(sourceClient, 5);
     assertAllSyncersLoggingEvents(testLogger, 0);
-  }
-
-  private void verifyInteractionsWithClientAfterSync(
-      @Nonnull final SphereClient client, final int numberOfGetConfigInvocations) {
-
-    // Verify config is accessed for the success message after sync:
-    // " example: Syncing products from CTP project with key 'x' to project with key 'y' is done","
-    verify(client, times(1)).close();
-    verify(client, times(numberOfGetConfigInvocations)).getConfig();
-    verifyNoMoreInteractions(client);
   }
 }
