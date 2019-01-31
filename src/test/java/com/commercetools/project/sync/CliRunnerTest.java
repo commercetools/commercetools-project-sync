@@ -12,6 +12,7 @@ import static com.commercetools.project.sync.CliRunner.VERSION_OPTION_SHORT;
 import static com.commercetools.project.sync.util.SyncUtils.APPLICATION_DEFAULT_NAME;
 import static com.commercetools.project.sync.util.SyncUtils.APPLICATION_DEFAULT_VERSION;
 import static java.lang.String.format;
+import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
@@ -22,10 +23,15 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
+import com.commercetools.project.sync.model.LastSyncCustomObject;
+import com.commercetools.sync.products.helpers.ProductSyncStatistics;
 import com.google.common.base.Optional;
 import io.sphere.sdk.categories.queries.CategoryQuery;
 import io.sphere.sdk.client.SphereClient;
 import io.sphere.sdk.client.SphereClientConfig;
+import io.sphere.sdk.customobjects.CustomObject;
+import io.sphere.sdk.customobjects.commands.CustomObjectUpsertCommand;
+import io.sphere.sdk.customobjects.queries.CustomObjectQuery;
 import io.sphere.sdk.inventory.queries.InventoryEntryQuery;
 import io.sphere.sdk.products.queries.ProductQuery;
 import io.sphere.sdk.producttypes.queries.ProductTypeQuery;
@@ -34,6 +40,7 @@ import io.sphere.sdk.types.queries.TypeQuery;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
+import java.time.ZonedDateTime;
 import java.util.concurrent.CompletableFuture;
 import javax.annotation.Nonnull;
 import org.apache.commons.cli.MissingArgumentException;
@@ -196,6 +203,8 @@ class CliRunnerTest {
     final SyncerFactory syncerFactory =
         spy(SyncerFactory.of(() -> sourceClient, () -> targetClient));
 
+    stubClientsCustomObjectService(targetClient);
+
     // test
     CliRunner.of().run(new String[] {"-s", "products"}, syncerFactory);
 
@@ -219,6 +228,8 @@ class CliRunnerTest {
 
     final SyncerFactory syncerFactory =
         spy(SyncerFactory.of(() -> sourceClient, () -> targetClient));
+
+    stubClientsCustomObjectService(targetClient);
 
     // test
     CliRunner.of().run(new String[] {"--sync", "products"}, syncerFactory);
@@ -277,8 +288,7 @@ class CliRunnerTest {
   }
 
   @Test
-  void run_WithSyncAsArgumentWithAllArg_ShouldExecuteAllSyncers()
-      throws UnsupportedEncodingException {
+  void run_WithSyncAsArgumentWithAllArg_ShouldExecuteAllSyncers() {
     // preparation
     final SphereClient sourceClient = mock(SphereClient.class);
     when(sourceClient.getConfig()).thenReturn(SphereClientConfig.of("foo", "foo", "foo"));
@@ -296,6 +306,8 @@ class CliRunnerTest {
         .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
     when(sourceClient.execute(any(ProductQuery.class)))
         .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
+
+    stubClientsCustomObjectService(targetClient);
 
     final SyncerFactory syncerFactory =
         spy(SyncerFactory.of(() -> sourceClient, () -> targetClient));
@@ -332,6 +344,8 @@ class CliRunnerTest {
     when(sourceClient.execute(any(ProductQuery.class)))
         .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
 
+    stubClientsCustomObjectService(targetClient);
+
     final SyncerFactory syncerFactory =
         spy(SyncerFactory.of(() -> sourceClient, () -> targetClient));
 
@@ -357,5 +371,26 @@ class CliRunnerTest {
     verify(client, times(1)).close();
     verify(client, times(numberOfGetConfigInvocations)).getConfig();
     verifyNoMoreInteractions(client);
+  }
+
+  private void stubClientsCustomObjectService(@Nonnull final SphereClient client) {
+
+    final CustomObject<LastSyncCustomObject> customObject = mock(CustomObject.class);
+
+    final LastSyncCustomObject lastSyncCustomObject =
+        LastSyncCustomObject.of(ZonedDateTime.now(), new ProductSyncStatistics(), 100);
+
+    when(customObject.getLastModifiedAt()).thenReturn(ZonedDateTime.now());
+    when(customObject.getValue()).thenReturn(lastSyncCustomObject);
+
+    when(client.execute(any(CustomObjectUpsertCommand.class)))
+        .thenReturn(CompletableFuture.completedFuture(customObject));
+
+    final PagedQueryResult<CustomObject<LastSyncCustomObject>> queriedCustomObjects =
+        spy(PagedQueryResult.empty());
+    when(queriedCustomObjects.getResults()).thenReturn(singletonList(customObject));
+
+    when(client.execute(any(CustomObjectQuery.class)))
+        .thenReturn(CompletableFuture.completedFuture(queriedCustomObjects));
   }
 }
