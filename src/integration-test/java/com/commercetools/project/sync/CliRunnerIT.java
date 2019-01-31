@@ -1,7 +1,7 @@
 package com.commercetools.project.sync;
 
 import static com.commercetools.project.sync.util.ClientConfigurationUtils.createClient;
-import static com.commercetools.project.sync.util.IntegrationTestUtils.deleteCustomObjects;
+import static com.commercetools.project.sync.util.IntegrationTestUtils.deleteLastSyncCustomObjects;
 import static com.commercetools.project.sync.util.QueryUtils.queryAndExecute;
 import static com.commercetools.project.sync.util.SphereClientUtils.CTP_SOURCE_CLIENT_CONFIG;
 import static com.commercetools.project.sync.util.SphereClientUtils.CTP_TARGET_CLIENT_CONFIG;
@@ -75,7 +75,7 @@ class CliRunnerIT {
     queryAndExecute(client, ProductTypeQuery.of(), ProductTypeDeleteCommand::of);
     queryAndExecute(client, TypeQuery.of(), TypeDeleteCommand::of);
     queryAndExecute(client, InventoryEntryQuery.of(), InventoryEntryDeleteCommand::of);
-    deleteCustomObjects(client);
+    deleteLastSyncCustomObjects(client);
   }
 
   @AfterEach
