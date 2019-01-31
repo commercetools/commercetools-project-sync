@@ -34,14 +34,8 @@ public class CustomObjectServiceImpl implements CustomObjectService {
   }
 
   @Nonnull
-  private CompletionStage<CustomObject<LastSyncCustomObject>> createLastSyncCustomObject(
-      @Nonnull final CustomObjectDraft<LastSyncCustomObject> customObjectDraft) {
-    return sphereClient.execute(CustomObjectUpsertCommand.of(customObjectDraft));
-  }
-
-  @Nonnull
-  private CompletionStage<CustomObject<String>> createCurrentCtpTimestampCustomObject(
-      @Nonnull final CustomObjectDraft<String> customObjectDraft) {
+  private <T> CompletionStage<CustomObject<T>> createCustomObject(
+      @Nonnull final CustomObjectDraft<T> customObjectDraft) {
     return sphereClient.execute(CustomObjectUpsertCommand.of(customObjectDraft));
   }
 
@@ -56,7 +50,7 @@ public class CustomObjectServiceImpl implements CustomObjectService {
             TIMESTAMP_GENERATOR_VALUE,
             String.class);
 
-    return createCurrentCtpTimestampCustomObject(currentTimestampDraft)
+    return createCustomObject(currentTimestampDraft)
         .thenApply(ResourceView::getLastModifiedAt)
         .thenApply(lastModifiedAt -> lastModifiedAt.minusMinutes(MINUTES_BEFORE_CURRENT_TIMESTAMP));
   }
@@ -93,7 +87,7 @@ public class CustomObjectServiceImpl implements CustomObjectService {
             lastSyncCustomObject,
             LastSyncCustomObject.class);
 
-    return createLastSyncCustomObject(lastTimeStampDraft);
+    return createCustomObject(lastTimeStampDraft);
   }
 
   @Nonnull
