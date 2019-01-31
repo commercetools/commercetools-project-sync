@@ -30,6 +30,7 @@ public final class TestUtils {
 
   public static void assertAllSyncersLoggingEvents(
       @Nonnull final TestLogger testLogger, final int numberOfResources) {
+
     final Condition<LoggingEvent> typesStartLog =
         new Condition<>(
             loggingEvent ->

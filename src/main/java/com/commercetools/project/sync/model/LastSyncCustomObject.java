@@ -3,9 +3,8 @@ package com.commercetools.project.sync.model;
 import com.commercetools.project.sync.util.SyncUtils;
 import com.commercetools.sync.commons.helpers.BaseSyncStatistics;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-
-import javax.annotation.Nonnull;
 import java.time.ZonedDateTime;
+import javax.annotation.Nonnull;
 
 public class LastSyncCustomObject {
 
