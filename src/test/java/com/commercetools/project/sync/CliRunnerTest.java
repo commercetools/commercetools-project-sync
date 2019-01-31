@@ -11,8 +11,9 @@ import static com.commercetools.project.sync.CliRunner.VERSION_OPTION_LONG;
 import static com.commercetools.project.sync.CliRunner.VERSION_OPTION_SHORT;
 import static com.commercetools.project.sync.util.SyncUtils.APPLICATION_DEFAULT_NAME;
 import static com.commercetools.project.sync.util.SyncUtils.APPLICATION_DEFAULT_VERSION;
+import static com.commercetools.project.sync.util.TestUtils.stubClientsCustomObjectService;
+import static com.commercetools.project.sync.util.TestUtils.verifyInteractionsWithClientAfterSync;
 import static java.lang.String.format;
-import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
@@ -20,18 +21,12 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
-import com.commercetools.project.sync.model.LastSyncCustomObject;
-import com.commercetools.sync.products.helpers.ProductSyncStatistics;
 import com.google.common.base.Optional;
 import io.sphere.sdk.categories.queries.CategoryQuery;
 import io.sphere.sdk.client.SphereClient;
 import io.sphere.sdk.client.SphereClientConfig;
-import io.sphere.sdk.customobjects.CustomObject;
-import io.sphere.sdk.customobjects.commands.CustomObjectUpsertCommand;
-import io.sphere.sdk.customobjects.queries.CustomObjectQuery;
 import io.sphere.sdk.inventory.queries.InventoryEntryQuery;
 import io.sphere.sdk.products.queries.ProductQuery;
 import io.sphere.sdk.producttypes.queries.ProductTypeQuery;
@@ -40,9 +35,7 @@ import io.sphere.sdk.types.queries.TypeQuery;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
-import java.time.ZonedDateTime;
 import java.util.concurrent.CompletableFuture;
-import javax.annotation.Nonnull;
 import org.apache.commons.cli.MissingArgumentException;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
@@ -364,33 +357,5 @@ class CliRunnerTest {
     inOrder.verify(sourceClient).execute(any(InventoryEntryQuery.class));
 
     verifyInteractionsWithClientAfterSync(sourceClient, 5);
-  }
-
-  private void verifyInteractionsWithClientAfterSync(
-      @Nonnull final SphereClient client, final int numberOfGetConfigInvocations) {
-    verify(client, times(1)).close();
-    verify(client, times(numberOfGetConfigInvocations)).getConfig();
-    verifyNoMoreInteractions(client);
-  }
-
-  private void stubClientsCustomObjectService(@Nonnull final SphereClient client) {
-
-    final CustomObject<LastSyncCustomObject> customObject = mock(CustomObject.class);
-
-    final LastSyncCustomObject lastSyncCustomObject =
-        LastSyncCustomObject.of(ZonedDateTime.now(), new ProductSyncStatistics(), 100);
-
-    when(customObject.getLastModifiedAt()).thenReturn(ZonedDateTime.now());
-    when(customObject.getValue()).thenReturn(lastSyncCustomObject);
-
-    when(client.execute(any(CustomObjectUpsertCommand.class)))
-        .thenReturn(CompletableFuture.completedFuture(customObject));
-
-    final PagedQueryResult<CustomObject<LastSyncCustomObject>> queriedCustomObjects =
-        spy(PagedQueryResult.empty());
-    when(queriedCustomObjects.getResults()).thenReturn(singletonList(customObject));
-
-    when(client.execute(any(CustomObjectQuery.class)))
-        .thenReturn(CompletableFuture.completedFuture(queriedCustomObjects));
   }
 }

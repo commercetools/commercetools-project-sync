@@ -1,8 +1,25 @@
 package com.commercetools.project.sync.util;
 
 import static java.lang.String.format;
+import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
+import com.commercetools.project.sync.model.LastSyncCustomObject;
+import com.commercetools.sync.products.helpers.ProductSyncStatistics;
+import io.sphere.sdk.client.SphereClient;
+import io.sphere.sdk.customobjects.CustomObject;
+import io.sphere.sdk.customobjects.commands.CustomObjectUpsertCommand;
+import io.sphere.sdk.customobjects.queries.CustomObjectQuery;
+import io.sphere.sdk.queries.PagedQueryResult;
+import java.time.ZonedDateTime;
+import java.util.concurrent.CompletableFuture;
 import javax.annotation.Nonnull;
 import org.assertj.core.api.Condition;
 import uk.org.lidalia.slf4jext.Level;
@@ -125,6 +142,37 @@ public final class TestUtils {
         .haveExactly(1, categoriesStatisticsLog)
         .haveExactly(1, productsStatisticsLog)
         .haveExactly(1, inventoriesStatisticsLog);
+  }
+
+  public static void verifyInteractionsWithClientAfterSync(
+      @Nonnull final SphereClient client, final int numberOfGetConfigInvocations) {
+
+    verify(client, times(1)).close();
+    // Verify config is accessed for the success message after sync:
+    // " example: Syncing products from CTP project with key 'x' to project with key 'y' is done","
+    verify(client, times(numberOfGetConfigInvocations)).getConfig();
+    verifyNoMoreInteractions(client);
+  }
+
+  public static void stubClientsCustomObjectService(@Nonnull final SphereClient client) {
+
+    final CustomObject<LastSyncCustomObject> customObject = mock(CustomObject.class);
+
+    final LastSyncCustomObject lastSyncCustomObject =
+        LastSyncCustomObject.of(ZonedDateTime.now(), new ProductSyncStatistics(), 100);
+
+    when(customObject.getLastModifiedAt()).thenReturn(ZonedDateTime.now());
+    when(customObject.getValue()).thenReturn(lastSyncCustomObject);
+
+    when(client.execute(any(CustomObjectUpsertCommand.class)))
+        .thenReturn(CompletableFuture.completedFuture(customObject));
+
+    final PagedQueryResult<CustomObject<LastSyncCustomObject>> queriedCustomObjects =
+        spy(PagedQueryResult.empty());
+    when(queriedCustomObjects.getResults()).thenReturn(singletonList(customObject));
+
+    when(client.execute(any(CustomObjectQuery.class)))
+        .thenReturn(CompletableFuture.completedFuture(queriedCustomObjects));
   }
 
   private TestUtils() {}
