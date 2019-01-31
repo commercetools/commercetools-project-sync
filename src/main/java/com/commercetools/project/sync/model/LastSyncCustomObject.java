@@ -38,11 +38,14 @@ public class LastSyncCustomObject {
 
   @Nonnull
   public static LastSyncCustomObject of(
-      @Nonnull final ZonedDateTime timestamp,
-      @Nonnull final BaseSyncStatistics statistics,
+      @Nonnull final ZonedDateTime lastSyncTimestamp,
+      @Nonnull final BaseSyncStatistics lastSyncStatistics,
       final long lastSyncDurationInSeconds) {
     return new LastSyncCustomObject(
-        timestamp, statistics, SyncUtils.getApplicationVersion(), lastSyncDurationInSeconds);
+        lastSyncTimestamp,
+        lastSyncStatistics,
+        SyncUtils.getApplicationVersion(),
+        lastSyncDurationInSeconds);
   }
 
   public ZonedDateTime getLastSyncTimestamp() {
