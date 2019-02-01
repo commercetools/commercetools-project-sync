@@ -22,8 +22,8 @@ import javax.annotation.Nonnull;
 
 public class CustomObjectServiceImpl implements CustomObjectService {
 
-  private static final String TIMESTAMP_GENERATOR_CONTAINER_POSTFIX = "timestampGenerator";
   public static final String TIMESTAMP_GENERATOR_KEY = "latestTimestamp";
+  private static final String TIMESTAMP_GENERATOR_CONTAINER_POSTFIX = "timestampGenerator";
   private static final String TIMESTAMP_GENERATOR_VALUE = "";
   private static final long MINUTES_BEFORE_CURRENT_TIMESTAMP = 2;
 
@@ -31,12 +31,6 @@ public class CustomObjectServiceImpl implements CustomObjectService {
 
   public CustomObjectServiceImpl(@Nonnull final SphereClient sphereClient) {
     this.sphereClient = sphereClient;
-  }
-
-  @Nonnull
-  private <T> CompletionStage<CustomObject<T>> createCustomObject(
-      @Nonnull final CustomObjectDraft<T> customObjectDraft) {
-    return sphereClient.execute(CustomObjectUpsertCommand.of(customObjectDraft));
   }
 
   @Nonnull
@@ -53,6 +47,12 @@ public class CustomObjectServiceImpl implements CustomObjectService {
     return createCustomObject(currentTimestampDraft)
         .thenApply(ResourceView::getLastModifiedAt)
         .thenApply(lastModifiedAt -> lastModifiedAt.minusMinutes(MINUTES_BEFORE_CURRENT_TIMESTAMP));
+  }
+
+  @Nonnull
+  private <T> CompletionStage<CustomObject<T>> createCustomObject(
+      @Nonnull final CustomObjectDraft<T> customObjectDraft) {
+    return sphereClient.execute(CustomObjectUpsertCommand.of(customObjectDraft));
   }
 
   @Nonnull
