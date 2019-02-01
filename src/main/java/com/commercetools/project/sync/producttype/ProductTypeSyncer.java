@@ -57,8 +57,7 @@ public final class ProductTypeSyncer
 
   @Nonnull
   @Override
-  protected List<ProductTypeDraft> transform(
-      @Nonnull final List<ProductType> page) {
+  protected List<ProductTypeDraft> transform(@Nonnull final List<ProductType> page) {
     return page.stream()
         .map(productType -> ProductTypeDraftBuilder.of(productType).build())
         .collect(Collectors.toList());
@@ -66,7 +65,7 @@ public final class ProductTypeSyncer
 
   @Nonnull
   @Override
-  public ProductTypeQuery getQuery() {
+  protected ProductTypeQuery getQuery() {
     return ProductTypeQuery.of();
   }
 }

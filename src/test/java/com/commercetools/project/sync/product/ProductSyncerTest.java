@@ -18,6 +18,7 @@ import io.sphere.sdk.products.ProductDraft;
 import io.sphere.sdk.products.commands.updateactions.ChangeName;
 import io.sphere.sdk.products.commands.updateactions.Publish;
 import io.sphere.sdk.products.commands.updateactions.Unpublish;
+import io.sphere.sdk.products.queries.ProductQuery;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.Test;

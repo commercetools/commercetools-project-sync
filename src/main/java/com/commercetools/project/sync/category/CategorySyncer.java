@@ -59,13 +59,13 @@ public final class CategorySyncer
 
   @Override
   @Nonnull
-  protected List<CategoryDraft> transformResourcesToDrafts(@Nonnull final List<Category> page) {
+  protected List<CategoryDraft> transform(@Nonnull final List<Category> page) {
     return replaceCategoriesReferenceIdsWithKeys(page);
   }
 
   @Nonnull
   @Override
-  public CategoryQuery getQuery() {
+  protected CategoryQuery getQuery() {
     return buildCategoryQuery();
   }
 }

@@ -39,8 +39,7 @@ class ProductTypeSyncerTest {
             readObjectFromResource("product-type-key-2.json", ProductType.class));
 
     // test
-    final List<ProductTypeDraft> draftsFromPage =
-        productTypeSyncer.transform(productTypePage);
+    final List<ProductTypeDraft> draftsFromPage = productTypeSyncer.transform(productTypePage);
 
     // assertions
     assertThat(draftsFromPage)

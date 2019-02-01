@@ -215,7 +215,7 @@ public abstract class Syncer<
   protected abstract List<S> transform(@Nonnull final List<T> page);
 
   @Nonnull
-  public abstract C getQuery();
+  protected abstract C getQuery();
 
   public B getSync() {
     return sync;

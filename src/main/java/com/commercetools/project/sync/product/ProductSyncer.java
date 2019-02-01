@@ -70,7 +70,7 @@ public final class ProductSyncer
 
   @Nonnull
   @Override
-  public ProductQuery getQuery() {
+  protected ProductQuery getQuery() {
     return buildProductQuery();
   }
 

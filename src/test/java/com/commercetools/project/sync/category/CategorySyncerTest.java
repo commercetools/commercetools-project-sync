@@ -10,6 +10,7 @@ import static org.mockito.Mockito.mock;
 import com.commercetools.sync.categories.CategorySync;
 import io.sphere.sdk.categories.Category;
 import io.sphere.sdk.categories.CategoryDraft;
+import io.sphere.sdk.categories.queries.CategoryQuery;
 import io.sphere.sdk.client.SphereClient;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -38,8 +39,7 @@ class CategorySyncerTest {
             readObjectFromResource("category-key-2.json", Category.class));
 
     // test
-    final List<CategoryDraft> draftsFromPage =
-        categorySyncer.transform(categoryPage);
+    final List<CategoryDraft> draftsFromPage = categorySyncer.transform(categoryPage);
 
     // assertions
     final List<CategoryDraft> expectedResult = replaceCategoriesReferenceIdsWithKeys(categoryPage);

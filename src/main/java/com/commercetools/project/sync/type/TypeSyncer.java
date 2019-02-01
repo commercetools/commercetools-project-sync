@@ -51,7 +51,7 @@ public final class TypeSyncer
 
   @Nonnull
   @Override
-  public TypeQuery getQuery() {
+  protected TypeQuery getQuery() {
     return TypeQuery.of();
   }
 
