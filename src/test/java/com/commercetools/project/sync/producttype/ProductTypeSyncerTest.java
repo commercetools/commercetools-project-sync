@@ -51,4 +51,17 @@ class ProductTypeSyncerTest {
                 .map(ProductTypeDraftBuilder::build)
                 .collect(toList()));
   }
+
+  @Test
+  void getQuery_ShouldBuildProductTypeQuery() {
+    // preparation
+    final ProductTypeSyncer productTypeSyncer =
+        ProductTypeSyncer.of(mock(SphereClient.class), mock(SphereClient.class));
+
+    // test
+    final ProductTypeQuery query = productTypeSyncer.getQuery();
+
+    // assertion
+    assertThat(query).isEqualTo(ProductTypeQuery.of());
+  }
 }

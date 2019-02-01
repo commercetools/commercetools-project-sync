@@ -53,4 +53,16 @@ class TypeSyncerTest {
                 .map(TypeDraftBuilder::build)
                 .collect(toList()));
   }
+
+  @Test
+  void getQuery_ShouldBuildTypeQuery() {
+    // preparation
+    final TypeSyncer typeSyncer = TypeSyncer.of(mock(SphereClient.class), mock(SphereClient.class));
+
+    // test
+    final TypeQuery query = typeSyncer.getQuery();
+
+    // assertion
+    assertThat(query).isEqualTo(TypeQuery.of());
+  }
 }

@@ -54,4 +54,21 @@ class InventoryEntrySyncerTest {
         replaceInventoriesReferenceIdsWithKeys(inventoryPage);
     assertThat(draftsFromPage).isEqualTo(expectedResult);
   }
+
+  @Test
+  void getQuery_ShouldBuildInventoryEntryQuery() {
+    // preparation
+    final InventoryEntrySyncer inventoryEntrySyncer =
+        InventoryEntrySyncer.of(mock(SphereClient.class), mock(SphereClient.class));
+
+    // test
+    final InventoryEntryQuery query = inventoryEntrySyncer.getQuery();
+
+    // assertion
+    assertThat(query)
+        .isEqualTo(
+            InventoryEntryQuery.of()
+                .withExpansionPaths(InventoryEntryExpansionModel::supplyChannel)
+                .plusExpansionPaths(ExpansionPath.of("custom.type")));
+  }
 }

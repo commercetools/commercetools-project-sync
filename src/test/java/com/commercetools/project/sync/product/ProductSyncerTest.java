@@ -55,6 +55,19 @@ class ProductSyncerTest {
   }
 
   @Test
+  void getQuery_ShouldBuildProductQuery() {
+    // preparation
+    final ProductSyncer productSyncer =
+        ProductSyncer.of(mock(SphereClient.class), mock(SphereClient.class));
+
+    // test
+    final ProductQuery query = productSyncer.getQuery();
+
+    // assertion
+    assertThat(query).isEqualTo(buildProductQuery());
+  }
+
+  @Test
   void appendPublishIfPublished_WithPublishedProductAndEmptyActions_ShouldNotAppendPublish() {
     final ProductCatalogData masterData = mock(ProductCatalogData.class);
     when(masterData.isPublished()).thenReturn(true);

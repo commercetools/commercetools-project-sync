@@ -45,4 +45,17 @@ class CategorySyncerTest {
     final List<CategoryDraft> expectedResult = replaceCategoriesReferenceIdsWithKeys(categoryPage);
     assertThat(draftsFromPage).isEqualTo(expectedResult);
   }
+
+  @Test
+  void getQuery_ShouldBuildCategoryQuery() {
+    // preparation
+    final CategorySyncer categorySyncer =
+        CategorySyncer.of(mock(SphereClient.class), mock(SphereClient.class));
+
+    // test
+    final CategoryQuery query = categorySyncer.getQuery();
+
+    // assertion
+    assertThat(query).isEqualTo(buildCategoryQuery());
+  }
 }
