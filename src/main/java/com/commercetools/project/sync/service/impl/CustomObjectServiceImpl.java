@@ -75,7 +75,7 @@ public class CustomObjectServiceImpl implements CustomObjectService {
 
   @Nonnull
   @Override
-  public CompletionStage<CustomObject<LastSyncCustomObject>> persistLastSyncCustomObject(
+  public CompletionStage<CustomObject<LastSyncCustomObject>> createLastSyncCustomObject(
       @Nonnull final String sourceProjectKey,
       @Nonnull final String syncModuleName,
       @Nonnull final LastSyncCustomObject lastSyncCustomObject) {

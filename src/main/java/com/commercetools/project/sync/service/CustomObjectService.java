@@ -16,7 +16,7 @@ public interface CustomObjectService {
       @Nonnull final String sourceProjectKey, @Nonnull final String syncModuleName);
 
   @Nonnull
-  CompletionStage<CustomObject<LastSyncCustomObject>> persistLastSyncCustomObject(
+  CompletionStage<CustomObject<LastSyncCustomObject>> createLastSyncCustomObject(
       @Nonnull final String sourceProjectKey,
       @Nonnull final String syncModuleName,
       @Nonnull final LastSyncCustomObject lastSyncCustomObject);
