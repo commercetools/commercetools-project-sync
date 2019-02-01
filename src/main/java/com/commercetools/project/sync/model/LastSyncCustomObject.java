@@ -35,6 +35,8 @@ public class LastSyncCustomObject<T extends BaseSyncStatistics> {
     this.lastSyncDurationInMillis = lastSyncDurationInMillis;
   }
 
+  // Needed for the 'com.fasterxml.jackson' deserialization, for example, when fetching
+  // from CTP custom objects.
   public LastSyncCustomObject() {}
 
   @Nonnull
@@ -65,6 +67,9 @@ public class LastSyncCustomObject<T extends BaseSyncStatistics> {
   public long getLastSyncDurationInMillis() {
     return lastSyncDurationInMillis;
   }
+
+  // Setters are needed for the 'com.fasterxml.jackson' deserialization, for example, when fetching
+  // from CTP custom objects.
 
   public void setLastSyncTimestamp(@Nonnull final ZonedDateTime lastSyncTimestamp) {
     this.lastSyncTimestamp = lastSyncTimestamp;
