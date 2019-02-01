@@ -37,7 +37,7 @@ class ProductSyncerTest {
   }
 
   @Test
-  void transformResourcesToDrafts_ShouldReplaceProductReferenceIdsWithKeys() {
+  void transform_ShouldReplaceProductReferenceIdsWithKeys() {
     // preparation
     final ProductSyncer productSyncer =
         ProductSyncer.of(mock(SphereClient.class), mock(SphereClient.class));
@@ -47,7 +47,7 @@ class ProductSyncerTest {
             readObjectFromResource("product-key-2.json", Product.class));
 
     // test
-    final List<ProductDraft> draftsFromPage = productSyncer.transformResourcesToDrafts(productPage);
+    final List<ProductDraft> draftsFromPage = productSyncer.transform(productPage);
 
     // assertions
     final List<ProductDraft> expectedResult = replaceProductsReferenceIdsWithKeys(productPage);

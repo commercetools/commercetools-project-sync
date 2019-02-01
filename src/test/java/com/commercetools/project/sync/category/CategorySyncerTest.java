@@ -28,7 +28,7 @@ class CategorySyncerTest {
   }
 
   @Test
-  void transformResourcesToDrafts_ShouldReplaceCategoryReferenceIdsWithKeys() {
+  void transform_ShouldReplaceCategoryReferenceIdsWithKeys() {
     // preparation
     final CategorySyncer categorySyncer =
         CategorySyncer.of(mock(SphereClient.class), mock(SphereClient.class));
@@ -39,7 +39,7 @@ class CategorySyncerTest {
 
     // test
     final List<CategoryDraft> draftsFromPage =
-        categorySyncer.transformResourcesToDrafts(categoryPage);
+        categorySyncer.transform(categoryPage);
 
     // assertions
     final List<CategoryDraft> expectedResult = replaceCategoriesReferenceIdsWithKeys(categoryPage);

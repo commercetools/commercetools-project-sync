@@ -29,7 +29,7 @@ class ProductTypeSyncerTest {
   }
 
   @Test
-  void transformResourcesToDrafts_ShouldConvertResourcesToDrafts() {
+  void transform_ShouldConvertResourcesToDrafts() {
     // preparation
     final ProductTypeSyncer productTypeSyncer =
         ProductTypeSyncer.of(mock(SphereClient.class), mock(SphereClient.class));
@@ -40,7 +40,7 @@ class ProductTypeSyncerTest {
 
     // test
     final List<ProductTypeDraft> draftsFromPage =
-        productTypeSyncer.transformResourcesToDrafts(productTypePage);
+        productTypeSyncer.transform(productTypePage);
 
     // assertions
     assertThat(draftsFromPage)

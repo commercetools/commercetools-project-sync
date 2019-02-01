@@ -200,7 +200,7 @@ public abstract class Syncer<
   @Nonnull
   private U syncPage(@Nonnull final List<T> page) {
 
-    final List<S> draftsWithKeysInReferences = transformResourcesToDrafts(page);
+    final List<S> draftsWithKeysInReferences = transform(page);
     return sync.sync(draftsWithKeysInReferences).toCompletableFuture().join();
   }
 
@@ -212,7 +212,7 @@ public abstract class Syncer<
    * @return list of drafts of type {@link S}.
    */
   @Nonnull
-  protected abstract List<S> transformResourcesToDrafts(@Nonnull final List<T> page);
+  protected abstract List<S> transform(@Nonnull final List<T> page);
 
   @Nonnull
   public abstract C getQuery();

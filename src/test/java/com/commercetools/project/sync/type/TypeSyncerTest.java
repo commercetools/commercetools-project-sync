@@ -28,7 +28,7 @@ class TypeSyncerTest {
   }
 
   @Test
-  void transformResourcesToDrafts_ShouldConvertResourcesToDrafts() {
+  void transform_ShouldConvertResourcesToDrafts() {
     // preparation
     final TypeSyncer typeSyncer = TypeSyncer.of(mock(SphereClient.class), mock(SphereClient.class));
     final List<Type> typePage =
@@ -37,7 +37,7 @@ class TypeSyncerTest {
             readObjectFromResource("type-key-2.json", Type.class));
 
     // test
-    final List<TypeDraft> draftsFromPage = typeSyncer.transformResourcesToDrafts(typePage);
+    final List<TypeDraft> draftsFromPage = typeSyncer.transform(typePage);
 
     // assertions
     assertThat(draftsFromPage)

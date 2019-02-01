@@ -36,7 +36,7 @@ class InventoryEntrySyncerTest {
   }
 
   @Test
-  void transformResourcesToDrafts_ShouldReplaceInventoryEntryReferenceIdsWithKeys() {
+  void transform_ShouldReplaceInventoryEntryReferenceIdsWithKeys() {
     // preparation
     final InventoryEntrySyncer inventoryEntrySyncer =
         InventoryEntrySyncer.of(mock(SphereClient.class), mock(SphereClient.class));
@@ -46,8 +46,7 @@ class InventoryEntrySyncerTest {
             readObjectFromResource("inventory-sku-2.json", InventoryEntry.class));
 
     // test
-    final List<InventoryEntryDraft> draftsFromPage =
-        inventoryEntrySyncer.transformResourcesToDrafts(inventoryPage);
+    final List<InventoryEntryDraft> draftsFromPage = inventoryEntrySyncer.transform(inventoryPage);
 
     // assertions
     final List<InventoryEntryDraft> expectedResult =

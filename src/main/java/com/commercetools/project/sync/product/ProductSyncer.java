@@ -64,7 +64,7 @@ public final class ProductSyncer
 
   @Override
   @Nonnull
-  protected List<ProductDraft> transformResourcesToDrafts(@Nonnull final List<Product> page) {
+  protected List<ProductDraft> transform(@Nonnull final List<Product> page) {
     return replaceProductsReferenceIdsWithKeys(page);
   }
 
