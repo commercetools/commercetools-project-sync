@@ -4,6 +4,7 @@ import com.commercetools.project.sync.util.SyncUtils;
 import com.commercetools.sync.commons.helpers.BaseSyncStatistics;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.time.ZonedDateTime;
+import java.util.Objects;
 import javax.annotation.Nonnull;
 
 public class LastSyncCustomObject<T extends BaseSyncStatistics> {
@@ -81,5 +82,33 @@ public class LastSyncCustomObject<T extends BaseSyncStatistics> {
 
   public void setLastSyncDurationInMillis(final long lastSyncDurationInMillis) {
     this.lastSyncDurationInMillis = lastSyncDurationInMillis;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (!(o instanceof LastSyncCustomObject)) {
+      return false;
+    }
+    if (!super.equals(o)) {
+      return false;
+    }
+    LastSyncCustomObject<?> that = (LastSyncCustomObject<?>) o;
+    return getLastSyncDurationInMillis() == that.getLastSyncDurationInMillis()
+        && Objects.equals(getLastSyncStatistics(), that.getLastSyncStatistics())
+        && Objects.equals(getLastSyncTimestamp(), that.getLastSyncTimestamp())
+        && Objects.equals(getApplicationVersion(), that.getApplicationVersion());
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(
+        super.hashCode(),
+        getLastSyncStatistics(),
+        getLastSyncTimestamp(),
+        getApplicationVersion(),
+        getLastSyncDurationInMillis());
   }
 }
