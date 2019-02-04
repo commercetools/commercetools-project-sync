@@ -156,16 +156,11 @@ public final class TestUtils {
     verifyNoMoreInteractions(client);
   }
 
-  public static void stubClientsCustomObjectService(@Nonnull final SphereClient client) {
+  public static void stubClientsCustomObjectService(
+      @Nonnull final SphereClient client, @Nonnull final ZonedDateTime currentCtpTimestamp) {
 
     final CustomObject<LastSyncCustomObject<ProductSyncStatistics>> customObject =
-        mock(CustomObject.class);
-
-    final LastSyncCustomObject<ProductSyncStatistics> lastSyncCustomObject =
-        LastSyncCustomObject.of(ZonedDateTime.now(), new ProductSyncStatistics(), 100);
-
-    when(customObject.getLastModifiedAt()).thenReturn(ZonedDateTime.now());
-    when(customObject.getValue()).thenReturn(lastSyncCustomObject);
+        mockLastSyncCustomObject(currentCtpTimestamp);
 
     when(client.execute(any(CustomObjectUpsertCommand.class)))
         .thenReturn(CompletableFuture.completedFuture(customObject));
@@ -179,6 +174,18 @@ public final class TestUtils {
   }
 
   @Nonnull
+  public static CustomObject<LastSyncCustomObject<ProductSyncStatistics>> mockLastSyncCustomObject(
+      @Nonnull ZonedDateTime currentCtpTimestamp) {
+    final CustomObject<LastSyncCustomObject<ProductSyncStatistics>> customObject =
+        mock(CustomObject.class);
+
+    final LastSyncCustomObject<ProductSyncStatistics> lastSyncCustomObject =
+        LastSyncCustomObject.of(ZonedDateTime.now(), new ProductSyncStatistics(), 100);
+
+    when(customObject.getLastModifiedAt()).thenReturn(currentCtpTimestamp);
+    when(customObject.getValue()).thenReturn(lastSyncCustomObject);
+    return customObject;
+  }
 
   @Nonnull
   public static Clock getMockedClock() {
