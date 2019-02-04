@@ -3,7 +3,6 @@ package com.commercetools.project.sync.model;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.commercetools.project.sync.util.SyncUtils;
-import com.commercetools.sync.categories.helpers.CategorySyncStatistics;
 import com.commercetools.sync.products.helpers.ProductSyncStatistics;
 import java.time.ZonedDateTime;
 import org.junit.jupiter.api.Test;
@@ -99,25 +98,6 @@ class LastSyncCustomObjectTest {
 
     // test
     final boolean result = lastSyncCustomObject.equals(otherLastSyncCustomObject);
-
-    // assertions
-    assertThat(result).isFalse();
-  }
-
-  @Test
-  void equals_WithDifferentType_ShouldReturnFalse() {
-    // preparation
-    final int lastSyncDurationInSeconds = 100;
-    final ProductSyncStatistics lastSyncStatistics = new ProductSyncStatistics();
-    final LastSyncCustomObject<ProductSyncStatistics> lastSyncCustomObject =
-        LastSyncCustomObject.of(ZonedDateTime.now(), lastSyncStatistics, lastSyncDurationInSeconds);
-
-    final LastSyncCustomObject<CategorySyncStatistics> lastCategorySyncStatisticsCustomObject =
-        LastSyncCustomObject.of(
-            ZonedDateTime.now(), new CategorySyncStatistics(), lastSyncDurationInSeconds);
-
-    // test
-    final boolean result = lastSyncCustomObject.equals(lastCategorySyncStatisticsCustomObject);
 
     // assertions
     assertThat(result).isFalse();
