@@ -1,5 +1,8 @@
 package com.commercetools.project.sync;
 
+import static com.commercetools.project.sync.service.impl.CustomObjectServiceImpl.TIMESTAMP_GENERATOR_CONTAINER_POSTFIX;
+import static com.commercetools.project.sync.service.impl.CustomObjectServiceImpl.TIMESTAMP_GENERATOR_KEY;
+import static com.commercetools.project.sync.service.impl.CustomObjectServiceImpl.TIMESTAMP_GENERATOR_VALUE;
 import static com.commercetools.project.sync.util.ClientConfigurationUtils.createClient;
 import static com.commercetools.project.sync.util.IntegrationTestUtils.deleteLastSyncCustomObjects;
 import static com.commercetools.project.sync.util.QueryUtils.queryAndExecute;
@@ -11,6 +14,13 @@ import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.commercetools.project.sync.model.LastSyncCustomObject;
+import com.commercetools.sync.categories.helpers.CategorySyncStatistics;
+import com.commercetools.sync.commons.helpers.BaseSyncStatistics;
+import com.commercetools.sync.inventories.helpers.InventorySyncStatistics;
+import com.commercetools.sync.products.helpers.ProductSyncStatistics;
+import com.commercetools.sync.producttypes.helpers.ProductTypeSyncStatistics;
+import com.commercetools.sync.types.helpers.TypeSyncStatistics;
 import io.sphere.sdk.categories.Category;
 import io.sphere.sdk.categories.CategoryDraft;
 import io.sphere.sdk.categories.CategoryDraftBuilder;
@@ -18,6 +28,8 @@ import io.sphere.sdk.categories.commands.CategoryCreateCommand;
 import io.sphere.sdk.categories.commands.CategoryDeleteCommand;
 import io.sphere.sdk.categories.queries.CategoryQuery;
 import io.sphere.sdk.client.SphereClient;
+import io.sphere.sdk.customobjects.CustomObject;
+import io.sphere.sdk.customobjects.queries.CustomObjectQuery;
 import io.sphere.sdk.inventory.InventoryEntry;
 import io.sphere.sdk.inventory.InventoryEntryDraft;
 import io.sphere.sdk.inventory.InventoryEntryDraftBuilder;
@@ -48,6 +60,7 @@ import io.sphere.sdk.types.commands.TypeCreateCommand;
 import io.sphere.sdk.types.commands.TypeDeleteCommand;
 import io.sphere.sdk.types.queries.TypeQuery;
 import java.time.Clock;
+import java.time.ZonedDateTime;
 import javax.annotation.Nonnull;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -109,73 +122,200 @@ class CliRunnerIT {
         // assertions
         assertAllSyncersLoggingEvents(testLogger, 1);
 
-        final PagedQueryResult<ProductType> productTypeQueryResult =
-            postTargetClient
-                .execute(ProductTypeQuery.of().byKey(resourceKey))
-                .toCompletableFuture()
-                .join();
-
-        assertThat(productTypeQueryResult.getResults())
-            .hasSize(1)
-            .hasOnlyOneElementSatisfying(
-                productType -> assertThat(productType.getKey()).isEqualTo(resourceKey));
-
-        final String queryPredicate = format("key=\"%s\"", resourceKey);
-
-        final PagedQueryResult<Type> typeQueryResult =
-            postTargetClient
-                .execute(TypeQuery.of().withPredicates(QueryPredicate.of(queryPredicate)))
-                .toCompletableFuture()
-                .join();
-
-        assertThat(typeQueryResult.getResults())
-            .hasSize(1)
-            .hasOnlyOneElementSatisfying(type -> assertThat(type.getKey()).isEqualTo(resourceKey));
-
-        final PagedQueryResult<Category> categoryQueryResult =
-            postTargetClient
-                .execute(CategoryQuery.of().withPredicates(QueryPredicate.of(queryPredicate)))
-                .toCompletableFuture()
-                .join();
-
-        assertThat(categoryQueryResult.getResults())
-            .hasSize(1)
-            .hasOnlyOneElementSatisfying(
-                category -> assertThat(category.getKey()).isEqualTo(resourceKey));
-
-        final PagedQueryResult<Product> productQueryResult =
-            postTargetClient
-                .execute(ProductQuery.of().withPredicates(QueryPredicate.of(queryPredicate)))
-                .toCompletableFuture()
-                .join();
-
-        assertThat(productQueryResult.getResults())
-            .hasSize(1)
-            .hasOnlyOneElementSatisfying(
-                product -> {
-                  assertThat(product.getKey()).isEqualTo(resourceKey);
-                  final ProductVariant stagedMasterVariant =
-                      product.getMasterData().getStaged().getMasterVariant();
-                  assertThat(stagedMasterVariant.getKey()).isEqualTo(resourceKey);
-                  assertThat(stagedMasterVariant.getSku()).isEqualTo(resourceKey);
-                });
-
-        final PagedQueryResult<InventoryEntry> inventoryEntryQueryResult =
-            postTargetClient
-                .execute(
-                    InventoryEntryQuery.of()
-                        .withPredicates(QueryPredicate.of(format("sku=\"%s\"", resourceKey))))
-                .toCompletableFuture()
-                .join();
-
-        assertThat(inventoryEntryQueryResult.getResults())
-            .hasSize(1)
-            .hasOnlyOneElementSatisfying(
-                inventoryEntry -> assertThat(inventoryEntry.getSku()).isEqualTo(resourceKey));
+        assertAllResourcesAreSyncedToTarget(resourceKey, postTargetClient);
 
         cleanUpProjects(postSourceClient, postTargetClient);
       }
     }
+  }
+
+  @Test
+  void
+      run_WithSyncAsArgumentWithAllArg_ShouldExecuteAllSyncersAndStoreLastSyncTimestampsAsCustomObjects() {
+    // preparation
+    final String resourceKey = "foo";
+    try (final SphereClient targetClient = createClient(CTP_TARGET_CLIENT_CONFIG)) {
+      try (final SphereClient sourceClient = createClient(CTP_SOURCE_CLIENT_CONFIG)) {
+        setupTestData(sourceClient, resourceKey);
+
+        final SyncerFactory syncerFactory =
+            SyncerFactory.of(() -> sourceClient, () -> targetClient, Clock.systemDefaultZone());
+
+        // test
+        CliRunner.of().run(new String[] {"-s", "all"}, syncerFactory);
+      }
+    }
+
+    // create clients again (for assertions and cleanup), since the run method closes the clients
+    // after execution
+    // is done.
+    try (final SphereClient postSourceClient = createClient(CTP_SOURCE_CLIENT_CONFIG)) {
+      try (final SphereClient postTargetClient = createClient(CTP_TARGET_CLIENT_CONFIG)) {
+        // assertions
+        assertAllSyncersLoggingEvents(testLogger, 1);
+
+        assertAllResourcesAreSyncedToTarget(resourceKey, postTargetClient);
+
+        final ZonedDateTime lastSyncTimestamp =
+            assertCurrentCtpTimestampGeneratorAndGetLastModifiedAt(postTargetClient);
+
+        final String sourceProjectKey = postSourceClient.getConfig().getProjectKey();
+
+        assertLastSyncCustomObject(
+            postTargetClient,
+            sourceProjectKey,
+            "productSync",
+            ProductSyncStatistics.class,
+            lastSyncTimestamp);
+
+        assertLastSyncCustomObject(
+            postTargetClient,
+            sourceProjectKey,
+            "categorySync",
+            CategorySyncStatistics.class,
+            lastSyncTimestamp);
+
+        assertLastSyncCustomObject(
+            postTargetClient,
+            sourceProjectKey,
+            "productTypeSync",
+            ProductTypeSyncStatistics.class,
+            lastSyncTimestamp);
+
+        assertLastSyncCustomObject(
+            postTargetClient,
+            sourceProjectKey,
+            "typeSync",
+            TypeSyncStatistics.class,
+            lastSyncTimestamp);
+
+        assertLastSyncCustomObject(
+            postTargetClient,
+            sourceProjectKey,
+            "inventoryEntrySync",
+            InventorySyncStatistics.class,
+            lastSyncTimestamp);
+
+        cleanUpProjects(postSourceClient, postTargetClient);
+      }
+    }
+  }
+
+  private void assertLastSyncCustomObject(
+      @Nonnull final SphereClient targetClient,
+      @Nonnull final String sourceProjectKey,
+      @Nonnull final String syncModule,
+      @Nonnull final Class<? extends BaseSyncStatistics> statisticsClass,
+      @Nonnull final ZonedDateTime lastSyncTimestamp) {
+
+    final CustomObjectQuery<LastSyncCustomObject> lastSyncQuery =
+        CustomObjectQuery.of(LastSyncCustomObject.class)
+            .byContainer(format("commercetools-project-sync.%s", syncModule));
+
+    final PagedQueryResult<CustomObject<LastSyncCustomObject>> lastSyncResult =
+        targetClient.execute(lastSyncQuery).toCompletableFuture().join();
+
+    assertThat(lastSyncResult.getResults())
+        .hasSize(1)
+        .hasOnlyOneElementSatisfying(
+            lastSyncCustomObject -> {
+              assertThat(lastSyncCustomObject.getKey()).isEqualTo(sourceProjectKey);
+              assertThat(lastSyncCustomObject.getValue())
+                  .satisfies(
+                      value -> {
+                        assertThat(value.getLastSyncStatistics()).isInstanceOf(statisticsClass);
+                        assertThat(value.getLastSyncStatistics().getProcessed()).isEqualTo(1);
+                        assertThat(value.getLastSyncTimestamp()).isEqualTo(lastSyncTimestamp);
+                      });
+            });
+  }
+
+  @Nonnull
+  private ZonedDateTime assertCurrentCtpTimestampGeneratorAndGetLastModifiedAt(
+      @Nonnull final SphereClient targetClient) {
+
+    final CustomObjectQuery<String> timestampGeneratorQuery =
+        CustomObjectQuery.of(String.class)
+            .byContainer(
+                format("commercetools-project-sync.%s", TIMESTAMP_GENERATOR_CONTAINER_POSTFIX));
+
+    final PagedQueryResult<CustomObject<String>> currentCtpTimestampGeneratorResults =
+        targetClient.execute(timestampGeneratorQuery).toCompletableFuture().join();
+
+    assertThat(currentCtpTimestampGeneratorResults.getResults())
+        .hasSize(1)
+        .hasOnlyOneElementSatisfying(
+            currentCtpTimestamp -> {
+              assertThat(currentCtpTimestamp.getKey()).isEqualTo(TIMESTAMP_GENERATOR_KEY);
+              assertThat(currentCtpTimestamp.getValue()).isEqualTo(TIMESTAMP_GENERATOR_VALUE);
+            });
+
+    return currentCtpTimestampGeneratorResults.getResults().get(0).getLastModifiedAt();
+  }
+
+  private static void assertAllResourcesAreSyncedToTarget(
+      @Nonnull final String resourceKey, @Nonnull final SphereClient targetClient) {
+
+    final PagedQueryResult<ProductType> productTypeQueryResult =
+        targetClient.execute(ProductTypeQuery.of().byKey(resourceKey)).toCompletableFuture().join();
+
+    assertThat(productTypeQueryResult.getResults())
+        .hasSize(1)
+        .hasOnlyOneElementSatisfying(
+            productType -> assertThat(productType.getKey()).isEqualTo(resourceKey));
+
+    final String queryPredicate = format("key=\"%s\"", resourceKey);
+
+    final PagedQueryResult<Type> typeQueryResult =
+        targetClient
+            .execute(TypeQuery.of().withPredicates(QueryPredicate.of(queryPredicate)))
+            .toCompletableFuture()
+            .join();
+
+    assertThat(typeQueryResult.getResults())
+        .hasSize(1)
+        .hasOnlyOneElementSatisfying(type -> assertThat(type.getKey()).isEqualTo(resourceKey));
+
+    final PagedQueryResult<Category> categoryQueryResult =
+        targetClient
+            .execute(CategoryQuery.of().withPredicates(QueryPredicate.of(queryPredicate)))
+            .toCompletableFuture()
+            .join();
+
+    assertThat(categoryQueryResult.getResults())
+        .hasSize(1)
+        .hasOnlyOneElementSatisfying(
+            category -> assertThat(category.getKey()).isEqualTo(resourceKey));
+
+    final PagedQueryResult<Product> productQueryResult =
+        targetClient
+            .execute(ProductQuery.of().withPredicates(QueryPredicate.of(queryPredicate)))
+            .toCompletableFuture()
+            .join();
+
+    assertThat(productQueryResult.getResults())
+        .hasSize(1)
+        .hasOnlyOneElementSatisfying(
+            product -> {
+              assertThat(product.getKey()).isEqualTo(resourceKey);
+              final ProductVariant stagedMasterVariant =
+                  product.getMasterData().getStaged().getMasterVariant();
+              assertThat(stagedMasterVariant.getKey()).isEqualTo(resourceKey);
+              assertThat(stagedMasterVariant.getSku()).isEqualTo(resourceKey);
+            });
+
+    final PagedQueryResult<InventoryEntry> inventoryEntryQueryResult =
+        targetClient
+            .execute(
+                InventoryEntryQuery.of()
+                    .withPredicates(QueryPredicate.of(format("sku=\"%s\"", resourceKey))))
+            .toCompletableFuture()
+            .join();
+
+    assertThat(inventoryEntryQueryResult.getResults())
+        .hasSize(1)
+        .hasOnlyOneElementSatisfying(
+            inventoryEntry -> assertThat(inventoryEntry.getSku()).isEqualTo(resourceKey));
   }
 
   static void setupTestData(@Nonnull final SphereClient client, @Nonnull final String resourceKey) {
