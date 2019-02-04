@@ -135,7 +135,7 @@ public abstract class Syncer<
         .thenCompose(this::sync)
         .thenCompose(
             syncDurationInMillis ->
-                persistNewLastSyncTimestamp(
+                createNewLastSyncCustomObject(
                     sourceProjectKey, syncModuleName, currentCtpTimestamp, syncDurationInMillis));
   }
 
@@ -184,7 +184,7 @@ public abstract class Syncer<
   }
 
   @Nonnull
-  private CompletionStage<CustomObject<LastSyncCustomObject>> persistNewLastSyncTimestamp(
+  private CompletionStage<CustomObject<LastSyncCustomObject>> createNewLastSyncCustomObject(
       @Nonnull final String sourceProjectKey,
       @Nonnull final String syncModuleName,
       @Nonnull final ZonedDateTime newLastSyncTimestamp,
