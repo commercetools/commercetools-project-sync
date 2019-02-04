@@ -23,8 +23,8 @@ import javax.annotation.Nonnull;
 public class CustomObjectServiceImpl implements CustomObjectService {
 
   public static final String TIMESTAMP_GENERATOR_KEY = "latestTimestamp";
-  private static final String TIMESTAMP_GENERATOR_CONTAINER_POSTFIX = "timestampGenerator";
-  private static final String TIMESTAMP_GENERATOR_VALUE = "";
+  public static final String TIMESTAMP_GENERATOR_CONTAINER_POSTFIX = "timestampGenerator";
+  public static final String TIMESTAMP_GENERATOR_VALUE = "";
   private static final long MINUTES_BEFORE_CURRENT_TIMESTAMP = 2;
 
   private SphereClient sphereClient;
