@@ -28,4 +28,78 @@ class LastSyncCustomObjectTest {
         .isEqualTo(lastSyncDurationInSeconds);
     assertThat(lastSyncCustomObject.getLastSyncStatistics()).isEqualTo(lastSyncStatistics);
   }
+
+  @Test
+  void equals_WithEqualInstances_ShouldReturnTrue() {
+    // preparation
+    final ZonedDateTime lastSyncTimestamp = ZonedDateTime.now();
+    final int lastSyncDurationInSeconds = 100;
+    final ProductSyncStatistics lastSyncStatistics = new ProductSyncStatistics();
+    final LastSyncCustomObject<ProductSyncStatistics> lastSyncCustomObject =
+        LastSyncCustomObject.of(lastSyncTimestamp, lastSyncStatistics, lastSyncDurationInSeconds);
+
+    final LastSyncCustomObject<ProductSyncStatistics> otherLastSyncCustomObject =
+        LastSyncCustomObject.of(lastSyncTimestamp, lastSyncStatistics, lastSyncDurationInSeconds);
+
+    // test
+    final boolean result = lastSyncCustomObject.equals(otherLastSyncCustomObject);
+
+    // assertions
+    assertThat(result).isTrue();
+  }
+
+  @Test
+  void equals_WithUnequalDurations_ShouldReturnFalse() {
+    // preparation
+    final ZonedDateTime lastSyncTimestamp = ZonedDateTime.now();
+    final int lastSyncDurationInSeconds = 100;
+    final ProductSyncStatistics lastSyncStatistics = new ProductSyncStatistics();
+    final LastSyncCustomObject<ProductSyncStatistics> lastSyncCustomObject =
+        LastSyncCustomObject.of(lastSyncTimestamp, lastSyncStatistics, lastSyncDurationInSeconds);
+
+    final LastSyncCustomObject<ProductSyncStatistics> otherLastSyncCustomObject =
+        LastSyncCustomObject.of(lastSyncTimestamp, lastSyncStatistics, 90);
+
+    // test
+    final boolean result = lastSyncCustomObject.equals(otherLastSyncCustomObject);
+
+    // assertions
+    assertThat(result).isFalse();
+  }
+
+  @Test
+  void equals_WithUnequalLastSyncTimeStamp_ShouldReturnFalse() {
+    // preparation
+    final int lastSyncDurationInSeconds = 100;
+    final ProductSyncStatistics lastSyncStatistics = new ProductSyncStatistics();
+    final LastSyncCustomObject<ProductSyncStatistics> lastSyncCustomObject =
+        LastSyncCustomObject.of(ZonedDateTime.now(), lastSyncStatistics, lastSyncDurationInSeconds);
+
+    final LastSyncCustomObject<ProductSyncStatistics> otherLastSyncCustomObject =
+        LastSyncCustomObject.of(ZonedDateTime.now(), lastSyncStatistics, lastSyncDurationInSeconds);
+
+    // test
+    final boolean result = lastSyncCustomObject.equals(otherLastSyncCustomObject);
+
+    // assertions
+    assertThat(result).isFalse();
+  }
+
+  @Test
+  void equals_WithUnequalLastSyncTimeStampAndDuration_ShouldReturnFalse() {
+    // preparation
+    final int lastSyncDurationInSeconds = 100;
+    final ProductSyncStatistics lastSyncStatistics = new ProductSyncStatistics();
+    final LastSyncCustomObject<ProductSyncStatistics> lastSyncCustomObject =
+        LastSyncCustomObject.of(ZonedDateTime.now(), lastSyncStatistics, lastSyncDurationInSeconds);
+
+    final LastSyncCustomObject<ProductSyncStatistics> otherLastSyncCustomObject =
+        LastSyncCustomObject.of(ZonedDateTime.now(), lastSyncStatistics, 90);
+
+    // test
+    final boolean result = lastSyncCustomObject.equals(otherLastSyncCustomObject);
+
+    // assertions
+    assertThat(result).isFalse();
+  }
 }

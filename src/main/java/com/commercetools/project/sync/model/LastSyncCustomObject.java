@@ -84,6 +84,8 @@ public class LastSyncCustomObject<T extends BaseSyncStatistics> {
     this.lastSyncDurationInMillis = lastSyncDurationInMillis;
   }
 
+  // TODO: Also include statistics in equals comparison after
+  // https://github.com/commercetools/commercetools-sync-java/issues/376 is resolved
   @Override
   public boolean equals(Object o) {
     if (this == o) {
@@ -92,23 +94,15 @@ public class LastSyncCustomObject<T extends BaseSyncStatistics> {
     if (!(o instanceof LastSyncCustomObject)) {
       return false;
     }
-    if (!super.equals(o)) {
-      return false;
-    }
     LastSyncCustomObject<?> that = (LastSyncCustomObject<?>) o;
     return getLastSyncDurationInMillis() == that.getLastSyncDurationInMillis()
-        && Objects.equals(getLastSyncStatistics(), that.getLastSyncStatistics())
-        && Objects.equals(getLastSyncTimestamp(), that.getLastSyncTimestamp())
-        && Objects.equals(getApplicationVersion(), that.getApplicationVersion());
+        && getLastSyncTimestamp().equals(that.getLastSyncTimestamp())
+        && getApplicationVersion().equals(that.getApplicationVersion());
   }
 
   @Override
   public int hashCode() {
     return Objects.hash(
-        super.hashCode(),
-        getLastSyncStatistics(),
-        getLastSyncTimestamp(),
-        getApplicationVersion(),
-        getLastSyncDurationInMillis());
+        getLastSyncTimestamp(), getApplicationVersion(), getLastSyncDurationInMillis());
   }
 }
