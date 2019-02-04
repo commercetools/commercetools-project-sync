@@ -1,11 +1,13 @@
 package com.commercetools.project.sync.model;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import com.commercetools.project.sync.util.SyncUtils;
+import com.commercetools.sync.categories.helpers.CategorySyncStatistics;
 import com.commercetools.sync.products.helpers.ProductSyncStatistics;
-import java.time.ZonedDateTime;
 import org.junit.jupiter.api.Test;
+
+import java.time.ZonedDateTime;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 class LastSyncCustomObjectTest {
 
@@ -111,8 +113,11 @@ class LastSyncCustomObjectTest {
     final LastSyncCustomObject<ProductSyncStatistics> lastSyncCustomObject =
         LastSyncCustomObject.of(ZonedDateTime.now(), lastSyncStatistics, lastSyncDurationInSeconds);
 
+    final LastSyncCustomObject<CategorySyncStatistics> lastCategorySyncStatisticsCustomObject =
+        LastSyncCustomObject.of(ZonedDateTime.now(), new CategorySyncStatistics(), lastSyncDurationInSeconds);
+
     // test
-    final boolean result = lastSyncCustomObject.equals("foo");
+    final boolean result = lastSyncCustomObject.equals(lastCategorySyncStatisticsCustomObject);
 
     // assertions
     assertThat(result).isFalse();
