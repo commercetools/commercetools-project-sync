@@ -80,14 +80,14 @@ public class CustomObjectServiceImpl implements CustomObjectService {
       @Nonnull final String syncModuleName,
       @Nonnull final LastSyncCustomObject lastSyncCustomObject) {
 
-    final CustomObjectDraft<LastSyncCustomObject> lastTimeStampDraft =
+    final CustomObjectDraft<LastSyncCustomObject> lastSyncCustomObjectDraft =
         CustomObjectDraft.ofUnversionedUpsert(
             buildLastSyncTimestampContainerName(syncModuleName),
             sourceProjectKey,
             lastSyncCustomObject,
             LastSyncCustomObject.class);
 
-    return createCustomObject(lastTimeStampDraft);
+    return createCustomObject(lastSyncCustomObjectDraft);
   }
 
   @Nonnull
