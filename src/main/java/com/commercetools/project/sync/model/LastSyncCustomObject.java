@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.time.ZonedDateTime;
 import java.util.Objects;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 public class LastSyncCustomObject<T extends BaseSyncStatistics> {
 
@@ -87,14 +88,14 @@ public class LastSyncCustomObject<T extends BaseSyncStatistics> {
   // TODO: Also include statistics in equals comparison after
   // https://github.com/commercetools/commercetools-sync-java/issues/376 is resolved
   @Override
-  public boolean equals(Object o) {
+  public boolean equals(@Nullable final Object o) {
     if (this == o) {
       return true;
     }
     if (!(o instanceof LastSyncCustomObject)) {
       return false;
     }
-    LastSyncCustomObject<?> that = (LastSyncCustomObject<?>) o;
+    final LastSyncCustomObject<?> that = (LastSyncCustomObject<?>) o;
     return getLastSyncDurationInMillis() == that.getLastSyncDurationInMillis()
         && getLastSyncTimestamp().equals(that.getLastSyncTimestamp())
         && getApplicationVersion().equals(that.getApplicationVersion());
