@@ -88,7 +88,7 @@ public class LastSyncCustomObject<T extends BaseSyncStatistics> {
   // TODO: Also include statistics in equals comparison after
   // https://github.com/commercetools/commercetools-sync-java/issues/376 is resolved
   @Override
-  public boolean equals(@Nullable final Object o) {
+  public boolean equals(final Object o) {
     if (this == o) {
       return true;
     }
