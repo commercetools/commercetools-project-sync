@@ -106,6 +106,7 @@ class SyncerFactoryTest {
   }
 
   @Test
+  @SuppressWarnings("unchecked")
   void sync_WithProductsArg_ShouldBuildSyncerAndExecuteSync() {
     // preparation
     final SphereClient sourceClient = mock(SphereClient.class);
@@ -197,6 +198,7 @@ class SyncerFactoryTest {
   }
 
   @Test
+  @SuppressWarnings("unchecked")
   void sync_WithCategoriesArg_ShouldBuildSyncerAndExecuteSync() {
     // preparation
     final SphereClient sourceClient = mock(SphereClient.class);
@@ -258,6 +260,7 @@ class SyncerFactoryTest {
   }
 
   @Test
+  @SuppressWarnings("unchecked")
   void sync_WithProductTypesArg_ShouldBuildSyncerAndExecuteSync() {
     // preparation
     final SphereClient sourceClient = mock(SphereClient.class);
@@ -319,6 +322,7 @@ class SyncerFactoryTest {
   }
 
   @Test
+  @SuppressWarnings("unchecked")
   void sync_WithTypesArg_ShouldBuildSyncerAndExecuteSync() {
     // preparation
     final SphereClient sourceClient = mock(SphereClient.class);
@@ -380,6 +384,7 @@ class SyncerFactoryTest {
   }
 
   @Test
+  @SuppressWarnings("unchecked")
   void sync_WithInventoryEntriesArg_ShouldBuildSyncerAndExecuteSync() {
     // preparation
     final SphereClient sourceClient = mock(SphereClient.class);
@@ -470,6 +475,7 @@ class SyncerFactoryTest {
   }
 
   @Test
+  @SuppressWarnings("unchecked")
   void
       sync_WithErrorOnCurrentCtpTimestampUpsert_ShouldCloseClientAndCompleteExceptionallyWithoutSyncing() {
     // preparation
@@ -497,6 +503,7 @@ class SyncerFactoryTest {
   }
 
   @Test
+  @SuppressWarnings("unchecked")
   void
       sync_WithErrorOnQueryLastSyncTimestamp_ShouldCloseClientAndCompleteExceptionallyWithoutSyncing() {
     // preparation
@@ -530,6 +537,7 @@ class SyncerFactoryTest {
   }
 
   @Test
+  @SuppressWarnings("unchecked")
   void syncAll_ShouldBuildSyncerAndExecuteSync() {
     // preparation
     final SphereClient sourceClient = mock(SphereClient.class);

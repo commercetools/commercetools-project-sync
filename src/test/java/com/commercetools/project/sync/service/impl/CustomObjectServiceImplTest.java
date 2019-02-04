@@ -27,6 +27,7 @@ import org.junit.jupiter.api.Test;
 class CustomObjectServiceImplTest {
 
   @Test
+  @SuppressWarnings("unchecked")
   void getCurrentCtpTimestamp_OnSuccessfulUpsert_ShouldCompleteWithCtpTimestampMinusTwoMinutes() {
     // preparation
     final SphereClient client = mock(SphereClient.class);
@@ -46,6 +47,7 @@ class CustomObjectServiceImplTest {
   }
 
   @Test
+  @SuppressWarnings("unchecked")
   void getCurrentCtpTimestamp_OnFailedUpsert_ShouldCompleteExceptionally() {
     // preparation
     final SphereClient client = mock(SphereClient.class);
@@ -69,6 +71,7 @@ class CustomObjectServiceImplTest {
   }
 
   @Test
+  @SuppressWarnings("unchecked")
   void
       getLastSyncCustomObject_OnSuccessfulQueryWithResults_ShouldCompleteWithLastSyncCustomObject() {
     // preparation
@@ -94,6 +97,7 @@ class CustomObjectServiceImplTest {
   }
 
   @Test
+  @SuppressWarnings("unchecked")
   void getLastSyncCustomObject_OnSuccessfulQueryWithNoResults_ShouldCompleteWithEmptyOptional() {
     // preparation
     final SphereClient client = mock(SphereClient.class);
@@ -115,6 +119,7 @@ class CustomObjectServiceImplTest {
   }
 
   @Test
+  @SuppressWarnings("unchecked")
   void getLastSyncCustomObject_OnFailedQuery_ShouldCompleteExceptionally() {
     // preparation
     final SphereClient client = mock(SphereClient.class);
@@ -144,6 +149,7 @@ class CustomObjectServiceImplTest {
   }
 
   @Test
+  @SuppressWarnings("unchecked")
   void createLastSyncCustomObject_OnSuccessfulCreation_ShouldCompleteWithLastSyncCustomObject() {
     // preparation
     final SphereClient client = mock(SphereClient.class);
@@ -170,6 +176,7 @@ class CustomObjectServiceImplTest {
   }
 
   @Test
+  @SuppressWarnings("unchecked")
   void createLastSyncCustomObject_OnFailedCreation_ShouldCompleteExceptionally() {
     // preparation
     final SphereClient client = mock(SphereClient.class);

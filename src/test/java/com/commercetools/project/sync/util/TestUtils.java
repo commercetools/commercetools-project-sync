@@ -156,6 +156,7 @@ public final class TestUtils {
     verifyNoMoreInteractions(client);
   }
 
+  @SuppressWarnings("unchecked")
   public static void stubClientsCustomObjectService(
       @Nonnull final SphereClient client, @Nonnull final ZonedDateTime currentCtpTimestamp) {
 
@@ -174,6 +175,7 @@ public final class TestUtils {
   }
 
   @Nonnull
+  @SuppressWarnings("unchecked")
   public static CustomObject<LastSyncCustomObject<ProductSyncStatistics>> mockLastSyncCustomObject(
       @Nonnull ZonedDateTime currentCtpTimestamp) {
     final CustomObject<LastSyncCustomObject<ProductSyncStatistics>> customObject =
