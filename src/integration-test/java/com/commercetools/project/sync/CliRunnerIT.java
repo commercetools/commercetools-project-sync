@@ -50,7 +50,7 @@ import io.sphere.sdk.types.queries.TypeQuery;
 import java.time.Clock;
 import javax.annotation.Nonnull;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import uk.org.lidalia.slf4jtest.TestLogger;
 import uk.org.lidalia.slf4jtest.TestLoggerFactory;
@@ -58,8 +58,8 @@ import uk.org.lidalia.slf4jtest.TestLoggerFactory;
 class CliRunnerIT {
   private static final TestLogger testLogger = TestLoggerFactory.getTestLogger(Syncer.class);
 
-  @BeforeAll
-  static void setupSuite() {
+  @BeforeEach
+  void setupSuite() {
     cleanUpProjects(createClient(CTP_SOURCE_CLIENT_CONFIG), createClient(CTP_TARGET_CLIENT_CONFIG));
   }
 
@@ -82,6 +82,7 @@ class CliRunnerIT {
   @AfterEach
   void tearDownTest() {
     testLogger.clearAll();
+    cleanUpProjects(createClient(CTP_SOURCE_CLIENT_CONFIG), createClient(CTP_TARGET_CLIENT_CONFIG));
   }
 
   @Test
