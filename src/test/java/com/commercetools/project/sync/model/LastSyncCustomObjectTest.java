@@ -102,4 +102,34 @@ class LastSyncCustomObjectTest {
     // assertions
     assertThat(result).isFalse();
   }
+
+  @Test
+  void equals_WithDifferentType_ShouldReturnFalse() {
+    // preparation
+    final int lastSyncDurationInSeconds = 100;
+    final ProductSyncStatistics lastSyncStatistics = new ProductSyncStatistics();
+    final LastSyncCustomObject<ProductSyncStatistics> lastSyncCustomObject =
+        LastSyncCustomObject.of(ZonedDateTime.now(), lastSyncStatistics, lastSyncDurationInSeconds);
+
+    // test
+    final boolean result = lastSyncCustomObject.equals("foo");
+
+    // assertions
+    assertThat(result).isFalse();
+  }
+
+  @Test
+  void equals_WithSameInstance_ShouldReturnTrue() {
+    // preparation
+    final int lastSyncDurationInSeconds = 100;
+    final ProductSyncStatistics lastSyncStatistics = new ProductSyncStatistics();
+    final LastSyncCustomObject<ProductSyncStatistics> lastSyncCustomObject =
+        LastSyncCustomObject.of(ZonedDateTime.now(), lastSyncStatistics, lastSyncDurationInSeconds);
+
+    // test
+    final boolean result = lastSyncCustomObject.equals(lastSyncCustomObject);
+
+    // assertions
+    assertThat(result).isTrue();
+  }
 }
