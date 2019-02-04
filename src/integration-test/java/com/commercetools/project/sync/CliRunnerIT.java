@@ -47,6 +47,7 @@ import io.sphere.sdk.types.TypeDraftBuilder;
 import io.sphere.sdk.types.commands.TypeCreateCommand;
 import io.sphere.sdk.types.commands.TypeDeleteCommand;
 import io.sphere.sdk.types.queries.TypeQuery;
+import java.time.Clock;
 import javax.annotation.Nonnull;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -92,7 +93,7 @@ class CliRunnerIT {
         setupTestData(sourceClient, resourceKey);
 
         final SyncerFactory syncerFactory =
-            SyncerFactory.of(() -> sourceClient, () -> targetClient);
+            SyncerFactory.of(() -> sourceClient, () -> targetClient, Clock.systemDefaultZone());
 
         // test
         CliRunner.of().run(new String[] {"-s", "all"}, syncerFactory);

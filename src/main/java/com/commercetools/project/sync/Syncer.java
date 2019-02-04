@@ -72,6 +72,7 @@ public abstract class Syncer<
    *     commercetools project.
    * @param customObjectService service that is used for fetching and persisting the last sync
    *     timestamp for delta syncing.
+   * @param clock the clock to record the time for calculating the sync duration.
    */
   public Syncer(
       @Nonnull final B sync,
