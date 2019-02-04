@@ -17,6 +17,7 @@ import io.sphere.sdk.products.ProductDraft;
 import io.sphere.sdk.products.commands.updateactions.Publish;
 import io.sphere.sdk.products.commands.updateactions.Unpublish;
 import io.sphere.sdk.products.queries.ProductQuery;
+import java.time.Clock;
 import java.util.List;
 import javax.annotation.Nonnull;
 import org.slf4j.Logger;
@@ -38,13 +39,16 @@ public final class ProductSyncer
       @Nonnull final ProductSync productSync,
       @Nonnull final SphereClient sourceClient,
       @Nonnull final SphereClient targetClient,
-      @Nonnull final CustomObjectService customObjectService) {
-    super(productSync, sourceClient, targetClient, customObjectService);
+      @Nonnull final CustomObjectService customObjectService,
+      @Nonnull final Clock clock) {
+    super(productSync, sourceClient, targetClient, customObjectService, clock);
   }
 
   @Nonnull
   public static ProductSyncer of(
-      @Nonnull final SphereClient sourceClient, @Nonnull final SphereClient targetClient) {
+      @Nonnull final SphereClient sourceClient,
+      @Nonnull final SphereClient targetClient,
+      @Nonnull final Clock clock) {
 
     final ProductSyncOptions syncOptions =
         ProductSyncOptionsBuilder.of(targetClient)
@@ -57,7 +61,7 @@ public final class ProductSyncer
 
     final CustomObjectService customObjectService = new CustomObjectServiceImpl(targetClient);
 
-    return new ProductSyncer(productSync, sourceClient, targetClient, customObjectService);
+    return new ProductSyncer(productSync, sourceClient, targetClient, customObjectService, clock);
     // TODO: Instead of reference expansion, we could cache all keys and replace references
     // manually.
   }

@@ -12,6 +12,7 @@ import io.sphere.sdk.producttypes.ProductType;
 import io.sphere.sdk.producttypes.ProductTypeDraft;
 import io.sphere.sdk.producttypes.ProductTypeDraftBuilder;
 import io.sphere.sdk.producttypes.queries.ProductTypeQuery;
+import java.time.Clock;
 import java.util.List;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
@@ -34,13 +35,16 @@ public final class ProductTypeSyncer
       @Nonnull final ProductTypeSync productTypeSync,
       @Nonnull final SphereClient sourceClient,
       @Nonnull final SphereClient targetClient,
-      @Nonnull final CustomObjectService customObjectService) {
-    super(productTypeSync, sourceClient, targetClient, customObjectService);
+      @Nonnull final CustomObjectService customObjectService,
+      @Nonnull final Clock clock) {
+    super(productTypeSync, sourceClient, targetClient, customObjectService, clock);
   }
 
   @Nonnull
   public static ProductTypeSyncer of(
-      @Nonnull final SphereClient sourceClient, @Nonnull final SphereClient targetClient) {
+      @Nonnull final SphereClient sourceClient,
+      @Nonnull final SphereClient targetClient,
+      @Nonnull final Clock clock) {
 
     final ProductTypeSyncOptions syncOptions =
         ProductTypeSyncOptionsBuilder.of(targetClient)
@@ -52,7 +56,8 @@ public final class ProductTypeSyncer
 
     final CustomObjectService customObjectService = new CustomObjectServiceImpl(targetClient);
 
-    return new ProductTypeSyncer(productTypeSync, sourceClient, targetClient, customObjectService);
+    return new ProductTypeSyncer(
+        productTypeSync, sourceClient, targetClient, customObjectService, clock);
   }
 
   @Nonnull

@@ -1,5 +1,6 @@
 package com.commercetools.project.sync.category;
 
+import static com.commercetools.project.sync.util.TestUtils.getMockedClock;
 import static com.commercetools.sync.categories.utils.CategoryReferenceReplacementUtils.buildCategoryQuery;
 import static com.commercetools.sync.categories.utils.CategoryReferenceReplacementUtils.replaceCategoriesReferenceIdsWithKeys;
 import static io.sphere.sdk.json.SphereJsonUtils.readObjectFromResource;
@@ -20,7 +21,7 @@ class CategorySyncerTest {
   void of_ShouldCreateCategorySyncerInstance() {
     // test
     final CategorySyncer categorySyncer =
-        CategorySyncer.of(mock(SphereClient.class), mock(SphereClient.class));
+        CategorySyncer.of(mock(SphereClient.class), mock(SphereClient.class), getMockedClock());
 
     // assertions
     assertThat(categorySyncer).isNotNull();
@@ -32,7 +33,7 @@ class CategorySyncerTest {
   void transform_ShouldReplaceCategoryReferenceIdsWithKeys() {
     // preparation
     final CategorySyncer categorySyncer =
-        CategorySyncer.of(mock(SphereClient.class), mock(SphereClient.class));
+        CategorySyncer.of(mock(SphereClient.class), mock(SphereClient.class), getMockedClock());
     final List<Category> categoryPage =
         asList(
             readObjectFromResource("category-key-1.json", Category.class),
@@ -50,7 +51,7 @@ class CategorySyncerTest {
   void getQuery_ShouldBuildCategoryQuery() {
     // preparation
     final CategorySyncer categorySyncer =
-        CategorySyncer.of(mock(SphereClient.class), mock(SphereClient.class));
+        CategorySyncer.of(mock(SphereClient.class), mock(SphereClient.class), getMockedClock());
 
     // test
     final CategoryQuery query = categorySyncer.getQuery();

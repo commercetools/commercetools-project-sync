@@ -43,7 +43,10 @@ class SyncerFactoryTest {
   @Test
   void sync_WithNullOptionValue_ShouldCompleteExceptionallyWithIllegalArgumentException() {
     assertThat(
-            SyncerFactory.of(() -> mock(SphereClient.class), () -> mock(SphereClient.class))
+            SyncerFactory.of(
+                    () -> mock(SphereClient.class),
+                    () -> mock(SphereClient.class),
+                    getMockedClock())
                 .sync(null))
         .hasFailedWithThrowableThat()
         .isExactlyInstanceOf(IllegalArgumentException.class)
@@ -56,7 +59,10 @@ class SyncerFactoryTest {
   @Test
   void sync_WithEmptyOptionValue_ShouldCompleteExceptionallyWithIllegalArgumentException() {
     assertThat(
-            SyncerFactory.of(() -> mock(SphereClient.class), () -> mock(SphereClient.class))
+            SyncerFactory.of(
+                    () -> mock(SphereClient.class),
+                    () -> mock(SphereClient.class),
+                    getMockedClock())
                 .sync(""))
         .hasFailedWithThrowableThat()
         .isExactlyInstanceOf(IllegalArgumentException.class)
@@ -71,7 +77,10 @@ class SyncerFactoryTest {
     final String unknownOptionValue = "anyOption";
 
     assertThat(
-            SyncerFactory.of(() -> mock(SphereClient.class), () -> mock(SphereClient.class))
+            SyncerFactory.of(
+                    () -> mock(SphereClient.class),
+                    () -> mock(SphereClient.class),
+                    getMockedClock())
                 .sync(unknownOptionValue))
         .hasFailedWithThrowableThat()
         .isExactlyInstanceOf(IllegalArgumentException.class)
@@ -93,7 +102,8 @@ class SyncerFactoryTest {
     when(sourceClient.execute(any(ProductQuery.class)))
         .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
 
-    final SyncerFactory syncerFactory = SyncerFactory.of(() -> sourceClient, () -> targetClient);
+    final SyncerFactory syncerFactory =
+        SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock());
 
     stubClientsCustomObjectService(targetClient);
 
@@ -140,7 +150,8 @@ class SyncerFactoryTest {
     when(sourceClient.execute(any(CategoryQuery.class)))
         .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
 
-    final SyncerFactory syncerFactory = SyncerFactory.of(() -> sourceClient, () -> targetClient);
+    final SyncerFactory syncerFactory =
+        SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock());
 
     stubClientsCustomObjectService(targetClient);
 
@@ -187,7 +198,8 @@ class SyncerFactoryTest {
     when(sourceClient.execute(any(ProductTypeQuery.class)))
         .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
 
-    final SyncerFactory syncerFactory = SyncerFactory.of(() -> sourceClient, () -> targetClient);
+    final SyncerFactory syncerFactory =
+        SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock());
 
     stubClientsCustomObjectService(targetClient);
 
@@ -236,7 +248,8 @@ class SyncerFactoryTest {
 
     stubClientsCustomObjectService(targetClient);
 
-    final SyncerFactory syncerFactory = SyncerFactory.of(() -> sourceClient, () -> targetClient);
+    final SyncerFactory syncerFactory =
+        SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock());
 
     // test
     syncerFactory.sync("types");
@@ -283,7 +296,8 @@ class SyncerFactoryTest {
 
     stubClientsCustomObjectService(targetClient);
 
-    final SyncerFactory syncerFactory = SyncerFactory.of(() -> sourceClient, () -> targetClient);
+    final SyncerFactory syncerFactory =
+        SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock());
 
     // test
     syncerFactory.sync("inventoryEntries");
@@ -331,7 +345,8 @@ class SyncerFactoryTest {
 
     stubClientsCustomObjectService(targetClient);
 
-    final SyncerFactory syncerFactory = SyncerFactory.of(() -> sourceClient, () -> targetClient);
+    final SyncerFactory syncerFactory =
+        SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock());
 
     // test
     final CompletionStage<Void> result = syncerFactory.sync("inventoryEntries");
@@ -364,7 +379,8 @@ class SyncerFactoryTest {
 
     stubClientsCustomObjectService(targetClient);
 
-    final SyncerFactory syncerFactory = SyncerFactory.of(() -> sourceClient, () -> targetClient);
+    final SyncerFactory syncerFactory =
+        SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock());
 
     // test
     syncerFactory.syncAll();

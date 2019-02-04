@@ -1,5 +1,6 @@
 package com.commercetools.project.sync.inventoryentry;
 
+import static com.commercetools.project.sync.util.TestUtils.getMockedClock;
 import static com.commercetools.sync.inventories.utils.InventoryReferenceReplacementUtils.replaceInventoriesReferenceIdsWithKeys;
 import static io.sphere.sdk.json.SphereJsonUtils.readObjectFromResource;
 import static java.util.Arrays.asList;
@@ -21,7 +22,8 @@ class InventoryEntrySyncerTest {
   void of_ShouldCreateInventoryEntrySyncerInstance() {
     // test
     final InventoryEntrySyncer inventorySyncer =
-        InventoryEntrySyncer.of(mock(SphereClient.class), mock(SphereClient.class));
+        InventoryEntrySyncer.of(
+            mock(SphereClient.class), mock(SphereClient.class), getMockedClock());
 
     // assertions
     assertThat(inventorySyncer).isNotNull();
@@ -39,7 +41,8 @@ class InventoryEntrySyncerTest {
   void transform_ShouldReplaceInventoryEntryReferenceIdsWithKeys() {
     // preparation
     final InventoryEntrySyncer inventoryEntrySyncer =
-        InventoryEntrySyncer.of(mock(SphereClient.class), mock(SphereClient.class));
+        InventoryEntrySyncer.of(
+            mock(SphereClient.class), mock(SphereClient.class), getMockedClock());
     final List<InventoryEntry> inventoryPage =
         asList(
             readObjectFromResource("inventory-sku-1.json", InventoryEntry.class),
@@ -58,7 +61,8 @@ class InventoryEntrySyncerTest {
   void getQuery_ShouldBuildInventoryEntryQuery() {
     // preparation
     final InventoryEntrySyncer inventoryEntrySyncer =
-        InventoryEntrySyncer.of(mock(SphereClient.class), mock(SphereClient.class));
+        InventoryEntrySyncer.of(
+            mock(SphereClient.class), mock(SphereClient.class), getMockedClock());
 
     // test
     final InventoryEntryQuery query = inventoryEntrySyncer.getQuery();

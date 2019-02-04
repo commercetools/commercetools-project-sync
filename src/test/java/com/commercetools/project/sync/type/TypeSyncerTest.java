@@ -1,5 +1,6 @@
 package com.commercetools.project.sync.type;
 
+import static com.commercetools.project.sync.util.TestUtils.getMockedClock;
 import static io.sphere.sdk.json.SphereJsonUtils.readObjectFromResource;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
@@ -19,7 +20,8 @@ class TypeSyncerTest {
   @Test
   void of_ShouldCreateTypeSyncerInstance() {
     // test
-    final TypeSyncer typeSyncer = TypeSyncer.of(mock(SphereClient.class), mock(SphereClient.class));
+    final TypeSyncer typeSyncer =
+        TypeSyncer.of(mock(SphereClient.class), mock(SphereClient.class), getMockedClock());
 
     // assertions
     assertThat(typeSyncer).isNotNull();
@@ -30,7 +32,8 @@ class TypeSyncerTest {
   @Test
   void transform_ShouldConvertResourcesToDrafts() {
     // preparation
-    final TypeSyncer typeSyncer = TypeSyncer.of(mock(SphereClient.class), mock(SphereClient.class));
+    final TypeSyncer typeSyncer =
+        TypeSyncer.of(mock(SphereClient.class), mock(SphereClient.class), getMockedClock());
     final List<Type> typePage =
         asList(
             readObjectFromResource("type-key-1.json", Type.class),
@@ -57,7 +60,8 @@ class TypeSyncerTest {
   @Test
   void getQuery_ShouldBuildTypeQuery() {
     // preparation
-    final TypeSyncer typeSyncer = TypeSyncer.of(mock(SphereClient.class), mock(SphereClient.class));
+    final TypeSyncer typeSyncer =
+        TypeSyncer.of(mock(SphereClient.class), mock(SphereClient.class), getMockedClock());
 
     // test
     final TypeQuery query = typeSyncer.getQuery();

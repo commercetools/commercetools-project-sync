@@ -11,6 +11,7 @@ import static com.commercetools.project.sync.CliRunner.VERSION_OPTION_LONG;
 import static com.commercetools.project.sync.CliRunner.VERSION_OPTION_SHORT;
 import static com.commercetools.project.sync.util.SyncUtils.APPLICATION_DEFAULT_NAME;
 import static com.commercetools.project.sync.util.SyncUtils.APPLICATION_DEFAULT_VERSION;
+import static com.commercetools.project.sync.util.TestUtils.getMockedClock;
 import static com.commercetools.project.sync.util.TestUtils.stubClientsCustomObjectService;
 import static com.commercetools.project.sync.util.TestUtils.verifyInteractionsWithClientAfterSync;
 import static java.lang.String.format;
@@ -35,6 +36,7 @@ import io.sphere.sdk.types.queries.TypeQuery;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
+import java.time.ZonedDateTime;
 import java.util.concurrent.CompletableFuture;
 import org.apache.commons.cli.MissingArgumentException;
 import org.junit.jupiter.api.AfterAll;
@@ -73,7 +75,8 @@ class CliRunnerTest {
   void run_WithEmptyArgumentList_ShouldFailAndLogError() {
     // preparation
     final SyncerFactory syncerFactory =
-        SyncerFactory.of(() -> mock(SphereClient.class), () -> mock(SphereClient.class));
+        SyncerFactory.of(
+            () -> mock(SphereClient.class), () -> mock(SphereClient.class), getMockedClock());
 
     // test
     CliRunner.of().run(new String[] {}, syncerFactory);
@@ -100,7 +103,8 @@ class CliRunnerTest {
       throws UnsupportedEncodingException {
     // preparation
     final SyncerFactory syncerFactory =
-        SyncerFactory.of(() -> mock(SphereClient.class), () -> mock(SphereClient.class));
+        SyncerFactory.of(
+            () -> mock(SphereClient.class), () -> mock(SphereClient.class), getMockedClock());
 
     // test
     CliRunner.of().run(new String[] {"-help"}, syncerFactory);
@@ -122,7 +126,8 @@ class CliRunnerTest {
       throws UnsupportedEncodingException {
     // preparation
     final SyncerFactory syncerFactory =
-        SyncerFactory.of(() -> mock(SphereClient.class), () -> mock(SphereClient.class));
+        SyncerFactory.of(
+            () -> mock(SphereClient.class), () -> mock(SphereClient.class), getMockedClock());
 
     // test
     CliRunner.of().run(new String[] {"-h"}, syncerFactory);
@@ -135,7 +140,8 @@ class CliRunnerTest {
       throws UnsupportedEncodingException {
     // preparation
     final SyncerFactory syncerFactory =
-        SyncerFactory.of(() -> mock(SphereClient.class), () -> mock(SphereClient.class));
+        SyncerFactory.of(
+            () -> mock(SphereClient.class), () -> mock(SphereClient.class), getMockedClock());
 
     // test
     CliRunner.of().run(new String[] {"-v"}, syncerFactory);
@@ -148,7 +154,8 @@ class CliRunnerTest {
       throws UnsupportedEncodingException {
     // preparation
     final SyncerFactory syncerFactory =
-        SyncerFactory.of(() -> mock(SphereClient.class), () -> mock(SphereClient.class));
+        SyncerFactory.of(
+            () -> mock(SphereClient.class), () -> mock(SphereClient.class), getMockedClock());
 
     // test
     CliRunner.of().run(new String[] {"--version"}, syncerFactory);
@@ -160,7 +167,8 @@ class CliRunnerTest {
   void run_WithSyncAsArgumentWithNoArgs_ShouldFailAndLogError() {
     // preparation
     final SyncerFactory syncerFactory =
-        SyncerFactory.of(() -> mock(SphereClient.class), () -> mock(SphereClient.class));
+        SyncerFactory.of(
+            () -> mock(SphereClient.class), () -> mock(SphereClient.class), getMockedClock());
 
     // test
     CliRunner.of().run(new String[] {"-s"}, syncerFactory);
@@ -194,9 +202,9 @@ class CliRunnerTest {
         .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
 
     final SyncerFactory syncerFactory =
-        spy(SyncerFactory.of(() -> sourceClient, () -> targetClient));
+        spy(SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock()));
 
-    stubClientsCustomObjectService(targetClient);
+    stubClientsCustomObjectService(targetClient, ZonedDateTime.now());
 
     // test
     CliRunner.of().run(new String[] {"-s", "products"}, syncerFactory);
@@ -220,9 +228,9 @@ class CliRunnerTest {
         .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
 
     final SyncerFactory syncerFactory =
-        spy(SyncerFactory.of(() -> sourceClient, () -> targetClient));
+        spy(SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock()));
 
-    stubClientsCustomObjectService(targetClient);
+    stubClientsCustomObjectService(targetClient, ZonedDateTime.now());
 
     // test
     CliRunner.of().run(new String[] {"--sync", "products"}, syncerFactory);
@@ -237,7 +245,9 @@ class CliRunnerTest {
   void run_WithUnknownArgument_ShouldPrintAndLogError() {
     // preparation
     final SyncerFactory syncerFactory =
-        spy(SyncerFactory.of(() -> mock(SphereClient.class), () -> mock(SphereClient.class)));
+        spy(
+            SyncerFactory.of(
+                () -> mock(SphereClient.class), () -> mock(SphereClient.class), getMockedClock()));
     // test
     CliRunner.of().run(new String[] {"-u"}, syncerFactory);
 
@@ -251,7 +261,9 @@ class CliRunnerTest {
       throws UnsupportedEncodingException {
     // preparation
     final SyncerFactory syncerFactory =
-        spy(SyncerFactory.of(() -> mock(SphereClient.class), () -> mock(SphereClient.class)));
+        spy(
+            SyncerFactory.of(
+                () -> mock(SphereClient.class), () -> mock(SphereClient.class), getMockedClock()));
 
     // test
     CliRunner.of().run(new String[] {"-h"}, syncerFactory);
@@ -300,10 +312,10 @@ class CliRunnerTest {
     when(sourceClient.execute(any(ProductQuery.class)))
         .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
 
-    stubClientsCustomObjectService(targetClient);
+    stubClientsCustomObjectService(targetClient, ZonedDateTime.now());
 
     final SyncerFactory syncerFactory =
-        spy(SyncerFactory.of(() -> sourceClient, () -> targetClient));
+        spy(SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock()));
 
     // test
     CliRunner.of().run(new String[] {"-s", "all"}, syncerFactory);
@@ -337,10 +349,10 @@ class CliRunnerTest {
     when(sourceClient.execute(any(ProductQuery.class)))
         .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
 
-    stubClientsCustomObjectService(targetClient);
+    stubClientsCustomObjectService(targetClient, ZonedDateTime.now());
 
     final SyncerFactory syncerFactory =
-        spy(SyncerFactory.of(() -> sourceClient, () -> targetClient));
+        spy(SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock()));
 
     // test
     CliRunner.of().run(new String[] {"-s", "all"}, syncerFactory);

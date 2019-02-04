@@ -18,6 +18,7 @@ import io.sphere.sdk.customobjects.CustomObject;
 import io.sphere.sdk.customobjects.commands.CustomObjectUpsertCommand;
 import io.sphere.sdk.customobjects.queries.CustomObjectQuery;
 import io.sphere.sdk.queries.PagedQueryResult;
+import java.time.Clock;
 import java.time.ZonedDateTime;
 import java.util.concurrent.CompletableFuture;
 import javax.annotation.Nonnull;
@@ -175,6 +176,15 @@ public final class TestUtils {
 
     when(client.execute(any(CustomObjectQuery.class)))
         .thenReturn(CompletableFuture.completedFuture(queriedCustomObjects));
+  }
+
+  @Nonnull
+
+  @Nonnull
+  public static Clock getMockedClock() {
+    final Clock clock = mock(Clock.class);
+    when(clock.millis()).thenReturn(0L);
+    return clock;
   }
 
   private TestUtils() {}

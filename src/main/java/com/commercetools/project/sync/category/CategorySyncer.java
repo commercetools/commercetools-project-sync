@@ -14,6 +14,7 @@ import io.sphere.sdk.categories.Category;
 import io.sphere.sdk.categories.CategoryDraft;
 import io.sphere.sdk.categories.queries.CategoryQuery;
 import io.sphere.sdk.client.SphereClient;
+import java.time.Clock;
 import java.util.List;
 import javax.annotation.Nonnull;
 import org.slf4j.Logger;
@@ -35,15 +36,18 @@ public final class CategorySyncer
       @Nonnull final CategorySync categorySync,
       @Nonnull final SphereClient sourceClient,
       @Nonnull final SphereClient targetClient,
-      @Nonnull final CustomObjectService customObjectService) {
-    super(categorySync, sourceClient, targetClient, customObjectService);
+      @Nonnull final CustomObjectService customObjectService,
+      @Nonnull final Clock clock) {
+    super(categorySync, sourceClient, targetClient, customObjectService, clock);
     // TODO: Instead of reference expansion, we could cache all keys and replace references
     // manually.
   }
 
   @Nonnull
   public static CategorySyncer of(
-      @Nonnull final SphereClient sourceClient, @Nonnull final SphereClient targetClient) {
+      @Nonnull final SphereClient sourceClient,
+      @Nonnull final SphereClient targetClient,
+      @Nonnull final Clock clock) {
     final CategorySyncOptions syncOptions =
         CategorySyncOptionsBuilder.of(targetClient)
             .errorCallback(LOGGER::error)
@@ -54,7 +58,7 @@ public final class CategorySyncer
 
     final CustomObjectService customObjectService = new CustomObjectServiceImpl(targetClient);
 
-    return new CategorySyncer(categorySync, sourceClient, targetClient, customObjectService);
+    return new CategorySyncer(categorySync, sourceClient, targetClient, customObjectService, clock);
   }
 
   @Override

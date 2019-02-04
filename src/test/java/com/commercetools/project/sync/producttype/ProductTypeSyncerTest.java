@@ -1,5 +1,6 @@
 package com.commercetools.project.sync.producttype;
 
+import static com.commercetools.project.sync.util.TestUtils.getMockedClock;
 import static io.sphere.sdk.json.SphereJsonUtils.readObjectFromResource;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
@@ -20,7 +21,7 @@ class ProductTypeSyncerTest {
   void of_ShouldCreateProductTypeSyncerInstance() {
     // test
     final ProductTypeSyncer productTypeSyncer =
-        ProductTypeSyncer.of(mock(SphereClient.class), mock(SphereClient.class));
+        ProductTypeSyncer.of(mock(SphereClient.class), mock(SphereClient.class), getMockedClock());
 
     // assertions
     assertThat(productTypeSyncer).isNotNull();
@@ -32,7 +33,7 @@ class ProductTypeSyncerTest {
   void transform_ShouldConvertResourcesToDrafts() {
     // preparation
     final ProductTypeSyncer productTypeSyncer =
-        ProductTypeSyncer.of(mock(SphereClient.class), mock(SphereClient.class));
+        ProductTypeSyncer.of(mock(SphereClient.class), mock(SphereClient.class), getMockedClock());
     final List<ProductType> productTypePage =
         asList(
             readObjectFromResource("product-type-key-1.json", ProductType.class),
@@ -55,7 +56,7 @@ class ProductTypeSyncerTest {
   void getQuery_ShouldBuildProductTypeQuery() {
     // preparation
     final ProductTypeSyncer productTypeSyncer =
-        ProductTypeSyncer.of(mock(SphereClient.class), mock(SphereClient.class));
+        ProductTypeSyncer.of(mock(SphereClient.class), mock(SphereClient.class), getMockedClock());
 
     // test
     final ProductTypeQuery query = productTypeSyncer.getQuery();

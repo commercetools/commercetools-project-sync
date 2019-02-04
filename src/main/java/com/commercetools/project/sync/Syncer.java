@@ -15,6 +15,7 @@ import io.sphere.sdk.customobjects.CustomObject;
 import io.sphere.sdk.models.Resource;
 import io.sphere.sdk.queries.QueryDsl;
 import io.sphere.sdk.queries.QueryPredicate;
+import java.time.Clock;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -58,6 +59,7 @@ public abstract class Syncer<
   private final SphereClient sourceClient;
   private final SphereClient targetClient;
   private final CustomObjectService customObjectService;
+  private final Clock clock;
 
   /**
    * Instantiates a {@link Syncer} which is used to sync resources from a source to a target
@@ -75,11 +77,13 @@ public abstract class Syncer<
       @Nonnull final B sync,
       @Nonnull final SphereClient sourceClient,
       @Nonnull final SphereClient targetClient,
-      @Nonnull final CustomObjectService customObjectService) {
+      @Nonnull final CustomObjectService customObjectService,
+      @Nonnull final Clock clock) {
     this.sync = sync;
     this.sourceClient = sourceClient;
     this.targetClient = targetClient;
     this.customObjectService = customObjectService;
+    this.clock = clock;
   }
 
   /**
@@ -170,11 +174,11 @@ public abstract class Syncer<
   @Nonnull
   private CompletionStage<Long> sync(@Nonnull final C queryResourcesSinceLastSync) {
 
-    final long timeBeforeSync = System.currentTimeMillis();
+    final long timeBeforeSync = clock.millis();
     return queryAll(sourceClient, queryResourcesSinceLastSync, this::syncPage)
         .thenApply(
             ignoredResult -> {
-              final long timeAfterSync = System.currentTimeMillis();
+              final long timeAfterSync = clock.millis();
               return timeAfterSync - timeBeforeSync;
             });
   }

@@ -1,5 +1,6 @@
 package com.commercetools.project.sync.product;
 
+import static com.commercetools.project.sync.util.TestUtils.getMockedClock;
 import static com.commercetools.sync.products.utils.ProductReferenceReplacementUtils.buildProductQuery;
 import static com.commercetools.sync.products.utils.ProductReferenceReplacementUtils.replaceProductsReferenceIdsWithKeys;
 import static io.sphere.sdk.json.SphereJsonUtils.readObjectFromResource;
@@ -29,7 +30,7 @@ class ProductSyncerTest {
   void of_ShouldCreateProductSyncerInstance() {
     // test
     final ProductSyncer productSyncer =
-        ProductSyncer.of(mock(SphereClient.class), mock(SphereClient.class));
+        ProductSyncer.of(mock(SphereClient.class), mock(SphereClient.class), getMockedClock());
 
     // assertions
     assertThat(productSyncer).isNotNull();
@@ -41,7 +42,7 @@ class ProductSyncerTest {
   void transform_ShouldReplaceProductReferenceIdsWithKeys() {
     // preparation
     final ProductSyncer productSyncer =
-        ProductSyncer.of(mock(SphereClient.class), mock(SphereClient.class));
+        ProductSyncer.of(mock(SphereClient.class), mock(SphereClient.class), getMockedClock());
     final List<Product> productPage =
         asList(
             readObjectFromResource("product-key-1.json", Product.class),
@@ -59,7 +60,7 @@ class ProductSyncerTest {
   void getQuery_ShouldBuildProductQuery() {
     // preparation
     final ProductSyncer productSyncer =
-        ProductSyncer.of(mock(SphereClient.class), mock(SphereClient.class));
+        ProductSyncer.of(mock(SphereClient.class), mock(SphereClient.class), getMockedClock());
 
     // test
     final ProductQuery query = productSyncer.getQuery();
