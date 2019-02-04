@@ -27,12 +27,11 @@ public class LastSyncCustomObject<T extends BaseSyncStatistics> {
   private LastSyncCustomObject(
       @Nonnull final ZonedDateTime lastSyncTimestamp,
       @Nonnull final T lastSyncStatistics,
-      @Nonnull final String applicationVersion,
       final long lastSyncDurationInMillis) {
 
     this.lastSyncTimestamp = lastSyncTimestamp;
     this.lastSyncStatistics = lastSyncStatistics;
-    this.applicationVersion = applicationVersion;
+    this.applicationVersion = SyncUtils.getApplicationVersion();
     this.lastSyncDurationInMillis = lastSyncDurationInMillis;
   }
 
@@ -47,10 +46,7 @@ public class LastSyncCustomObject<T extends BaseSyncStatistics> {
       final long lastSyncDurationInSeconds) {
 
     return new LastSyncCustomObject<>(
-        lastSyncTimestamp,
-        lastSyncStatistics,
-        SyncUtils.getApplicationVersion(),
-        lastSyncDurationInSeconds);
+        lastSyncTimestamp, lastSyncStatistics, lastSyncDurationInSeconds);
   }
 
   public ZonedDateTime getLastSyncTimestamp() {
@@ -96,13 +92,11 @@ public class LastSyncCustomObject<T extends BaseSyncStatistics> {
     }
     final LastSyncCustomObject<?> that = (LastSyncCustomObject<?>) o;
     return getLastSyncDurationInMillis() == that.getLastSyncDurationInMillis()
-        && getLastSyncTimestamp().equals(that.getLastSyncTimestamp())
-        && getApplicationVersion().equals(that.getApplicationVersion());
+        && getLastSyncTimestamp().equals(that.getLastSyncTimestamp());
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(
-        getLastSyncTimestamp(), getApplicationVersion(), getLastSyncDurationInMillis());
+    return Objects.hash(getLastSyncTimestamp(), getLastSyncDurationInMillis());
   }
 }
