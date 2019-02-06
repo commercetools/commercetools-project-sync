@@ -32,118 +32,72 @@ public final class TestUtils {
   public static void assertAllSyncersLoggingEvents(
       @Nonnull final TestLogger testLogger, final int numberOfResources) {
 
-    final Condition<LoggingEvent> typesStartLog =
-        new Condition<>(
-            loggingEvent ->
-                Level.INFO.equals(loggingEvent.getLevel())
-                    && loggingEvent.getMessage().contains("Starting TypeSync"),
-            "types start log");
+    final String typeStatsSummary =
+        format(
+            "Summary: %d types were processed in total (%d created, 0 updated "
+                + "and 0 failed to sync).",
+            numberOfResources, numberOfResources);
 
-    final Condition<LoggingEvent> typesStatisticsLog =
-        new Condition<>(
-            loggingEvent ->
-                Level.INFO.equals(loggingEvent.getLevel())
-                    && loggingEvent
-                        .getMessage()
-                        .contains(
-                            format(
-                                "Summary: %d types were processed in total (%d created, 0 updated "
-                                    + "and 0 failed to sync).",
-                                numberOfResources, numberOfResources)),
-            "TypeSync statistics log");
+    assertSyncerLoggingEvents(testLogger, "TypeSync", typeStatsSummary);
 
-    final Condition<LoggingEvent> productTypesStartLog =
-        new Condition<>(
-            loggingEvent ->
-                Level.INFO.equals(loggingEvent.getLevel())
-                    && loggingEvent.getMessage().contains("Starting ProductTypeSync"),
-            "ProductTypes start log");
+    final String productTypesStatsSummary =
+        format(
+            "Summary: %d product types were processed in total (%d created, 0 updated "
+                + "and 0 failed to sync).",
+            numberOfResources, numberOfResources);
 
-    final Condition<LoggingEvent> productTypesStatisticsLog =
-        new Condition<>(
-            loggingEvent ->
-                Level.INFO.equals(loggingEvent.getLevel())
-                    && loggingEvent
-                        .getMessage()
-                        .contains(
-                            format(
-                                "Summary: %d product types were processed in total (%d created, 0 updated "
-                                    + "and 0 failed to sync).",
-                                numberOfResources, numberOfResources)),
-            "ProductTypeSync statistics log");
+    assertSyncerLoggingEvents(testLogger, "ProductTypeSync", productTypesStatsSummary);
 
-    final Condition<LoggingEvent> categoriesStartLog =
-        new Condition<>(
-            loggingEvent ->
-                Level.INFO.equals(loggingEvent.getLevel())
-                    && loggingEvent.getMessage().contains("Starting CategorySync"),
-            "categories start log");
+    final String categoryStatsSummary =
+        format(
+            "Summary: %d categories were processed in total (%d created, 0 updated, "
+                + "0 failed to sync and 0 categories with a missing parent).",
+            numberOfResources, numberOfResources);
 
-    final Condition<LoggingEvent> categoriesStatisticsLog =
-        new Condition<>(
-            loggingEvent ->
-                Level.INFO.equals(loggingEvent.getLevel())
-                    && loggingEvent
-                        .getMessage()
-                        .contains(
-                            format(
-                                "Summary: %d categories were processed in total (%d created, 0 updated, "
-                                    + "0 failed to sync and 0 categories with a missing parent).",
-                                numberOfResources, numberOfResources)),
-            "CategorySync statistics log");
+    assertSyncerLoggingEvents(testLogger, "CategorySync", categoryStatsSummary);
 
-    final Condition<LoggingEvent> productsStartLog =
-        new Condition<>(
-            loggingEvent ->
-                Level.INFO.equals(loggingEvent.getLevel())
-                    && loggingEvent.getMessage().contains("Starting ProductSync"),
-            "products start log");
+    final String productStatsSummary =
+        format(
+            "Summary: %d products were processed in total (%d created, 0 updated "
+                + "and 0 failed to sync).",
+            numberOfResources, numberOfResources);
 
-    final Condition<LoggingEvent> productsStatisticsLog =
-        new Condition<>(
-            loggingEvent ->
-                Level.INFO.equals(loggingEvent.getLevel())
-                    && loggingEvent
-                        .getMessage()
-                        .contains(
-                            format(
-                                "Summary: %d products were processed in total (%d created, 0 updated "
-                                    + "and 0 failed to sync).",
-                                numberOfResources, numberOfResources)),
-            "ProductSync statistics log");
+    assertSyncerLoggingEvents(testLogger, "ProductSync", productStatsSummary);
 
-    final Condition<LoggingEvent> inventoriesStartLog =
-        new Condition<>(
-            loggingEvent ->
-                Level.INFO.equals(loggingEvent.getLevel())
-                    && loggingEvent.getMessage().contains("Starting InventorySync"),
-            "inventories start log");
+    final String inventoryStatsSummary =
+        format(
+            "Summary: %d inventory entries were processed in total (%d created, 0 updated "
+                + "and 0 failed to sync).",
+            numberOfResources, numberOfResources);
 
-    final Condition<LoggingEvent> inventoriesStatisticsLog =
+    assertSyncerLoggingEvents(testLogger, "InventorySync", inventoryStatsSummary);
+
+    // Every sync module (5 modules) is expected to have 2 logs (start and stats summary)
+    assertThat(testLogger.getAllLoggingEvents()).hasSize(10);
+  }
+
+  public static void assertSyncerLoggingEvents(
+      @Nonnull final TestLogger testLogger,
+      @Nonnull final String syncModuleName,
+      @Nonnull final String statisticsSummary) {
+
+    final Condition<LoggingEvent> startLog =
         new Condition<>(
             loggingEvent ->
                 Level.INFO.equals(loggingEvent.getLevel())
-                    && loggingEvent
-                        .getMessage()
-                        .contains(
-                            format(
-                                "Summary: %d inventory entries were processed in total (%d created, 0 updated "
-                                    + "and 0 failed to sync).",
-                                numberOfResources, numberOfResources)),
-            "InventorySync statistics log");
+                    && loggingEvent.getMessage().contains(format("Starting %s", syncModuleName)),
+            format("%s start log", syncModuleName));
+
+    final Condition<LoggingEvent> statisticsLog =
+        new Condition<>(
+            loggingEvent ->
+                Level.INFO.equals(loggingEvent.getLevel())
+                    && loggingEvent.getMessage().contains(statisticsSummary),
+            format("%s statistics log", syncModuleName));
 
     assertThat(testLogger.getAllLoggingEvents())
-        .hasSize(10)
-        .haveExactly(1, typesStartLog)
-        .haveExactly(1, productTypesStartLog)
-        .haveExactly(1, categoriesStartLog)
-        .haveExactly(1, productsStartLog)
-        .haveExactly(1, inventoriesStartLog)
-        .haveExactly(1, typesStatisticsLog)
-        .haveExactly(1, productTypesStatisticsLog)
-        .haveExactly(1, categoriesStatisticsLog)
-        .haveExactly(1, productsStatisticsLog)
-        .haveExactly(1, inventoriesStatisticsLog);
+        .haveExactly(1, startLog)
+        .haveExactly(1, statisticsLog);
   }
 
   public static void verifyInteractionsWithClientAfterSync(
