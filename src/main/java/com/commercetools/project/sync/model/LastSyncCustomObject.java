@@ -76,6 +76,12 @@ public class LastSyncCustomObject<T extends BaseSyncStatistics> {
     this.lastSyncTimestamp = lastSyncTimestamp;
   }
 
+  // TODO: Implement a settter for lastSyncStatistics too to be able to deserialize statisitcs. It
+  // needs a
+  // customized deserializer for because BaseSyncStatistics is an abstract class:
+  // https://www.baeldung.com/jackson-inheritance
+  // https://github.com/commercetools/commercetools-project-sync/issues/27
+
   public void setApplicationVersion(@Nonnull final String applicationVersion) {
     this.applicationVersion = applicationVersion;
   }
@@ -86,6 +92,7 @@ public class LastSyncCustomObject<T extends BaseSyncStatistics> {
 
   // TODO: Also include statistics in equals comparison after
   // https://github.com/commercetools/commercetools-sync-java/issues/376 is resolved
+  // https://github.com/commercetools/commercetools-project-sync/issues/28
   @Override
   public boolean equals(final Object o) {
     if (this == o) {
