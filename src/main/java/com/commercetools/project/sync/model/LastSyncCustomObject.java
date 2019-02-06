@@ -7,7 +7,7 @@ import java.time.ZonedDateTime;
 import java.util.Objects;
 import javax.annotation.Nonnull;
 
-public class LastSyncCustomObject<T extends BaseSyncStatistics> {
+public final class LastSyncCustomObject<T extends BaseSyncStatistics> {
 
   @JsonIgnoreProperties({
     "latestBatchStartTime",
