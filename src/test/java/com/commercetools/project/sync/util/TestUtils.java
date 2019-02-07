@@ -30,9 +30,14 @@ import uk.org.lidalia.slf4jtest.TestLogger;
 public final class TestUtils {
 
   public static void assertAllSyncersLoggingEvents(
-      @Nonnull final TestLogger testLogger, final int numberOfResources) {
+      @Nonnull final TestLogger syncerTestLogger,
+      @Nonnull final TestLogger cliRunnerTestLogger,
+      final int numberOfResources) {
 
-    assertThat(testLogger.getAllLoggingEvents())
+    assertThat(cliRunnerTestLogger.getAllLoggingEvents())
+        .allMatch(loggingEvent -> !Level.ERROR.equals(loggingEvent.getLevel()));
+
+    assertThat(syncerTestLogger.getAllLoggingEvents())
         .allMatch(loggingEvent -> !Level.ERROR.equals(loggingEvent.getLevel()));
 
     final Condition<LoggingEvent> typesStartLog =
@@ -135,7 +140,7 @@ public final class TestUtils {
                                 numberOfResources, numberOfResources)),
             "InventorySync statistics log");
 
-    assertThat(testLogger.getAllLoggingEvents())
+    assertThat(syncerTestLogger.getAllLoggingEvents())
         .hasSize(10)
         .haveExactly(1, typesStartLog)
         .haveExactly(1, productTypesStartLog)

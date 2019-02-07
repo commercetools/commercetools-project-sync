@@ -56,7 +56,9 @@ import uk.org.lidalia.slf4jtest.TestLogger;
 import uk.org.lidalia.slf4jtest.TestLoggerFactory;
 
 class CliRunnerIT {
-  private static final TestLogger testLogger = TestLoggerFactory.getTestLogger(Syncer.class);
+  private static final TestLogger syncerTestLogger = TestLoggerFactory.getTestLogger(Syncer.class);
+  private static final TestLogger cliRunnerTestLogger =
+      TestLoggerFactory.getTestLogger(CliRunner.class);
 
   @BeforeEach
   void setupSuite() {
@@ -81,7 +83,8 @@ class CliRunnerIT {
 
   @AfterEach
   void tearDownTest() {
-    testLogger.clearAll();
+    syncerTestLogger.clearAll();
+    cliRunnerTestLogger.clearAll();
     cleanUpProjects(createClient(CTP_SOURCE_CLIENT_CONFIG), createClient(CTP_TARGET_CLIENT_CONFIG));
   }
 
@@ -107,7 +110,7 @@ class CliRunnerIT {
     try (final SphereClient postSourceClient = createClient(CTP_SOURCE_CLIENT_CONFIG)) {
       try (final SphereClient postTargetClient = createClient(CTP_TARGET_CLIENT_CONFIG)) {
         // assertions
-        assertAllSyncersLoggingEvents(testLogger, 1);
+        assertAllSyncersLoggingEvents(syncerTestLogger, cliRunnerTestLogger, 1);
 
         final PagedQueryResult<ProductType> productTypeQueryResult =
             postTargetClient
