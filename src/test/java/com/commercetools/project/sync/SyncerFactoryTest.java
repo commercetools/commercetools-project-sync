@@ -48,11 +48,14 @@ import uk.org.lidalia.slf4jtest.TestLogger;
 import uk.org.lidalia.slf4jtest.TestLoggerFactory;
 
 class SyncerFactoryTest {
-  private static final TestLogger testLogger = TestLoggerFactory.getTestLogger(Syncer.class);
+  private static final TestLogger syncerTestLogger = TestLoggerFactory.getTestLogger(Syncer.class);
+  private static final TestLogger cliRunnerTestLogger =
+      TestLoggerFactory.getTestLogger(CliRunner.class);
 
   @AfterEach
   void tearDownTest() {
-    testLogger.clearAll();
+    syncerTestLogger.clearAll();
+    cliRunnerTestLogger.clearAll();
   }
 
   @Test
@@ -162,7 +165,7 @@ class SyncerFactoryTest {
                                 + "and 0 failed to sync)."),
             "statistics log");
 
-    assertThat(testLogger.getAllLoggingEvents())
+    assertThat(syncerTestLogger.getAllLoggingEvents())
         .hasSize(2)
         .haveExactly(1, startLog)
         .haveExactly(1, statisticsLog);
@@ -253,7 +256,7 @@ class SyncerFactoryTest {
                                 + "0 failed to sync and 0 categories with a missing parent)."),
             "statistics log");
 
-    assertThat(testLogger.getAllLoggingEvents())
+    assertThat(syncerTestLogger.getAllLoggingEvents())
         .hasSize(2)
         .haveExactly(1, startLog)
         .haveExactly(1, statisticsLog);
@@ -315,7 +318,7 @@ class SyncerFactoryTest {
                                 + "and 0 failed to sync)."),
             "statistics log");
 
-    assertThat(testLogger.getAllLoggingEvents())
+    assertThat(syncerTestLogger.getAllLoggingEvents())
         .hasSize(2)
         .haveExactly(1, startLog)
         .haveExactly(1, statisticsLog);
@@ -377,7 +380,7 @@ class SyncerFactoryTest {
                                 + "and 0 failed to sync)."),
             "statistics log");
 
-    assertThat(testLogger.getAllLoggingEvents())
+    assertThat(syncerTestLogger.getAllLoggingEvents())
         .hasSize(2)
         .haveExactly(1, startLog)
         .haveExactly(1, statisticsLog);
@@ -439,7 +442,7 @@ class SyncerFactoryTest {
                                 + "and 0 failed to sync)."),
             "statistics log");
 
-    assertThat(testLogger.getAllLoggingEvents())
+    assertThat(syncerTestLogger.getAllLoggingEvents())
         .hasSize(2)
         .haveExactly(1, startLog)
         .haveExactly(1, statisticsLog);
@@ -580,6 +583,6 @@ class SyncerFactoryTest {
     verify(sourceClient, times(1)).execute(any(ProductQuery.class));
     verify(sourceClient, times(1)).execute(any(InventoryEntryQuery.class));
     verifyInteractionsWithClientAfterSync(sourceClient, 5);
-    assertAllSyncersLoggingEvents(testLogger, 0);
+    assertAllSyncersLoggingEvents(syncerTestLogger, cliRunnerTestLogger, 0);
   }
 }

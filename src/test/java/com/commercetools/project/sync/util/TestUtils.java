@@ -30,9 +30,14 @@ import uk.org.lidalia.slf4jtest.TestLogger;
 public final class TestUtils {
 
   public static void assertAllSyncersLoggingEvents(
-      @Nonnull final TestLogger testLogger, final int numberOfResources) {
+      @Nonnull final TestLogger syncerTestLogger,
+      @Nonnull final TestLogger cliRunnerTestLogger,
+      final int numberOfResources) {
 
-    assertThat(testLogger.getAllLoggingEvents())
+    assertThat(cliRunnerTestLogger.getAllLoggingEvents())
+        .allMatch(loggingEvent -> !Level.ERROR.equals(loggingEvent.getLevel()));
+
+    assertThat(syncerTestLogger.getAllLoggingEvents())
         .allMatch(loggingEvent -> !Level.ERROR.equals(loggingEvent.getLevel()));
 
     final String typeStatsSummary =
@@ -41,7 +46,7 @@ public final class TestUtils {
                 + "and 0 failed to sync).",
             numberOfResources, numberOfResources);
 
-    assertSyncerLoggingEvents(testLogger, "TypeSync", typeStatsSummary);
+    assertSyncerLoggingEvents(syncerTestLogger, "TypeSync", typeStatsSummary);
 
     final String productTypesStatsSummary =
         format(
@@ -49,7 +54,7 @@ public final class TestUtils {
                 + "and 0 failed to sync).",
             numberOfResources, numberOfResources);
 
-    assertSyncerLoggingEvents(testLogger, "ProductTypeSync", productTypesStatsSummary);
+    assertSyncerLoggingEvents(syncerTestLogger, "ProductTypeSync", productTypesStatsSummary);
 
     final String categoryStatsSummary =
         format(
@@ -57,7 +62,7 @@ public final class TestUtils {
                 + "0 failed to sync and 0 categories with a missing parent).",
             numberOfResources, numberOfResources);
 
-    assertSyncerLoggingEvents(testLogger, "CategorySync", categoryStatsSummary);
+    assertSyncerLoggingEvents(syncerTestLogger, "CategorySync", categoryStatsSummary);
 
     final String productStatsSummary =
         format(
@@ -65,7 +70,7 @@ public final class TestUtils {
                 + "and 0 failed to sync).",
             numberOfResources, numberOfResources);
 
-    assertSyncerLoggingEvents(testLogger, "ProductSync", productStatsSummary);
+    assertSyncerLoggingEvents(syncerTestLogger, "ProductSync", productStatsSummary);
 
     final String inventoryStatsSummary =
         format(
@@ -73,10 +78,10 @@ public final class TestUtils {
                 + "and 0 failed to sync).",
             numberOfResources, numberOfResources);
 
-    assertSyncerLoggingEvents(testLogger, "InventorySync", inventoryStatsSummary);
+    assertSyncerLoggingEvents(syncerTestLogger, "InventorySync", inventoryStatsSummary);
 
     // Every sync module (5 modules) is expected to have 2 logs (start and stats summary)
-    assertThat(testLogger.getAllLoggingEvents()).hasSize(10);
+    assertThat(syncerTestLogger.getAllLoggingEvents()).hasSize(10);
   }
 
   public static void assertSyncerLoggingEvents(

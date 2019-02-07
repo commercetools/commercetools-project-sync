@@ -68,7 +68,10 @@ import uk.org.lidalia.slf4jtest.TestLogger;
 import uk.org.lidalia.slf4jtest.TestLoggerFactory;
 
 class CliRunnerIT {
-  private static final TestLogger testLogger = TestLoggerFactory.getTestLogger(Syncer.class);
+
+  private static final TestLogger syncerTestLogger = TestLoggerFactory.getTestLogger(Syncer.class);
+  private static final TestLogger cliRunnerTestLogger =
+      TestLoggerFactory.getTestLogger(CliRunner.class);
   private static final String RESOURCE_KEY = "foo";
 
   @BeforeAll
@@ -144,7 +147,8 @@ class CliRunnerIT {
 
   @AfterEach
   void tearDownTest() {
-    testLogger.clearAll();
+    syncerTestLogger.clearAll();
+    cliRunnerTestLogger.clearAll();
     cleanUpProjects(createClient(CTP_SOURCE_CLIENT_CONFIG), createClient(CTP_TARGET_CLIENT_CONFIG));
   }
 
@@ -168,7 +172,7 @@ class CliRunnerIT {
     try (final SphereClient postSourceClient = createClient(CTP_SOURCE_CLIENT_CONFIG)) {
       try (final SphereClient postTargetClient = createClient(CTP_TARGET_CLIENT_CONFIG)) {
         // assertions
-        assertAllSyncersLoggingEvents(testLogger, 1);
+        assertAllSyncersLoggingEvents(syncerTestLogger, cliRunnerTestLogger, 1);
 
         assertAllResourcesAreSyncedToTarget(postTargetClient);
 
@@ -201,10 +205,10 @@ class CliRunnerIT {
       try (final SphereClient postTargetClient = createClient(CTP_TARGET_CLIENT_CONFIG)) {
 
         // assertions
-        assertThat(testLogger.getAllLoggingEvents()).hasSize(2);
+        assertThat(syncerTestLogger.getAllLoggingEvents()).hasSize(2);
 
         assertSyncerLoggingEvents(
-            testLogger,
+            syncerTestLogger,
             "ProductTypeSync",
             "Summary: 1 product types were processed in total (1 created, 0 updated "
                 + "and 0 failed to sync).");
@@ -312,7 +316,7 @@ class CliRunnerIT {
     try (final SphereClient postSourceClient = createClient(CTP_SOURCE_CLIENT_CONFIG)) {
       try (final SphereClient postTargetClient = createClient(CTP_TARGET_CLIENT_CONFIG)) {
         // assertions
-        assertAllSyncersLoggingEvents(testLogger, 1);
+        assertAllSyncersLoggingEvents(syncerTestLogger, cliRunnerTestLogger, 1);
 
         assertAllResourcesAreSyncedToTarget(postTargetClient);
         assertCurrentCtpTimestampGeneratorAndGetLastModifiedAt(postTargetClient);
