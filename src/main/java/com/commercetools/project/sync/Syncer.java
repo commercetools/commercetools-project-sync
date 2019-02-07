@@ -90,7 +90,7 @@ public abstract class Syncer<
    *
    * <p>Note: The method checks if there was a last sync time stamp persisted as a custom object in
    * the target project for this specific source project and sync module. If there is, it will sync
-   * only the resources which were modified after the last sync time stamp and before the start of
+   * only the resources which were modified after the last sync timestamp and before the start of
    * this sync.
    *
    * @return completion stage containing no result after the execution of the sync process and
