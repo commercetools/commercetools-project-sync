@@ -1,11 +1,13 @@
 package com.commercetools.project.sync.model;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import com.commercetools.project.sync.util.SyncUtils;
 import com.commercetools.sync.products.helpers.ProductSyncStatistics;
-import java.time.ZonedDateTime;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.junit.jupiter.api.Test;
+
+import java.time.ZonedDateTime;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 class LastSyncCustomObjectTest {
 
@@ -102,5 +104,40 @@ class LastSyncCustomObjectTest {
 
     // assertions
     assertThat(result).isFalse();
+  }
+
+  @Test
+  @SuppressFBWarnings(
+      value = "EC_UNRELATED_TYPES",
+      justification =
+          "We suppress the FB warning here, to cover the test case of using "
+              + "LastSyncCustomObject#equals on comparing different types.")
+  void equals_WithDifferentType_ShouldReturnFalse() {
+    // preparation
+    final int lastSyncDurationInSeconds = 100;
+    final ProductSyncStatistics lastSyncStatistics = new ProductSyncStatistics();
+    final LastSyncCustomObject<ProductSyncStatistics> lastSyncCustomObject =
+        LastSyncCustomObject.of(ZonedDateTime.now(), lastSyncStatistics, lastSyncDurationInSeconds);
+
+    // test
+    final boolean result = lastSyncCustomObject.equals("foo");
+
+    // assertions
+    assertThat(result).isFalse();
+  }
+
+  @Test
+  void equals_WithSameInstance_ShouldReturnTrue() {
+    // preparation
+    final int lastSyncDurationInSeconds = 100;
+    final ProductSyncStatistics lastSyncStatistics = new ProductSyncStatistics();
+    final LastSyncCustomObject<ProductSyncStatistics> lastSyncCustomObject =
+        LastSyncCustomObject.of(ZonedDateTime.now(), lastSyncStatistics, lastSyncDurationInSeconds);
+
+    // test
+    final boolean result = lastSyncCustomObject.equals(lastSyncCustomObject);
+
+    // assertions
+    assertThat(result).isTrue();
   }
 }
