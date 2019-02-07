@@ -76,7 +76,8 @@ class LastSyncCustomObjectTest {
         LastSyncCustomObject.of(ZonedDateTime.now(), lastSyncStatistics, lastSyncDurationInSeconds);
 
     final LastSyncCustomObject<ProductSyncStatistics> otherLastSyncCustomObject =
-        LastSyncCustomObject.of(ZonedDateTime.now(), lastSyncStatistics, lastSyncDurationInSeconds);
+        LastSyncCustomObject.of(
+            ZonedDateTime.now().minusMinutes(2), lastSyncStatistics, lastSyncDurationInSeconds);
 
     // test
     final boolean result = lastSyncCustomObject.equals(otherLastSyncCustomObject);
