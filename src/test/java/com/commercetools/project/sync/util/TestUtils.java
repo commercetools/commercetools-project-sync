@@ -32,6 +32,9 @@ public final class TestUtils {
   public static void assertAllSyncersLoggingEvents(
       @Nonnull final TestLogger testLogger, final int numberOfResources) {
 
+    assertThat(testLogger.getAllLoggingEvents())
+        .allMatch(loggingEvent -> !Level.ERROR.equals(loggingEvent.getLevel()));
+
     final String typeStatsSummary =
         format(
             "Summary: %d types were processed in total (%d created, 0 updated "
