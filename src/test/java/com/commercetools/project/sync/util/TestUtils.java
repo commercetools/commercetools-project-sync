@@ -32,6 +32,9 @@ public final class TestUtils {
   public static void assertAllSyncersLoggingEvents(
       @Nonnull final TestLogger testLogger, final int numberOfResources) {
 
+    assertThat(testLogger.getAllLoggingEvents())
+        .allMatch(loggingEvent -> !Level.ERROR.equals(loggingEvent.getLevel()));
+
     final Condition<LoggingEvent> typesStartLog =
         new Condition<>(
             loggingEvent ->
