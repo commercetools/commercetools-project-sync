@@ -63,8 +63,8 @@ public abstract class Syncer<
    * Instantiates a {@link Syncer} which is used to sync resources from a source to a target
    * commercetools project.
    *
-   * @param sync The sync module that is used for syncing the transformed drafts to the target
-   *     project.
+   * @param sync The sync module that is used for syncing the resource drafts to the target project,
+   *     after being transformed from the resources fetched from the source project.
    * @param sourceClient the client used for querying data from the source commercetools project.
    * @param targetClient the client used for syncing the transformed drafts into the target
    *     commercetools project.
