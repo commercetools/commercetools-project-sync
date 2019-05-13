@@ -20,4 +20,6 @@ public interface CustomObjectService {
       @Nonnull final String sourceProjectKey,
       @Nonnull final String syncModuleName,
       @Nonnull final LastSyncCustomObject lastSyncCustomObject);
+
+  CustomObjectService attachRunnerName(String runnerName);
 }

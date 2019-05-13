@@ -101,7 +101,7 @@ public abstract class Syncer<
    * @return completion stage containing no result after the execution of the sync process and
    *     logging the result.
    */
-  public CompletionStage<Void> sync() {
+  public CompletionStage<Void> sync(String runnerName) {
 
     final String sourceProjectKey = sourceClient.getConfig().getProjectKey();
     final String syncModuleName = getSyncModuleName(sync.getClass());
@@ -113,7 +113,7 @@ public abstract class Syncer<
               syncModuleName, sourceProjectKey, targetProjectKey));
     }
 
-    return customObjectService
+    return customObjectService.attachRunnerName(runnerName)
         .getCurrentCtpTimestamp()
         .thenCompose(
             currentCtpTimestamp ->

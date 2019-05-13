@@ -9,6 +9,7 @@ public final class SyncUtils {
 
   public static final String APPLICATION_DEFAULT_NAME = "commercetools-project-sync";
   public static final String APPLICATION_DEFAULT_VERSION = "development-SNAPSHOT";
+  public static final String DEFAULT_RUNNER_NAME = "runnerName";
 
   @Nonnull
   public static String getSyncModuleName(@Nonnull final Class<? extends BaseSync> syncClass) {

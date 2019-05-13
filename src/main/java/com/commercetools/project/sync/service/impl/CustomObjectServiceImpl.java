@@ -1,5 +1,6 @@
 package com.commercetools.project.sync.service.impl;
 
+import static com.commercetools.project.sync.util.SyncUtils.DEFAULT_RUNNER_NAME;
 import static com.commercetools.project.sync.util.SyncUtils.getApplicationName;
 import static java.lang.String.format;
 
@@ -28,6 +29,7 @@ public class CustomObjectServiceImpl implements CustomObjectService {
   private static final long MINUTES_BEFORE_CURRENT_TIMESTAMP = 2;
 
   private SphereClient sphereClient;
+  private String runnerName = DEFAULT_RUNNER_NAME;
 
   public CustomObjectServiceImpl(@Nonnull final SphereClient sphereClient) {
     this.sphereClient = sphereClient;
@@ -39,7 +41,7 @@ public class CustomObjectServiceImpl implements CustomObjectService {
 
     final CustomObjectDraft<String> currentTimestampDraft =
         CustomObjectDraft.ofUnversionedUpsert(
-            format("%s.%s", getApplicationName(), TIMESTAMP_GENERATOR_CONTAINER_POSTFIX),
+            format("%s.%s.%s", getApplicationName(), runnerName, TIMESTAMP_GENERATOR_CONTAINER_POSTFIX),
             TIMESTAMP_GENERATOR_KEY,
             TIMESTAMP_GENERATOR_VALUE,
             String.class);
@@ -90,11 +92,19 @@ public class CustomObjectServiceImpl implements CustomObjectService {
     return createCustomObject(lastSyncCustomObjectDraft);
   }
 
+  @Override
+  public CustomObjectService attachRunnerName(String runnerName) {
+    if (runnerName != null && !runnerName.isEmpty()) {
+      this.runnerName = runnerName;
+    }
+    return this;
+  }
+
   @Nonnull
   private String buildLastSyncTimestampContainerName(@Nonnull final String syncModuleName) {
 
     final String syncModuleNameWithLowerCasedFirstChar = lowerCaseFirstChar(syncModuleName);
-    return format("%s.%s", getApplicationName(), syncModuleNameWithLowerCasedFirstChar);
+    return format("%s.%s.%s", getApplicationName(), runnerName, syncModuleNameWithLowerCasedFirstChar);
   }
 
   @Nonnull

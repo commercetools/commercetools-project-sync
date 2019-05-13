@@ -22,9 +22,11 @@ import org.slf4j.LoggerFactory;
 final class CliRunner {
   static final String SYNC_MODULE_OPTION_SHORT = "s";
   static final String HELP_OPTION_SHORT = "h";
+  static final String RUNNER_NAME_OPTION_SHORT = "r";
   static final String VERSION_OPTION_SHORT = "v";
 
   static final String SYNC_MODULE_OPTION_LONG = "sync";
+  static final String RUNNER_NAME_OPTION_LONG = "runnerName";
   static final String HELP_OPTION_LONG = "help";
   static final String VERSION_OPTION_LONG = "version";
 
@@ -44,6 +46,7 @@ final class CliRunner {
           SYNC_MODULE_OPTION_PRODUCT_SYNC,
           SYNC_MODULE_OPTION_INVENTORY_ENTRY_SYNC,
           SYNC_MODULE_OPTION_ALL);
+  static final String RUNNER_NAME_OPTION_DESCRIPTION = "Unique identifer name to run parallel sync in same project. ";
   static final String HELP_OPTION_DESCRIPTION = "Print help information.";
   static final String VERSION_OPTION_DESCRIPTION = "Print the version of the application.";
 
@@ -96,6 +99,13 @@ final class CliRunner {
             .hasArg()
             .build();
 
+    final Option runnerOption =
+        Option.builder(RUNNER_NAME_OPTION_SHORT)
+            .longOpt(RUNNER_NAME_OPTION_LONG)
+            .desc(RUNNER_NAME_OPTION_DESCRIPTION)
+            .hasArg()
+            .build();
+
     final Option helpOption =
         Option.builder(HELP_OPTION_SHORT)
             .longOpt(HELP_OPTION_LONG)
@@ -109,6 +119,7 @@ final class CliRunner {
             .build();
 
     options.addOption(syncOption);
+    options.addOption(runnerOption);
     options.addOption(helpOption);
     options.addOption(versionOption);
 
@@ -157,10 +168,11 @@ final class CliRunner {
       @Nonnull final CommandLine commandLine, @Nonnull final SyncerFactory syncerFactory) {
 
     final String syncOptionValue = commandLine.getOptionValue(SYNC_MODULE_OPTION_SHORT);
+    final String runnerNameValue = commandLine.getOptionValue(RUNNER_NAME_OPTION_SHORT);
 
     return SYNC_MODULE_OPTION_ALL.equals(syncOptionValue)
-        ? syncerFactory.syncAll()
-        : syncerFactory.sync(syncOptionValue);
+        ? syncerFactory.syncAll(runnerNameValue)
+        : syncerFactory.sync(syncOptionValue, runnerNameValue);
   }
 
   private static void printHelpToStdOut(@Nonnull final Options cliOptions) {
