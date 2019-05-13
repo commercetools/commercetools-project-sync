@@ -53,6 +53,7 @@ class CliRunnerTest {
   private static final TestLogger testLogger = TestLoggerFactory.getTestLogger(CliRunner.class);
   private static ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
   private static PrintStream originalSystemOut;
+  static String defaultTestRunnerName = "testRunner";
 
   @BeforeAll
   static void setupSuite() throws UnsupportedEncodingException {
@@ -210,9 +211,9 @@ class CliRunnerTest {
     CliRunner.of().run(new String[] {"-s", "products"}, syncerFactory);
 
     // assertions
-    verify(syncerFactory, times(1)).sync("products");
+    verify(syncerFactory, times(1)).sync("products", defaultTestRunnerName);
     verify(sourceClient, times(1)).execute(any(ProductQuery.class));
-    verify(syncerFactory, never()).syncAll();
+    verify(syncerFactory, never()).syncAll(defaultTestRunnerName);
   }
 
   @Test
@@ -236,9 +237,9 @@ class CliRunnerTest {
     CliRunner.of().run(new String[] {"--sync", "products"}, syncerFactory);
 
     // assertions
-    verify(syncerFactory, times(1)).sync("products");
+    verify(syncerFactory, times(1)).sync("products", defaultTestRunnerName);
     verify(sourceClient, times(1)).execute(any(ProductQuery.class));
-    verify(syncerFactory, never()).syncAll();
+    verify(syncerFactory, never()).syncAll(defaultTestRunnerName);
   }
 
   @Test
@@ -252,8 +253,8 @@ class CliRunnerTest {
     CliRunner.of().run(new String[] {"-u"}, syncerFactory);
 
     // Assert error log
-    verify(syncerFactory, never()).sync(any());
-    verify(syncerFactory, never()).syncAll();
+    verify(syncerFactory, never()).sync(any(), defaultTestRunnerName);
+    verify(syncerFactory, never()).syncAll(defaultTestRunnerName);
   }
 
   @Test
@@ -289,7 +290,7 @@ class CliRunnerTest {
             format(
                 "-%s,--%s %s",
                 VERSION_OPTION_SHORT, VERSION_OPTION_LONG, VERSION_OPTION_DESCRIPTION));
-    verify(syncerFactory, never()).sync(any());
+    verify(syncerFactory, never()).sync(any(), defaultTestRunnerName);
   }
 
   @Test
@@ -321,7 +322,7 @@ class CliRunnerTest {
     CliRunner.of().run(new String[] {"-s", "all"}, syncerFactory);
 
     // assertions
-    verify(syncerFactory, times(1)).syncAll();
+    verify(syncerFactory, times(1)).syncAll(defaultTestRunnerName);
     verify(sourceClient, times(1)).execute(any(ProductTypeQuery.class));
     verify(sourceClient, times(1)).execute(any(TypeQuery.class));
     verify(sourceClient, times(1)).execute(any(CategoryQuery.class));
@@ -358,7 +359,7 @@ class CliRunnerTest {
     CliRunner.of().run(new String[] {"-s", "all"}, syncerFactory);
 
     // assertions
-    verify(syncerFactory, times(1)).syncAll();
+    verify(syncerFactory, times(1)).syncAll(defaultTestRunnerName);
 
     final InOrder inOrder = Mockito.inOrder(sourceClient);
 

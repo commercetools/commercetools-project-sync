@@ -1,6 +1,7 @@
 package com.commercetools.project.sync;
 
 import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_DESCRIPTION;
+import static com.commercetools.project.sync.CliRunnerTest.defaultTestRunnerName;
 import static com.commercetools.project.sync.service.impl.CustomObjectServiceImpl.TIMESTAMP_GENERATOR_CONTAINER_POSTFIX;
 import static com.commercetools.project.sync.service.impl.CustomObjectServiceImpl.TIMESTAMP_GENERATOR_KEY;
 import static com.commercetools.project.sync.service.impl.CustomObjectServiceImpl.TIMESTAMP_GENERATOR_VALUE;
@@ -65,7 +66,7 @@ class SyncerFactoryTest {
                     () -> mock(SphereClient.class),
                     () -> mock(SphereClient.class),
                     getMockedClock())
-                .sync(null))
+                .sync(null, null))
         .hasFailedWithThrowableThat()
         .isExactlyInstanceOf(IllegalArgumentException.class)
         .hasMessageContaining(
@@ -81,7 +82,7 @@ class SyncerFactoryTest {
                     () -> mock(SphereClient.class),
                     () -> mock(SphereClient.class),
                     getMockedClock())
-                .sync(""))
+                .sync("", defaultTestRunnerName))
         .hasFailedWithThrowableThat()
         .isExactlyInstanceOf(IllegalArgumentException.class)
         .hasMessageContaining(
@@ -99,7 +100,7 @@ class SyncerFactoryTest {
                     () -> mock(SphereClient.class),
                     () -> mock(SphereClient.class),
                     getMockedClock())
-                .sync(unknownOptionValue))
+                .sync(unknownOptionValue, defaultTestRunnerName))
         .hasFailedWithThrowableThat()
         .isExactlyInstanceOf(IllegalArgumentException.class)
         .hasMessageContaining(
@@ -128,7 +129,7 @@ class SyncerFactoryTest {
     stubClientsCustomObjectService(targetClient, currentCtpTimestamp);
 
     // test
-    syncerFactory.sync("products");
+    syncerFactory.sync("products", defaultTestRunnerName);
 
     // assertions
     verify(sourceClient, times(1)).execute(any(ProductQuery.class));
@@ -220,7 +221,7 @@ class SyncerFactoryTest {
     stubClientsCustomObjectService(targetClient, currentCtpTimestamp);
 
     // test
-    syncerFactory.sync("categories");
+    syncerFactory.sync("categories", defaultTestRunnerName);
 
     // assertions
     verify(sourceClient, times(1)).execute(any(CategoryQuery.class));
@@ -282,7 +283,7 @@ class SyncerFactoryTest {
     stubClientsCustomObjectService(targetClient, currentCtpTimestamp);
 
     // test
-    syncerFactory.sync("productTypes");
+    syncerFactory.sync("productTypes", defaultTestRunnerName);
 
     // assertions
     verify(sourceClient, times(1)).execute(any(ProductTypeQuery.class));
@@ -344,7 +345,7 @@ class SyncerFactoryTest {
         SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock());
 
     // test
-    syncerFactory.sync("types");
+    syncerFactory.sync("types", defaultTestRunnerName);
 
     // assertions
     verify(sourceClient, times(1)).execute(any(TypeQuery.class));
@@ -406,7 +407,7 @@ class SyncerFactoryTest {
         SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock());
 
     // test
-    syncerFactory.sync("inventoryEntries");
+    syncerFactory.sync("inventoryEntries", defaultTestRunnerName);
 
     // assertions
     verify(sourceClient, times(1)).execute(any(InventoryEntryQuery.class));
@@ -468,7 +469,7 @@ class SyncerFactoryTest {
         SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock());
 
     // test
-    final CompletionStage<Void> result = syncerFactory.sync("inventoryEntries");
+    final CompletionStage<Void> result = syncerFactory.sync("inventoryEntries", defaultTestRunnerName);
 
     // assertions
     verifyTimestampGeneratorCustomObjectUpsert(targetClient, 1);
@@ -496,7 +497,7 @@ class SyncerFactoryTest {
         SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock());
 
     // test
-    final CompletionStage<Void> result = syncerFactory.sync("inventoryEntries");
+    final CompletionStage<Void> result = syncerFactory.sync("inventoryEntries", defaultTestRunnerName);
 
     // assertions
     verifyTimestampGeneratorCustomObjectUpsert(targetClient, 1);
@@ -529,7 +530,7 @@ class SyncerFactoryTest {
         SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock());
 
     // test
-    final CompletionStage<Void> result = syncerFactory.sync("inventoryEntries");
+    final CompletionStage<Void> result = syncerFactory.sync("inventoryEntries", defaultTestRunnerName);
 
     // assertions
     verifyTimestampGeneratorCustomObjectUpsert(targetClient, 1);
@@ -567,7 +568,7 @@ class SyncerFactoryTest {
         SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock());
 
     // test
-    syncerFactory.syncAll();
+    syncerFactory.syncAll(defaultTestRunnerName);
 
     // assertions
     verifyTimestampGeneratorCustomObjectUpsert(targetClient, 5);
