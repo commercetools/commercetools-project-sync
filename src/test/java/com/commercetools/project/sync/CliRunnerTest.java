@@ -1,14 +1,6 @@
 package com.commercetools.project.sync;
 
-import static com.commercetools.project.sync.CliRunner.HELP_OPTION_DESCRIPTION;
-import static com.commercetools.project.sync.CliRunner.HELP_OPTION_LONG;
-import static com.commercetools.project.sync.CliRunner.HELP_OPTION_SHORT;
-import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_DESCRIPTION;
-import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_LONG;
-import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_SHORT;
-import static com.commercetools.project.sync.CliRunner.VERSION_OPTION_DESCRIPTION;
-import static com.commercetools.project.sync.CliRunner.VERSION_OPTION_LONG;
-import static com.commercetools.project.sync.CliRunner.VERSION_OPTION_SHORT;
+import static com.commercetools.project.sync.CliRunner.*;
 import static com.commercetools.project.sync.util.SyncUtils.APPLICATION_DEFAULT_NAME;
 import static com.commercetools.project.sync.util.SyncUtils.APPLICATION_DEFAULT_VERSION;
 import static com.commercetools.project.sync.util.TestUtils.getMockedClock;
@@ -243,6 +235,59 @@ class CliRunnerTest {
   }
 
   @Test
+  void run_WithRunnerName_ShouldProcessSyncOption() {
+    // preparation
+    final SphereClient sourceClient = mock(SphereClient.class);
+    when(sourceClient.getConfig()).thenReturn(SphereClientConfig.of("foo", "foo", "foo"));
+
+    final SphereClient targetClient = mock(SphereClient.class);
+    when(targetClient.getConfig()).thenReturn(SphereClientConfig.of("bar", "bar", "bar"));
+
+    when(sourceClient.execute(any(ProductQuery.class)))
+        .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
+
+    final SyncerFactory syncerFactory =
+        spy(SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock()));
+
+    stubClientsCustomObjectService(targetClient, ZonedDateTime.now());
+
+    // test
+    CliRunner.of().run(new String[] {"--sync", "products", "-r", "Runner123"}, syncerFactory);
+
+    // assertions
+    verify(syncerFactory, times(1)).sync("products", "Runner123");
+    verify(sourceClient, times(1)).execute(any(ProductQuery.class));
+    verify(syncerFactory, never()).syncAll(null);
+  }
+
+  @Test
+  void run_WithRunnerNameLong_ShouldProcessSyncOption() {
+    // preparation
+    final SphereClient sourceClient = mock(SphereClient.class);
+    when(sourceClient.getConfig()).thenReturn(SphereClientConfig.of("foo", "foo", "foo"));
+
+    final SphereClient targetClient = mock(SphereClient.class);
+    when(targetClient.getConfig()).thenReturn(SphereClientConfig.of("bar", "bar", "bar"));
+
+    when(sourceClient.execute(any(ProductQuery.class)))
+        .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
+
+    final SyncerFactory syncerFactory =
+        spy(SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock()));
+
+    stubClientsCustomObjectService(targetClient, ZonedDateTime.now());
+
+    // test
+    CliRunner.of()
+        .run(new String[] {"--sync", "products", "--runnerName", "Runner123"}, syncerFactory);
+
+    // assertions
+    verify(syncerFactory, times(1)).sync("products", "Runner123");
+    verify(sourceClient, times(1)).execute(any(ProductQuery.class));
+    verify(syncerFactory, never()).syncAll(null);
+  }
+
+  @Test
   void run_WithUnknownArgument_ShouldPrintAndLogError() {
     // preparation
     final SyncerFactory syncerFactory =
@@ -286,6 +331,10 @@ class CliRunnerTest {
             format(
                 "-%s,--%s <arg> %s",
                 SYNC_MODULE_OPTION_SHORT, SYNC_MODULE_OPTION_LONG, SYNC_MODULE_OPTION_DESCRIPTION))
+        .contains(
+            format(
+                "-%s,--%s <arg> %s",
+                RUNNER_NAME_OPTION_SHORT, RUNNER_NAME_OPTION_LONG, RUNNER_NAME_OPTION_DESCRIPTION))
         .contains(
             format(
                 "-%s,--%s %s",
