@@ -22,4 +22,6 @@ public interface CustomObjectService {
       @Nonnull final LastSyncCustomObject lastSyncCustomObject);
 
   CustomObjectService attachRunnerName(String runnerName);
+
+  CustomObjectService attachMethodName(String methodName);
 }

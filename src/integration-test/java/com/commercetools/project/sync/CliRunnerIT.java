@@ -67,12 +67,13 @@ import org.junit.jupiter.api.Test;
 import uk.org.lidalia.slf4jtest.TestLogger;
 import uk.org.lidalia.slf4jtest.TestLoggerFactory;
 
-class CliRunnerIT {
+class MOCK_RUNNER_NAME {
 
   private static final TestLogger syncerTestLogger = TestLoggerFactory.getTestLogger(Syncer.class);
   private static final TestLogger cliRunnerTestLogger =
       TestLoggerFactory.getTestLogger(CliRunner.class);
   private static final String RESOURCE_KEY = "foo";
+  static String defaultTestRunnerName = "testRunner";
 
   @BeforeAll
   static void setupSuite() {
@@ -216,7 +217,8 @@ class CliRunnerIT {
         assertProductTypesAreSyncedCorrectly(postTargetClient);
 
         final ZonedDateTime lastSyncTimestamp =
-            assertCurrentCtpTimestampGeneratorAndGetLastModifiedAt(postTargetClient);
+            assertCurrentCtpTimestampGeneratorAndGetLastModifiedAt(
+                postTargetClient, "ProductTypeSync");
 
         final String sourceProjectKey = postSourceClient.getConfig().getProjectKey();
 
@@ -252,7 +254,8 @@ class CliRunnerIT {
 
     final CustomObjectQuery<LastSyncCustomObject> lastSyncQuery =
         CustomObjectQuery.of(LastSyncCustomObject.class)
-            .byContainer(format("commercetools-project-sync.%s", syncModule));
+            .byContainer(
+                format("commercetools-project-sync.%s.%s", defaultTestRunnerName, syncModule));
 
     final PagedQueryResult<CustomObject<LastSyncCustomObject>> lastSyncResult =
         targetClient.execute(lastSyncQuery).toCompletableFuture().join();
@@ -274,12 +277,14 @@ class CliRunnerIT {
 
   @Nonnull
   private ZonedDateTime assertCurrentCtpTimestampGeneratorAndGetLastModifiedAt(
-      @Nonnull final SphereClient targetClient) {
+      @Nonnull final SphereClient targetClient, String syncMethodName) {
 
     final CustomObjectQuery<String> timestampGeneratorQuery =
         CustomObjectQuery.of(String.class)
             .byContainer(
-                format("commercetools-project-sync.%s", TIMESTAMP_GENERATOR_CONTAINER_POSTFIX));
+                format(
+                    "commercetools-project-sync.%s.%s.%s",
+                    defaultTestRunnerName, syncMethodName, TIMESTAMP_GENERATOR_CONTAINER_POSTFIX));
 
     final PagedQueryResult<CustomObject<String>> currentCtpTimestampGeneratorResults =
         targetClient.execute(timestampGeneratorQuery).toCompletableFuture().join();
@@ -306,7 +311,7 @@ class CliRunnerIT {
             SyncerFactory.of(() -> sourceClient, () -> targetClient, Clock.systemDefaultZone());
 
         // test
-        CliRunner.of().run(new String[] {"-s", "all"}, syncerFactory);
+        CliRunner.of().run(new String[] {"-s", "all", "-r", defaultTestRunnerName}, syncerFactory);
       }
     }
 
@@ -319,7 +324,7 @@ class CliRunnerIT {
         assertAllSyncersLoggingEvents(syncerTestLogger, cliRunnerTestLogger, 1);
 
         assertAllResourcesAreSyncedToTarget(postTargetClient);
-        assertCurrentCtpTimestampGeneratorAndGetLastModifiedAt(postTargetClient);
+        assertCurrentCtpTimestampGeneratorAndGetLastModifiedAt(postTargetClient, "ProductTypeSync");
 
         final String sourceProjectKey = postSourceClient.getConfig().getProjectKey();
 
@@ -345,7 +350,8 @@ class CliRunnerIT {
 
     final CustomObjectQuery<LastSyncCustomObject> lastSyncQuery =
         CustomObjectQuery.of(LastSyncCustomObject.class)
-            .byContainer(format("commercetools-project-sync.%s", syncModule));
+            .byContainer(
+                format("commercetools-project-sync.%s.%s", defaultTestRunnerName, syncModule));
 
     final PagedQueryResult<CustomObject<LastSyncCustomObject>> lastSyncResult =
         targetClient.execute(lastSyncQuery).toCompletableFuture().join();

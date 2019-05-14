@@ -20,6 +20,7 @@ import java.util.Optional;
 import java.util.concurrent.CompletionStage;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
+import org.apache.commons.lang3.StringUtils;
 
 public class CustomObjectServiceImpl implements CustomObjectService {
 
@@ -30,6 +31,7 @@ public class CustomObjectServiceImpl implements CustomObjectService {
 
   private SphereClient sphereClient;
   private String runnerName = DEFAULT_RUNNER_NAME;
+  private String methodName = StringUtils.EMPTY;
 
   public CustomObjectServiceImpl(@Nonnull final SphereClient sphereClient) {
     this.sphereClient = sphereClient;
@@ -41,7 +43,12 @@ public class CustomObjectServiceImpl implements CustomObjectService {
 
     final CustomObjectDraft<String> currentTimestampDraft =
         CustomObjectDraft.ofUnversionedUpsert(
-            format("%s.%s.%s", getApplicationName(), runnerName, TIMESTAMP_GENERATOR_CONTAINER_POSTFIX),
+            format(
+                "%s.%s.%s.%s",
+                getApplicationName(),
+                runnerName,
+                methodName,
+                TIMESTAMP_GENERATOR_CONTAINER_POSTFIX),
             TIMESTAMP_GENERATOR_KEY,
             TIMESTAMP_GENERATOR_VALUE,
             String.class);
@@ -100,11 +107,20 @@ public class CustomObjectServiceImpl implements CustomObjectService {
     return this;
   }
 
+  @Override
+  public CustomObjectService attachMethodName(String methodName) {
+    if (methodName != null && !methodName.isEmpty()) {
+      this.methodName = methodName;
+    }
+    return this;
+  }
+
   @Nonnull
   private String buildLastSyncTimestampContainerName(@Nonnull final String syncModuleName) {
 
     final String syncModuleNameWithLowerCasedFirstChar = lowerCaseFirstChar(syncModuleName);
-    return format("%s.%s.%s", getApplicationName(), runnerName, syncModuleNameWithLowerCasedFirstChar);
+    return format(
+        "%s.%s.%s", getApplicationName(), runnerName, syncModuleNameWithLowerCasedFirstChar);
   }
 
   @Nonnull

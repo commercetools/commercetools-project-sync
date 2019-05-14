@@ -211,7 +211,7 @@ class CliRunnerTest {
     CliRunner.of().run(new String[] {"-s", "products"}, syncerFactory);
 
     // assertions
-    verify(syncerFactory, times(1)).sync("products", defaultTestRunnerName);
+    verify(syncerFactory, times(1)).sync("products", null);
     verify(sourceClient, times(1)).execute(any(ProductQuery.class));
     verify(syncerFactory, never()).syncAll(defaultTestRunnerName);
   }
@@ -237,9 +237,9 @@ class CliRunnerTest {
     CliRunner.of().run(new String[] {"--sync", "products"}, syncerFactory);
 
     // assertions
-    verify(syncerFactory, times(1)).sync("products", defaultTestRunnerName);
+    verify(syncerFactory, times(1)).sync("products", null);
     verify(sourceClient, times(1)).execute(any(ProductQuery.class));
-    verify(syncerFactory, never()).syncAll(defaultTestRunnerName);
+    verify(syncerFactory, never()).syncAll(null);
   }
 
   @Test
@@ -253,8 +253,8 @@ class CliRunnerTest {
     CliRunner.of().run(new String[] {"-u"}, syncerFactory);
 
     // Assert error log
-    verify(syncerFactory, never()).sync(any(), defaultTestRunnerName);
-    verify(syncerFactory, never()).syncAll(defaultTestRunnerName);
+    verify(syncerFactory, never()).sync(any(), any());
+    verify(syncerFactory, never()).syncAll(any());
   }
 
   @Test
@@ -290,7 +290,7 @@ class CliRunnerTest {
             format(
                 "-%s,--%s %s",
                 VERSION_OPTION_SHORT, VERSION_OPTION_LONG, VERSION_OPTION_DESCRIPTION));
-    verify(syncerFactory, never()).sync(any(), defaultTestRunnerName);
+    verify(syncerFactory, never()).sync(any(), any());
   }
 
   @Test
@@ -322,7 +322,7 @@ class CliRunnerTest {
     CliRunner.of().run(new String[] {"-s", "all"}, syncerFactory);
 
     // assertions
-    verify(syncerFactory, times(1)).syncAll(defaultTestRunnerName);
+    verify(syncerFactory, times(1)).syncAll(null);
     verify(sourceClient, times(1)).execute(any(ProductTypeQuery.class));
     verify(sourceClient, times(1)).execute(any(TypeQuery.class));
     verify(sourceClient, times(1)).execute(any(CategoryQuery.class));
@@ -359,7 +359,7 @@ class CliRunnerTest {
     CliRunner.of().run(new String[] {"-s", "all"}, syncerFactory);
 
     // assertions
-    verify(syncerFactory, times(1)).syncAll(defaultTestRunnerName);
+    verify(syncerFactory, times(1)).syncAll(null);
 
     final InOrder inOrder = Mockito.inOrder(sourceClient);
 

@@ -113,7 +113,9 @@ public abstract class Syncer<
               syncModuleName, sourceProjectKey, targetProjectKey));
     }
 
-    return customObjectService.attachRunnerName(runnerName)
+    return customObjectService
+        .attachRunnerName(runnerName)
+        .attachMethodName(syncModuleName)
         .getCurrentCtpTimestamp()
         .thenCompose(
             currentCtpTimestamp ->

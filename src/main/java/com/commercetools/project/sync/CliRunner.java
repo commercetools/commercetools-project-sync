@@ -46,7 +46,8 @@ final class CliRunner {
           SYNC_MODULE_OPTION_PRODUCT_SYNC,
           SYNC_MODULE_OPTION_INVENTORY_ENTRY_SYNC,
           SYNC_MODULE_OPTION_ALL);
-  static final String RUNNER_NAME_OPTION_DESCRIPTION = "Unique identifer name to run parallel sync in same project. ";
+  static final String RUNNER_NAME_OPTION_DESCRIPTION =
+      "Unique identifer name to run parallel sync in same project. ";
   static final String HELP_OPTION_DESCRIPTION = "Print help information.";
   static final String VERSION_OPTION_DESCRIPTION = "Print the version of the application.";
 

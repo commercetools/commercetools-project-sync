@@ -62,13 +62,20 @@ final class SyncerFactory {
 
     final List<CompletableFuture<Void>> typeAndProductTypeSync =
         asList(
-            ProductTypeSyncer.of(sourceClient, targetClient, clock).sync(runnerName).toCompletableFuture(),
-            TypeSyncer.of(sourceClient, targetClient, clock).sync(runnerName).toCompletableFuture());
+            ProductTypeSyncer.of(sourceClient, targetClient, clock)
+                .sync(runnerName)
+                .toCompletableFuture(),
+            TypeSyncer.of(sourceClient, targetClient, clock)
+                .sync(runnerName)
+                .toCompletableFuture());
 
     return CompletableFuture.allOf(typeAndProductTypeSync.toArray(new CompletableFuture[0]))
-        .thenCompose(ignored -> CategorySyncer.of(sourceClient, targetClient, clock).sync(runnerName))
-        .thenCompose(ignored -> ProductSyncer.of(sourceClient, targetClient, clock).sync(runnerName))
-        .thenCompose(ignored -> InventoryEntrySyncer.of(sourceClient, targetClient, clock).sync(runnerName))
+        .thenCompose(
+            ignored -> CategorySyncer.of(sourceClient, targetClient, clock).sync(runnerName))
+        .thenCompose(
+            ignored -> ProductSyncer.of(sourceClient, targetClient, clock).sync(runnerName))
+        .thenCompose(
+            ignored -> InventoryEntrySyncer.of(sourceClient, targetClient, clock).sync(runnerName))
         .whenComplete((syncResult, throwable) -> closeClients());
   }
 
