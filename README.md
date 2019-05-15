@@ -21,6 +21,7 @@ Dockerized CLI application which allows to automatically sync different resource
 ### Prerequisites
  
  - Make sure you have `JDK 8` installed.
+ - Intellij IDEA version 2018.2 or higher version
  - The following fields are **required** to be set on the following resources (and sub-resources) that should be synced:
     - `Product`
         - `key`
@@ -47,9 +48,10 @@ Dockerized CLI application which allows to automatically sync different resource
 
    ```bash
    usage: commercetools-project-sync
-    -h,--help         Print help information.
-    -s,--sync <arg>   Choose one of the following modules to run: "types", "productTypes", "categories", "products", "inventoryEntries" or "all" (will run all the modules).
-    -v,--version      Print the version of the application.
+    -h,--help               Print help information.
+    -s,--sync <arg>         Choose one of the following modules to run: "types", "productTypes", "categories", "products", "inventoryEntries" or "all" (will run all the modules).
+    -r,--runnerName <arg>   Unique identifer name to run parallel sync in same project. (optional parameter)
+    -v,--version            Print the version of the application.
    ```
 
 #### Running the Docker Image
@@ -107,6 +109,11 @@ commercetools/commercetools-project-sync:1.1.0 -s all
 - To run the inventoryEntry sync
    ```bash
    docker run commercetools/commercetools-project-sync:1.1.0 -s inventoryEntries
+   ```   
+       
+- To run the all sync with unique runner name
+   ```bash
+   docker run commercetools/commercetools-project-sync:1.1.0 -s all -r myRunnerName
    ```     
    
 
