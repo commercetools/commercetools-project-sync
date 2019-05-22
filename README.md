@@ -52,7 +52,7 @@ Dockerized CLI application which allows to automatically sync different resource
    usage: commercetools-project-sync
     -h,--help               Print help information.
     -s,--sync <arg>         Choose one of the following modules to run: "types", "productTypes", "categories", "products", "inventoryEntries" or "all" (will run all the modules).
-    -r,--runnerName <arg>   Unique identifer name to run parallel sync in same project. (optional parameter)
+    -r,--runnerName <arg>   Unique identifer to run parallel sync in same project. (optional parameter)
     -v,--version            Print the version of the application.
    ```
 
