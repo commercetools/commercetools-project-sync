@@ -21,7 +21,6 @@ Dockerized CLI application which allows to automatically sync different resource
 ### Prerequisites
  
  - Make sure you have `JDK 8` installed.
- - Intellij IDEA version 2018.2 or higher version
  - The following fields are **required** to be set on the following resources (and sub-resources) that should be synced:
     - `Product`
         - `key`
@@ -43,6 +42,9 @@ Dockerized CLI application which allows to automatically sync different resource
    export TARGET_CLIENT_ID = xxxxxxxxxxxxxxx
    export TARGET_CLIENT_SECRET = xxxxxxxxxxx
    ```
+
+### Notes
+ - Use Intellij IDEA version 2018.2 or higher
 
 ### Usage
 
