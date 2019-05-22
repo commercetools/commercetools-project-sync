@@ -67,7 +67,7 @@ import org.junit.jupiter.api.Test;
 import uk.org.lidalia.slf4jtest.TestLogger;
 import uk.org.lidalia.slf4jtest.TestLoggerFactory;
 
-class MOCK_RUNNER_NAME {
+class CliRunnerIT {
 
   private static final TestLogger syncerTestLogger = TestLoggerFactory.getTestLogger(Syncer.class);
   private static final TestLogger cliRunnerTestLogger =
