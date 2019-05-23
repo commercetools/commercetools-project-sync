@@ -47,8 +47,8 @@ final class CliRunner {
           SYNC_MODULE_OPTION_INVENTORY_ENTRY_SYNC,
           SYNC_MODULE_OPTION_ALL);
   static final String RUNNER_NAME_OPTION_DESCRIPTION =
-      "name for the running sync instance. Please make sure the name is unique otherwise running to sync instances " +
-              "with the same name would lead to an unexpected behaviour. (optional parameter) default: runnerName ";
+      "name for the running sync instance. Please make sure the name is unique otherwise running to sync instances "
+          + "with the same name would lead to an unexpected behaviour. (optional parameter) default: runnerName ";
   static final String HELP_OPTION_DESCRIPTION = "Print help information.";
   static final String VERSION_OPTION_DESCRIPTION = "Print the version of the application.";
 
