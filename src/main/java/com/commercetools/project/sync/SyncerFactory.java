@@ -55,7 +55,7 @@ final class SyncerFactory {
   }
 
   @Nonnull
-  CompletableFuture<Void> syncAll(String runnerName) {
+  CompletableFuture<Void> syncAll(@Nullable final String runnerName) {
 
     final SphereClient sourceClient = sourceClientSupplier.get();
     final SphereClient targetClient = targetClientSupplier.get();
@@ -85,7 +85,8 @@ final class SyncerFactory {
   }
 
   @Nonnull
-  CompletionStage<Void> sync(@Nullable final String syncOptionValue, String runnerName) {
+  CompletionStage<Void> sync(
+      @Nullable final String syncOptionValue, @Nullable final String runnerName) {
 
     if (isBlank(syncOptionValue)) {
       final String errorMessage =

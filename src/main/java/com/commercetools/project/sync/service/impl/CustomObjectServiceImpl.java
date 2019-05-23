@@ -1,5 +1,10 @@
 package com.commercetools.project.sync.service.impl;
 
+import static com.commercetools.project.sync.util.SyncUtils.DEFAULT_METHOD_NAME;
+import static com.commercetools.project.sync.util.SyncUtils.DEFAULT_RUNNER_NAME;
+import static com.commercetools.project.sync.util.SyncUtils.getApplicationName;
+import static java.lang.String.format;
+
 import com.commercetools.project.sync.model.LastSyncCustomObject;
 import com.commercetools.project.sync.service.CustomObjectService;
 import io.sphere.sdk.client.SphereClient;
@@ -10,18 +15,12 @@ import io.sphere.sdk.customobjects.queries.CustomObjectQuery;
 import io.sphere.sdk.models.ResourceView;
 import io.sphere.sdk.queries.PagedQueryResult;
 import io.sphere.sdk.queries.QueryPredicate;
-
-import javax.annotation.Nonnull;
 import java.time.ZonedDateTime;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.concurrent.CompletionStage;
 import java.util.stream.Stream;
-
-import static com.commercetools.project.sync.util.SyncUtils.DEFAULT_METHOD_NAME;
-import static com.commercetools.project.sync.util.SyncUtils.DEFAULT_RUNNER_NAME;
-import static com.commercetools.project.sync.util.SyncUtils.getApplicationName;
-import static java.lang.String.format;
+import javax.annotation.Nonnull;
 
 public class CustomObjectServiceImpl implements CustomObjectService {
 
