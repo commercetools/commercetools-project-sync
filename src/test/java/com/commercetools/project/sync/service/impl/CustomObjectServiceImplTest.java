@@ -1,15 +1,5 @@
 package com.commercetools.project.sync.service.impl;
 
-import static com.commercetools.project.sync.util.SyncUtils.DEFAULT_METHOD_NAME;
-import static com.commercetools.project.sync.util.SyncUtils.DEFAULT_RUNNER_NAME;
-import static java.util.Collections.singletonList;
-import static java.util.Optional.empty;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.when;
-
 import com.commercetools.project.sync.model.LastSyncCustomObject;
 import com.commercetools.project.sync.service.CustomObjectService;
 import com.commercetools.sync.products.helpers.ProductSyncStatistics;
@@ -21,12 +11,23 @@ import io.sphere.sdk.customobjects.commands.CustomObjectUpsertCommand;
 import io.sphere.sdk.customobjects.queries.CustomObjectQuery;
 import io.sphere.sdk.queries.PagedQueryResult;
 import io.sphere.sdk.utils.CompletableFutureUtils;
+import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
+
 import java.time.ZonedDateTime;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
-import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
+
+import static com.commercetools.project.sync.util.SyncUtils.DEFAULT_METHOD_NAME;
+import static com.commercetools.project.sync.util.SyncUtils.DEFAULT_RUNNER_NAME;
+import static java.util.Collections.singletonList;
+import static java.util.Optional.empty;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.when;
 
 class CustomObjectServiceImplTest {
 
@@ -221,14 +222,12 @@ class CustomObjectServiceImplTest {
     when(customObject.getLastModifiedAt()).thenReturn(ZonedDateTime.now());
 
     final CustomObjectService customObjectService = new CustomObjectServiceImpl(client);
-    CustomObjectService customObjectServiceWithAttachedRunnerName =
-        customObjectService.attachRunnerName("testRunnerName");
 
     final LastSyncCustomObject<ProductSyncStatistics> lastSyncCustomObject =
         LastSyncCustomObject.of(ZonedDateTime.now(), new ProductSyncStatistics(), 100);
 
     // test
-    customObjectServiceWithAttachedRunnerName.createLastSyncCustomObject(
+    customObjectService.createLastSyncCustomObject(
         "foo", "bar", "testRunnerName", lastSyncCustomObject);
 
     // assertions
@@ -248,42 +247,12 @@ class CustomObjectServiceImplTest {
     when(customObject.getLastModifiedAt()).thenReturn(ZonedDateTime.now());
 
     final CustomObjectService customObjectService = new CustomObjectServiceImpl(client);
-    CustomObjectService customObjectServiceWithAttachedRunnerName =
-        customObjectService.attachRunnerName("");
 
     final LastSyncCustomObject<ProductSyncStatistics> lastSyncCustomObject =
         LastSyncCustomObject.of(ZonedDateTime.now(), new ProductSyncStatistics(), 100);
 
     // test
-    customObjectServiceWithAttachedRunnerName.createLastSyncCustomObject(
-        "foo", "bar", DEFAULT_RUNNER_NAME, lastSyncCustomObject);
-
-    // assertions
-    assertThat(((CustomObjectDraft) arg.getValue().getDraft()).getContainer())
-        .contains(DEFAULT_RUNNER_NAME);
-  }
-
-  @Test
-  void attachRunnerName_WithNullRunnerName_ShouldRunWithDefaultRunnerName() {
-    // preparation
-    final SphereClient client = mock(SphereClient.class);
-    ArgumentCaptor<CustomObjectUpsertCommand> arg =
-        ArgumentCaptor.forClass(CustomObjectUpsertCommand.class);
-    when(client.execute(arg.capture())).thenReturn(null);
-
-    final CustomObject<LastSyncCustomObject> customObject = mock(CustomObject.class);
-    when(customObject.getLastModifiedAt()).thenReturn(ZonedDateTime.now());
-
-    final CustomObjectService customObjectService = new CustomObjectServiceImpl(client);
-    CustomObjectService customObjectServiceWithAttachedRunnerName =
-        customObjectService.attachRunnerName(null);
-
-    final LastSyncCustomObject<ProductSyncStatistics> lastSyncCustomObject =
-        LastSyncCustomObject.of(ZonedDateTime.now(), new ProductSyncStatistics(), 100);
-
-    // test
-    customObjectServiceWithAttachedRunnerName.createLastSyncCustomObject(
-        "foo", "bar", DEFAULT_RUNNER_NAME, lastSyncCustomObject);
+    customObjectService.createLastSyncCustomObject("foo", "bar", "", lastSyncCustomObject);
 
     // assertions
     assertThat(((CustomObjectDraft) arg.getValue().getDraft()).getContainer())

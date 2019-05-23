@@ -6,7 +6,6 @@ import java.time.ZonedDateTime;
 import java.util.Optional;
 import java.util.concurrent.CompletionStage;
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 
 public interface CustomObjectService {
   @Nonnull
@@ -25,10 +24,4 @@ public interface CustomObjectService {
       @Nonnull final String syncModuleName,
       @Nonnull final String runnerName,
       @Nonnull final LastSyncCustomObject lastSyncCustomObject);
-
-  @Nonnull
-  CustomObjectService attachRunnerName(@Nullable final String runnerName);
-
-  @Nonnull
-  CustomObjectService attachMethodName(@Nullable final String methodName);
 }

@@ -21,7 +21,6 @@ import java.util.Optional;
 import java.util.concurrent.CompletionStage;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 
 public class CustomObjectServiceImpl implements CustomObjectService {
 
@@ -31,8 +30,6 @@ public class CustomObjectServiceImpl implements CustomObjectService {
   private static final long MINUTES_BEFORE_CURRENT_TIMESTAMP = 2;
 
   private SphereClient sphereClient;
-  private String runnerName = DEFAULT_RUNNER_NAME;
-  private String methodName = DEFAULT_METHOD_NAME;
 
   public CustomObjectServiceImpl(@Nonnull final SphereClient sphereClient) {
     this.sphereClient = sphereClient;
@@ -104,29 +101,16 @@ public class CustomObjectServiceImpl implements CustomObjectService {
     return createCustomObject(lastSyncCustomObjectDraft);
   }
 
-  @Override
-  public CustomObjectService attachRunnerName(@Nullable final String runnerName) {
-    if (runnerName != null && !runnerName.isEmpty()) {
-      this.runnerName = runnerName;
-    }
-    return this;
-  }
-
-  @Override
-  public CustomObjectService attachMethodName(@Nullable final String methodName) {
-    if (methodName != null && !methodName.isEmpty()) {
-      this.methodName = methodName;
-    }
-    return this;
-  }
-
   @Nonnull
   private String buildLastSyncTimestampContainerName(
       @Nonnull final String syncModuleName, @Nonnull final String runnerName) {
 
     final String syncModuleNameWithLowerCasedFirstChar = lowerCaseFirstChar(syncModuleName);
     return format(
-        "%s.%s.%s", getApplicationName(), runnerName, syncModuleNameWithLowerCasedFirstChar);
+        "%s.%s.%s",
+        getApplicationName(),
+        runnerName.isEmpty() ? DEFAULT_RUNNER_NAME : runnerName,
+        syncModuleNameWithLowerCasedFirstChar);
   }
 
   @Nonnull
