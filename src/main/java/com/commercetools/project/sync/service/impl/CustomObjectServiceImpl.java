@@ -40,15 +40,16 @@ public class CustomObjectServiceImpl implements CustomObjectService {
 
   @Nonnull
   @Override
-  public CompletionStage<ZonedDateTime> getCurrentCtpTimestamp() {
+  public CompletionStage<ZonedDateTime> getCurrentCtpTimestamp(
+      @Nonnull String runnerName, @Nonnull String methodName) {
 
     final CustomObjectDraft<String> currentTimestampDraft =
         CustomObjectDraft.ofUnversionedUpsert(
             format(
                 "%s.%s.%s.%s",
                 getApplicationName(),
-                runnerName,
-                methodName,
+                runnerName.isEmpty() ? DEFAULT_RUNNER_NAME : runnerName,
+                methodName.isEmpty() ? DEFAULT_METHOD_NAME : methodName,
                 TIMESTAMP_GENERATOR_CONTAINER_POSTFIX),
             TIMESTAMP_GENERATOR_KEY,
             TIMESTAMP_GENERATOR_VALUE,
@@ -68,13 +69,15 @@ public class CustomObjectServiceImpl implements CustomObjectService {
   @Nonnull
   @Override
   public CompletionStage<Optional<CustomObject<LastSyncCustomObject>>> getLastSyncCustomObject(
-      @Nonnull final String sourceProjectKey, @Nonnull final String syncModuleName) {
+      @Nonnull final String sourceProjectKey,
+      @Nonnull final String syncModuleName,
+      @Nonnull final String runnerName) {
 
     final QueryPredicate<CustomObject<LastSyncCustomObject>> queryPredicate =
         QueryPredicate.of(
             format(
                 "container=\"%s\" AND key=\"%s\"",
-                buildLastSyncTimestampContainerName(syncModuleName), sourceProjectKey));
+                buildLastSyncTimestampContainerName(syncModuleName, runnerName), sourceProjectKey));
 
     return sphereClient
         .execute(CustomObjectQuery.of(LastSyncCustomObject.class).plusPredicates(queryPredicate))
@@ -88,11 +91,12 @@ public class CustomObjectServiceImpl implements CustomObjectService {
   public CompletionStage<CustomObject<LastSyncCustomObject>> createLastSyncCustomObject(
       @Nonnull final String sourceProjectKey,
       @Nonnull final String syncModuleName,
+      @Nonnull final String runnerName,
       @Nonnull final LastSyncCustomObject lastSyncCustomObject) {
 
     final CustomObjectDraft<LastSyncCustomObject> lastSyncCustomObjectDraft =
         CustomObjectDraft.ofUnversionedUpsert(
-            buildLastSyncTimestampContainerName(syncModuleName),
+            buildLastSyncTimestampContainerName(syncModuleName, runnerName),
             sourceProjectKey,
             lastSyncCustomObject,
             LastSyncCustomObject.class);
@@ -117,7 +121,8 @@ public class CustomObjectServiceImpl implements CustomObjectService {
   }
 
   @Nonnull
-  private String buildLastSyncTimestampContainerName(@Nonnull final String syncModuleName) {
+  private String buildLastSyncTimestampContainerName(
+      @Nonnull final String syncModuleName, @Nonnull final String runnerName) {
 
     final String syncModuleNameWithLowerCasedFirstChar = lowerCaseFirstChar(syncModuleName);
     return format(

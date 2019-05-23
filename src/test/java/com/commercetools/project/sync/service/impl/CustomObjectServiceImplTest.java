@@ -43,7 +43,7 @@ class CustomObjectServiceImplTest {
 
     // test
     final CompletionStage<ZonedDateTime> ctpTimestamp =
-        customObjectService.getCurrentCtpTimestamp();
+        customObjectService.getCurrentCtpTimestamp(DEFAULT_RUNNER_NAME, DEFAULT_METHOD_NAME);
 
     // assertions
     assertThat(ctpTimestamp)
@@ -65,7 +65,7 @@ class CustomObjectServiceImplTest {
 
     // test
     final CompletionStage<ZonedDateTime> ctpTimestamp =
-        customObjectService.getCurrentCtpTimestamp();
+        customObjectService.getCurrentCtpTimestamp(DEFAULT_RUNNER_NAME, DEFAULT_METHOD_NAME);
 
     // assertions
     assertThat(ctpTimestamp)
@@ -94,7 +94,7 @@ class CustomObjectServiceImplTest {
 
     // test
     final CompletionStage<Optional<CustomObject<LastSyncCustomObject>>> lastSyncCustomObject =
-        customObjectService.getLastSyncCustomObject("foo", "bar");
+        customObjectService.getLastSyncCustomObject("foo", "bar", DEFAULT_RUNNER_NAME);
 
     // assertions
     assertThat(lastSyncCustomObject).isCompletedWithValue(Optional.of(customObject));
@@ -116,7 +116,7 @@ class CustomObjectServiceImplTest {
 
     // test
     final CompletionStage<Optional<CustomObject<LastSyncCustomObject>>> lastSyncCustomObject =
-        customObjectService.getLastSyncCustomObject("foo", "bar");
+        customObjectService.getLastSyncCustomObject("foo", "bar", DEFAULT_RUNNER_NAME);
 
     // assertions
     assertThat(lastSyncCustomObject).isCompletedWithValue(empty());
@@ -143,7 +143,7 @@ class CustomObjectServiceImplTest {
 
     // test
     final CompletionStage<Optional<CustomObject<LastSyncCustomObject>>> lastSyncCustomObject =
-        customObjectService.getLastSyncCustomObject("foo", "bar");
+        customObjectService.getLastSyncCustomObject("foo", "bar", DEFAULT_RUNNER_NAME);
 
     // assertions
     assertThat(lastSyncCustomObject)
@@ -171,7 +171,7 @@ class CustomObjectServiceImplTest {
 
     final CustomObject<LastSyncCustomObject> createdCustomObject =
         customObjectService
-            .createLastSyncCustomObject("foo", "bar", lastSyncCustomObject)
+            .createLastSyncCustomObject("foo", "bar", DEFAULT_RUNNER_NAME, lastSyncCustomObject)
             .toCompletableFuture()
             .join();
 
@@ -199,7 +199,8 @@ class CustomObjectServiceImplTest {
         LastSyncCustomObject.of(ZonedDateTime.now(), new ProductSyncStatistics(), 100);
 
     final CompletionStage<CustomObject<LastSyncCustomObject>> createdCustomObject =
-        customObjectService.createLastSyncCustomObject("foo", "bar", lastSyncCustomObject);
+        customObjectService.createLastSyncCustomObject(
+            "foo", "bar", DEFAULT_RUNNER_NAME, lastSyncCustomObject);
 
     // assertions
     assertThat(createdCustomObject)
@@ -228,7 +229,7 @@ class CustomObjectServiceImplTest {
 
     // test
     customObjectServiceWithAttachedRunnerName.createLastSyncCustomObject(
-        "foo", "bar", lastSyncCustomObject);
+        "foo", "bar", "testRunnerName", lastSyncCustomObject);
 
     // assertions
     assertThat(((CustomObjectDraft) arg.getValue().getDraft()).getContainer())
@@ -255,7 +256,7 @@ class CustomObjectServiceImplTest {
 
     // test
     customObjectServiceWithAttachedRunnerName.createLastSyncCustomObject(
-        "foo", "bar", lastSyncCustomObject);
+        "foo", "bar", DEFAULT_RUNNER_NAME, lastSyncCustomObject);
 
     // assertions
     assertThat(((CustomObjectDraft) arg.getValue().getDraft()).getContainer())
@@ -282,7 +283,7 @@ class CustomObjectServiceImplTest {
 
     // test
     customObjectServiceWithAttachedRunnerName.createLastSyncCustomObject(
-        "foo", "bar", lastSyncCustomObject);
+        "foo", "bar", DEFAULT_RUNNER_NAME, lastSyncCustomObject);
 
     // assertions
     assertThat(((CustomObjectDraft) arg.getValue().getDraft()).getContainer())
@@ -302,11 +303,9 @@ class CustomObjectServiceImplTest {
     when(customObject.getLastModifiedAt()).thenReturn(ZonedDateTime.now());
 
     final CustomObjectService customObjectService = new CustomObjectServiceImpl(client);
-    CustomObjectService customObjectServiceWithAttachedMethodName =
-        customObjectService.attachMethodName(null);
 
     // test
-    customObjectServiceWithAttachedMethodName.getCurrentCtpTimestamp();
+    customObjectService.getCurrentCtpTimestamp(DEFAULT_RUNNER_NAME, DEFAULT_METHOD_NAME);
 
     // assertions
     assertThat(((CustomObjectDraft) arg.getValue().getDraft()).getContainer())
@@ -326,11 +325,9 @@ class CustomObjectServiceImplTest {
     when(customObject.getLastModifiedAt()).thenReturn(ZonedDateTime.now());
 
     final CustomObjectService customObjectService = new CustomObjectServiceImpl(client);
-    CustomObjectService customObjectServiceWithAttachedMethodName =
-        customObjectService.attachMethodName("");
 
     // test
-    customObjectServiceWithAttachedMethodName.getCurrentCtpTimestamp();
+    customObjectService.getCurrentCtpTimestamp(DEFAULT_RUNNER_NAME, "");
 
     // assertions
     assertThat(((CustomObjectDraft) arg.getValue().getDraft()).getContainer())
@@ -350,11 +347,9 @@ class CustomObjectServiceImplTest {
     when(customObject.getLastModifiedAt()).thenReturn(ZonedDateTime.now());
 
     final CustomObjectService customObjectService = new CustomObjectServiceImpl(client);
-    CustomObjectService customObjectServiceWithAttachedMethodName =
-        customObjectService.attachMethodName("Test");
 
     // test
-    customObjectServiceWithAttachedMethodName.getCurrentCtpTimestamp();
+    customObjectService.getCurrentCtpTimestamp("Test", DEFAULT_METHOD_NAME);
 
     // assertions
     assertThat(((CustomObjectDraft) arg.getValue().getDraft()).getContainer()).contains(".Test.");
