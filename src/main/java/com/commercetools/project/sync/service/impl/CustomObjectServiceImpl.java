@@ -21,6 +21,7 @@ import java.util.Optional;
 import java.util.concurrent.CompletionStage;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 public class CustomObjectServiceImpl implements CustomObjectService {
 
@@ -100,7 +101,7 @@ public class CustomObjectServiceImpl implements CustomObjectService {
   }
 
   @Override
-  public CustomObjectService attachRunnerName(String runnerName) {
+  public CustomObjectService attachRunnerName(@Nullable final String runnerName) {
     if (runnerName != null && !runnerName.isEmpty()) {
       this.runnerName = runnerName;
     }
@@ -108,7 +109,7 @@ public class CustomObjectServiceImpl implements CustomObjectService {
   }
 
   @Override
-  public CustomObjectService attachMethodName(String methodName) {
+  public CustomObjectService attachMethodName(@Nullable final String methodName) {
     if (methodName != null && !methodName.isEmpty()) {
       this.methodName = methodName;
     }
