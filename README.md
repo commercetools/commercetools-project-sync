@@ -113,7 +113,7 @@ commercetools/commercetools-project-sync:1.1.0 -s all
    docker run commercetools/commercetools-project-sync:1.1.0 -s inventoryEntries
    ```   
        
-- To run the all sync with unique runner name
+- To run all sync modules using a runner name
    ```bash
    docker run commercetools/commercetools-project-sync:1.1.0 -s all -r myRunnerName
    ```     
