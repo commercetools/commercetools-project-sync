@@ -1,5 +1,15 @@
 package com.commercetools.project.sync.service.impl;
 
+import static com.commercetools.project.sync.util.SyncUtils.DEFAULT_METHOD_NAME;
+import static com.commercetools.project.sync.util.SyncUtils.DEFAULT_RUNNER_NAME;
+import static java.util.Collections.singletonList;
+import static java.util.Optional.empty;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.when;
+
 import com.commercetools.project.sync.model.LastSyncCustomObject;
 import com.commercetools.project.sync.service.CustomObjectService;
 import com.commercetools.sync.products.helpers.ProductSyncStatistics;
@@ -11,23 +21,12 @@ import io.sphere.sdk.customobjects.commands.CustomObjectUpsertCommand;
 import io.sphere.sdk.customobjects.queries.CustomObjectQuery;
 import io.sphere.sdk.queries.PagedQueryResult;
 import io.sphere.sdk.utils.CompletableFutureUtils;
-import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
-
 import java.time.ZonedDateTime;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
-
-import static com.commercetools.project.sync.util.SyncUtils.DEFAULT_METHOD_NAME;
-import static com.commercetools.project.sync.util.SyncUtils.DEFAULT_RUNNER_NAME;
-import static java.util.Collections.singletonList;
-import static java.util.Optional.empty;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.when;
+import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 
 class CustomObjectServiceImplTest {
 
@@ -228,9 +227,8 @@ class CustomObjectServiceImplTest {
         LastSyncCustomObject.of(ZonedDateTime.now(), new ProductSyncStatistics(), 100);
 
     // test
-    final CompletionStage<CustomObject<LastSyncCustomObject>> createdCustomObject =
-        customObjectServiceWithAttachedRunnerName.createLastSyncCustomObject(
-            "foo", "bar", lastSyncCustomObject);
+    customObjectServiceWithAttachedRunnerName.createLastSyncCustomObject(
+        "foo", "bar", lastSyncCustomObject);
 
     // assertions
     assertThat(((CustomObjectDraft) arg.getValue().getDraft()).getContainer())
@@ -256,9 +254,8 @@ class CustomObjectServiceImplTest {
         LastSyncCustomObject.of(ZonedDateTime.now(), new ProductSyncStatistics(), 100);
 
     // test
-    final CompletionStage<CustomObject<LastSyncCustomObject>> createdCustomObject =
-        customObjectServiceWithAttachedRunnerName.createLastSyncCustomObject(
-            "foo", "bar", lastSyncCustomObject);
+    customObjectServiceWithAttachedRunnerName.createLastSyncCustomObject(
+        "foo", "bar", lastSyncCustomObject);
 
     // assertions
     assertThat(((CustomObjectDraft) arg.getValue().getDraft()).getContainer())
@@ -284,9 +281,8 @@ class CustomObjectServiceImplTest {
         LastSyncCustomObject.of(ZonedDateTime.now(), new ProductSyncStatistics(), 100);
 
     // test
-    final CompletionStage<CustomObject<LastSyncCustomObject>> createdCustomObject =
-        customObjectServiceWithAttachedRunnerName.createLastSyncCustomObject(
-            "foo", "bar", lastSyncCustomObject);
+    customObjectServiceWithAttachedRunnerName.createLastSyncCustomObject(
+        "foo", "bar", lastSyncCustomObject);
 
     // assertions
     assertThat(((CustomObjectDraft) arg.getValue().getDraft()).getContainer())
@@ -313,7 +309,8 @@ class CustomObjectServiceImplTest {
     customObjectServiceWithAttachedMethodName.getCurrentCtpTimestamp();
 
     // assertions
-    assertThat(((CustomObjectDraft) arg.getValue().getDraft()).getContainer()).contains(DEFAULT_METHOD_NAME);
+    assertThat(((CustomObjectDraft) arg.getValue().getDraft()).getContainer())
+        .contains(DEFAULT_METHOD_NAME);
   }
 
   @Test
@@ -336,7 +333,8 @@ class CustomObjectServiceImplTest {
     customObjectServiceWithAttachedMethodName.getCurrentCtpTimestamp();
 
     // assertions
-    assertThat(((CustomObjectDraft) arg.getValue().getDraft()).getContainer()).contains(DEFAULT_METHOD_NAME);
+    assertThat(((CustomObjectDraft) arg.getValue().getDraft()).getContainer())
+        .contains(DEFAULT_METHOD_NAME);
   }
 
   @Test
