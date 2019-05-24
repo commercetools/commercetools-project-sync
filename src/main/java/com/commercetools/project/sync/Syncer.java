@@ -161,7 +161,7 @@ public abstract class Syncer<
   private CompletionStage<C> getQueryOfResourcesSinceLastSync(
       @Nonnull final String sourceProjectKey,
       @Nonnull final String syncModuleName,
-      @Nonnull final String runnerName,
+      @Nullable final String runnerName,
       @Nonnull final ZonedDateTime currentSyncStartTimestamp) {
 
     return customObjectService
