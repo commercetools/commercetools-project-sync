@@ -198,7 +198,7 @@ public abstract class Syncer<
   private CompletionStage<CustomObject<LastSyncCustomObject>> createNewLastSyncCustomObject(
       @Nonnull final String sourceProjectKey,
       @Nonnull final String syncModuleName,
-      @Nonnull final String runnerName,
+      @Nullable final String runnerName,
       @Nonnull final ZonedDateTime newLastSyncTimestamp,
       final long syncDurationInMillis) {
 
