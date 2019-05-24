@@ -100,6 +100,8 @@ public abstract class Syncer<
    * this sync.
    *
    * @param runnerName the name of the sync runner.
+   * @param isFullSync whether to run a delta sync (based on the last sync timestamp) or a full
+   *     sync.
    * @return completion stage containing no result after the execution of the sync process and
    *     logging the result.
    */
