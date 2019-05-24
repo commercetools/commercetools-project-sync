@@ -1,16 +1,15 @@
 package com.commercetools.project.sync.util;
 
-import static org.apache.commons.lang3.StringUtils.isBlank;
-
 import com.commercetools.sync.commons.BaseSync;
+
 import javax.annotation.Nonnull;
+
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 public final class SyncUtils {
 
   public static final String APPLICATION_DEFAULT_NAME = "commercetools-project-sync";
   public static final String APPLICATION_DEFAULT_VERSION = "development-SNAPSHOT";
-  public static final String DEFAULT_RUNNER_NAME = "runnerName";
-  public static final String DEFAULT_METHOD_NAME = "methodName";
 
   @Nonnull
   public static String getSyncModuleName(@Nonnull final Class<? extends BaseSync> syncClass) {

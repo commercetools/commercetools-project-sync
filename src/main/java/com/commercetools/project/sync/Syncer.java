@@ -1,10 +1,5 @@
 package com.commercetools.project.sync;
 
-import static com.commercetools.project.sync.util.StatisticsUtils.logStatistics;
-import static com.commercetools.project.sync.util.SyncUtils.getSyncModuleName;
-import static com.commercetools.sync.commons.utils.CtpQueryUtils.queryAll;
-import static java.lang.String.format;
-
 import com.commercetools.project.sync.model.LastSyncCustomObject;
 import com.commercetools.project.sync.service.CustomObjectService;
 import com.commercetools.sync.commons.BaseSync;
@@ -15,14 +10,21 @@ import io.sphere.sdk.customobjects.CustomObject;
 import io.sphere.sdk.models.Resource;
 import io.sphere.sdk.queries.QueryDsl;
 import io.sphere.sdk.queries.QueryPredicate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.time.Clock;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
-import javax.annotation.Nonnull;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import static com.commercetools.project.sync.util.StatisticsUtils.logStatistics;
+import static com.commercetools.project.sync.util.SyncUtils.getSyncModuleName;
+import static com.commercetools.sync.commons.utils.CtpQueryUtils.queryAll;
+import static java.lang.String.format;
 
 /**
  * Base class of the syncer that handles syncing a resource from a source CTP project to a target
@@ -98,10 +100,11 @@ public abstract class Syncer<
    * only the resources which were modified after the last sync time stamp and before the start of
    * this sync.
    *
+   * @param runnerName the name of the sync runner.
    * @return completion stage containing no result after the execution of the sync process and
    *     logging the result.
    */
-  public CompletionStage<Void> sync(final String runnerName) {
+  public CompletionStage<Void> sync(@Nullable final String runnerName) {
 
     final String sourceProjectKey = sourceClient.getConfig().getProjectKey();
     final String syncModuleName = getSyncModuleName(sync.getClass());

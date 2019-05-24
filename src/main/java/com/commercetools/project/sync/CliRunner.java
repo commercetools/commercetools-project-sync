@@ -1,14 +1,6 @@
 package com.commercetools.project.sync;
 
-import static com.commercetools.project.sync.util.SyncUtils.getApplicationName;
-import static com.commercetools.project.sync.util.SyncUtils.getApplicationVersion;
-import static io.sphere.sdk.utils.CompletableFutureUtils.exceptionallyCompletedFuture;
-import static java.lang.String.format;
-
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
-import javax.annotation.Nonnull;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
@@ -18,6 +10,15 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.annotation.Nonnull;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
+
+import static com.commercetools.project.sync.util.SyncUtils.getApplicationName;
+import static com.commercetools.project.sync.util.SyncUtils.getApplicationVersion;
+import static io.sphere.sdk.utils.CompletableFutureUtils.exceptionallyCompletedFuture;
+import static java.lang.String.format;
 
 final class CliRunner {
   static final String SYNC_MODULE_OPTION_SHORT = "s";

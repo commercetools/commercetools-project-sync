@@ -1,19 +1,5 @@
 package com.commercetools.project.sync;
 
-import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_CATEGORY_SYNC;
-import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_DESCRIPTION;
-import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_INVENTORY_ENTRY_SYNC;
-import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_LONG;
-import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_PRODUCT_SYNC;
-import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_PRODUCT_TYPE_SYNC;
-import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_SHORT;
-import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_TYPE_SYNC;
-import static com.commercetools.project.sync.util.SyncUtils.DEFAULT_RUNNER_NAME;
-import static io.sphere.sdk.utils.CompletableFutureUtils.exceptionallyCompletedFuture;
-import static java.lang.String.format;
-import static java.util.Arrays.asList;
-import static org.apache.commons.lang3.StringUtils.isBlank;
-
 import com.commercetools.project.sync.category.CategorySyncer;
 import com.commercetools.project.sync.inventoryentry.InventoryEntrySyncer;
 import com.commercetools.project.sync.product.ProductSyncer;
@@ -25,13 +11,27 @@ import com.commercetools.sync.commons.helpers.BaseSyncStatistics;
 import io.sphere.sdk.client.SphereClient;
 import io.sphere.sdk.models.Resource;
 import io.sphere.sdk.queries.QueryDsl;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.time.Clock;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.function.Supplier;
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+
+import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_CATEGORY_SYNC;
+import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_DESCRIPTION;
+import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_INVENTORY_ENTRY_SYNC;
+import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_LONG;
+import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_PRODUCT_SYNC;
+import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_PRODUCT_TYPE_SYNC;
+import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_SHORT;
+import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_TYPE_SYNC;
+import static io.sphere.sdk.utils.CompletableFutureUtils.exceptionallyCompletedFuture;
+import static java.lang.String.format;
+import static java.util.Arrays.asList;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 final class SyncerFactory {
   private Supplier<SphereClient> targetClientSupplier;
@@ -60,25 +60,23 @@ final class SyncerFactory {
 
     final SphereClient sourceClient = sourceClientSupplier.get();
     final SphereClient targetClient = targetClientSupplier.get();
-    final String runnerName =
-        runnerNameOptionValue == null ? DEFAULT_RUNNER_NAME : runnerNameOptionValue;
 
     final List<CompletableFuture<Void>> typeAndProductTypeSync =
         asList(
             ProductTypeSyncer.of(sourceClient, targetClient, clock)
-                .sync(runnerName)
+                .sync(runnerNameOptionValue)
                 .toCompletableFuture(),
             TypeSyncer.of(sourceClient, targetClient, clock)
-                .sync(runnerName)
+                .sync(runnerNameOptionValue)
                 .toCompletableFuture());
 
     return CompletableFuture.allOf(typeAndProductTypeSync.toArray(new CompletableFuture[0]))
         .thenCompose(
-            ignored -> CategorySyncer.of(sourceClient, targetClient, clock).sync(runnerName))
+            ignored -> CategorySyncer.of(sourceClient, targetClient, clock).sync(runnerNameOptionValue))
         .thenCompose(
-            ignored -> ProductSyncer.of(sourceClient, targetClient, clock).sync(runnerName))
+            ignored -> ProductSyncer.of(sourceClient, targetClient, clock).sync(runnerNameOptionValue))
         .thenCompose(
-            ignored -> InventoryEntrySyncer.of(sourceClient, targetClient, clock).sync(runnerName))
+            ignored -> InventoryEntrySyncer.of(sourceClient, targetClient, clock).sync(runnerNameOptionValue))
         .whenComplete((syncResult, throwable) -> closeClients());
   }
 
@@ -116,12 +114,8 @@ final class SyncerFactory {
       return exceptionallyCompletedFuture(exception);
     }
 
-    String runnerName = runnerNameOptionValue;
-    if (runnerName == null) {
-      runnerName = DEFAULT_RUNNER_NAME;
-    }
-
-    return syncer.sync(runnerName).whenComplete((syncResult, throwable) -> closeClients());
+    return syncer.sync(runnerNameOptionValue)
+                 .whenComplete((syncResult, throwable) -> closeClients());
   }
 
   /**

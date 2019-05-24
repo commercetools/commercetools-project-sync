@@ -1,24 +1,5 @@
 package com.commercetools.project.sync;
 
-import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_DESCRIPTION;
-import static com.commercetools.project.sync.CliRunnerTest.defaultTestRunnerName;
-import static com.commercetools.project.sync.service.impl.CustomObjectServiceImpl.TIMESTAMP_GENERATOR_CONTAINER_POSTFIX;
-import static com.commercetools.project.sync.service.impl.CustomObjectServiceImpl.TIMESTAMP_GENERATOR_KEY;
-import static com.commercetools.project.sync.service.impl.CustomObjectServiceImpl.TIMESTAMP_GENERATOR_VALUE;
-import static com.commercetools.project.sync.util.SyncUtils.getApplicationName;
-import static com.commercetools.project.sync.util.TestUtils.assertAllSyncersLoggingEvents;
-import static com.commercetools.project.sync.util.TestUtils.getMockedClock;
-import static com.commercetools.project.sync.util.TestUtils.mockLastSyncCustomObject;
-import static com.commercetools.project.sync.util.TestUtils.stubClientsCustomObjectService;
-import static com.commercetools.project.sync.util.TestUtils.verifyInteractionsWithClientAfterSync;
-import static java.lang.String.format;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 import com.commercetools.project.sync.model.LastSyncCustomObject;
 import com.commercetools.sync.products.helpers.ProductSyncStatistics;
 import io.sphere.sdk.categories.queries.CategoryQuery;
@@ -36,10 +17,6 @@ import io.sphere.sdk.queries.PagedQueryResult;
 import io.sphere.sdk.queries.QueryPredicate;
 import io.sphere.sdk.types.queries.TypeQuery;
 import io.sphere.sdk.utils.CompletableFutureUtils;
-import java.time.ZonedDateTime;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
-import javax.annotation.Nonnull;
 import org.assertj.core.api.Condition;
 import org.junit.Ignore;
 import org.junit.jupiter.api.BeforeEach;
@@ -48,6 +25,29 @@ import uk.org.lidalia.slf4jext.Level;
 import uk.org.lidalia.slf4jtest.LoggingEvent;
 import uk.org.lidalia.slf4jtest.TestLogger;
 import uk.org.lidalia.slf4jtest.TestLoggerFactory;
+
+import javax.annotation.Nonnull;
+import java.time.ZonedDateTime;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
+
+import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_DESCRIPTION;
+import static com.commercetools.project.sync.CliRunnerTest.defaultTestRunnerName;
+import static com.commercetools.project.sync.service.impl.CustomObjectServiceImpl.TIMESTAMP_GENERATOR_KEY;
+import static com.commercetools.project.sync.service.impl.CustomObjectServiceImpl.TIMESTAMP_GENERATOR_VALUE;
+import static com.commercetools.project.sync.util.SyncUtils.getApplicationName;
+import static com.commercetools.project.sync.util.TestUtils.assertAllSyncersLoggingEvents;
+import static com.commercetools.project.sync.util.TestUtils.getMockedClock;
+import static com.commercetools.project.sync.util.TestUtils.mockLastSyncCustomObject;
+import static com.commercetools.project.sync.util.TestUtils.stubClientsCustomObjectService;
+import static com.commercetools.project.sync.util.TestUtils.verifyInteractionsWithClientAfterSync;
+import static java.lang.String.format;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 class SyncerFactoryTest {
   private static final TestLogger syncerTestLogger = TestLoggerFactory.getTestLogger(Syncer.class);
@@ -185,7 +185,7 @@ class SyncerFactoryTest {
                 getApplicationName(),
                 defaultTestRunnerName,
                 syncMethodName,
-                TIMESTAMP_GENERATOR_CONTAINER_POSTFIX),
+                TIMESTAMP_GENERATOR_KEY),
             TIMESTAMP_GENERATOR_KEY,
             TIMESTAMP_GENERATOR_VALUE,
             String.class);

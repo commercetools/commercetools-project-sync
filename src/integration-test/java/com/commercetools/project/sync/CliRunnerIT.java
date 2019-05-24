@@ -1,20 +1,5 @@
 package com.commercetools.project.sync;
 
-import static com.commercetools.project.sync.service.impl.CustomObjectServiceImpl.TIMESTAMP_GENERATOR_CONTAINER_POSTFIX;
-import static com.commercetools.project.sync.service.impl.CustomObjectServiceImpl.TIMESTAMP_GENERATOR_KEY;
-import static com.commercetools.project.sync.service.impl.CustomObjectServiceImpl.TIMESTAMP_GENERATOR_VALUE;
-import static com.commercetools.project.sync.util.ClientConfigurationUtils.createClient;
-import static com.commercetools.project.sync.util.IntegrationTestUtils.deleteLastSyncCustomObjects;
-import static com.commercetools.project.sync.util.QueryUtils.queryAndExecute;
-import static com.commercetools.project.sync.util.SphereClientUtils.CTP_SOURCE_CLIENT_CONFIG;
-import static com.commercetools.project.sync.util.SphereClientUtils.CTP_TARGET_CLIENT_CONFIG;
-import static com.commercetools.project.sync.util.TestUtils.assertAllSyncersLoggingEvents;
-import static com.commercetools.project.sync.util.TestUtils.assertSyncerLoggingEvents;
-import static io.sphere.sdk.models.LocalizedString.ofEnglish;
-import static java.lang.String.format;
-import static java.util.Collections.emptyList;
-import static org.assertj.core.api.Assertions.assertThat;
-
 import com.commercetools.project.sync.model.LastSyncCustomObject;
 import com.commercetools.sync.commons.helpers.BaseSyncStatistics;
 import com.commercetools.sync.products.helpers.ProductSyncStatistics;
@@ -56,9 +41,6 @@ import io.sphere.sdk.types.TypeDraftBuilder;
 import io.sphere.sdk.types.commands.TypeCreateCommand;
 import io.sphere.sdk.types.commands.TypeDeleteCommand;
 import io.sphere.sdk.types.queries.TypeQuery;
-import java.time.Clock;
-import java.time.ZonedDateTime;
-import javax.annotation.Nonnull;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -66,6 +48,24 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import uk.org.lidalia.slf4jtest.TestLogger;
 import uk.org.lidalia.slf4jtest.TestLoggerFactory;
+
+import javax.annotation.Nonnull;
+import java.time.Clock;
+import java.time.ZonedDateTime;
+
+import static com.commercetools.project.sync.service.impl.CustomObjectServiceImpl.TIMESTAMP_GENERATOR_KEY;
+import static com.commercetools.project.sync.service.impl.CustomObjectServiceImpl.TIMESTAMP_GENERATOR_VALUE;
+import static com.commercetools.project.sync.util.ClientConfigurationUtils.createClient;
+import static com.commercetools.project.sync.util.IntegrationTestUtils.deleteLastSyncCustomObjects;
+import static com.commercetools.project.sync.util.QueryUtils.queryAndExecute;
+import static com.commercetools.project.sync.util.SphereClientUtils.CTP_SOURCE_CLIENT_CONFIG;
+import static com.commercetools.project.sync.util.SphereClientUtils.CTP_TARGET_CLIENT_CONFIG;
+import static com.commercetools.project.sync.util.TestUtils.assertAllSyncersLoggingEvents;
+import static com.commercetools.project.sync.util.TestUtils.assertSyncerLoggingEvents;
+import static io.sphere.sdk.models.LocalizedString.ofEnglish;
+import static java.lang.String.format;
+import static java.util.Collections.emptyList;
+import static org.assertj.core.api.Assertions.assertThat;
 
 class CliRunnerIT {
 
@@ -284,7 +284,7 @@ class CliRunnerIT {
             .byContainer(
                 format(
                     "commercetools-project-sync.%s.%s.%s",
-                    defaultTestRunnerName, syncMethodName, TIMESTAMP_GENERATOR_CONTAINER_POSTFIX));
+                    defaultTestRunnerName, syncMethodName, TIMESTAMP_GENERATOR_KEY));
 
     final PagedQueryResult<CustomObject<String>> currentCtpTimestampGeneratorResults =
         targetClient.execute(timestampGeneratorQuery).toCompletableFuture().join();
