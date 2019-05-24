@@ -73,7 +73,6 @@ class CliRunnerIT {
   private static final TestLogger cliRunnerTestLogger =
       TestLoggerFactory.getTestLogger(CliRunner.class);
   private static final String RESOURCE_KEY = "foo";
-  static String defaultTestRunnerName = "testRunner";
 
   @BeforeAll
   static void setupSuite() {
