@@ -205,7 +205,7 @@ class CliRunnerTest {
     // assertions
     verify(syncerFactory, times(1)).sync("products", null);
     verify(sourceClient, times(1)).execute(any(ProductQuery.class));
-    verify(syncerFactory, never()).syncAll(defaultTestRunnerName);
+    verify(syncerFactory, never()).syncAll(null);
   }
 
   @Test
@@ -257,7 +257,7 @@ class CliRunnerTest {
     // assertions
     verify(syncerFactory, times(1)).sync("products", "Runner123");
     verify(sourceClient, times(1)).execute(any(ProductQuery.class));
-    verify(syncerFactory, never()).syncAll(null);
+    verify(syncerFactory, never()).syncAll("Runner123");
   }
 
   @Test
@@ -284,7 +284,7 @@ class CliRunnerTest {
     // assertions
     verify(syncerFactory, times(1)).sync("products", "Runner123");
     verify(sourceClient, times(1)).execute(any(ProductQuery.class));
-    verify(syncerFactory, never()).syncAll(null);
+    verify(syncerFactory, never()).syncAll("Runner123");
   }
 
   @Test
