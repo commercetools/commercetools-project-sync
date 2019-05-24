@@ -1,6 +1,17 @@
 package com.commercetools.project.sync;
 
-import static com.commercetools.project.sync.CliRunner.*;
+import static com.commercetools.project.sync.CliRunner.HELP_OPTION_DESCRIPTION;
+import static com.commercetools.project.sync.CliRunner.HELP_OPTION_LONG;
+import static com.commercetools.project.sync.CliRunner.HELP_OPTION_SHORT;
+import static com.commercetools.project.sync.CliRunner.RUNNER_NAME_OPTION_DESCRIPTION;
+import static com.commercetools.project.sync.CliRunner.RUNNER_NAME_OPTION_LONG;
+import static com.commercetools.project.sync.CliRunner.RUNNER_NAME_OPTION_SHORT;
+import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_DESCRIPTION;
+import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_LONG;
+import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_SHORT;
+import static com.commercetools.project.sync.CliRunner.VERSION_OPTION_DESCRIPTION;
+import static com.commercetools.project.sync.CliRunner.VERSION_OPTION_LONG;
+import static com.commercetools.project.sync.CliRunner.VERSION_OPTION_SHORT;
 import static com.commercetools.project.sync.util.SyncUtils.APPLICATION_DEFAULT_NAME;
 import static com.commercetools.project.sync.util.SyncUtils.APPLICATION_DEFAULT_VERSION;
 import static com.commercetools.project.sync.util.TestUtils.getMockedClock;
