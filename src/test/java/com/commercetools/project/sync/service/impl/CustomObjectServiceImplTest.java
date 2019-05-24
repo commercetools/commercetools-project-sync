@@ -209,6 +209,7 @@ class CustomObjectServiceImplTest {
   }
 
   @Test
+  @SuppressWarnings("unchecked")
   void createLastSyncCustomObject_WithValidTestRunnerName_ShouldCreateCorrectCustomObjectDraft() {
     // preparation
     final SphereClient client = mock(SphereClient.class);
@@ -233,6 +234,7 @@ class CustomObjectServiceImplTest {
   }
 
   @Test
+  @SuppressWarnings("unchecked")
   void createLastSyncCustomObject_WithEmptyRunnerName_ShouldCreateCorrectCustomObjectDraft() {
     // preparation
     final SphereClient client = mock(SphereClient.class);
@@ -255,6 +257,7 @@ class CustomObjectServiceImplTest {
   }
 
   @Test
+  @SuppressWarnings("unchecked")
   void createLastSyncCustomObject_WithNullRunnerName_ShouldCreateCorrectCustomObjectDraft() {
     // preparation
     final SphereClient client = mock(SphereClient.class);
