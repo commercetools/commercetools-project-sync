@@ -56,7 +56,6 @@ class CliRunnerTest {
   private static final TestLogger testLogger = TestLoggerFactory.getTestLogger(CliRunner.class);
   private static ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
   private static PrintStream originalSystemOut;
-  static String defaultTestRunnerName = "testRunner";
 
   @BeforeAll
   static void setupSuite() throws UnsupportedEncodingException {

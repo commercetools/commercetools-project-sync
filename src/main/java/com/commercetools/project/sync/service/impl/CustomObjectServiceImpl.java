@@ -27,8 +27,8 @@ public class CustomObjectServiceImpl implements CustomObjectService {
 
   public static final String TIMESTAMP_GENERATOR_KEY = "timestampGenerator";
   public static final String TIMESTAMP_GENERATOR_VALUE = "";
+  public static final String DEFAULT_RUNNER_NAME = "runnerName";
   private static final long MINUTES_BEFORE_CURRENT_TIMESTAMP = 2;
-  static final String DEFAULT_RUNNER_NAME = "runnerName";
 
   private SphereClient sphereClient;
 
