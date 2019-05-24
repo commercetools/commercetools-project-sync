@@ -43,9 +43,6 @@ Dockerized CLI application which allows to automatically sync different resource
    export TARGET_CLIENT_SECRET = xxxxxxxxxxx
    ```
 
-### Notes
- - Use Intellij IDEA version 2018.2 or higher
-
 ### Usage
 
    ```bash
