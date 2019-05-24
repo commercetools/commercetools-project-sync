@@ -103,7 +103,7 @@ public abstract class Syncer<
    * @return completion stage containing no result after the execution of the sync process and
    *     logging the result.
    */
-  public CompletionStage<Void> sync(@Nullable final String runnerName) {
+  public CompletionStage<Void> sync(@Nullable final String runnerName, final boolean isFullSync) {
 
     final String sourceProjectKey = sourceClient.getConfig().getProjectKey();
     final String syncModuleName = getSyncModuleName(sync.getClass());
@@ -115,22 +115,29 @@ public abstract class Syncer<
               syncModuleName, sourceProjectKey, targetProjectKey));
     }
 
-    return customObjectService
-        .getCurrentCtpTimestamp(runnerName, syncModuleName)
-        .thenCompose(
-            currentCtpTimestamp ->
-                syncResourcesSinceLastSync(
-                    sourceProjectKey, syncModuleName, runnerName, currentCtpTimestamp))
-        .thenAccept(
-            ignoredResult -> {
-              if (LOGGER.isInfoEnabled()) {
-                logStatistics(sync.getStatistics(), LOGGER);
-              }
-            });
+    CompletionStage<Void> syncStage;
+    if (isFullSync) {
+      syncStage = sync(getQuery()).thenAccept(result -> {});
+    } else {
+      syncStage =
+          customObjectService
+              .getCurrentCtpTimestamp(runnerName, syncModuleName)
+              .thenCompose(
+                  currentCtpTimestamp ->
+                      syncResourcesSinceLastSync(
+                          sourceProjectKey, syncModuleName, runnerName, currentCtpTimestamp));
+    }
+
+    return syncStage.thenAccept(
+        ignoredResult -> {
+          if (LOGGER.isInfoEnabled()) {
+            logStatistics(sync.getStatistics(), LOGGER);
+          }
+        });
   }
 
   @Nonnull
-  private CompletionStage<CustomObject<LastSyncCustomObject>> syncResourcesSinceLastSync(
+  private CompletionStage<Void> syncResourcesSinceLastSync(
       @Nonnull final String sourceProjectKey,
       @Nonnull final String syncModuleName,
       @Nonnull final String runnerName,
@@ -146,7 +153,8 @@ public abstract class Syncer<
                     syncModuleName,
                     runnerName,
                     currentCtpTimestamp,
-                    syncDurationInMillis));
+                    syncDurationInMillis))
+        .thenAccept(result -> {});
   }
 
   @Nonnull
