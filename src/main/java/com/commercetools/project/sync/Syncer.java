@@ -140,7 +140,7 @@ public abstract class Syncer<
   private CompletionStage<Void> syncResourcesSinceLastSync(
       @Nonnull final String sourceProjectKey,
       @Nonnull final String syncModuleName,
-      @Nonnull final String runnerName,
+      @Nullable final String runnerName,
       @Nonnull final ZonedDateTime currentCtpTimestamp) {
 
     return getQueryOfResourcesSinceLastSync(
