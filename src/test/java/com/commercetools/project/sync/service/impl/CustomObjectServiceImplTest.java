@@ -1,5 +1,14 @@
 package com.commercetools.project.sync.service.impl;
 
+import static com.commercetools.project.sync.service.impl.CustomObjectServiceImpl.DEFAULT_RUNNER_NAME;
+import static java.util.Collections.singletonList;
+import static java.util.Optional.empty;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.when;
+
 import com.commercetools.project.sync.model.LastSyncCustomObject;
 import com.commercetools.project.sync.service.CustomObjectService;
 import com.commercetools.sync.products.helpers.ProductSyncStatistics;
@@ -11,22 +20,12 @@ import io.sphere.sdk.customobjects.commands.CustomObjectUpsertCommand;
 import io.sphere.sdk.customobjects.queries.CustomObjectQuery;
 import io.sphere.sdk.queries.PagedQueryResult;
 import io.sphere.sdk.utils.CompletableFutureUtils;
-import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
-
 import java.time.ZonedDateTime;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
-
-import static com.commercetools.project.sync.service.impl.CustomObjectServiceImpl.DEFAULT_RUNNER_NAME;
-import static java.util.Collections.singletonList;
-import static java.util.Optional.empty;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.when;
+import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 
 class CustomObjectServiceImplTest {
 
@@ -213,7 +212,8 @@ class CustomObjectServiceImplTest {
   void createLastSyncCustomObject_WithValidTestRunnerName_ShouldCreateCorrectCustomObjectDraft() {
     // preparation
     final SphereClient client = mock(SphereClient.class);
-    final ArgumentCaptor<CustomObjectUpsertCommand> arg = ArgumentCaptor.forClass(CustomObjectUpsertCommand.class);
+    final ArgumentCaptor<CustomObjectUpsertCommand> arg =
+        ArgumentCaptor.forClass(CustomObjectUpsertCommand.class);
     when(client.execute(arg.capture())).thenReturn(null);
 
     final CustomObjectService customObjectService = new CustomObjectServiceImpl(client);
@@ -227,7 +227,8 @@ class CustomObjectServiceImplTest {
 
     // assertions
     final CustomObjectDraft createdDraft = (CustomObjectDraft) arg.getValue().getDraft();
-    assertThat(createdDraft.getContainer()).isEqualTo("commercetools-project-sync.testRunnerName.bar");
+    assertThat(createdDraft.getContainer())
+        .isEqualTo("commercetools-project-sync.testRunnerName.bar");
     assertThat(createdDraft.getKey()).isEqualTo("foo");
   }
 
@@ -235,7 +236,8 @@ class CustomObjectServiceImplTest {
   void createLastSyncCustomObject_WithEmptyRunnerName_ShouldCreateCorrectCustomObjectDraft() {
     // preparation
     final SphereClient client = mock(SphereClient.class);
-    final ArgumentCaptor<CustomObjectUpsertCommand> arg = ArgumentCaptor.forClass(CustomObjectUpsertCommand.class);
+    final ArgumentCaptor<CustomObjectUpsertCommand> arg =
+        ArgumentCaptor.forClass(CustomObjectUpsertCommand.class);
     when(client.execute(arg.capture())).thenReturn(null);
 
     final CustomObjectService customObjectService = new CustomObjectServiceImpl(client);
@@ -244,8 +246,7 @@ class CustomObjectServiceImplTest {
         LastSyncCustomObject.of(ZonedDateTime.now(), new ProductSyncStatistics(), 100);
 
     // test
-    customObjectService.createLastSyncCustomObject(
-        "foo", "bar", "", lastSyncCustomObject);
+    customObjectService.createLastSyncCustomObject("foo", "bar", "", lastSyncCustomObject);
 
     // assertions
     final CustomObjectDraft createdDraft = (CustomObjectDraft) arg.getValue().getDraft();
@@ -257,7 +258,8 @@ class CustomObjectServiceImplTest {
   void createLastSyncCustomObject_WithNullRunnerName_ShouldCreateCorrectCustomObjectDraft() {
     // preparation
     final SphereClient client = mock(SphereClient.class);
-    final ArgumentCaptor<CustomObjectUpsertCommand> arg = ArgumentCaptor.forClass(CustomObjectUpsertCommand.class);
+    final ArgumentCaptor<CustomObjectUpsertCommand> arg =
+        ArgumentCaptor.forClass(CustomObjectUpsertCommand.class);
     when(client.execute(arg.capture())).thenReturn(null);
 
     final CustomObjectService customObjectService = new CustomObjectServiceImpl(client);
@@ -266,8 +268,7 @@ class CustomObjectServiceImplTest {
         LastSyncCustomObject.of(ZonedDateTime.now(), new ProductSyncStatistics(), 100);
 
     // test
-    customObjectService.createLastSyncCustomObject(
-        "foo", "bar", null, lastSyncCustomObject);
+    customObjectService.createLastSyncCustomObject("foo", "bar", null, lastSyncCustomObject);
 
     // assertions
     final CustomObjectDraft createdDraft = (CustomObjectDraft) arg.getValue().getDraft();

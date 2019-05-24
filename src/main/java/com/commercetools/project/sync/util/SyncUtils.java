@@ -1,10 +1,9 @@
 package com.commercetools.project.sync.util;
 
-import com.commercetools.sync.commons.BaseSync;
-
-import javax.annotation.Nonnull;
-
 import static org.apache.commons.lang3.StringUtils.isBlank;
+
+import com.commercetools.sync.commons.BaseSync;
+import javax.annotation.Nonnull;
 
 public final class SyncUtils {
 

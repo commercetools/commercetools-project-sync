@@ -2,12 +2,11 @@ package com.commercetools.project.sync.service;
 
 import com.commercetools.project.sync.model.LastSyncCustomObject;
 import io.sphere.sdk.customobjects.CustomObject;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.time.ZonedDateTime;
 import java.util.Optional;
 import java.util.concurrent.CompletionStage;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 public interface CustomObjectService {
   @Nonnull

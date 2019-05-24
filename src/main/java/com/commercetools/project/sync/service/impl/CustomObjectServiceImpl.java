@@ -1,5 +1,9 @@
 package com.commercetools.project.sync.service.impl;
 
+import static com.commercetools.project.sync.util.SyncUtils.getApplicationName;
+import static java.lang.String.format;
+import static java.util.Optional.ofNullable;
+
 import com.commercetools.project.sync.model.LastSyncCustomObject;
 import com.commercetools.project.sync.service.CustomObjectService;
 import io.sphere.sdk.client.SphereClient;
@@ -10,19 +14,14 @@ import io.sphere.sdk.customobjects.queries.CustomObjectQuery;
 import io.sphere.sdk.models.ResourceView;
 import io.sphere.sdk.queries.PagedQueryResult;
 import io.sphere.sdk.queries.QueryPredicate;
-import org.apache.commons.lang3.StringUtils;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.time.ZonedDateTime;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.concurrent.CompletionStage;
 import java.util.stream.Stream;
-
-import static com.commercetools.project.sync.util.SyncUtils.getApplicationName;
-import static java.lang.String.format;
-import static java.util.Optional.ofNullable;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import org.apache.commons.lang3.StringUtils;
 
 public class CustomObjectServiceImpl implements CustomObjectService {
 
@@ -42,14 +41,17 @@ public class CustomObjectServiceImpl implements CustomObjectService {
   public CompletionStage<ZonedDateTime> getCurrentCtpTimestamp(
       @Nullable final String runnerName, @Nonnull final String syncModuleName) {
 
-    final String container = format("%s.%s.%s.%s",
-        getApplicationName(),
-        getRunnerNameValue(runnerName),
-        syncModuleName,
-        TIMESTAMP_GENERATOR_KEY);
+    final String container =
+        format(
+            "%s.%s.%s.%s",
+            getApplicationName(),
+            getRunnerNameValue(runnerName),
+            syncModuleName,
+            TIMESTAMP_GENERATOR_KEY);
 
-    final CustomObjectDraft<String> currentTimestampDraft = CustomObjectDraft
-        .ofUnversionedUpsert(container, TIMESTAMP_GENERATOR_KEY, TIMESTAMP_GENERATOR_VALUE, String.class);
+    final CustomObjectDraft<String> currentTimestampDraft =
+        CustomObjectDraft.ofUnversionedUpsert(
+            container, TIMESTAMP_GENERATOR_KEY, TIMESTAMP_GENERATOR_VALUE, String.class);
 
     return createCustomObject(currentTimestampDraft)
         .thenApply(ResourceView::getLastModifiedAt)
@@ -74,13 +76,12 @@ public class CustomObjectServiceImpl implements CustomObjectService {
       @Nonnull final String syncModuleName,
       @Nullable final String runnerName) {
 
-
-
     final QueryPredicate<CustomObject<LastSyncCustomObject>> queryPredicate =
         QueryPredicate.of(
             format(
                 "container=\"%s\" AND key=\"%s\"",
-                buildLastSyncTimestampContainerName(syncModuleName, getRunnerNameValue(runnerName)), sourceProjectKey));
+                buildLastSyncTimestampContainerName(syncModuleName, getRunnerNameValue(runnerName)),
+                sourceProjectKey));
 
     return sphereClient
         .execute(CustomObjectQuery.of(LastSyncCustomObject.class).plusPredicates(queryPredicate))
@@ -112,7 +113,8 @@ public class CustomObjectServiceImpl implements CustomObjectService {
       @Nonnull final String syncModuleName, @Nonnull final String runnerName) {
 
     final String syncModuleNameWithLowerCasedFirstChar = lowerCaseFirstChar(syncModuleName);
-    return format("%s.%s.%s", getApplicationName(), runnerName, syncModuleNameWithLowerCasedFirstChar);
+    return format(
+        "%s.%s.%s", getApplicationName(), runnerName, syncModuleNameWithLowerCasedFirstChar);
   }
 
   @Nonnull
