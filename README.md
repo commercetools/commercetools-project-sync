@@ -53,7 +53,7 @@ Dockerized CLI application which allows to automatically sync different resource
     -r,--runnerName <arg>   name for the running sync instance. Please make sure the name is unique, otherwise running 
                             more than 1 sync instance with the same name would lead to an unexpected behaviour. 
                             (optional parameter) default: 'runnerName'.
-    -f,--full               By default, delta sync runs using last sync timestamp logic. Use this flag to run a full
+    -f,--full               By default, a delta sync runs using a last-sync-timestamp logic. Use this flag to run a full
                             sync. i.e. sync the entire data set.               
     -v,--version            Print the version of the application.
    ```
