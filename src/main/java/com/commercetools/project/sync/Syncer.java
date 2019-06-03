@@ -116,7 +116,7 @@ public abstract class Syncer<
               syncModuleName, sourceProjectKey, targetProjectKey));
     }
 
-    CompletionStage<Void> syncStage;
+    final CompletionStage<Void> syncStage;
     if (isFullSync) {
       syncStage = sync(getQuery()).thenAccept(result -> {});
     } else {
