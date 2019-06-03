@@ -54,7 +54,7 @@ Dockerized CLI application which allows to automatically sync different resource
                             more than 1 sync instance with the same name would lead to an unexpected behaviour. 
                             (optional parameter) default: 'runnerName'.
     -f,--full               By default a delta sync runs using a last sync timestamp logic. Use this flag to run a full
-                            sync. i.e. sync the entire data set and not specific to a time frame.               
+                            sync. i.e. sync the entire data set.               
     -v,--version            Print the version of the application.
    ```
 
@@ -104,8 +104,6 @@ A last sync timestamp `customObject` for a runner name `testRun` running a **Typ
 _Note:_ Another `customObject` with the `container` convention `commercetools-project-sync.{runnerName}.{syncModuleName}.timestampGenerator` is also created on the target project for capturing a unified timestamp from commercetools.
 
 Running a Full sync using `-f` or `--full` option will not create any `customObjects`.
- 
-   
 
 #### Running the Docker Image
 
