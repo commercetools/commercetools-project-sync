@@ -103,7 +103,7 @@ A last sync timestamp `customObject` for a runner name `testRun` running a **Typ
 
 _Note:_ Another `customObject` with the `container` convention `commercetools-project-sync.{runnerName}.{syncModuleName}.timestampGenerator` is also created on the target project for capturing a unified timestamp from commercetools.
 
-Running a Full sync using `-f` or `--full` option will not create any `customObjects`.
+Running a **Full sync** using `-f` or `--full` option will not create any `customObjects`.
 
 #### Running the Docker Image
 
