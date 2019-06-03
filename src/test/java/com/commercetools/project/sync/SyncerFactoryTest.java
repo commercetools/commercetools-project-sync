@@ -111,7 +111,7 @@ class SyncerFactoryTest {
 
   @Test
   @SuppressWarnings("unchecked")
-  void sync_WithProductsArgAsDeltaSync_ShouldBuildSyncerAndExecuteSync() {
+  void sync_AsProductsDeltaSync_ShouldBuildSyncerAndExecuteSync() {
     // preparation
     final SphereClient sourceClient = mock(SphereClient.class);
     when(sourceClient.getConfig()).thenReturn(SphereClientConfig.of("foo", "foo", "foo"));
@@ -174,7 +174,7 @@ class SyncerFactoryTest {
 
   @Test
   @SuppressWarnings("unchecked")
-  void sync_WithProductsArgAsFullSync_ShouldBuildSyncerAndExecuteSync() {
+  void sync_AsProductsFullSync_ShouldBuildSyncerAndExecuteSync() {
     // preparation
     final SphereClient sourceClient = mock(SphereClient.class);
     when(sourceClient.getConfig()).thenReturn(SphereClientConfig.of("foo", "foo", "foo"));
@@ -264,7 +264,7 @@ class SyncerFactoryTest {
 
   @Test
   @SuppressWarnings("unchecked")
-  void sync_WithCategoriesArgAsDeltaSync_ShouldBuildSyncerAndExecuteSync() {
+  void sync_AsCategoriesDeltaSync_ShouldBuildSyncerAndExecuteSync() {
     // preparation
     final SphereClient sourceClient = mock(SphereClient.class);
     when(sourceClient.getConfig()).thenReturn(SphereClientConfig.of("foo", "foo", "foo"));
@@ -327,7 +327,7 @@ class SyncerFactoryTest {
 
   @Test
   @SuppressWarnings("unchecked")
-  void sync_WithProductTypesArgAsDeltaSync_ShouldBuildSyncerAndExecuteSync() {
+  void sync_AsProductTypesDeltaSync_ShouldBuildSyncerAndExecuteSync() {
     // preparation
     final SphereClient sourceClient = mock(SphereClient.class);
     when(sourceClient.getConfig()).thenReturn(SphereClientConfig.of("foo", "foo", "foo"));
@@ -390,7 +390,7 @@ class SyncerFactoryTest {
 
   @Test
   @SuppressWarnings("unchecked")
-  void sync_WithTypesArgAsDeltaSync_ShouldBuildSyncerAndExecuteSync() {
+  void sync_AsTypesDeltaSync_ShouldBuildSyncerAndExecuteSync() {
     // preparation
     final SphereClient sourceClient = mock(SphereClient.class);
     when(sourceClient.getConfig()).thenReturn(SphereClientConfig.of("foo", "foo", "foo"));
@@ -452,7 +452,7 @@ class SyncerFactoryTest {
 
   @Test
   @SuppressWarnings("unchecked")
-  void sync_WithInventoryEntriesArgAsDeltaSync_ShouldBuildSyncerAndExecuteSync() {
+  void sync_AsInventoryEntriesDeltaSync_ShouldBuildSyncerAndExecuteSync() {
     // preparation
     final SphereClient sourceClient = mock(SphereClient.class);
     when(sourceClient.getConfig()).thenReturn(SphereClientConfig.of("foo", "foo", "foo"));
