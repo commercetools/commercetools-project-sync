@@ -194,7 +194,7 @@ class CliRunnerTest {
   }
 
   @Test
-  void run_WithSyncAsArgumentWithProductsArgAsDelta_ShouldBuildSyncerAndExecuteSync() {
+  void run_AsProductDeltaSync_ShouldBuildSyncerAndExecuteSync() {
     // preparation
     final SphereClient sourceClient = mock(SphereClient.class);
     when(sourceClient.getConfig()).thenReturn(SphereClientConfig.of("foo", "foo", "foo"));
@@ -220,7 +220,7 @@ class CliRunnerTest {
   }
 
   @Test
-  void run_WithSyncAsArgumentWithProductsArgAsFull_ShouldBuildSyncerAndExecuteSync() {
+  void run_AsProductFullSync_ShouldBuildSyncerAndExecuteSync() {
     // preparation
     final SphereClient sourceClient = mock(SphereClient.class);
     when(sourceClient.getConfig()).thenReturn(SphereClientConfig.of("foo", "foo", "foo"));
