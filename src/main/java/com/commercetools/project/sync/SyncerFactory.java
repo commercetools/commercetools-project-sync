@@ -95,7 +95,7 @@ final class SyncerFactory {
   CompletionStage<Void> sync(
       @Nullable final String syncOptionValue,
       @Nullable final String runnerNameOptionValue,
-      final boolean fullSyncOptionValue) {
+      final boolean isFullSync) {
 
     if (isBlank(syncOptionValue)) {
       final String errorMessage =
@@ -123,7 +123,7 @@ final class SyncerFactory {
     }
 
     return syncer
-        .sync(runnerNameOptionValue, fullSyncOptionValue)
+        .sync(runnerNameOptionValue, isFullSync)
         .whenComplete((syncResult, throwable) -> closeClients());
   }
 
