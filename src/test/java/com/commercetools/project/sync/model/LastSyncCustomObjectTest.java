@@ -69,6 +69,26 @@ class LastSyncCustomObjectTest {
   }
 
   @Test
+  void equals_WithUnequalVersions_ShouldReturnFalse() {
+    // preparation
+    final ZonedDateTime lastSyncTimestamp = ZonedDateTime.now();
+    final int lastSyncDurationInSeconds = 100;
+    final ProductSyncStatistics lastSyncStatistics = new ProductSyncStatistics();
+    final LastSyncCustomObject<ProductSyncStatistics> lastSyncCustomObject =
+        LastSyncCustomObject.of(
+            lastSyncTimestamp, lastSyncStatistics, "foo", lastSyncDurationInSeconds);
+
+    final LastSyncCustomObject<ProductSyncStatistics> otherLastSyncCustomObject =
+        LastSyncCustomObject.of(lastSyncTimestamp, lastSyncStatistics, "bar", 90);
+
+    // test
+    final boolean result = lastSyncCustomObject.equals(otherLastSyncCustomObject);
+
+    // assertions
+    assertThat(result).isFalse();
+  }
+
+  @Test
   void equals_WithUnequalLastSyncTimeStamp_ShouldReturnFalse() {
     // preparation
     final int lastSyncDurationInSeconds = 100;

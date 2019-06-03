@@ -35,6 +35,18 @@ public final class LastSyncCustomObject<T extends BaseSyncStatistics> {
     this.lastSyncDurationInMillis = lastSyncDurationInMillis;
   }
 
+  private LastSyncCustomObject(
+      @Nonnull final ZonedDateTime lastSyncTimestamp,
+      @Nonnull final T lastSyncStatistics,
+      @Nonnull final String applicationVersion,
+      final long lastSyncDurationInMillis) {
+
+    this.lastSyncTimestamp = lastSyncTimestamp;
+    this.lastSyncStatistics = lastSyncStatistics;
+    this.applicationVersion = applicationVersion;
+    this.lastSyncDurationInMillis = lastSyncDurationInMillis;
+  }
+
   // Needed for the 'com.fasterxml.jackson' deserialization, for example, when fetching
   // from CTP custom objects.
   public LastSyncCustomObject() {}
@@ -47,6 +59,17 @@ public final class LastSyncCustomObject<T extends BaseSyncStatistics> {
 
     return new LastSyncCustomObject<>(
         lastSyncTimestamp, lastSyncStatistics, lastSyncDurationInSeconds);
+  }
+
+  @Nonnull
+  public static <T extends BaseSyncStatistics> LastSyncCustomObject<T> of(
+      @Nonnull final ZonedDateTime lastSyncTimestamp,
+      @Nonnull final T lastSyncStatistics,
+      @Nonnull final String applicationVersion,
+      final long lastSyncDurationInSeconds) {
+
+    return new LastSyncCustomObject<>(
+        lastSyncTimestamp, lastSyncStatistics, applicationVersion, lastSyncDurationInSeconds);
   }
 
   public ZonedDateTime getLastSyncTimestamp() {
@@ -83,16 +106,17 @@ public final class LastSyncCustomObject<T extends BaseSyncStatistics> {
   // TODO: Also include statistics in equals comparison after
   // https://github.com/commercetools/commercetools-sync-java/issues/376 is resolved
   @Override
-  public boolean equals(final Object o) {
+  public boolean equals(Object o) {
     if (this == o) {
       return true;
     }
     if (!(o instanceof LastSyncCustomObject)) {
       return false;
     }
-    final LastSyncCustomObject<?> that = (LastSyncCustomObject<?>) o;
+    LastSyncCustomObject<?> that = (LastSyncCustomObject<?>) o;
     return getLastSyncDurationInMillis() == that.getLastSyncDurationInMillis()
-        && getLastSyncTimestamp().equals(that.getLastSyncTimestamp());
+        && Objects.equals(getLastSyncTimestamp(), that.getLastSyncTimestamp())
+        && Objects.equals(getApplicationVersion(), that.getApplicationVersion());
   }
 
   @Override
