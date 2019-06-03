@@ -64,7 +64,7 @@ By default, running the sync without using `-f` or `--full` option would run a d
 which have been modified since the last time the sync has run would be synced. The application achieves that by 
 persisting the last sync timestamp on commercetools using `CustomObjects` on every sync run. 
 
-A last sync timestamp `customObject` for a runner name `testRun` running a **Type Sync** from a source commercetools project with the key `java-sync-source-dev1` looks as follows:
+The last sync timestamp `customObject` for a runner name `testRun` running a **Type Sync** from a source commercetools project with the key `java-sync-source-dev1` looks as follows:
 
 ```javascript
 {
