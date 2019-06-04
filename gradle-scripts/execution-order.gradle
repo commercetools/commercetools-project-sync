@@ -24,6 +24,8 @@ jacocoTestReport.mustRunAfter jacocoTestCoverageVerification
  * Global execution order
  */
 // Ensure FindBugs runs after PMD
+pmdMain.mustRunAfter compileIntegrationTestJava
+// Ensure FindBugs runs after PMD
 findbugsMain.mustRunAfter pmdIntegrationTest
 // Ensure dependencyUpdates runs after findbugsIntegrationTest
 dependencyUpdates.mustRunAfter findbugsIntegrationTest
