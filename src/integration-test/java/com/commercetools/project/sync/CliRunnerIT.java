@@ -104,7 +104,7 @@ class CliRunnerIT {
     sourceProjectClient.execute(TypeCreateCommand.of(typeDraft)).toCompletableFuture().join();
 
     final CategoryDraft categoryDraft =
-        CategoryDraftBuilder.of(ofEnglish("t-shirts"), ofEnglish("Summer 2019 t-shirts"))
+        CategoryDraftBuilder.of(ofEnglish("t-shirts"), ofEnglish("t-shirts"))
             .key(RESOURCE_KEY)
             .build();
 
