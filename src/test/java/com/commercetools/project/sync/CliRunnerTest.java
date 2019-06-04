@@ -246,7 +246,7 @@ class CliRunnerTest {
   }
 
   @Test
-  void run_WithSyncAsLongArgument_ShouldProcessSyncOption() {
+  void run_WithSyncAsLongArgument_ShouldBuildSyncerAndExecuteSync() {
     // preparation
     final SphereClient sourceClient = mock(SphereClient.class);
     when(sourceClient.getConfig()).thenReturn(SphereClientConfig.of("foo", "foo", "foo"));
