@@ -121,6 +121,7 @@ public final class LastSyncCustomObject<T extends BaseSyncStatistics> {
 
   @Override
   public int hashCode() {
-    return Objects.hash(getLastSyncTimestamp(), getLastSyncDurationInMillis());
+    return Objects.hash(
+        getLastSyncTimestamp(), getApplicationVersion(), getLastSyncDurationInMillis());
   }
 }
