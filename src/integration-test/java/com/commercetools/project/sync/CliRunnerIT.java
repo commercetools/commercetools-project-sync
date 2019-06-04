@@ -73,7 +73,6 @@ class CliRunnerIT {
       TestLoggerFactory.getTestLogger(CliRunner.class);
   private static final String RESOURCE_KEY = "foo";
 
-
   @BeforeEach
   void setup() {
     syncerTestLogger.clearAll();
@@ -301,7 +300,7 @@ class CliRunnerIT {
 
   @Test
   void
-      run_WithSyncAsArgumentWithAllArg_ShouldExecuteAllSyncersAndStoreLastSyncTimestampsAsCustomObjects() {
+      run_WithSyncAsArgumentWithAllArgAsDeltaSync_ShouldExecuteAllSyncersAndStoreLastSyncTimestampsAsCustomObjects() {
     // preparation
     try (final SphereClient targetClient = createClient(CTP_TARGET_CLIENT_CONFIG)) {
       try (final SphereClient sourceClient = createClient(CTP_SOURCE_CLIENT_CONFIG)) {
@@ -346,6 +345,64 @@ class CliRunnerIT {
         cleanUpProjects(postSourceClient, postTargetClient);
       }
     }
+  }
+
+  @Test
+  void run_WithSyncAsArgumentWithAllArgAsFullSync_ShouldExecuteAllSyncers() {
+    // preparation
+    try (final SphereClient targetClient = createClient(CTP_TARGET_CLIENT_CONFIG)) {
+      try (final SphereClient sourceClient = createClient(CTP_SOURCE_CLIENT_CONFIG)) {
+
+        final SyncerFactory syncerFactory =
+            SyncerFactory.of(() -> sourceClient, () -> targetClient, Clock.systemDefaultZone());
+
+        // test
+        CliRunner.of().run(new String[] {"-s", "all", "-r", "runnerName", "-f"}, syncerFactory);
+      }
+    }
+
+    // create clients again (for assertions and cleanup), since the run method closes the clients
+    // after execution
+    // is done.
+    try (final SphereClient postSourceClient = createClient(CTP_SOURCE_CLIENT_CONFIG)) {
+      try (final SphereClient postTargetClient = createClient(CTP_TARGET_CLIENT_CONFIG)) {
+        // assertions
+        assertAllSyncersLoggingEvents(syncerTestLogger, cliRunnerTestLogger, 1);
+
+        assertAllResourcesAreSyncedToTarget(postTargetClient);
+        assertCurrentCtpTimestampGeneratorDoesntExist(
+            postTargetClient, "runnerName", "ProductTypeSync");
+        assertNoCustomObjectExists(postTargetClient);
+        cleanUpProjects(postSourceClient, postTargetClient);
+      }
+    }
+  }
+
+  private void assertNoCustomObjectExists(@Nonnull final SphereClient targetClient) {
+
+    final CustomObjectQuery<LastSyncCustomObject> lastSyncQuery =
+        CustomObjectQuery.of(LastSyncCustomObject.class);
+    final PagedQueryResult<CustomObject<LastSyncCustomObject>> lastSyncResult =
+        targetClient.execute(lastSyncQuery).toCompletableFuture().join();
+    assertThat(lastSyncResult.getResults()).isEmpty();
+  }
+
+  private void assertCurrentCtpTimestampGeneratorDoesntExist(
+      @Nonnull final SphereClient targetClient,
+      @Nonnull final String runnerName,
+      @Nonnull final String syncModuleName) {
+
+    final CustomObjectQuery<String> timestampGeneratorQuery =
+        CustomObjectQuery.of(String.class)
+            .byContainer(
+                format(
+                    "commercetools-project-sync.%s.%s.%s",
+                    runnerName, syncModuleName, TIMESTAMP_GENERATOR_KEY));
+
+    final PagedQueryResult<CustomObject<String>> currentCtpTimestampGeneratorResults =
+        targetClient.execute(timestampGeneratorQuery).toCompletableFuture().join();
+
+    assertThat(currentCtpTimestampGeneratorResults.getResults()).isEmpty();
   }
 
   private void assertLastSyncCustomObjectExists(

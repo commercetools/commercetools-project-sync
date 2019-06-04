@@ -91,19 +91,22 @@ public abstract class Syncer<
   /**
    * Fetches the sourceClient's project resources of type {@code T} with all needed references
    * expanded and treats each page as a batch to the sync process. Then executes the sync process of
-   * all pages in parallel. It then returns a completion stage containing no result after the
-   * execution of the sync process and logging the result.
+   * on every page fetched from the source project sequentially. It then returns a completion stage
+   * containing a {@link Void} result after the execution of the sync process and logging the
+   * result.
    *
-   * <p>Note: The method checks if there was a last sync time stamp persisted as a custom object in
-   * the target project for this specific source project and sync module. If there is, it will sync
-   * only the resources which were modified after the last sync time stamp and before the start of
-   * this sync.
+   * <p>Note: If {@code isFullSync} is {@code false}, i.e. a delta sync is required, the method
+   * checks if there was a last sync time stamp persisted as a custom object in the target project
+   * for this specific source project and sync module. If there is, it will sync only the resources
+   * which were modified after the last sync time stamp and before the start of this sync.
    *
    * @param runnerName the name of the sync runner.
+   * @param isFullSync whether to run a delta sync (based on the last sync timestamp) or a full
+   *     sync.
    * @return completion stage containing no result after the execution of the sync process and
    *     logging the result.
    */
-  public CompletionStage<Void> sync(@Nullable final String runnerName) {
+  public CompletionStage<Void> sync(@Nullable final String runnerName, final boolean isFullSync) {
 
     final String sourceProjectKey = sourceClient.getConfig().getProjectKey();
     final String syncModuleName = getSyncModuleName(sync.getClass());
@@ -115,22 +118,29 @@ public abstract class Syncer<
               syncModuleName, sourceProjectKey, targetProjectKey));
     }
 
-    return customObjectService
-        .getCurrentCtpTimestamp(runnerName, syncModuleName)
-        .thenCompose(
-            currentCtpTimestamp ->
-                syncResourcesSinceLastSync(
-                    sourceProjectKey, syncModuleName, runnerName, currentCtpTimestamp))
-        .thenAccept(
-            ignoredResult -> {
-              if (LOGGER.isInfoEnabled()) {
-                logStatistics(sync.getStatistics(), LOGGER);
-              }
-            });
+    final CompletionStage<Void> syncStage;
+    if (isFullSync) {
+      syncStage = sync(getQuery()).thenAccept(result -> {});
+    } else {
+      syncStage =
+          customObjectService
+              .getCurrentCtpTimestamp(runnerName, syncModuleName)
+              .thenCompose(
+                  currentCtpTimestamp ->
+                      syncResourcesSinceLastSync(
+                          sourceProjectKey, syncModuleName, runnerName, currentCtpTimestamp));
+    }
+
+    return syncStage.thenAccept(
+        ignoredResult -> {
+          if (LOGGER.isInfoEnabled()) {
+            logStatistics(sync.getStatistics(), LOGGER);
+          }
+        });
   }
 
   @Nonnull
-  private CompletionStage<CustomObject<LastSyncCustomObject>> syncResourcesSinceLastSync(
+  private CompletionStage<Void> syncResourcesSinceLastSync(
       @Nonnull final String sourceProjectKey,
       @Nonnull final String syncModuleName,
       @Nullable final String runnerName,
@@ -146,7 +156,8 @@ public abstract class Syncer<
                     syncModuleName,
                     runnerName,
                     currentCtpTimestamp,
-                    syncDurationInMillis));
+                    syncDurationInMillis))
+        .thenAccept(result -> {});
   }
 
   @Nonnull

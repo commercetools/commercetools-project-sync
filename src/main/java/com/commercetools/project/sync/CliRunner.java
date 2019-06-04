@@ -21,12 +21,14 @@ import org.slf4j.LoggerFactory;
 
 final class CliRunner {
   static final String SYNC_MODULE_OPTION_SHORT = "s";
-  static final String HELP_OPTION_SHORT = "h";
   static final String RUNNER_NAME_OPTION_SHORT = "r";
+  static final String FULL_SYNC_OPTION_SHORT = "f";
+  static final String HELP_OPTION_SHORT = "h";
   static final String VERSION_OPTION_SHORT = "v";
 
   static final String SYNC_MODULE_OPTION_LONG = "sync";
   static final String RUNNER_NAME_OPTION_LONG = "runnerName";
+  static final String FULL_SYNC_OPTION_LONG = "full";
   static final String HELP_OPTION_LONG = "help";
   static final String VERSION_OPTION_LONG = "version";
 
@@ -47,9 +49,12 @@ final class CliRunner {
           SYNC_MODULE_OPTION_INVENTORY_ENTRY_SYNC,
           SYNC_MODULE_OPTION_ALL);
   static final String RUNNER_NAME_OPTION_DESCRIPTION =
-      "name for the running sync instance. Please make sure the name is unique, otherwise running more than 1 sync "
+      "Choose a name for the running sync instance. Please make sure the name is unique, otherwise running more than 1 sync "
           + "instance with the same name would lead to an unexpected behaviour. "
           + "(optional parameter) default: 'runnerName'.";
+  static final String FULL_SYNC_OPTION_DESCRIPTION =
+      "By default, a delta sync runs using last-sync-timestamp logic. Use this flag to run a full sync. i.e. sync the "
+          + "entire data set.";
   static final String HELP_OPTION_DESCRIPTION = "Print help information.";
   static final String VERSION_OPTION_DESCRIPTION = "Print the version of the application.";
 
@@ -109,6 +114,12 @@ final class CliRunner {
             .hasArg()
             .build();
 
+    final Option fullSyncOption =
+        Option.builder(FULL_SYNC_OPTION_SHORT)
+            .longOpt(FULL_SYNC_OPTION_LONG)
+            .desc(FULL_SYNC_OPTION_DESCRIPTION)
+            .build();
+
     final Option helpOption =
         Option.builder(HELP_OPTION_SHORT)
             .longOpt(HELP_OPTION_LONG)
@@ -122,6 +133,7 @@ final class CliRunner {
             .build();
 
     options.addOption(syncOption);
+    options.addOption(fullSyncOption);
     options.addOption(runnerOption);
     options.addOption(helpOption);
     options.addOption(versionOption);
@@ -172,10 +184,11 @@ final class CliRunner {
 
     final String syncOptionValue = commandLine.getOptionValue(SYNC_MODULE_OPTION_SHORT);
     final String runnerNameValue = commandLine.getOptionValue(RUNNER_NAME_OPTION_SHORT);
+    final boolean isFullSync = commandLine.hasOption(FULL_SYNC_OPTION_SHORT);
 
     return SYNC_MODULE_OPTION_ALL.equals(syncOptionValue)
-        ? syncerFactory.syncAll(runnerNameValue)
-        : syncerFactory.sync(syncOptionValue, runnerNameValue);
+        ? syncerFactory.syncAll(runnerNameValue, isFullSync)
+        : syncerFactory.sync(syncOptionValue, runnerNameValue, isFullSync);
   }
 
   private static void printHelpToStdOut(@Nonnull final Options cliOptions) {
