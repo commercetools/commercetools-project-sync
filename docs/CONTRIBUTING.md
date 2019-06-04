@@ -84,4 +84,4 @@ It is recommended to set it in your IDE auto formatting settings for this projec
 This images are pushed to the docker hub repo: [commercetools/commercetools-project-sync](https://hub.docker.com/r/commercetools/commercetools-project-sync/)
 
 ## License
-Copyright (c) 2018 commercetools
+Copyright (c) 2019 commercetools
