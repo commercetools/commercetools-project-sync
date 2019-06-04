@@ -91,16 +91,18 @@ public abstract class Syncer<
   /**
    * Fetches the sourceClient's project resources of type {@code T} with all needed references
    * expanded and treats each page as a batch to the sync process. Then executes the sync process of
-   * all pages in parallel. It then returns a completion stage containing no result after the
-   * execution of the sync process and logging the result.
+   * on every page fetched from the source project sequentially. It then returns a completion stage
+   * containing a {@link Void} result after the execution of the sync process and logging the
+   * result.
    *
-   * <p>Note: The method checks if there was a last sync time stamp persisted as a custom object in
-   * the target project for this specific source project and sync module. If there is, it will sync
-   * only the resources which were modified after the last sync time stamp and before the start of
-   * this sync.
+   * <p>Note: If {@code isFullSync} is {@code false}, i.e. a delta sync is required, the method
+   * checks if there was a last sync time stamp persisted as a custom object in the target project
+   * for this specific source project and sync module. If there is, it will sync only the resources
+   * which were modified after the last sync time stamp and before the start of this sync.
    *
    * @param runnerName the name of the sync runner.
-   * @param isFullSync whether to run a delta sync (based on the last sync timestamp) or a full sync.
+   * @param isFullSync whether to run a delta sync (based on the last sync timestamp) or a full
+   *     sync.
    * @return completion stage containing no result after the execution of the sync process and
    *     logging the result.
    */

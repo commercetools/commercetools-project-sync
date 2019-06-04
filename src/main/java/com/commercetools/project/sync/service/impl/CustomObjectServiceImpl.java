@@ -36,6 +36,22 @@ public class CustomObjectServiceImpl implements CustomObjectService {
     this.sphereClient = sphereClient;
   }
 
+  /**
+   * Gets the current timestamp of CTP by creating/updating a custom object with the container:
+   * 'commercetools-project-sync.{@code runnerName}.{@code syncModuleName}.timestampGenerator' and
+   * key: 'timestampGenerator' and then returning the (lastModifiedAt - 2 minutes) of this
+   * created/updated custom object.
+   *
+   * <p>Note: The 2 minutes is an arbitrary number chosen to account for any potential delays of
+   * entries added to the CTP DB with older dates than now, since CTP timestamps are created on
+   * distributed APIs.
+   *
+   * @param syncModuleName the name of the resource being synced. E.g. productSync, categorySync,
+   *     etc..
+   * @param runnerName the name of this specific running sync instance defined by the user.
+   * @return a {@link CompletionStage} containing the current CTP timestamp as {@link
+   *     ZonedDateTime}.
+   */
   @Nonnull
   @Override
   public CompletionStage<ZonedDateTime> getCurrentCtpTimestamp(
@@ -69,6 +85,22 @@ public class CustomObjectServiceImpl implements CustomObjectService {
     return sphereClient.execute(CustomObjectUpsertCommand.of(customObjectDraft));
   }
 
+  /**
+   * Queries for custom objects, on the CTP project defined by the {@code sphereClient}, which have
+   * a container: 'commercetools-project-sync.{@code runnerName}.{@code syncModuleName}' and key:
+   * {@code sourceProjectKey}. The method then returns the first custom object returned in the
+   * result set if there is, wrapped in an {@link Optional} as a result of a {@link
+   * CompletionStage}. It will be, at most, one custom object since the key is unique per custom
+   * object container as per CTP documentation.
+   *
+   * @param sourceProjectKey the source project from which the data is coming.
+   * @param syncModuleName the name of the resource being synced. E.g. productSync, categorySync,
+   *     etc..
+   * @param runnerName the name of this specific running sync instance defined by the user.
+   * @return the first custom object returned in the result set if there is, wrapped in an {@link
+   *     Optional} as a result of a {@link CompletionStage}. It will be, at most, one custom object
+   *     since the key is unique per custom object container as per CTP documentation.
+   */
   @Nonnull
   @Override
   public CompletionStage<Optional<CustomObject<LastSyncCustomObject>>> getLastSyncCustomObject(
@@ -90,6 +122,21 @@ public class CustomObjectServiceImpl implements CustomObjectService {
         .thenApply(Stream::findFirst);
   }
 
+  /**
+   * Creates (or updates an already existing) custom object, with the container:
+   * 'commercetools-project-sync.{@code runnerName}.{@code syncModuleName}' and key: {@code
+   * sourceProjectKey}, enriched with the information in the passed {@link LastSyncCustomObject}
+   * param.
+   *
+   * @param sourceProjectKey the source project from which the data is coming.
+   * @param syncModuleName the name of the resource being synced. E.g. productSync, categorySync,
+   *     etc..
+   * @param runnerName the name of this specific running sync instance defined by the user.
+   * @param lastSyncCustomObject contains information about the last sync instance.
+   * @return the first custom object returned in the result set if there is, wrapped in an {@link
+   *     Optional} as a result of a {@link CompletionStage}. It will be, at most, one custom object
+   *     since the key is unique per custom object container as per CTP documentation.
+   */
   @Nonnull
   @Override
   public CompletionStage<CustomObject<LastSyncCustomObject>> createLastSyncCustomObject(
