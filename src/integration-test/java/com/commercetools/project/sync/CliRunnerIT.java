@@ -288,7 +288,7 @@ class CliRunnerIT {
         CustomObjectQuery.of(String.class)
             .byContainer(
                 format(
-                    "%s.%s.%s",
+                    "%s.%s.%s.%s",
                     APPLICATION_DEFAULT_NAME, runnerName, syncModuleName, TIMESTAMP_GENERATOR_KEY));
 
     final PagedQueryResult<CustomObject<String>> currentCtpTimestampGeneratorResults =
