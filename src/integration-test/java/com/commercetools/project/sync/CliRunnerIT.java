@@ -59,8 +59,7 @@ import io.sphere.sdk.types.queries.TypeQuery;
 import java.time.Clock;
 import java.time.ZonedDateTime;
 import javax.annotation.Nonnull;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -74,9 +73,13 @@ class CliRunnerIT {
       TestLoggerFactory.getTestLogger(CliRunner.class);
   private static final String RESOURCE_KEY = "foo";
 
-  @BeforeAll
-  static void setupSuite() {
+
+  @BeforeEach
+  void setup() {
+    syncerTestLogger.clearAll();
+    cliRunnerTestLogger.clearAll();
     cleanUpProjects(createClient(CTP_SOURCE_CLIENT_CONFIG), createClient(CTP_TARGET_CLIENT_CONFIG));
+    setupSourceProjectData(createClient(CTP_SOURCE_CLIENT_CONFIG));
   }
 
   static void setupSourceProjectData(@Nonnull final SphereClient sourceProjectClient) {
@@ -124,11 +127,6 @@ class CliRunnerIT {
         .join();
   }
 
-  @BeforeEach
-  void setup() {
-    setupSourceProjectData(createClient(CTP_SOURCE_CLIENT_CONFIG));
-  }
-
   private static void cleanUpProjects(
       @Nonnull final SphereClient sourceClient, @Nonnull final SphereClient targetClient) {
 
@@ -145,10 +143,8 @@ class CliRunnerIT {
     queryAndExecute(client, InventoryEntryQuery.of(), InventoryEntryDeleteCommand::of);
   }
 
-  @AfterEach
-  void tearDownTest() {
-    syncerTestLogger.clearAll();
-    cliRunnerTestLogger.clearAll();
+  @AfterAll
+  static void tearDownSuite() {
     cleanUpProjects(createClient(CTP_SOURCE_CLIENT_CONFIG), createClient(CTP_TARGET_CLIENT_CONFIG));
   }
 

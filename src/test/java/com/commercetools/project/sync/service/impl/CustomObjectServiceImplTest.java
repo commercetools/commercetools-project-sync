@@ -24,21 +24,34 @@ import java.time.ZonedDateTime;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
 class CustomObjectServiceImplTest {
 
+  private static final SphereClient CLIENT = mock(SphereClient.class);
+
+  @SuppressWarnings("unchecked")
+  private static final CustomObject<String> STRING_CUSTOM_OBJECT = mock(CustomObject.class);
+
+  @SuppressWarnings("unchecked")
+  private static final CustomObject<LastSyncCustomObject> LAST_SYNC_CUSTOM_OBJECT =
+      mock(CustomObject.class);
+
+  @BeforeAll
+  static void setup() {
+    when(STRING_CUSTOM_OBJECT.getLastModifiedAt()).thenReturn(ZonedDateTime.now());
+    when(LAST_SYNC_CUSTOM_OBJECT.getLastModifiedAt()).thenReturn(ZonedDateTime.now());
+  }
+
   @Test
   @SuppressWarnings("unchecked")
   void getCurrentCtpTimestamp_OnSuccessfulUpsert_ShouldCompleteWithCtpTimestampMinusTwoMinutes() {
     // preparation
-    final SphereClient client = mock(SphereClient.class);
-    final CustomObject<String> stringCustomObject = mock(CustomObject.class);
-    when(stringCustomObject.getLastModifiedAt()).thenReturn(ZonedDateTime.now());
-    when(client.execute(any(CustomObjectUpsertCommand.class)))
-        .thenReturn(CompletableFuture.completedFuture(stringCustomObject));
-    final CustomObjectService customObjectService = new CustomObjectServiceImpl(client);
+    when(CLIENT.execute(any(CustomObjectUpsertCommand.class)))
+        .thenReturn(CompletableFuture.completedFuture(STRING_CUSTOM_OBJECT));
+    final CustomObjectService customObjectService = new CustomObjectServiceImpl(CLIENT);
 
     // test
     final CompletionStage<ZonedDateTime> ctpTimestamp =
@@ -46,21 +59,18 @@ class CustomObjectServiceImplTest {
 
     // assertions
     assertThat(ctpTimestamp)
-        .isCompletedWithValue(stringCustomObject.getLastModifiedAt().minusMinutes(2));
+        .isCompletedWithValue(STRING_CUSTOM_OBJECT.getLastModifiedAt().minusMinutes(2));
   }
 
   @Test
   @SuppressWarnings("unchecked")
   void getCurrentCtpTimestamp_OnFailedUpsert_ShouldCompleteExceptionally() {
     // preparation
-    final SphereClient client = mock(SphereClient.class);
-    final CustomObject<String> stringCustomObject = mock(CustomObject.class);
-    when(stringCustomObject.getLastModifiedAt()).thenReturn(ZonedDateTime.now());
-    when(client.execute(any(CustomObjectUpsertCommand.class)))
+    when(CLIENT.execute(any(CustomObjectUpsertCommand.class)))
         .thenReturn(
             CompletableFutureUtils.exceptionallyCompletedFuture(
                 new BadGatewayException("CTP error!")));
-    final CustomObjectService customObjectService = new CustomObjectServiceImpl(client);
+    final CustomObjectService customObjectService = new CustomObjectServiceImpl(CLIENT);
 
     // test
     final CompletionStage<ZonedDateTime> ctpTimestamp =
@@ -78,40 +88,34 @@ class CustomObjectServiceImplTest {
   void
       getLastSyncCustomObject_OnSuccessfulQueryWithResults_ShouldCompleteWithLastSyncCustomObject() {
     // preparation
-    final SphereClient client = mock(SphereClient.class);
-    final CustomObject<LastSyncCustomObject> customObject = mock(CustomObject.class);
-    when(customObject.getLastModifiedAt()).thenReturn(ZonedDateTime.now());
-
     final PagedQueryResult<CustomObject<LastSyncCustomObject>> queriedCustomObjects =
         spy(PagedQueryResult.empty());
-    when(queriedCustomObjects.getResults()).thenReturn(singletonList(customObject));
+    when(queriedCustomObjects.getResults()).thenReturn(singletonList(LAST_SYNC_CUSTOM_OBJECT));
 
-    when(client.execute(any(CustomObjectQuery.class)))
+    when(CLIENT.execute(any(CustomObjectQuery.class)))
         .thenReturn(CompletableFuture.completedFuture(queriedCustomObjects));
 
-    final CustomObjectService customObjectService = new CustomObjectServiceImpl(client);
+    final CustomObjectService customObjectService = new CustomObjectServiceImpl(CLIENT);
 
     // test
     final CompletionStage<Optional<CustomObject<LastSyncCustomObject>>> lastSyncCustomObject =
         customObjectService.getLastSyncCustomObject("foo", "bar", DEFAULT_RUNNER_NAME);
 
     // assertions
-    assertThat(lastSyncCustomObject).isCompletedWithValue(Optional.of(customObject));
+    assertThat(lastSyncCustomObject).isCompletedWithValue(Optional.of(LAST_SYNC_CUSTOM_OBJECT));
   }
 
   @Test
   @SuppressWarnings("unchecked")
   void getLastSyncCustomObject_OnSuccessfulQueryWithNoResults_ShouldCompleteWithEmptyOptional() {
     // preparation
-    final SphereClient client = mock(SphereClient.class);
-
     final PagedQueryResult<CustomObject<LastSyncCustomObject>> queriedCustomObjects =
         PagedQueryResult.empty();
 
-    when(client.execute(any(CustomObjectQuery.class)))
+    when(CLIENT.execute(any(CustomObjectQuery.class)))
         .thenReturn(CompletableFuture.completedFuture(queriedCustomObjects));
 
-    final CustomObjectService customObjectService = new CustomObjectServiceImpl(client);
+    final CustomObjectService customObjectService = new CustomObjectServiceImpl(CLIENT);
 
     // test
     final CompletionStage<Optional<CustomObject<LastSyncCustomObject>>> lastSyncCustomObject =
@@ -125,20 +129,16 @@ class CustomObjectServiceImplTest {
   @SuppressWarnings("unchecked")
   void getLastSyncCustomObject_OnFailedQuery_ShouldCompleteExceptionally() {
     // preparation
-    final SphereClient client = mock(SphereClient.class);
-    final CustomObject<LastSyncCustomObject> customObject = mock(CustomObject.class);
-    when(customObject.getLastModifiedAt()).thenReturn(ZonedDateTime.now());
-
     final PagedQueryResult<CustomObject<LastSyncCustomObject>> queriedCustomObjects =
         spy(PagedQueryResult.empty());
-    when(queriedCustomObjects.getResults()).thenReturn(singletonList(customObject));
+    when(queriedCustomObjects.getResults()).thenReturn(singletonList(LAST_SYNC_CUSTOM_OBJECT));
 
-    when(client.execute(any(CustomObjectQuery.class)))
+    when(CLIENT.execute(any(CustomObjectQuery.class)))
         .thenReturn(
             CompletableFutureUtils.exceptionallyCompletedFuture(
                 new BadGatewayException("CTP error!")));
 
-    final CustomObjectService customObjectService = new CustomObjectServiceImpl(client);
+    final CustomObjectService customObjectService = new CustomObjectServiceImpl(CLIENT);
 
     // test
     final CompletionStage<Optional<CustomObject<LastSyncCustomObject>>> lastSyncCustomObject =
@@ -155,14 +155,10 @@ class CustomObjectServiceImplTest {
   @SuppressWarnings("unchecked")
   void createLastSyncCustomObject_OnSuccessfulCreation_ShouldCompleteWithLastSyncCustomObject() {
     // preparation
-    final SphereClient client = mock(SphereClient.class);
-    final CustomObject<LastSyncCustomObject> customObject = mock(CustomObject.class);
-    when(customObject.getLastModifiedAt()).thenReturn(ZonedDateTime.now());
+    when(CLIENT.execute(any(CustomObjectUpsertCommand.class)))
+        .thenReturn(CompletableFuture.completedFuture(LAST_SYNC_CUSTOM_OBJECT));
 
-    when(client.execute(any(CustomObjectUpsertCommand.class)))
-        .thenReturn(CompletableFuture.completedFuture(customObject));
-
-    final CustomObjectService customObjectService = new CustomObjectServiceImpl(client);
+    final CustomObjectService customObjectService = new CustomObjectServiceImpl(CLIENT);
 
     // test
     final LastSyncCustomObject<ProductSyncStatistics> lastSyncCustomObject =
@@ -175,23 +171,19 @@ class CustomObjectServiceImplTest {
             .join();
 
     // assertions
-    assertThat(createdCustomObject).isEqualTo(customObject);
+    assertThat(createdCustomObject).isEqualTo(LAST_SYNC_CUSTOM_OBJECT);
   }
 
   @Test
   @SuppressWarnings("unchecked")
   void createLastSyncCustomObject_OnFailedCreation_ShouldCompleteExceptionally() {
     // preparation
-    final SphereClient client = mock(SphereClient.class);
-    final CustomObject<LastSyncCustomObject> customObject = mock(CustomObject.class);
-    when(customObject.getLastModifiedAt()).thenReturn(ZonedDateTime.now());
-
-    when(client.execute(any(CustomObjectUpsertCommand.class)))
+    when(CLIENT.execute(any(CustomObjectUpsertCommand.class)))
         .thenReturn(
             CompletableFutureUtils.exceptionallyCompletedFuture(
                 new BadGatewayException("CTP error!")));
 
-    final CustomObjectService customObjectService = new CustomObjectServiceImpl(client);
+    final CustomObjectService customObjectService = new CustomObjectServiceImpl(CLIENT);
 
     // test
     final LastSyncCustomObject<ProductSyncStatistics> lastSyncCustomObject =
