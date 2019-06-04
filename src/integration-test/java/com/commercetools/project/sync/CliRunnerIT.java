@@ -49,7 +49,7 @@ import io.sphere.sdk.types.commands.TypeDeleteCommand;
 import io.sphere.sdk.types.queries.TypeQuery;
 import java.time.Clock;
 import javax.annotation.Nonnull;
-import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import uk.org.lidalia.slf4jtest.TestLogger;
@@ -61,7 +61,9 @@ class CliRunnerIT {
       TestLoggerFactory.getTestLogger(CliRunner.class);
 
   @BeforeEach
-  void setupSuite() {
+  void setup() {
+    syncerTestLogger.clearAll();
+    cliRunnerTestLogger.clearAll();
     cleanUpProjects(createClient(CTP_SOURCE_CLIENT_CONFIG), createClient(CTP_TARGET_CLIENT_CONFIG));
   }
 
@@ -81,10 +83,8 @@ class CliRunnerIT {
     queryAndExecute(client, InventoryEntryQuery.of(), InventoryEntryDeleteCommand::of);
   }
 
-  @AfterEach
-  void tearDownTest() {
-    syncerTestLogger.clearAll();
-    cliRunnerTestLogger.clearAll();
+  @AfterAll
+  static void tearDownSuite() {
     cleanUpProjects(createClient(CTP_SOURCE_CLIENT_CONFIG), createClient(CTP_TARGET_CLIENT_CONFIG));
   }
 
