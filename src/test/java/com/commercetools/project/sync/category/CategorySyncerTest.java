@@ -1,5 +1,6 @@
 package com.commercetools.project.sync.category;
 
+import static com.commercetools.project.sync.util.TestUtils.getMockedClock;
 import static com.commercetools.sync.categories.utils.CategoryReferenceReplacementUtils.buildCategoryQuery;
 import static com.commercetools.sync.categories.utils.CategoryReferenceReplacementUtils.replaceCategoriesReferenceIdsWithKeys;
 import static io.sphere.sdk.json.SphereJsonUtils.readObjectFromResource;
@@ -10,6 +11,7 @@ import static org.mockito.Mockito.mock;
 import com.commercetools.sync.categories.CategorySync;
 import io.sphere.sdk.categories.Category;
 import io.sphere.sdk.categories.CategoryDraft;
+import io.sphere.sdk.categories.queries.CategoryQuery;
 import io.sphere.sdk.client.SphereClient;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -19,7 +21,7 @@ class CategorySyncerTest {
   void of_ShouldCreateCategorySyncerInstance() {
     // test
     final CategorySyncer categorySyncer =
-        CategorySyncer.of(mock(SphereClient.class), mock(SphereClient.class));
+        CategorySyncer.of(mock(SphereClient.class), mock(SphereClient.class), getMockedClock());
 
     // assertions
     assertThat(categorySyncer).isNotNull();
@@ -28,21 +30,33 @@ class CategorySyncerTest {
   }
 
   @Test
-  void transformResourcesToDrafts_ShouldReplaceCategoryReferenceIdsWithKeys() {
+  void transform_ShouldReplaceCategoryReferenceIdsWithKeys() {
     // preparation
     final CategorySyncer categorySyncer =
-        CategorySyncer.of(mock(SphereClient.class), mock(SphereClient.class));
+        CategorySyncer.of(mock(SphereClient.class), mock(SphereClient.class), getMockedClock());
     final List<Category> categoryPage =
         asList(
             readObjectFromResource("category-key-1.json", Category.class),
             readObjectFromResource("category-key-2.json", Category.class));
 
     // test
-    final List<CategoryDraft> draftsFromPage =
-        categorySyncer.transformResourcesToDrafts(categoryPage);
+    final List<CategoryDraft> draftsFromPage = categorySyncer.transform(categoryPage);
 
     // assertions
     final List<CategoryDraft> expectedResult = replaceCategoriesReferenceIdsWithKeys(categoryPage);
     assertThat(draftsFromPage).isEqualTo(expectedResult);
+  }
+
+  @Test
+  void getQuery_ShouldBuildCategoryQuery() {
+    // preparation
+    final CategorySyncer categorySyncer =
+        CategorySyncer.of(mock(SphereClient.class), mock(SphereClient.class), getMockedClock());
+
+    // test
+    final CategoryQuery query = categorySyncer.getQuery();
+
+    // assertion
+    assertThat(query).isEqualTo(buildCategoryQuery());
   }
 }

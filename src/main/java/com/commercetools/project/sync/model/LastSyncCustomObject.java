@@ -4,9 +4,10 @@ import com.commercetools.project.sync.util.SyncUtils;
 import com.commercetools.sync.commons.helpers.BaseSyncStatistics;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.time.ZonedDateTime;
+import java.util.Objects;
 import javax.annotation.Nonnull;
 
-public class LastSyncCustomObject<T extends BaseSyncStatistics> {
+public final class LastSyncCustomObject<T extends BaseSyncStatistics> {
 
   @JsonIgnoreProperties({
     "latestBatchStartTime",
@@ -26,6 +27,17 @@ public class LastSyncCustomObject<T extends BaseSyncStatistics> {
   private LastSyncCustomObject(
       @Nonnull final ZonedDateTime lastSyncTimestamp,
       @Nonnull final T lastSyncStatistics,
+      final long lastSyncDurationInMillis) {
+
+    this.lastSyncTimestamp = lastSyncTimestamp;
+    this.lastSyncStatistics = lastSyncStatistics;
+    this.applicationVersion = SyncUtils.getApplicationVersion();
+    this.lastSyncDurationInMillis = lastSyncDurationInMillis;
+  }
+
+  private LastSyncCustomObject(
+      @Nonnull final ZonedDateTime lastSyncTimestamp,
+      @Nonnull final T lastSyncStatistics,
       @Nonnull final String applicationVersion,
       final long lastSyncDurationInMillis) {
 
@@ -35,6 +47,8 @@ public class LastSyncCustomObject<T extends BaseSyncStatistics> {
     this.lastSyncDurationInMillis = lastSyncDurationInMillis;
   }
 
+  // Needed for the 'com.fasterxml.jackson' deserialization, for example, when fetching
+  // from CTP custom objects.
   public LastSyncCustomObject() {}
 
   @Nonnull
@@ -44,10 +58,18 @@ public class LastSyncCustomObject<T extends BaseSyncStatistics> {
       final long lastSyncDurationInSeconds) {
 
     return new LastSyncCustomObject<>(
-        lastSyncTimestamp,
-        lastSyncStatistics,
-        SyncUtils.getApplicationVersion(),
-        lastSyncDurationInSeconds);
+        lastSyncTimestamp, lastSyncStatistics, lastSyncDurationInSeconds);
+  }
+
+  @Nonnull
+  public static <T extends BaseSyncStatistics> LastSyncCustomObject<T> of(
+      @Nonnull final ZonedDateTime lastSyncTimestamp,
+      @Nonnull final T lastSyncStatistics,
+      @Nonnull final String applicationVersion,
+      final long lastSyncDurationInSeconds) {
+
+    return new LastSyncCustomObject<>(
+        lastSyncTimestamp, lastSyncStatistics, applicationVersion, lastSyncDurationInSeconds);
   }
 
   public ZonedDateTime getLastSyncTimestamp() {
@@ -66,9 +88,18 @@ public class LastSyncCustomObject<T extends BaseSyncStatistics> {
     return lastSyncDurationInMillis;
   }
 
+  // Setters are needed for the 'com.fasterxml.jackson' deserialization, for example, when fetching
+  // from CTP custom objects.
+
   public void setLastSyncTimestamp(@Nonnull final ZonedDateTime lastSyncTimestamp) {
     this.lastSyncTimestamp = lastSyncTimestamp;
   }
+
+  // TODO: Implement a settter for lastSyncStatistics too to be able to deserialize statisitcs. It
+  // needs a
+  // customized deserializer for because BaseSyncStatistics is an abstract class:
+  // https://www.baeldung.com/jackson-inheritance
+  // https://github.com/commercetools/commercetools-project-sync/issues/27
 
   public void setApplicationVersion(@Nonnull final String applicationVersion) {
     this.applicationVersion = applicationVersion;
@@ -76,5 +107,28 @@ public class LastSyncCustomObject<T extends BaseSyncStatistics> {
 
   public void setLastSyncDurationInMillis(final long lastSyncDurationInMillis) {
     this.lastSyncDurationInMillis = lastSyncDurationInMillis;
+  }
+
+  // TODO: Also include statistics in equals comparison after
+  // https://github.com/commercetools/commercetools-sync-java/issues/376 is resolved
+  // https://github.com/commercetools/commercetools-project-sync/issues/28
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (!(o instanceof LastSyncCustomObject)) {
+      return false;
+    }
+    LastSyncCustomObject<?> that = (LastSyncCustomObject<?>) o;
+    return getLastSyncDurationInMillis() == that.getLastSyncDurationInMillis()
+        && Objects.equals(getLastSyncTimestamp(), that.getLastSyncTimestamp())
+        && Objects.equals(getApplicationVersion(), that.getApplicationVersion());
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(
+        getLastSyncTimestamp(), getApplicationVersion(), getLastSyncDurationInMillis());
   }
 }

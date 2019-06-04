@@ -15,6 +15,7 @@ import io.sphere.sdk.inventory.InventoryEntry;
 import io.sphere.sdk.inventory.InventoryEntryDraft;
 import io.sphere.sdk.inventory.expansion.InventoryEntryExpansionModel;
 import io.sphere.sdk.inventory.queries.InventoryEntryQuery;
+import java.time.Clock;
 import java.util.List;
 import javax.annotation.Nonnull;
 import org.slf4j.Logger;
@@ -36,12 +37,15 @@ public final class InventoryEntrySyncer
       @Nonnull final InventorySync inventorySync,
       @Nonnull final SphereClient sourceClient,
       @Nonnull final SphereClient targetClient,
-      @Nonnull final CustomObjectService customObjectService) {
-    super(inventorySync, sourceClient, targetClient, customObjectService);
+      @Nonnull final CustomObjectService customObjectService,
+      @Nonnull final Clock clock) {
+    super(inventorySync, sourceClient, targetClient, customObjectService, clock);
   }
 
   public static InventoryEntrySyncer of(
-      @Nonnull final SphereClient sourceClient, @Nonnull final SphereClient targetClient) {
+      @Nonnull final SphereClient sourceClient,
+      @Nonnull final SphereClient targetClient,
+      @Nonnull final Clock clock) {
 
     final InventorySyncOptions syncOptions =
         InventorySyncOptionsBuilder.of(targetClient)
@@ -53,19 +57,19 @@ public final class InventoryEntrySyncer
 
     final CustomObjectService customObjectService = new CustomObjectServiceImpl(targetClient);
 
-    return new InventoryEntrySyncer(inventorySync, sourceClient, targetClient, customObjectService);
+    return new InventoryEntrySyncer(
+        inventorySync, sourceClient, targetClient, customObjectService, clock);
   }
 
   @Nonnull
   @Override
-  protected List<InventoryEntryDraft> transformResourcesToDrafts(
-      @Nonnull final List<InventoryEntry> page) {
+  protected List<InventoryEntryDraft> transform(@Nonnull final List<InventoryEntry> page) {
     return replaceInventoriesReferenceIdsWithKeys(page);
   }
 
   @Nonnull
   @Override
-  public InventoryEntryQuery getQuery() {
+  protected InventoryEntryQuery getQuery() {
     return buildQuery();
   }
 

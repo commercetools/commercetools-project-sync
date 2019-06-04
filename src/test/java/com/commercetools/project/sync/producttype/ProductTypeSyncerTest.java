@@ -1,5 +1,6 @@
 package com.commercetools.project.sync.producttype;
 
+import static com.commercetools.project.sync.util.TestUtils.getMockedClock;
 import static io.sphere.sdk.json.SphereJsonUtils.readObjectFromResource;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
@@ -20,7 +21,7 @@ class ProductTypeSyncerTest {
   void of_ShouldCreateProductTypeSyncerInstance() {
     // test
     final ProductTypeSyncer productTypeSyncer =
-        ProductTypeSyncer.of(mock(SphereClient.class), mock(SphereClient.class));
+        ProductTypeSyncer.of(mock(SphereClient.class), mock(SphereClient.class), getMockedClock());
 
     // assertions
     assertThat(productTypeSyncer).isNotNull();
@@ -29,18 +30,17 @@ class ProductTypeSyncerTest {
   }
 
   @Test
-  void transformResourcesToDrafts_ShouldConvertResourcesToDrafts() {
+  void transform_ShouldConvertResourcesToDrafts() {
     // preparation
     final ProductTypeSyncer productTypeSyncer =
-        ProductTypeSyncer.of(mock(SphereClient.class), mock(SphereClient.class));
+        ProductTypeSyncer.of(mock(SphereClient.class), mock(SphereClient.class), getMockedClock());
     final List<ProductType> productTypePage =
         asList(
             readObjectFromResource("product-type-key-1.json", ProductType.class),
             readObjectFromResource("product-type-key-2.json", ProductType.class));
 
     // test
-    final List<ProductTypeDraft> draftsFromPage =
-        productTypeSyncer.transformResourcesToDrafts(productTypePage);
+    final List<ProductTypeDraft> draftsFromPage = productTypeSyncer.transform(productTypePage);
 
     // assertions
     assertThat(draftsFromPage)
@@ -50,5 +50,18 @@ class ProductTypeSyncerTest {
                 .map(ProductTypeDraftBuilder::of)
                 .map(ProductTypeDraftBuilder::build)
                 .collect(toList()));
+  }
+
+  @Test
+  void getQuery_ShouldBuildProductTypeQuery() {
+    // preparation
+    final ProductTypeSyncer productTypeSyncer =
+        ProductTypeSyncer.of(mock(SphereClient.class), mock(SphereClient.class), getMockedClock());
+
+    // test
+    final ProductTypeQuery query = productTypeSyncer.getQuery();
+
+    // assertion
+    assertThat(query).isEqualTo(ProductTypeQuery.of());
   }
 }

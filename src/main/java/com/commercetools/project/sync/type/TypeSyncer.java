@@ -12,6 +12,7 @@ import io.sphere.sdk.types.Type;
 import io.sphere.sdk.types.TypeDraft;
 import io.sphere.sdk.types.TypeDraftBuilder;
 import io.sphere.sdk.types.queries.TypeQuery;
+import java.time.Clock;
 import java.util.List;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
@@ -28,13 +29,16 @@ public final class TypeSyncer
       @Nonnull final TypeSync typeSync,
       @Nonnull final SphereClient sourceClient,
       @Nonnull final SphereClient targetClient,
-      @Nonnull final CustomObjectService customObjectService) {
-    super(typeSync, sourceClient, targetClient, customObjectService);
+      @Nonnull final CustomObjectService customObjectService,
+      @Nonnull final Clock clock) {
+    super(typeSync, sourceClient, targetClient, customObjectService, clock);
   }
 
   @Nonnull
   public static TypeSyncer of(
-      @Nonnull final SphereClient sourceClient, @Nonnull final SphereClient targetClient) {
+      @Nonnull final SphereClient sourceClient,
+      @Nonnull final SphereClient targetClient,
+      @Nonnull final Clock clock) {
 
     final TypeSyncOptions syncOptions =
         TypeSyncOptionsBuilder.of(targetClient)
@@ -46,18 +50,18 @@ public final class TypeSyncer
 
     final CustomObjectService customObjectService = new CustomObjectServiceImpl(targetClient);
 
-    return new TypeSyncer(typeSync, sourceClient, targetClient, customObjectService);
+    return new TypeSyncer(typeSync, sourceClient, targetClient, customObjectService, clock);
   }
 
   @Nonnull
   @Override
-  public TypeQuery getQuery() {
+  protected TypeQuery getQuery() {
     return TypeQuery.of();
   }
 
   @Nonnull
   @Override
-  protected List<TypeDraft> transformResourcesToDrafts(@Nonnull final List<Type> page) {
+  protected List<TypeDraft> transform(@Nonnull final List<Type> page) {
     return page.stream().map(TypeSyncer::typeToDraft).collect(Collectors.toList());
   }
 
