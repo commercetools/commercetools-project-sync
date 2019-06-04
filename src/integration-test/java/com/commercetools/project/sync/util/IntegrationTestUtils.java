@@ -9,13 +9,11 @@ import io.sphere.sdk.customobjects.CustomObject;
 import io.sphere.sdk.customobjects.commands.CustomObjectDeleteCommand;
 import io.sphere.sdk.customobjects.queries.CustomObjectQuery;
 import io.sphere.sdk.queries.PagedQueryResult;
-import io.sphere.sdk.queries.PagedResult;
 import io.sphere.sdk.queries.QueryPredicate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
-import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 
 public final class IntegrationTestUtils {
@@ -39,21 +37,24 @@ public final class IntegrationTestUtils {
 
     final List<CompletableFuture> deletionStages = new ArrayList<>();
 
-    final CompletableFuture<CustomObject<String>> deleteTimeGeneratorCustomObjectFuture =
+    final CompletableFuture<Void> timeGeneratorDeletionsStage =
         ctpClient
             .execute(timeGeneratorCustomObjectQuery)
-            .thenApply(PagedResult::head)
+            .thenApply(PagedQueryResult::getResults)
             .thenCompose(
-                optionalCustomObject ->
-                    optionalCustomObject
-                        .map(
-                            customObject ->
-                                ctpClient.execute(
-                                    CustomObjectDeleteCommand.of(customObject, String.class)))
-                        .orElseGet(() -> CompletableFuture.completedFuture(null)))
+                customObjects ->
+                    CompletableFuture.allOf(
+                        customObjects
+                            .stream()
+                            .map(
+                                customObject ->
+                                    ctpClient.execute(
+                                        CustomObjectDeleteCommand.of(customObject, String.class)))
+                            .map(CompletionStage::toCompletableFuture)
+                            .toArray(CompletableFuture[]::new)))
             .toCompletableFuture();
 
-    deletionStages.add(deleteTimeGeneratorCustomObjectFuture);
+    deletionStages.add(timeGeneratorDeletionsStage);
 
     // 2. Then query for the lastSync custom objects
     final QueryPredicate<CustomObject<LastSyncCustomObject>> lastSyncPredicate =
@@ -62,22 +63,25 @@ public final class IntegrationTestUtils {
     final CustomObjectQuery<LastSyncCustomObject> lastSyncCustomObjectQuery =
         CustomObjectQuery.of(LastSyncCustomObject.class).plusPredicates(lastSyncPredicate);
 
-    final PagedQueryResult<CustomObject<LastSyncCustomObject>> queryResult =
-        ctpClient.execute(lastSyncCustomObjectQuery).toCompletableFuture().join();
+    final CompletableFuture<Void> lastSyncCustomObjectDeletionFutures =
+        ctpClient
+            .execute(lastSyncCustomObjectQuery)
+            .thenApply(PagedQueryResult::getResults)
+            .thenCompose(
+                customObjects ->
+                    CompletableFuture.allOf(
+                        customObjects
+                            .stream()
+                            .map(
+                                customObject ->
+                                    ctpClient.execute(
+                                        CustomObjectDeleteCommand.of(
+                                            customObject, LastSyncCustomObject.class)))
+                            .map(CompletionStage::toCompletableFuture)
+                            .toArray(CompletableFuture[]::new)))
+            .toCompletableFuture();
 
-    final List<CompletableFuture<CustomObject<LastSyncCustomObject>>>
-        lastSyncCustomObjectDeletionFutures =
-            queryResult
-                .getResults()
-                .stream()
-                .map(
-                    customObject ->
-                        ctpClient.execute(
-                            CustomObjectDeleteCommand.of(customObject, LastSyncCustomObject.class)))
-                .map(CompletionStage::toCompletableFuture)
-                .collect(Collectors.toList());
-
-    deletionStages.addAll(lastSyncCustomObjectDeletionFutures);
+    deletionStages.add(lastSyncCustomObjectDeletionFutures);
 
     // 3. Then delete all in parallel
     CompletableFuture.allOf(deletionStages.toArray(new CompletableFuture[0])).join();
