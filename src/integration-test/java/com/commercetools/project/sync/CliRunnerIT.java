@@ -73,7 +73,6 @@ class CliRunnerIT {
       TestLoggerFactory.getTestLogger(CliRunner.class);
   private static final String RESOURCE_KEY = "foo";
 
-
   @BeforeEach
   void setup() {
     syncerTestLogger.clearAll();
