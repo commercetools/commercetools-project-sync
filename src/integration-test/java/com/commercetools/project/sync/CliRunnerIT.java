@@ -8,6 +8,7 @@ import static com.commercetools.project.sync.util.IntegrationTestUtils.deleteLas
 import static com.commercetools.project.sync.util.QueryUtils.queryAndExecute;
 import static com.commercetools.project.sync.util.SphereClientUtils.CTP_SOURCE_CLIENT_CONFIG;
 import static com.commercetools.project.sync.util.SphereClientUtils.CTP_TARGET_CLIENT_CONFIG;
+import static com.commercetools.project.sync.util.SyncUtils.APPLICATION_DEFAULT_NAME;
 import static com.commercetools.project.sync.util.TestUtils.assertAllSyncersLoggingEvents;
 import static com.commercetools.project.sync.util.TestUtils.assertSyncerLoggingEvents;
 import static io.sphere.sdk.models.LocalizedString.ofEnglish;
@@ -83,7 +84,9 @@ class CliRunnerIT {
 
   static void setupSourceProjectData(@Nonnull final SphereClient sourceProjectClient) {
     final ProductTypeDraft productTypeDraft =
-        ProductTypeDraftBuilder.of(RESOURCE_KEY, "bar", "desc", emptyList()).build();
+        ProductTypeDraftBuilder.of(
+                RESOURCE_KEY, "sample-product-type", "a productType for t-shirts", emptyList())
+            .build();
 
     final ProductType productType =
         sourceProjectClient
@@ -93,13 +96,17 @@ class CliRunnerIT {
 
     final TypeDraft typeDraft =
         TypeDraftBuilder.of(
-                RESOURCE_KEY, ofEnglish("bar"), ResourceTypeIdsSetBuilder.of().addCategories())
+                RESOURCE_KEY,
+                ofEnglish("category-custom-type"),
+                ResourceTypeIdsSetBuilder.of().addCategories())
             .build();
 
     sourceProjectClient.execute(TypeCreateCommand.of(typeDraft)).toCompletableFuture().join();
 
     final CategoryDraft categoryDraft =
-        CategoryDraftBuilder.of(ofEnglish("foo"), ofEnglish("bar")).key(RESOURCE_KEY).build();
+        CategoryDraftBuilder.of(ofEnglish("t-shirts"), ofEnglish("Summer 2019 t-shirts"))
+            .key(RESOURCE_KEY)
+            .build();
 
     sourceProjectClient
         .execute(CategoryCreateCommand.of(categoryDraft))
@@ -109,8 +116,8 @@ class CliRunnerIT {
     final ProductDraft productDraft =
         ProductDraftBuilder.of(
                 productType,
-                ofEnglish("foo"),
-                ofEnglish("bar"),
+                ofEnglish("V-neck Tee"),
+                ofEnglish("v-neck-tee"),
                 ProductVariantDraftBuilder.of().key(RESOURCE_KEY).sku(RESOURCE_KEY).build())
             .key(RESOURCE_KEY)
             .build();
@@ -251,7 +258,7 @@ class CliRunnerIT {
     final CustomObjectQuery<LastSyncCustomObject> lastSyncQuery =
         CustomObjectQuery.of(LastSyncCustomObject.class)
             .byContainer(
-                format("commercetools-project-sync.%s.%s", syncRunnerName, syncModuleName));
+                format("%s.%s.%s", APPLICATION_DEFAULT_NAME, syncRunnerName, syncModuleName));
 
     final PagedQueryResult<CustomObject<LastSyncCustomObject>> lastSyncResult =
         targetClient.execute(lastSyncQuery).toCompletableFuture().join();
@@ -281,8 +288,8 @@ class CliRunnerIT {
         CustomObjectQuery.of(String.class)
             .byContainer(
                 format(
-                    "commercetools-project-sync.%s.%s.%s",
-                    runnerName, syncModuleName, TIMESTAMP_GENERATOR_KEY));
+                    "%s.%s.%s",
+                    APPLICATION_DEFAULT_NAME, runnerName, syncModuleName, TIMESTAMP_GENERATOR_KEY));
 
     final PagedQueryResult<CustomObject<String>> currentCtpTimestampGeneratorResults =
         targetClient.execute(timestampGeneratorQuery).toCompletableFuture().join();
@@ -413,7 +420,7 @@ class CliRunnerIT {
 
     final CustomObjectQuery<LastSyncCustomObject> lastSyncQuery =
         CustomObjectQuery.of(LastSyncCustomObject.class)
-            .byContainer(format("commercetools-project-sync.%s.%s", runnerName, syncModuleName));
+            .byContainer(format("%s.%s.%s", APPLICATION_DEFAULT_NAME, runnerName, syncModuleName));
 
     final PagedQueryResult<CustomObject<LastSyncCustomObject>> lastSyncResult =
         targetClient.execute(lastSyncQuery).toCompletableFuture().join();
