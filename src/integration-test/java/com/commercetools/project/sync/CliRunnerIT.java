@@ -8,6 +8,7 @@ import static com.commercetools.project.sync.util.IntegrationTestUtils.deleteLas
 import static com.commercetools.project.sync.util.QueryUtils.queryAndExecute;
 import static com.commercetools.project.sync.util.SphereClientUtils.CTP_SOURCE_CLIENT_CONFIG;
 import static com.commercetools.project.sync.util.SphereClientUtils.CTP_TARGET_CLIENT_CONFIG;
+import static com.commercetools.project.sync.util.SyncUtils.APPLICATION_DEFAULT_NAME;
 import static com.commercetools.project.sync.util.TestUtils.assertAllSyncersLoggingEvents;
 import static com.commercetools.project.sync.util.TestUtils.assertSyncerLoggingEvents;
 import static io.sphere.sdk.models.LocalizedString.ofEnglish;
@@ -72,7 +73,6 @@ class CliRunnerIT {
   private static final TestLogger cliRunnerTestLogger =
       TestLoggerFactory.getTestLogger(CliRunner.class);
   private static final String RESOURCE_KEY = "foo";
-
 
   @BeforeEach
   void setup() {
@@ -248,7 +248,7 @@ class CliRunnerIT {
 
     final CustomObjectQuery<LastSyncCustomObject> lastSyncQuery =
         CustomObjectQuery.of(LastSyncCustomObject.class)
-            .byContainer(format("commercetools-project-sync.%s", syncModule));
+            .byContainer(format("%s.%s", APPLICATION_DEFAULT_NAME, syncModule));
 
     final PagedQueryResult<CustomObject<LastSyncCustomObject>> lastSyncResult =
         targetClient.execute(lastSyncQuery).toCompletableFuture().join();
@@ -275,7 +275,7 @@ class CliRunnerIT {
     final CustomObjectQuery<String> timestampGeneratorQuery =
         CustomObjectQuery.of(String.class)
             .byContainer(
-                format("commercetools-project-sync.%s", TIMESTAMP_GENERATOR_CONTAINER_POSTFIX));
+                format("%s.%s", APPLICATION_DEFAULT_NAME, TIMESTAMP_GENERATOR_CONTAINER_POSTFIX));
 
     final PagedQueryResult<CustomObject<String>> currentCtpTimestampGeneratorResults =
         targetClient.execute(timestampGeneratorQuery).toCompletableFuture().join();
@@ -341,7 +341,7 @@ class CliRunnerIT {
 
     final CustomObjectQuery<LastSyncCustomObject> lastSyncQuery =
         CustomObjectQuery.of(LastSyncCustomObject.class)
-            .byContainer(format("commercetools-project-sync.%s", syncModule));
+            .byContainer(format("%s.%s", APPLICATION_DEFAULT_NAME, syncModule));
 
     final PagedQueryResult<CustomObject<LastSyncCustomObject>> lastSyncResult =
         targetClient.execute(lastSyncQuery).toCompletableFuture().join();
