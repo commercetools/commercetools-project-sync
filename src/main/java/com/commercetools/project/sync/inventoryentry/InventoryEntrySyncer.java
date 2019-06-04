@@ -3,6 +3,8 @@ package com.commercetools.project.sync.inventoryentry;
 import static com.commercetools.sync.inventories.utils.InventoryReferenceReplacementUtils.replaceInventoriesReferenceIdsWithKeys;
 
 import com.commercetools.project.sync.Syncer;
+import com.commercetools.project.sync.service.CustomObjectService;
+import com.commercetools.project.sync.service.impl.CustomObjectServiceImpl;
 import com.commercetools.sync.inventories.InventorySync;
 import com.commercetools.sync.inventories.InventorySyncOptions;
 import com.commercetools.sync.inventories.InventorySyncOptionsBuilder;
@@ -13,6 +15,7 @@ import io.sphere.sdk.inventory.InventoryEntry;
 import io.sphere.sdk.inventory.InventoryEntryDraft;
 import io.sphere.sdk.inventory.expansion.InventoryEntryExpansionModel;
 import io.sphere.sdk.inventory.queries.InventoryEntryQuery;
+import java.time.Clock;
 import java.util.List;
 import javax.annotation.Nonnull;
 import org.slf4j.Logger;
@@ -32,14 +35,17 @@ public final class InventoryEntrySyncer
   /** Instantiates a {@link Syncer} instance. */
   private InventoryEntrySyncer(
       @Nonnull final InventorySync inventorySync,
-      @Nonnull final InventoryEntryQuery inventoryEntryQuery,
       @Nonnull final SphereClient sourceClient,
-      @Nonnull final SphereClient targetClient) {
-    super(inventorySync, inventoryEntryQuery, sourceClient, targetClient);
+      @Nonnull final SphereClient targetClient,
+      @Nonnull final CustomObjectService customObjectService,
+      @Nonnull final Clock clock) {
+    super(inventorySync, sourceClient, targetClient, customObjectService, clock);
   }
 
   public static InventoryEntrySyncer of(
-      @Nonnull final SphereClient sourceClient, @Nonnull final SphereClient targetClient) {
+      @Nonnull final SphereClient sourceClient,
+      @Nonnull final SphereClient targetClient,
+      @Nonnull final Clock clock) {
 
     final InventorySyncOptions syncOptions =
         InventorySyncOptionsBuilder.of(targetClient)
@@ -49,7 +55,22 @@ public final class InventoryEntrySyncer
 
     final InventorySync inventorySync = new InventorySync(syncOptions);
 
-    return new InventoryEntrySyncer(inventorySync, buildQuery(), sourceClient, targetClient);
+    final CustomObjectService customObjectService = new CustomObjectServiceImpl(targetClient);
+
+    return new InventoryEntrySyncer(
+        inventorySync, sourceClient, targetClient, customObjectService, clock);
+  }
+
+  @Nonnull
+  @Override
+  protected List<InventoryEntryDraft> transform(@Nonnull final List<InventoryEntry> page) {
+    return replaceInventoriesReferenceIdsWithKeys(page);
+  }
+
+  @Nonnull
+  @Override
+  protected InventoryEntryQuery getQuery() {
+    return buildQuery();
   }
 
   /**
@@ -61,12 +82,5 @@ public final class InventoryEntrySyncer
     return InventoryEntryQuery.of()
         .withExpansionPaths(InventoryEntryExpansionModel::supplyChannel)
         .plusExpansionPaths(ExpansionPath.of("custom.type"));
-  }
-
-  @Nonnull
-  @Override
-  protected List<InventoryEntryDraft> transformResourcesToDrafts(
-      @Nonnull final List<InventoryEntry> page) {
-    return replaceInventoriesReferenceIdsWithKeys(page);
   }
 }

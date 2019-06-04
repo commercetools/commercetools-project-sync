@@ -5,11 +5,12 @@
 
 
   - [Development](#development)
+      - [Prerequisites](#prerequisites)
       - [Run unit tests](#run-unit-tests)
       - [Run Spotless Style Check](#run-spotless-style-check)
       - [Fix Spotless style violations](#fix-spotless-style-violations)
       - [Package JARs (Without dependencies)](#package-jars-without-dependencies)
-      - [Package an über jar(packed with all needed dependencies)](#package-an-%C3%BCber-jarpacked-with-all-needed-dependencies)
+      - [Package an über JAR (packed with all needed dependencies)](#package-an-%C3%BCber-jar-packed-with-all-needed-dependencies)
       - [Package JARs and run tests (Recommended for development)](#package-jars-and-run-tests-recommended-for-development)
       - [Full build with tests](#full-build-with-tests)
   - [Build](#build)
@@ -31,6 +32,10 @@ For example, `#2055: Remove redundant space.`
     - Close the issue **only** if the change was released.
 
 ### Development
+
+##### Prerequisites
+ - For Intellij users, make sure to use Intellij IDEA version 2018.2 or higher.
+
 ##### Run unit tests
 ````bash
 ./gradlew test

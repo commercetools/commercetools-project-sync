@@ -1,5 +1,6 @@
 package com.commercetools.project.sync.product;
 
+import static com.commercetools.project.sync.util.TestUtils.getMockedClock;
 import static com.commercetools.sync.products.utils.ProductReferenceReplacementUtils.buildProductQuery;
 import static com.commercetools.sync.products.utils.ProductReferenceReplacementUtils.replaceProductsReferenceIdsWithKeys;
 import static io.sphere.sdk.json.SphereJsonUtils.readObjectFromResource;
@@ -18,6 +19,7 @@ import io.sphere.sdk.products.ProductDraft;
 import io.sphere.sdk.products.commands.updateactions.ChangeName;
 import io.sphere.sdk.products.commands.updateactions.Publish;
 import io.sphere.sdk.products.commands.updateactions.Unpublish;
+import io.sphere.sdk.products.queries.ProductQuery;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -28,7 +30,7 @@ class ProductSyncerTest {
   void of_ShouldCreateProductSyncerInstance() {
     // test
     final ProductSyncer productSyncer =
-        ProductSyncer.of(mock(SphereClient.class), mock(SphereClient.class));
+        ProductSyncer.of(mock(SphereClient.class), mock(SphereClient.class), getMockedClock());
 
     // assertions
     assertThat(productSyncer).isNotNull();
@@ -37,21 +39,34 @@ class ProductSyncerTest {
   }
 
   @Test
-  void transformResourcesToDrafts_ShouldReplaceProductReferenceIdsWithKeys() {
+  void transform_ShouldReplaceProductReferenceIdsWithKeys() {
     // preparation
     final ProductSyncer productSyncer =
-        ProductSyncer.of(mock(SphereClient.class), mock(SphereClient.class));
+        ProductSyncer.of(mock(SphereClient.class), mock(SphereClient.class), getMockedClock());
     final List<Product> productPage =
         asList(
             readObjectFromResource("product-key-1.json", Product.class),
             readObjectFromResource("product-key-2.json", Product.class));
 
     // test
-    final List<ProductDraft> draftsFromPage = productSyncer.transformResourcesToDrafts(productPage);
+    final List<ProductDraft> draftsFromPage = productSyncer.transform(productPage);
 
     // assertions
     final List<ProductDraft> expectedResult = replaceProductsReferenceIdsWithKeys(productPage);
     assertThat(draftsFromPage).isEqualTo(expectedResult);
+  }
+
+  @Test
+  void getQuery_ShouldBuildProductQuery() {
+    // preparation
+    final ProductSyncer productSyncer =
+        ProductSyncer.of(mock(SphereClient.class), mock(SphereClient.class), getMockedClock());
+
+    // test
+    final ProductQuery query = productSyncer.getQuery();
+
+    // assertion
+    assertThat(query).isEqualTo(buildProductQuery());
   }
 
   @Test

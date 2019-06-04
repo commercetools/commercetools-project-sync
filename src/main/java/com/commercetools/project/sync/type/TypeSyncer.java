@@ -1,6 +1,8 @@
 package com.commercetools.project.sync.type;
 
 import com.commercetools.project.sync.Syncer;
+import com.commercetools.project.sync.service.CustomObjectService;
+import com.commercetools.project.sync.service.impl.CustomObjectServiceImpl;
 import com.commercetools.sync.types.TypeSync;
 import com.commercetools.sync.types.TypeSyncOptions;
 import com.commercetools.sync.types.TypeSyncOptionsBuilder;
@@ -10,6 +12,7 @@ import io.sphere.sdk.types.Type;
 import io.sphere.sdk.types.TypeDraft;
 import io.sphere.sdk.types.TypeDraftBuilder;
 import io.sphere.sdk.types.queries.TypeQuery;
+import java.time.Clock;
 import java.util.List;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
@@ -24,15 +27,18 @@ public final class TypeSyncer
   /** Instantiates a {@link Syncer} instance. */
   private TypeSyncer(
       @Nonnull final TypeSync typeSync,
-      @Nonnull final TypeQuery query,
       @Nonnull final SphereClient sourceClient,
-      @Nonnull final SphereClient targetClient) {
-    super(typeSync, query, sourceClient, targetClient);
+      @Nonnull final SphereClient targetClient,
+      @Nonnull final CustomObjectService customObjectService,
+      @Nonnull final Clock clock) {
+    super(typeSync, sourceClient, targetClient, customObjectService, clock);
   }
 
   @Nonnull
   public static TypeSyncer of(
-      @Nonnull final SphereClient sourceClient, @Nonnull final SphereClient targetClient) {
+      @Nonnull final SphereClient sourceClient,
+      @Nonnull final SphereClient targetClient,
+      @Nonnull final Clock clock) {
 
     final TypeSyncOptions syncOptions =
         TypeSyncOptionsBuilder.of(targetClient)
@@ -42,12 +48,20 @@ public final class TypeSyncer
 
     final TypeSync typeSync = new TypeSync(syncOptions);
 
-    return new TypeSyncer(typeSync, TypeQuery.of(), sourceClient, targetClient);
+    final CustomObjectService customObjectService = new CustomObjectServiceImpl(targetClient);
+
+    return new TypeSyncer(typeSync, sourceClient, targetClient, customObjectService, clock);
   }
 
   @Nonnull
   @Override
-  protected List<TypeDraft> transformResourcesToDrafts(@Nonnull final List<Type> page) {
+  protected TypeQuery getQuery() {
+    return TypeQuery.of();
+  }
+
+  @Nonnull
+  @Override
+  protected List<TypeDraft> transform(@Nonnull final List<Type> page) {
     return page.stream().map(TypeSyncer::typeToDraft).collect(Collectors.toList());
   }
 

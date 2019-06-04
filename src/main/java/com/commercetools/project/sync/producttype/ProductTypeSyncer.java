@@ -1,6 +1,8 @@
 package com.commercetools.project.sync.producttype;
 
 import com.commercetools.project.sync.Syncer;
+import com.commercetools.project.sync.service.CustomObjectService;
+import com.commercetools.project.sync.service.impl.CustomObjectServiceImpl;
 import com.commercetools.sync.producttypes.ProductTypeSync;
 import com.commercetools.sync.producttypes.ProductTypeSyncOptions;
 import com.commercetools.sync.producttypes.ProductTypeSyncOptionsBuilder;
@@ -10,6 +12,7 @@ import io.sphere.sdk.producttypes.ProductType;
 import io.sphere.sdk.producttypes.ProductTypeDraft;
 import io.sphere.sdk.producttypes.ProductTypeDraftBuilder;
 import io.sphere.sdk.producttypes.queries.ProductTypeQuery;
+import java.time.Clock;
 import java.util.List;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
@@ -30,15 +33,18 @@ public final class ProductTypeSyncer
   /** Instantiates a {@link Syncer} instance. */
   private ProductTypeSyncer(
       @Nonnull final ProductTypeSync productTypeSync,
-      @Nonnull final ProductTypeQuery query,
       @Nonnull final SphereClient sourceClient,
-      @Nonnull final SphereClient targetClient) {
-    super(productTypeSync, query, sourceClient, targetClient);
+      @Nonnull final SphereClient targetClient,
+      @Nonnull final CustomObjectService customObjectService,
+      @Nonnull final Clock clock) {
+    super(productTypeSync, sourceClient, targetClient, customObjectService, clock);
   }
 
   @Nonnull
   public static ProductTypeSyncer of(
-      @Nonnull final SphereClient sourceClient, @Nonnull final SphereClient targetClient) {
+      @Nonnull final SphereClient sourceClient,
+      @Nonnull final SphereClient targetClient,
+      @Nonnull final Clock clock) {
 
     final ProductTypeSyncOptions syncOptions =
         ProductTypeSyncOptionsBuilder.of(targetClient)
@@ -48,16 +54,23 @@ public final class ProductTypeSyncer
 
     final ProductTypeSync productTypeSync = new ProductTypeSync(syncOptions);
 
+    final CustomObjectService customObjectService = new CustomObjectServiceImpl(targetClient);
+
     return new ProductTypeSyncer(
-        productTypeSync, ProductTypeQuery.of(), sourceClient, targetClient);
+        productTypeSync, sourceClient, targetClient, customObjectService, clock);
   }
 
   @Nonnull
   @Override
-  protected List<ProductTypeDraft> transformResourcesToDrafts(
-      @Nonnull final List<ProductType> page) {
+  protected List<ProductTypeDraft> transform(@Nonnull final List<ProductType> page) {
     return page.stream()
         .map(productType -> ProductTypeDraftBuilder.of(productType).build())
         .collect(Collectors.toList());
+  }
+
+  @Nonnull
+  @Override
+  protected ProductTypeQuery getQuery() {
+    return ProductTypeQuery.of();
   }
 }

@@ -4,6 +4,8 @@ import static com.commercetools.sync.categories.utils.CategoryReferenceReplaceme
 import static com.commercetools.sync.categories.utils.CategoryReferenceReplacementUtils.replaceCategoriesReferenceIdsWithKeys;
 
 import com.commercetools.project.sync.Syncer;
+import com.commercetools.project.sync.service.CustomObjectService;
+import com.commercetools.project.sync.service.impl.CustomObjectServiceImpl;
 import com.commercetools.sync.categories.CategorySync;
 import com.commercetools.sync.categories.CategorySyncOptions;
 import com.commercetools.sync.categories.CategorySyncOptionsBuilder;
@@ -12,6 +14,7 @@ import io.sphere.sdk.categories.Category;
 import io.sphere.sdk.categories.CategoryDraft;
 import io.sphere.sdk.categories.queries.CategoryQuery;
 import io.sphere.sdk.client.SphereClient;
+import java.time.Clock;
 import java.util.List;
 import javax.annotation.Nonnull;
 import org.slf4j.Logger;
@@ -31,17 +34,20 @@ public final class CategorySyncer
   /** Instantiates a {@link Syncer} instance. */
   private CategorySyncer(
       @Nonnull final CategorySync categorySync,
-      @Nonnull final CategoryQuery categoryQuery,
       @Nonnull final SphereClient sourceClient,
-      @Nonnull final SphereClient targetClient) {
-    super(categorySync, categoryQuery, sourceClient, targetClient);
+      @Nonnull final SphereClient targetClient,
+      @Nonnull final CustomObjectService customObjectService,
+      @Nonnull final Clock clock) {
+    super(categorySync, sourceClient, targetClient, customObjectService, clock);
     // TODO: Instead of reference expansion, we could cache all keys and replace references
     // manually.
   }
 
   @Nonnull
   public static CategorySyncer of(
-      @Nonnull final SphereClient sourceClient, @Nonnull final SphereClient targetClient) {
+      @Nonnull final SphereClient sourceClient,
+      @Nonnull final SphereClient targetClient,
+      @Nonnull final Clock clock) {
     final CategorySyncOptions syncOptions =
         CategorySyncOptionsBuilder.of(targetClient)
             .errorCallback(LOGGER::error)
@@ -50,12 +56,20 @@ public final class CategorySyncer
 
     final CategorySync categorySync = new CategorySync(syncOptions);
 
-    return new CategorySyncer(categorySync, buildCategoryQuery(), sourceClient, targetClient);
+    final CustomObjectService customObjectService = new CustomObjectServiceImpl(targetClient);
+
+    return new CategorySyncer(categorySync, sourceClient, targetClient, customObjectService, clock);
   }
 
   @Override
   @Nonnull
-  protected List<CategoryDraft> transformResourcesToDrafts(@Nonnull final List<Category> page) {
+  protected List<CategoryDraft> transform(@Nonnull final List<Category> page) {
     return replaceCategoriesReferenceIdsWithKeys(page);
+  }
+
+  @Nonnull
+  @Override
+  protected CategoryQuery getQuery() {
+    return buildCategoryQuery();
   }
 }
