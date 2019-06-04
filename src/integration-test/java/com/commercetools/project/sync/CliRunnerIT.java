@@ -84,7 +84,9 @@ class CliRunnerIT {
 
   static void setupSourceProjectData(@Nonnull final SphereClient sourceProjectClient) {
     final ProductTypeDraft productTypeDraft =
-        ProductTypeDraftBuilder.of(RESOURCE_KEY, "bar", "desc", emptyList()).build();
+        ProductTypeDraftBuilder.of(
+                RESOURCE_KEY, "sample-product-type", "a productType for t-shirts", emptyList())
+            .build();
 
     final ProductType productType =
         sourceProjectClient
@@ -94,13 +96,17 @@ class CliRunnerIT {
 
     final TypeDraft typeDraft =
         TypeDraftBuilder.of(
-                RESOURCE_KEY, ofEnglish("bar"), ResourceTypeIdsSetBuilder.of().addCategories())
+                RESOURCE_KEY,
+                ofEnglish("category-custom-type"),
+                ResourceTypeIdsSetBuilder.of().addCategories())
             .build();
 
     sourceProjectClient.execute(TypeCreateCommand.of(typeDraft)).toCompletableFuture().join();
 
     final CategoryDraft categoryDraft =
-        CategoryDraftBuilder.of(ofEnglish("foo"), ofEnglish("bar")).key(RESOURCE_KEY).build();
+        CategoryDraftBuilder.of(ofEnglish("t-shirts"), ofEnglish("Summer 2019 t-shirts"))
+            .key(RESOURCE_KEY)
+            .build();
 
     sourceProjectClient
         .execute(CategoryCreateCommand.of(categoryDraft))
@@ -110,8 +116,8 @@ class CliRunnerIT {
     final ProductDraft productDraft =
         ProductDraftBuilder.of(
                 productType,
-                ofEnglish("foo"),
-                ofEnglish("bar"),
+                ofEnglish("V-neck Tee"),
+                ofEnglish("v-neck-tee"),
                 ProductVariantDraftBuilder.of().key(RESOURCE_KEY).sku(RESOURCE_KEY).build())
             .key(RESOURCE_KEY)
             .build();
