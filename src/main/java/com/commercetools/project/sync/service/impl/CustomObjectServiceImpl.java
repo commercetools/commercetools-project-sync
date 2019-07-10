@@ -28,7 +28,6 @@ public class CustomObjectServiceImpl implements CustomObjectService {
   public static final String TIMESTAMP_GENERATOR_KEY = "timestampGenerator";
   public static final String TIMESTAMP_GENERATOR_VALUE = "";
   public static final String DEFAULT_RUNNER_NAME = "runnerName";
-  private static final long MINUTES_BEFORE_CURRENT_TIMESTAMP = 2;
 
   private SphereClient sphereClient;
 
@@ -39,12 +38,8 @@ public class CustomObjectServiceImpl implements CustomObjectService {
   /**
    * Gets the current timestamp of CTP by creating/updating a custom object with the container:
    * 'commercetools-project-sync.{@code runnerName}.{@code syncModuleName}.timestampGenerator' and
-   * key: 'timestampGenerator' and then returning the (lastModifiedAt - 2 minutes) of this
-   * created/updated custom object.
-   *
-   * <p>Note: The 2 minutes is an arbitrary number chosen to account for any potential delays of
-   * entries added to the CTP DB with older dates than now, since CTP timestamps are created on
-   * distributed APIs.
+   * key: 'timestampGenerator' and then returning the lastModifiedAt of this created/updated custom
+   * object.
    *
    * @param syncModuleName the name of the resource being synced. E.g. productSync, categorySync,
    *     etc..
@@ -69,9 +64,7 @@ public class CustomObjectServiceImpl implements CustomObjectService {
         CustomObjectDraft.ofUnversionedUpsert(
             container, TIMESTAMP_GENERATOR_KEY, TIMESTAMP_GENERATOR_VALUE, String.class);
 
-    return createCustomObject(currentTimestampDraft)
-        .thenApply(ResourceView::getLastModifiedAt)
-        .thenApply(lastModifiedAt -> lastModifiedAt.minusMinutes(MINUTES_BEFORE_CURRENT_TIMESTAMP));
+    return createCustomObject(currentTimestampDraft).thenApply(ResourceView::getLastModifiedAt);
   }
 
   @Nonnull
