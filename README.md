@@ -135,7 +135,8 @@ commercetools/commercetools-project-sync:2.0.0 -s all
  1. `Type` Sync and `ProductType` Sync in parallel.
  2. `Category` Sync.
  3. `Product` Sync.
- 4. `InventoryEntry` Sync.
+ 4. `CartDiscount` Sync.
+ 5. `InventoryEntry` Sync.
 
  - To run the type sync
    ```bash
@@ -155,6 +156,11 @@ commercetools/commercetools-project-sync:2.0.0 -s all
 - To run the product sync
    ```bash
    docker run commercetools/commercetools-project-sync:2.0.0 -s products
+   ```
+   
+- To run the cartDiscount sync
+   ```bash
+   docker run commercetools/commercetools-project-sync:2.0.0 -s cartDiscounts
    ```  
     
 - To run the inventoryEntry sync
