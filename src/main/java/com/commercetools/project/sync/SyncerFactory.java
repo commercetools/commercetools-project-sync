@@ -83,6 +83,10 @@ final class SyncerFactory {
                     .sync(runnerNameOptionValue, isFullSync))
         .thenCompose(
             ignored ->
+                CartDiscountSyncer.of(sourceClient, targetClient, clock)
+                    .sync(runnerNameOptionValue, isFullSync))
+        .thenCompose(
+            ignored ->
                 InventoryEntrySyncer.of(sourceClient, targetClient, clock)
                     .sync(runnerNameOptionValue, isFullSync))
         .whenComplete((syncResult, throwable) -> closeClients());
