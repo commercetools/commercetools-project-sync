@@ -38,9 +38,14 @@ Dockerized CLI application which allows to automatically sync different resource
    export SOURCE_PROJECT_KEY = xxxxxxxxxxxxx
    export SOURCE_CLIENT_ID = xxxxxxxxxxxxxxx
    export SOURCE_CLIENT_SECRET = xxxxxxxxxxx
+   export SOURCE_AUTH_URL = xxxxxxxxxxxxxxxx #optional parameter
+   export SOURCE_API_URL = xxxxxxxxxxxxxxxxx #optional parameter
+   
    export TARGET_PROJECT_KEY = xxxxxxxxxxxxx
    export TARGET_CLIENT_ID = xxxxxxxxxxxxxxx
    export TARGET_CLIENT_SECRET = xxxxxxxxxxx
+   export TARGET_AUTH_URL = xxxxxxxxxxxxxxxx #optional parameter
+   export TARGET_API_URL = xxxxxxxxxxxxxxxxx #optional parameter
    ```
 
 ### Usage
