@@ -1,6 +1,6 @@
 package com.commercetools.project.sync.service.impl;
 
-import com.commercetools.project.sync.product.CombinedReferenceKeysRequest;
+import com.commercetools.project.sync.model.request.CombinedReferenceKeysRequest;
 import com.commercetools.project.sync.service.ReferencesService;
 import io.sphere.sdk.client.SphereClient;
 
@@ -12,16 +12,20 @@ import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
-public class ReferencesServiceImpl implements ReferencesService {
-
-    // Are you uuid unique across resources?
-    final Map<String, String> idToKey = new ConcurrentHashMap<>();
-    final SphereClient ctpClient;
+public class ReferencesServiceImpl extends BaseServiceImpl implements ReferencesService {
+    private final Map<String, String> idToKey = new ConcurrentHashMap<>();
 
     public ReferencesServiceImpl(@Nonnull final SphereClient ctpClient) {
-        this.ctpClient = ctpClient;
+        super(ctpClient);
     }
 
+    /**
+     * TODO!!
+     * @param productIds
+     * @param categoryIds
+     * @param productTypeIds
+     * @return
+     */
     @Nonnull
     @Override
     public CompletionStage<Map<String, String>> getReferenceKeys(
@@ -30,50 +34,48 @@ public class ReferencesServiceImpl implements ReferencesService {
         @Nonnull final List<String> productTypeIds) {
 
 
-        final List<String> nonCachedProductIds = productIds
-            .stream()
-            .filter(id -> !idToKey.containsKey(id))
-            .collect(Collectors.toList());
+        final List<String> nonCachedProductIds = getNonCachedIds(productIds);
+        final List<String> nonCachedCategoryIds = getNonCachedIds(categoryIds);
+        final List<String> nonCachedProductTypeIds = getNonCachedIds(productTypeIds);
 
-        final List<String> nonCachedCategoryIds = categoryIds
-            .stream()
-            .filter(id -> !idToKey.containsKey(id))
-            .collect(Collectors.toList());
-
-        final List<String> nonCachedProductTypeIds = productTypeIds
-            .stream()
-            .filter(id -> !idToKey.containsKey(id))
-            .collect(Collectors.toList());
-
-        if (nonCachedCategoryIds.isEmpty() && nonCachedProductIds.isEmpty() && nonCachedProductTypeIds.isEmpty()) {
+        // if everything is cached, no need to make a request to CTP.
+        if (nonCachedProductIds.isEmpty() && nonCachedCategoryIds.isEmpty() && nonCachedProductTypeIds.isEmpty()) {
             return CompletableFuture.completedFuture(idToKey);
         }
 
+        // otherwise, make a combined request to CTP.
         final CombinedReferenceKeysRequest combinedReferenceKeysRequest =
             new CombinedReferenceKeysRequest(nonCachedProductIds, nonCachedCategoryIds, nonCachedProductTypeIds);
 
-        return ctpClient
+        return getCtpClient()
             .execute(combinedReferenceKeysRequest)
             .thenApply(combinedReferenceKeys -> {
 
-                // TODO: Check if the key is empty.
+                // TODO: Check if the key is empty/null
                 combinedReferenceKeys
-                    .getCategoryKeys()
-                    .getReferenceKeys()
+                    .getCategories()
+                    .getResults()
                     .forEach(referenceKey -> idToKey.put(referenceKey.getId(), referenceKey.getKey()));
 
                 combinedReferenceKeys
-                    .getProductKeys()
-                    .getReferenceKeys()
+                    .getProducts()
+                    .getResults()
                     .forEach(referenceKey -> idToKey.put(referenceKey.getId(), referenceKey.getKey()));
 
                 combinedReferenceKeys
-                    .getProductTypeKeys()
-                    .getReferenceKeys()
+                    .getProductTypes()
+                    .getResults()
                     .forEach(referenceKey -> idToKey.put(referenceKey.getId(), referenceKey.getKey()));
-
-
                return idToKey;
             });
+        // TODO: Handle fetch exceptions
+    }
+
+    @Nonnull
+    private List<String> getNonCachedIds(@Nonnull final List<String> ids) {
+        return ids
+            .stream()
+            .filter(id -> !idToKey.containsKey(id))
+            .collect(Collectors.toList());
     }
 }
