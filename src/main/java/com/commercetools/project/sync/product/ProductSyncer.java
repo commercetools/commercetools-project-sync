@@ -1,7 +1,5 @@
 package com.commercetools.project.sync.product;
 
-import static com.commercetools.sync.products.utils.ProductReferenceReplacementUtils.replaceProductsReferenceIdsWithKeys;
-
 import com.commercetools.project.sync.Syncer;
 import com.commercetools.project.sync.service.CustomObjectService;
 import com.commercetools.project.sync.service.ReferencesService;
@@ -29,15 +27,19 @@ import io.sphere.sdk.products.commands.updateactions.Unpublish;
 import io.sphere.sdk.products.expansion.ProductExpansionModel;
 import io.sphere.sdk.products.queries.ProductQuery;
 import io.sphere.sdk.producttypes.ProductType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.annotation.Nonnull;
 import java.time.Clock;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CompletionStage;
 import java.util.stream.Collectors;
-import javax.annotation.Nonnull;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import static com.commercetools.sync.products.utils.ProductReferenceReplacementUtils.replaceProductsReferenceIdsWithKeys;
 
 public final class ProductSyncer
     extends Syncer<
@@ -49,6 +51,8 @@ public final class ProductSyncer
         ProductSync> {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(ProductSyncer.class);
+  private static final String REFERENCE_TYPE_ID_FIELD = "typeId";
+  private static final String REFERENCE_ID_FIELD = "id";
 
   /** Instantiates a {@link Syncer} instance. */
   private ProductSyncer(
@@ -78,60 +82,44 @@ public final class ProductSyncer
     final CustomObjectService customObjectService = new CustomObjectServiceImpl(targetClient);
 
     return new ProductSyncer(productSync, sourceClient, targetClient, customObjectService, clock);
-    // TODO: Instead of reference expansion, we could cache all keys and replace references
-    // manually.
   }
 
   @Override
   @Nonnull
-  protected List<ProductDraft> transform(@Nonnull final List<Product> page) {
-    return replaceReferenceIdsWithKeys(page)
-        .thenApply(aVoid -> replaceProductsReferenceIdsWithKeys(page))
-        .toCompletableFuture()
-        .join(); // todo: don't block.
-    // return replaceProductsReferenceIdsWithKeys(page);
+  protected CompletionStage<List<ProductDraft>> transform(@Nonnull final List<Product> page) {
+    return replaceAttributeReferenceIdsWithKeys(page)
+        .thenApply(aVoid -> replaceProductsReferenceIdsWithKeys(page));
   }
 
-  private CompletionStage<Void> replaceReferenceIdsWithKeys(@Nonnull final List<Product> page) {
+  @Nonnull
+  private CompletionStage<Void> replaceAttributeReferenceIdsWithKeys(
+      @Nonnull final List<Product> page) {
 
-    // 1. Get references
-    final List<JsonNode> allAttributeReferenceValues =
+    final Set<JsonNode> allAttributeReferences =
         page.stream()
             .map(Product::getMasterData)
             .map(ProductCatalogData::getStaged)
             .map(ProductData::getAllVariants)
-            .map(ProductSyncer::getVariantAttributeReferences)
+            .map(ProductSyncer::getAttributeReferences)
             .flatMap(Collection::stream)
-            .collect(Collectors.toList());
+            .collect(Collectors.toSet());
 
-    final List<JsonNode> allProductReferences =
-        allAttributeReferenceValues
-            .stream()
-            .filter(reference -> Product.referenceTypeId().equals(reference.get("typeId").asText()))
-            .collect(Collectors.toList());
+    final Set<JsonNode> allProductReferences =
+        getReferencesByTypeId(allAttributeReferences, Product.referenceTypeId());
 
-    final List<JsonNode> allCategoryReferences =
-        allAttributeReferenceValues
-            .stream()
-            .filter(
-                reference -> Category.referenceTypeId().equals(reference.get("typeId").asText()))
-            .collect(Collectors.toList());
+    final Set<JsonNode> allCategoryReferences =
+        getReferencesByTypeId(allAttributeReferences, Category.referenceTypeId());
 
-    final List<JsonNode> allProductTypeReferences =
-        allAttributeReferenceValues
-            .stream()
-            .filter(
-                reference -> ProductType.referenceTypeId().equals(reference.get("typeId").asText()))
-            .collect(Collectors.toList());
+    final Set<JsonNode> allProductTypeReferences =
+        getReferencesByTypeId(allAttributeReferences, ProductType.referenceTypeId());
 
-    final List<String> productIds = getIds(allProductReferences);
-    final List<String> categoryIds = getIds(allCategoryReferences);
-    final List<String> productTypeIds = getIds(allProductTypeReferences);
-
-    // 2. Replace references
     final ReferencesService referencesService = new ReferencesServiceImpl(getSourceClient());
+
     return referencesService
-        .getReferenceKeys(productIds, categoryIds, productTypeIds)
+        .getIdToKeys(
+            getIds(allProductReferences),
+            getIds(allCategoryReferences),
+            getIds(allProductTypeReferences))
         .thenAccept(
             idToKey -> {
               replaceReferences(allProductReferences, idToKey);
@@ -140,7 +128,8 @@ public final class ProductSyncer
             });
   }
 
-  private static List<JsonNode> getVariantAttributeReferences(
+  @Nonnull
+  private static List<JsonNode> getAttributeReferences(
       @Nonnull final List<ProductVariant> variants) {
     return variants
         .stream()
@@ -152,28 +141,44 @@ public final class ProductSyncer
         .collect(Collectors.toList());
   }
 
+  @Nonnull
   private static List<JsonNode> getReferences(@Nonnull final JsonNode attributeValue) {
-    // can only work if the reference is not expanded.
-    return attributeValue.findParents("typeId");
+    // This will only work if the reference is not expanded, otherwise behaviour is not guaranteed.
+    return attributeValue.findParents(REFERENCE_TYPE_ID_FIELD);
   }
 
   private static void replaceReferences(
-      @Nonnull final List<JsonNode> references, @Nonnull final Map<String, String> idToKey) {
+      @Nonnull final Set<JsonNode> references, @Nonnull final Map<String, String> idToKey) {
+
     references.forEach(
-        ref -> {
-          final String id = ref.get("id").asText();
+        reference -> {
+          final String id = reference.get(REFERENCE_ID_FIELD).asText();
           final String key = idToKey.get(id);
-          ((ObjectNode) ref).put("id", key);
+          ((ObjectNode) reference).put(REFERENCE_ID_FIELD, key);
         });
   }
 
-  private static List<String> getIds(@Nonnull final List<JsonNode> references) {
-    return references.stream().map(ref -> ref.get("id").asText()).collect(Collectors.toList());
+  @Nonnull
+  private Set<JsonNode> getReferencesByTypeId(
+      @Nonnull final Set<JsonNode> references, @Nonnull final String typeId) {
+    return references
+        .stream()
+        .filter(reference -> typeId.equals(reference.get(REFERENCE_TYPE_ID_FIELD).asText()))
+        .collect(Collectors.toSet());
+  }
+
+  @Nonnull
+  private static Set<String> getIds(@Nonnull final Set<JsonNode> references) {
+    return references
+        .stream()
+        .map(ref -> ref.get(REFERENCE_ID_FIELD).asText())
+        .collect(Collectors.toSet());
   }
 
   @Nonnull
   @Override
   protected ProductQuery getQuery() {
+    // TODO: Eventually don't expand all references and cache references for replacement.
     return ProductQuery.of()
         .withExpansionPaths(ProductExpansionModel::productType)
         .plusExpansionPaths(ProductExpansionModel::taxCategory)

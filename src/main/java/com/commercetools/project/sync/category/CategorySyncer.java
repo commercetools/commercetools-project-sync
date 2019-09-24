@@ -16,6 +16,8 @@ import io.sphere.sdk.categories.queries.CategoryQuery;
 import io.sphere.sdk.client.SphereClient;
 import java.time.Clock;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
 import javax.annotation.Nonnull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,8 +65,8 @@ public final class CategorySyncer
 
   @Override
   @Nonnull
-  protected List<CategoryDraft> transform(@Nonnull final List<Category> page) {
-    return replaceCategoriesReferenceIdsWithKeys(page);
+  protected CompletionStage<List<CategoryDraft>> transform(@Nonnull final List<Category> page) {
+    return CompletableFuture.completedFuture(replaceCategoriesReferenceIdsWithKeys(page));
   }
 
   @Nonnull
