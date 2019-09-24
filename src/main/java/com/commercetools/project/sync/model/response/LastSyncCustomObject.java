@@ -3,10 +3,9 @@ package com.commercetools.project.sync.model.response;
 import com.commercetools.project.sync.util.SyncUtils;
 import com.commercetools.sync.commons.helpers.BaseSyncStatistics;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-
-import javax.annotation.Nonnull;
 import java.time.ZonedDateTime;
 import java.util.Objects;
+import javax.annotation.Nonnull;
 
 public final class LastSyncCustomObject<T extends BaseSyncStatistics> {
 

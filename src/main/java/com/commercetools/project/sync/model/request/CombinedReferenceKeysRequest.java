@@ -1,5 +1,7 @@
 package com.commercetools.project.sync.model.request;
 
+import static java.util.stream.Collectors.joining;
+
 import com.commercetools.project.sync.model.response.CombinedReferenceKeys;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -9,13 +11,10 @@ import io.sphere.sdk.http.HttpMethod;
 import io.sphere.sdk.http.HttpResponse;
 import io.sphere.sdk.json.SphereJsonUtils;
 import io.sphere.sdk.models.Base;
-import org.apache.commons.lang3.Validate;
-
+import java.util.List;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.List;
-
-import static java.util.stream.Collectors.joining;
+import org.apache.commons.lang3.Validate;
 
 public class CombinedReferenceKeysRequest extends Base
     implements SphereRequest<CombinedReferenceKeys> {
@@ -27,7 +26,7 @@ public class CombinedReferenceKeysRequest extends Base
       @Nonnull final List<String> productIds,
       @Nonnull final List<String> categoryIds,
       @Nonnull final List<String> productTypeIds) {
-    this.productIds = Validate.notEmpty(productIds); //todo: Why not empty?!
+    this.productIds = Validate.notEmpty(productIds); // todo: Why not empty?!
     this.categoryIds = Validate.notEmpty(categoryIds);
     this.productTypeIds = Validate.notEmpty(productTypeIds);
   }
@@ -42,16 +41,19 @@ public class CombinedReferenceKeysRequest extends Base
 
   @Override
   public HttpRequestIntent httpRequestIntent() {
-    final String body = String.format("{\"query\": \"{%s, %s, %s}\"}",
-                createProductsGraphQlQuery(productIds),
-                createCategoriesGraphQlQuery(categoryIds),
-                createProductTypesGraphQlQuery(productTypeIds));
+    final String body =
+        String.format(
+            "{\"query\": \"{%s, %s, %s}\"}",
+            createProductsGraphQlQuery(productIds),
+            createCategoriesGraphQlQuery(categoryIds),
+            createProductTypesGraphQlQuery(productTypeIds));
 
     return HttpRequestIntent.of(HttpMethod.POST, "/graphql", body);
   }
 
   private static String createProductsGraphQlQuery(@Nonnull final List<String> productIds) {
-    return String.format("products(where: %s) { results { id key } }", createWhereQuery(productIds));
+    return String.format(
+        "products(where: %s) { results { id key } }", createWhereQuery(productIds));
   }
 
   private static String createCategoriesGraphQlQuery(@Nonnull final List<String> categoryIds) {
@@ -65,7 +67,7 @@ public class CombinedReferenceKeysRequest extends Base
   }
 
   private static String createWhereQuery(@Nonnull final List<String> ids) {
-      final String commaSeparatedIds =
+    final String commaSeparatedIds =
         ids.stream().distinct().collect(joining("\\\\\\\", \\\\\\\"", "\\\\\\\"", "\\\\\\\""));
 
     return createWhereQuery(commaSeparatedIds);
