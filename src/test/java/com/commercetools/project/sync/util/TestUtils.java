@@ -11,7 +11,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
-import com.commercetools.project.sync.model.LastSyncCustomObject;
+import com.commercetools.project.sync.model.response.LastSyncCustomObject;
 import com.commercetools.sync.products.helpers.ProductSyncStatistics;
 import io.sphere.sdk.client.SphereClient;
 import io.sphere.sdk.customobjects.CustomObject;

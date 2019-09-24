@@ -3,7 +3,7 @@ package com.commercetools.project.sync.util;
 import static com.commercetools.project.sync.service.impl.CustomObjectServiceImpl.TIMESTAMP_GENERATOR_KEY;
 import static java.lang.String.format;
 
-import com.commercetools.project.sync.model.LastSyncCustomObject;
+import com.commercetools.project.sync.model.response.LastSyncCustomObject;
 import io.sphere.sdk.client.SphereClient;
 import io.sphere.sdk.customobjects.CustomObject;
 import io.sphere.sdk.customobjects.commands.CustomObjectDeleteCommand;

@@ -1,12 +1,13 @@
-package com.commercetools.project.sync.model;
-
-import static org.assertj.core.api.Assertions.assertThat;
+package com.commercetools.project.sync.model.response;
 
 import com.commercetools.project.sync.util.SyncUtils;
 import com.commercetools.sync.products.helpers.ProductSyncStatistics;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import java.time.ZonedDateTime;
 import org.junit.jupiter.api.Test;
+
+import java.time.ZonedDateTime;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 class LastSyncCustomObjectTest {
 

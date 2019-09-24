@@ -1,6 +1,6 @@
 package com.commercetools.project.sync;
 
-import com.commercetools.project.sync.model.LastSyncCustomObject;
+import com.commercetools.project.sync.model.response.LastSyncCustomObject;
 import com.commercetools.project.sync.service.CustomObjectService;
 import com.commercetools.sync.commons.BaseSync;
 import com.commercetools.sync.commons.BaseSyncOptions;
