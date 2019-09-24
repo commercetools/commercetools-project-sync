@@ -16,7 +16,7 @@ import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.commercetools.project.sync.model.LastSyncCustomObject;
+import com.commercetools.project.sync.model.response.LastSyncCustomObject;
 import com.commercetools.sync.commons.helpers.BaseSyncStatistics;
 import com.commercetools.sync.products.helpers.ProductSyncStatistics;
 import io.sphere.sdk.categories.Category;
