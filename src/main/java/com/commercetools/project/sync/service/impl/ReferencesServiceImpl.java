@@ -1,23 +1,22 @@
 package com.commercetools.project.sync.service.impl;
 
+import static java.lang.String.format;
+import static org.apache.commons.lang3.StringUtils.isBlank;
+
 import com.commercetools.project.sync.model.request.CombinedResourceKeysRequest;
 import com.commercetools.project.sync.model.response.CombinedResult;
 import com.commercetools.project.sync.model.response.ResultingResourcesContainer;
 import com.commercetools.project.sync.service.ReferencesService;
 import io.sphere.sdk.client.SphereClient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.annotation.Nonnull;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.stream.Collectors;
-
-import static java.lang.String.format;
-import static org.apache.commons.lang3.StringUtils.isBlank;
+import javax.annotation.Nonnull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ReferencesServiceImpl extends BaseServiceImpl implements ReferencesService {
   private final Map<String, String> idToKey = new HashMap<>();
@@ -32,9 +31,9 @@ public class ReferencesServiceImpl extends BaseServiceImpl implements References
    * if there is a key mapping for each id in the {@code idToKey} cache. If there exists a mapping
    * for all the ids, the method returns a future containing the existing {@code idToKey} cache as
    * it is. If there is at least one missing mapping, it attempts to make a GraphQL request to CTP
-   * to fetch all ids and keys of every missing product, category or productType Id in a combined request. For each
-   * fetched key/id pair, the method will insert it into the {@code idToKey} cache and then return
-   * the cache in a {@link CompletableFuture} after the request is successful.
+   * to fetch all ids and keys of every missing product, category or productType Id in a combined
+   * request. For each fetched key/id pair, the method will insert it into the {@code idToKey} cache
+   * and then return the cache in a {@link CompletableFuture} after the request is successful.
    *
    * @param productIds the product ids to find a key mapping for.
    * @param categoryIds the category ids to find a key mapping for.
