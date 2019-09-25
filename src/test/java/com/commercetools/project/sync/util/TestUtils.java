@@ -1,5 +1,22 @@
 package com.commercetools.project.sync.util;
 
+import com.commercetools.project.sync.model.response.LastSyncCustomObject;
+import com.commercetools.sync.products.helpers.ProductSyncStatistics;
+import io.sphere.sdk.client.SphereClient;
+import io.sphere.sdk.customobjects.CustomObject;
+import io.sphere.sdk.customobjects.commands.CustomObjectUpsertCommand;
+import io.sphere.sdk.customobjects.queries.CustomObjectQuery;
+import io.sphere.sdk.queries.PagedQueryResult;
+import org.assertj.core.api.Condition;
+import uk.org.lidalia.slf4jext.Level;
+import uk.org.lidalia.slf4jtest.LoggingEvent;
+import uk.org.lidalia.slf4jtest.TestLogger;
+
+import javax.annotation.Nonnull;
+import java.time.Clock;
+import java.time.ZonedDateTime;
+import java.util.concurrent.CompletableFuture;
+
 import static java.lang.String.format;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -10,22 +27,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
-
-import com.commercetools.project.sync.model.response.LastSyncCustomObject;
-import com.commercetools.sync.products.helpers.ProductSyncStatistics;
-import io.sphere.sdk.client.SphereClient;
-import io.sphere.sdk.customobjects.CustomObject;
-import io.sphere.sdk.customobjects.commands.CustomObjectUpsertCommand;
-import io.sphere.sdk.customobjects.queries.CustomObjectQuery;
-import io.sphere.sdk.queries.PagedQueryResult;
-import java.time.Clock;
-import java.time.ZonedDateTime;
-import java.util.concurrent.CompletableFuture;
-import javax.annotation.Nonnull;
-import org.assertj.core.api.Condition;
-import uk.org.lidalia.slf4jext.Level;
-import uk.org.lidalia.slf4jtest.LoggingEvent;
-import uk.org.lidalia.slf4jtest.TestLogger;
 
 public final class TestUtils {
 
@@ -40,6 +41,18 @@ public final class TestUtils {
     assertThat(syncerTestLogger.getAllLoggingEvents())
         .allMatch(loggingEvent -> !Level.ERROR.equals(loggingEvent.getLevel()));
 
+    assertTypeSyncerLoggingEvents(syncerTestLogger, numberOfResources);
+    assertProductTypeSyncerLoggingEvents(syncerTestLogger, numberOfResources);
+    assertCategorySyncerLoggingEvents(syncerTestLogger, numberOfResources);
+    assertProductSyncerLoggingEvents(syncerTestLogger, numberOfResources);
+    assertInventoryEntrySyncerLoggingEvents(syncerTestLogger, numberOfResources);
+
+    // Every sync module (5 modules) is expected to have 2 logs (start and stats summary)
+    assertThat(syncerTestLogger.getAllLoggingEvents()).hasSize(10);
+  }
+
+  public static void assertTypeSyncerLoggingEvents(
+      @Nonnull final TestLogger syncerTestLogger, final int numberOfResources) {
     final String typeStatsSummary =
         format(
             "Summary: %d types were processed in total (%d created, 0 updated "
@@ -47,15 +60,22 @@ public final class TestUtils {
             numberOfResources, numberOfResources);
 
     assertSyncerLoggingEvents(syncerTestLogger, "TypeSync", typeStatsSummary);
+  }
 
+  public static void assertProductTypeSyncerLoggingEvents(
+      @Nonnull final TestLogger syncerTestLogger, final int numberOfResources) {
     final String productTypesStatsSummary =
         format(
-            "Summary: %d product types were processed in total (%d created, 0 updated "
-                + "and 0 failed to sync).",
+            "Summary: %d product types were processed in total (%d created, 0 updated, 0 failed to sync and 0 product"
+                + " types with at least one NestedType or a Set of NestedType "
+                + "attribute definition(s) referencing a missing product type).",
             numberOfResources, numberOfResources);
 
     assertSyncerLoggingEvents(syncerTestLogger, "ProductTypeSync", productTypesStatsSummary);
+  }
 
+  public static void assertCategorySyncerLoggingEvents(
+      @Nonnull final TestLogger syncerTestLogger, final int numberOfResources) {
     final String categoryStatsSummary =
         format(
             "Summary: %d categories were processed in total (%d created, 0 updated, "
@@ -63,7 +83,10 @@ public final class TestUtils {
             numberOfResources, numberOfResources);
 
     assertSyncerLoggingEvents(syncerTestLogger, "CategorySync", categoryStatsSummary);
+  }
 
+  public static void assertProductSyncerLoggingEvents(
+      @Nonnull final TestLogger syncerTestLogger, final int numberOfResources) {
     final String productStatsSummary =
         format(
             "Summary: %d products were processed in total (%d created, 0 updated "
@@ -71,7 +94,10 @@ public final class TestUtils {
             numberOfResources, numberOfResources);
 
     assertSyncerLoggingEvents(syncerTestLogger, "ProductSync", productStatsSummary);
+  }
 
+  public static void assertInventoryEntrySyncerLoggingEvents(
+      @Nonnull final TestLogger syncerTestLogger, final int numberOfResources) {
     final String inventoryStatsSummary =
         format(
             "Summary: %d inventory entries were processed in total (%d created, 0 updated "
@@ -79,9 +105,6 @@ public final class TestUtils {
             numberOfResources, numberOfResources);
 
     assertSyncerLoggingEvents(syncerTestLogger, "InventorySync", inventoryStatsSummary);
-
-    // Every sync module (5 modules) is expected to have 2 logs (start and stats summary)
-    assertThat(syncerTestLogger.getAllLoggingEvents()).hasSize(10);
   }
 
   public static void assertSyncerLoggingEvents(
