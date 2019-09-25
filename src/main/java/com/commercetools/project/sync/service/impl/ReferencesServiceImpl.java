@@ -9,18 +9,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 public class ReferencesServiceImpl extends BaseServiceImpl implements ReferencesService {
-  private final Map<String, String> idToKey = new ConcurrentHashMap<>();
+  private final Map<String, String> idToKey = new HashMap<>();
   private static final Logger LOGGER = LoggerFactory.getLogger(ReferencesServiceImpl.class);
 
   public ReferencesServiceImpl(@Nonnull final SphereClient ctpClient) {
