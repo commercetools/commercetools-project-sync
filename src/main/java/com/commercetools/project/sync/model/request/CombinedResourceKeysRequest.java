@@ -41,11 +41,11 @@ public class CombinedResourceKeysRequest implements SphereRequest<CombinedResult
   @Override
   public HttpRequestIntent httpRequestIntent() {
     final String body =
-        String.format(
-            "{\"query\": \"{%s, %s, %s}\"}",
-            createProductsGraphQlQuery(productIds),
-            createCategoriesGraphQlQuery(categoryIds),
-            createProductTypesGraphQlQuery(productTypeIds));
+        format(
+            "{\"query\": \"{%s%s%s}\"}",
+            productIds.isEmpty()? "" : format("%s,", createProductsGraphQlQuery(productIds)),
+            categoryIds.isEmpty()? "" : format("%s,", createCategoriesGraphQlQuery(categoryIds)),
+            productTypeIds.isEmpty()? "" : createProductTypesGraphQlQuery(productTypeIds));
 
     return HttpRequestIntent.of(HttpMethod.POST, "/graphql", body);
   }
