@@ -28,13 +28,13 @@ public class ReferencesServiceImpl extends BaseServiceImpl implements References
   }
 
   /**
-   * Given 3 {@link Set}s of ids (products, categories and productTypes), this method, first checks
+   * Given 3 {@link Set}s of ids of products, categories and productTypes, this method first checks
    * if there is a key mapping for each id in the {@code idToKey} cache. If there exists a mapping
    * for all the ids, the method returns a future containing the existing {@code idToKey} cache as
    * it is. If there is at least one missing mapping, it attempts to make a GraphQL request to CTP
-   * to fetch all ids and keys of every missing product, category or productType Id. For each
+   * to fetch all ids and keys of every missing product, category or productType Id in a combined request. For each
    * fetched key/id pair, the method will insert it into the {@code idToKey} cache and then return
-   * the cache in a {@link CompletableFuture} after the request succeeds.
+   * the cache in a {@link CompletableFuture} after the request is successful.
    *
    * @param productIds the product ids to find a key mapping for.
    * @param categoryIds the category ids to find a key mapping for.
@@ -99,8 +99,8 @@ public class ReferencesServiceImpl extends BaseServiceImpl implements References
                   LOGGER.error(
                       format(
                           "The key for the productTypes with id '%s' is blank. Please make sure all"
-                              + " productTypes, in the source project with key '%s', have non-blank (not null and not "
-                              + "empty string) keys.",
+                              + " productTypes, in the source project with key '%s', have non-blank"
+                              + "(i.e. non-null and non-empty) keys.",
                           id, getCtpClient().getConfig().getProjectKey()));
                 } else {
                   idToKey.put(id, key);
@@ -122,8 +122,8 @@ public class ReferencesServiceImpl extends BaseServiceImpl implements References
                   LOGGER.error(
                       format(
                           "The key for the product with id '%s' is blank. Please make sure all "
-                              + "products, in the source project with key '%s', have non-blank (not null and not "
-                              + "empty string) keys.",
+                              + "products, in the source project with key '%s', have non-blank"
+                              + "(i.e. non-null and non-empty) keys.",
                           id, getCtpClient().getConfig().getProjectKey()));
                 } else {
                   idToKey.put(id, key);
@@ -145,8 +145,8 @@ public class ReferencesServiceImpl extends BaseServiceImpl implements References
                   LOGGER.error(
                       format(
                           "The key for the category with id '%s' is blank. Please make sure all "
-                              + "categories, in the source project with key '%s', have non-blank (not null and not "
-                              + "empty string) keys.",
+                              + "categories, in the source project with key '%s', have non-blank"
+                              + "(i.e. non-null and non-empty) keys.",
                           id, getCtpClient().getConfig().getProjectKey()));
                 } else {
                   idToKey.put(id, key);
