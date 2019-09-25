@@ -1,22 +1,5 @@
 package com.commercetools.project.sync.util;
 
-import com.commercetools.project.sync.model.response.LastSyncCustomObject;
-import com.commercetools.sync.products.helpers.ProductSyncStatistics;
-import io.sphere.sdk.client.SphereClient;
-import io.sphere.sdk.customobjects.CustomObject;
-import io.sphere.sdk.customobjects.commands.CustomObjectUpsertCommand;
-import io.sphere.sdk.customobjects.queries.CustomObjectQuery;
-import io.sphere.sdk.queries.PagedQueryResult;
-import org.assertj.core.api.Condition;
-import uk.org.lidalia.slf4jext.Level;
-import uk.org.lidalia.slf4jtest.LoggingEvent;
-import uk.org.lidalia.slf4jtest.TestLogger;
-
-import javax.annotation.Nonnull;
-import java.time.Clock;
-import java.time.ZonedDateTime;
-import java.util.concurrent.CompletableFuture;
-
 import static java.lang.String.format;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -27,6 +10,22 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
+
+import com.commercetools.project.sync.model.response.LastSyncCustomObject;
+import com.commercetools.sync.products.helpers.ProductSyncStatistics;
+import io.sphere.sdk.client.SphereClient;
+import io.sphere.sdk.customobjects.CustomObject;
+import io.sphere.sdk.customobjects.commands.CustomObjectUpsertCommand;
+import io.sphere.sdk.customobjects.queries.CustomObjectQuery;
+import io.sphere.sdk.queries.PagedQueryResult;
+import java.time.Clock;
+import java.time.ZonedDateTime;
+import java.util.concurrent.CompletableFuture;
+import javax.annotation.Nonnull;
+import org.assertj.core.api.Condition;
+import uk.org.lidalia.slf4jext.Level;
+import uk.org.lidalia.slf4jtest.LoggingEvent;
+import uk.org.lidalia.slf4jtest.TestLogger;
 
 public final class TestUtils {
 

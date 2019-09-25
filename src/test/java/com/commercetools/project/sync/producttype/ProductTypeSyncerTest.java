@@ -1,22 +1,21 @@
 package com.commercetools.project.sync.producttype;
 
-import com.commercetools.sync.producttypes.ProductTypeSync;
-import io.sphere.sdk.client.SphereClient;
-import io.sphere.sdk.producttypes.ProductType;
-import io.sphere.sdk.producttypes.ProductTypeDraft;
-import io.sphere.sdk.producttypes.ProductTypeDraftBuilder;
-import io.sphere.sdk.producttypes.queries.ProductTypeQuery;
-import org.junit.jupiter.api.Test;
-
-import java.util.List;
-import java.util.concurrent.CompletionStage;
-
 import static com.commercetools.project.sync.util.TestUtils.getMockedClock;
 import static io.sphere.sdk.json.SphereJsonUtils.readObjectFromResource;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
+
+import com.commercetools.sync.producttypes.ProductTypeSync;
+import io.sphere.sdk.client.SphereClient;
+import io.sphere.sdk.producttypes.ProductType;
+import io.sphere.sdk.producttypes.ProductTypeDraft;
+import io.sphere.sdk.producttypes.ProductTypeDraftBuilder;
+import io.sphere.sdk.producttypes.queries.ProductTypeQuery;
+import java.util.List;
+import java.util.concurrent.CompletionStage;
+import org.junit.jupiter.api.Test;
 
 class ProductTypeSyncerTest {
   @Test
@@ -42,7 +41,8 @@ class ProductTypeSyncerTest {
             readObjectFromResource("product-type-key-2.json", ProductType.class));
 
     // test
-    final CompletionStage<List<ProductTypeDraft>> draftsFromPageStage = productTypeSyncer.transform(productTypePage);
+    final CompletionStage<List<ProductTypeDraft>> draftsFromPageStage =
+        productTypeSyncer.transform(productTypePage);
 
     // assertions
     assertThat(draftsFromPageStage)

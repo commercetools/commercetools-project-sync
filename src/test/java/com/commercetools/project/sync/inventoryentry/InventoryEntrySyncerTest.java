@@ -1,5 +1,12 @@
 package com.commercetools.project.sync.inventoryentry;
 
+import static com.commercetools.project.sync.util.TestUtils.getMockedClock;
+import static com.commercetools.sync.inventories.utils.InventoryReferenceReplacementUtils.replaceInventoriesReferenceIdsWithKeys;
+import static io.sphere.sdk.json.SphereJsonUtils.readObjectFromResource;
+import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+
 import com.commercetools.sync.inventories.InventorySync;
 import io.sphere.sdk.client.SphereClient;
 import io.sphere.sdk.expansion.ExpansionPath;
@@ -7,17 +14,9 @@ import io.sphere.sdk.inventory.InventoryEntry;
 import io.sphere.sdk.inventory.InventoryEntryDraft;
 import io.sphere.sdk.inventory.expansion.InventoryEntryExpansionModel;
 import io.sphere.sdk.inventory.queries.InventoryEntryQuery;
-import org.junit.jupiter.api.Test;
-
 import java.util.List;
 import java.util.concurrent.CompletionStage;
-
-import static com.commercetools.project.sync.util.TestUtils.getMockedClock;
-import static com.commercetools.sync.inventories.utils.InventoryReferenceReplacementUtils.replaceInventoriesReferenceIdsWithKeys;
-import static io.sphere.sdk.json.SphereJsonUtils.readObjectFromResource;
-import static java.util.Arrays.asList;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
+import org.junit.jupiter.api.Test;
 
 class InventoryEntrySyncerTest {
   @Test

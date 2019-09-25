@@ -1,5 +1,10 @@
 package com.commercetools.project.sync.util;
 
+import static com.commercetools.project.sync.service.impl.CustomObjectServiceImpl.TIMESTAMP_GENERATOR_KEY;
+import static com.commercetools.project.sync.util.QueryUtils.queryAndExecute;
+import static java.lang.String.format;
+import static org.assertj.core.api.Assertions.assertThat;
+
 import com.commercetools.project.sync.model.response.LastSyncCustomObject;
 import com.commercetools.sync.commons.utils.CtpQueryUtils;
 import io.sphere.sdk.categories.Category;
@@ -25,8 +30,6 @@ import io.sphere.sdk.queries.PagedQueryResult;
 import io.sphere.sdk.queries.QueryPredicate;
 import io.sphere.sdk.types.commands.TypeDeleteCommand;
 import io.sphere.sdk.types.queries.TypeQuery;
-
-import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -34,11 +37,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
-
-import static com.commercetools.project.sync.service.impl.CustomObjectServiceImpl.TIMESTAMP_GENERATOR_KEY;
-import static com.commercetools.project.sync.util.QueryUtils.queryAndExecute;
-import static java.lang.String.format;
-import static org.assertj.core.api.Assertions.assertThat;
+import javax.annotation.Nonnull;
 
 public final class IntegrationTestUtils {
 
@@ -136,41 +135,44 @@ public final class IntegrationTestUtils {
     final ConcurrentHashMap<ProductType, Set<UpdateAction<ProductType>>> productTypesToUpdate =
         new ConcurrentHashMap<>();
 
-    CtpQueryUtils
-        .queryAll(ctpClient,
-            ProductTypeQuery.of(), page -> {
-              page.forEach(productType -> {
-                final Set<UpdateAction<ProductType>> removeActions =
-                    productType
-                        .getAttributes()
-                        .stream()
-                        .map(attributeDefinition -> RemoveAttributeDefinition
-                            .of(attributeDefinition.getName()))
-                        .collect(Collectors.toSet());
-                productTypesToUpdate.put(productType, removeActions);
-              });
+    CtpQueryUtils.queryAll(
+            ctpClient,
+            ProductTypeQuery.of(),
+            page -> {
+              page.forEach(
+                  productType -> {
+                    final Set<UpdateAction<ProductType>> removeActions =
+                        productType
+                            .getAttributes()
+                            .stream()
+                            .map(
+                                attributeDefinition ->
+                                    RemoveAttributeDefinition.of(attributeDefinition.getName()))
+                            .collect(Collectors.toSet());
+                    productTypesToUpdate.put(productType, removeActions);
+                  });
             })
-        .thenCompose(aVoid ->
-            CompletableFuture.allOf(productTypesToUpdate
-                .entrySet()
-                .stream()
-                .map(entry ->
-                    ctpClient.execute(
-                        ProductTypeUpdateCommand.of(entry.getKey(), new ArrayList<>(entry.getValue()))))
-                .toArray(CompletableFuture[]::new))
-        )
+        .thenCompose(
+            aVoid ->
+                CompletableFuture.allOf(
+                    productTypesToUpdate
+                        .entrySet()
+                        .stream()
+                        .map(
+                            entry ->
+                                ctpClient.execute(
+                                    ProductTypeUpdateCommand.of(
+                                        entry.getKey(), new ArrayList<>(entry.getValue()))))
+                        .toArray(CompletableFuture[]::new)))
         .toCompletableFuture()
         .join();
   }
 
   @Nonnull
-  public static ProductType assertProductTypeExists(@Nonnull final SphereClient ctpClient,
-                                                    @Nonnull final String productTypeKey) {
+  public static ProductType assertProductTypeExists(
+      @Nonnull final SphereClient ctpClient, @Nonnull final String productTypeKey) {
     final PagedQueryResult<ProductType> productTypeQueryResult =
-        ctpClient
-            .execute(ProductTypeQuery.of().byKey(productTypeKey))
-            .toCompletableFuture()
-            .join();
+        ctpClient.execute(ProductTypeQuery.of().byKey(productTypeKey)).toCompletableFuture().join();
 
     assertThat(productTypeQueryResult.getResults())
         .hasSize(1)
@@ -181,7 +183,8 @@ public final class IntegrationTestUtils {
   }
 
   @Nonnull
-  public static Category assertCategoryExists(@Nonnull final SphereClient ctpClient, @Nonnull final String key) {
+  public static Category assertCategoryExists(
+      @Nonnull final SphereClient ctpClient, @Nonnull final String key) {
     final String queryPredicate = format("key=\"%s\"", key);
 
     final PagedQueryResult<Category> categoryQueryResult =
@@ -192,17 +195,17 @@ public final class IntegrationTestUtils {
 
     assertThat(categoryQueryResult.getResults())
         .hasSize(1)
-        .hasOnlyOneElementSatisfying(
-            category -> assertThat(category.getKey()).isEqualTo(key));
+        .hasOnlyOneElementSatisfying(category -> assertThat(category.getKey()).isEqualTo(key));
 
     return categoryQueryResult.getResults().get(0);
   }
 
   @Nonnull
-  public static Product assertProductExists(@Nonnull final SphereClient targetClient,
-                                            @Nonnull final String productKey,
-                                            @Nonnull final String masterVariantKey,
-                                            @Nonnull final String masterVariantSku) {
+  public static Product assertProductExists(
+      @Nonnull final SphereClient targetClient,
+      @Nonnull final String productKey,
+      @Nonnull final String masterVariantKey,
+      @Nonnull final String masterVariantSku) {
     final PagedQueryResult<Product> productQueryResult =
         targetClient.execute(ProductQuery.of()).toCompletableFuture().join();
 

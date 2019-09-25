@@ -43,21 +43,19 @@ public class CombinedResourceKeysRequest implements SphereRequest<CombinedResult
     final String body =
         format(
             "{\"query\": \"{%s%s%s}\"}",
-            productIds.isEmpty()? "" : format("%s,", createProductsGraphQlQuery(productIds)),
-            categoryIds.isEmpty()? "" : format("%s,", createCategoriesGraphQlQuery(categoryIds)),
-            productTypeIds.isEmpty()? "" : createProductTypesGraphQlQuery(productTypeIds));
+            productIds.isEmpty() ? "" : format("%s,", createProductsGraphQlQuery(productIds)),
+            categoryIds.isEmpty() ? "" : format("%s,", createCategoriesGraphQlQuery(categoryIds)),
+            productTypeIds.isEmpty() ? "" : createProductTypesGraphQlQuery(productTypeIds));
 
     return HttpRequestIntent.of(HttpMethod.POST, "/graphql", body);
   }
 
   private static String createProductsGraphQlQuery(@Nonnull final Set<String> productIds) {
-    return format(
-        "products(where: %s) { results { id key } }", createWhereQuery(productIds));
+    return format("products(where: %s) { results { id key } }", createWhereQuery(productIds));
   }
 
   private static String createCategoriesGraphQlQuery(@Nonnull final Set<String> categoryIds) {
-    return format(
-        "categories(where: %s) { results { id key } }", createWhereQuery(categoryIds));
+    return format("categories(where: %s) { results { id key } }", createWhereQuery(categoryIds));
   }
 
   private static String createProductTypesGraphQlQuery(@Nonnull final Set<String> productTypeIds) {

@@ -1,5 +1,22 @@
 package com.commercetools.project.sync;
 
+import static com.commercetools.project.sync.util.ClientConfigurationUtils.createClient;
+import static com.commercetools.project.sync.util.IntegrationTestUtils.assertCategoryExists;
+import static com.commercetools.project.sync.util.IntegrationTestUtils.assertProductTypeExists;
+import static com.commercetools.project.sync.util.IntegrationTestUtils.cleanUpProjects;
+import static com.commercetools.project.sync.util.SphereClientUtils.CTP_SOURCE_CLIENT_CONFIG;
+import static com.commercetools.project.sync.util.SphereClientUtils.CTP_TARGET_CLIENT_CONFIG;
+import static com.commercetools.project.sync.util.TestUtils.assertCategorySyncerLoggingEvents;
+import static com.commercetools.project.sync.util.TestUtils.assertInventoryEntrySyncerLoggingEvents;
+import static com.commercetools.project.sync.util.TestUtils.assertProductSyncerLoggingEvents;
+import static com.commercetools.project.sync.util.TestUtils.assertProductTypeSyncerLoggingEvents;
+import static com.commercetools.project.sync.util.TestUtils.assertTypeSyncerLoggingEvents;
+import static io.sphere.sdk.models.LocalizedString.ofEnglish;
+import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
+import static org.assertj.core.api.Assertions.assertThat;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
@@ -29,32 +46,14 @@ import io.sphere.sdk.producttypes.ProductTypeDraft;
 import io.sphere.sdk.producttypes.ProductTypeDraftBuilder;
 import io.sphere.sdk.producttypes.commands.ProductTypeCreateCommand;
 import io.sphere.sdk.queries.PagedQueryResult;
+import java.time.Clock;
+import javax.annotation.Nonnull;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import uk.org.lidalia.slf4jext.Level;
 import uk.org.lidalia.slf4jtest.TestLogger;
 import uk.org.lidalia.slf4jtest.TestLoggerFactory;
-
-import javax.annotation.Nonnull;
-import java.time.Clock;
-
-import static com.commercetools.project.sync.util.ClientConfigurationUtils.createClient;
-import static com.commercetools.project.sync.util.IntegrationTestUtils.assertCategoryExists;
-import static com.commercetools.project.sync.util.IntegrationTestUtils.assertProductTypeExists;
-import static com.commercetools.project.sync.util.IntegrationTestUtils.cleanUpProjects;
-import static com.commercetools.project.sync.util.SphereClientUtils.CTP_SOURCE_CLIENT_CONFIG;
-import static com.commercetools.project.sync.util.SphereClientUtils.CTP_TARGET_CLIENT_CONFIG;
-import static com.commercetools.project.sync.util.TestUtils.assertCategorySyncerLoggingEvents;
-import static com.commercetools.project.sync.util.TestUtils.assertInventoryEntrySyncerLoggingEvents;
-import static com.commercetools.project.sync.util.TestUtils.assertProductSyncerLoggingEvents;
-import static com.commercetools.project.sync.util.TestUtils.assertProductTypeSyncerLoggingEvents;
-import static com.commercetools.project.sync.util.TestUtils.assertTypeSyncerLoggingEvents;
-import static io.sphere.sdk.models.LocalizedString.ofEnglish;
-import static java.util.Arrays.asList;
-import static java.util.Collections.emptyList;
-import static java.util.Collections.singletonList;
-import static org.assertj.core.api.Assertions.assertThat;
 
 class ProductSyncWithNestedReferences {
 
@@ -78,25 +77,34 @@ class ProductSyncWithNestedReferences {
   }
 
   static void setupSourceProjectData(@Nonnull final SphereClient sourceProjectClient) {
-    final AttributeDefinitionDraft setOfCategoriesAttributeDef = AttributeDefinitionDraftBuilder
-        .of(SetAttributeType.of(ReferenceAttributeType.ofCategory()), "categories", ofEnglish("categories"), false)
-        .searchable(false)
-        .attributeConstraint(AttributeConstraint.NONE)
-        .build();
+    final AttributeDefinitionDraft setOfCategoriesAttributeDef =
+        AttributeDefinitionDraftBuilder.of(
+                SetAttributeType.of(ReferenceAttributeType.ofCategory()),
+                "categories",
+                ofEnglish("categories"),
+                false)
+            .searchable(false)
+            .attributeConstraint(AttributeConstraint.NONE)
+            .build();
 
-    final AttributeDefinitionDraft setOfProductTypeAttributeDef = AttributeDefinitionDraftBuilder
-        .of(SetAttributeType.of(ReferenceAttributeType.ofProductType()), "productTypes", ofEnglish("productTypes"), false)
-        .searchable(false)
-        .attributeConstraint(AttributeConstraint.NONE)
-        .build();
+    final AttributeDefinitionDraft setOfProductTypeAttributeDef =
+        AttributeDefinitionDraftBuilder.of(
+                SetAttributeType.of(ReferenceAttributeType.ofProductType()),
+                "productTypes",
+                ofEnglish("productTypes"),
+                false)
+            .searchable(false)
+            .attributeConstraint(AttributeConstraint.NONE)
+            .build();
 
     final ProductTypeDraft nestedProductTypeDraft =
         ProductTypeDraftBuilder.of(
-            INNER_PRODUCT_TYPE_KEY, INNER_PRODUCT_TYPE_KEY, "an inner productType for t-shirts", emptyList())
-                               .attributes(asList(
-                                   setOfCategoriesAttributeDef, setOfProductTypeAttributeDef
-                               ))
-                               .build();
+                INNER_PRODUCT_TYPE_KEY,
+                INNER_PRODUCT_TYPE_KEY,
+                "an inner productType for t-shirts",
+                emptyList())
+            .attributes(asList(setOfCategoriesAttributeDef, setOfProductTypeAttributeDef))
+            .build();
 
     final ProductType innerProductType =
         sourceProjectClient
@@ -104,44 +112,53 @@ class ProductSyncWithNestedReferences {
             .toCompletableFuture()
             .join();
 
-    final AttributeDefinitionDraft nestedAttribute = AttributeDefinitionDraftBuilder
-        .of(SetAttributeType.of(NestedAttributeType.of(innerProductType)), NESTED_ATTRIBUTE_NAME,
-            ofEnglish("nested attribute"), false)
-        .searchable(false)
-        .attributeConstraint(AttributeConstraint.NONE)
-        .build();
+    final AttributeDefinitionDraft nestedAttribute =
+        AttributeDefinitionDraftBuilder.of(
+                SetAttributeType.of(NestedAttributeType.of(innerProductType)),
+                NESTED_ATTRIBUTE_NAME,
+                ofEnglish("nested attribute"),
+                false)
+            .searchable(false)
+            .attributeConstraint(AttributeConstraint.NONE)
+            .build();
 
     final ProductTypeDraft productTypeDraft =
         ProductTypeDraftBuilder.of(
-            MAIN_PRODUCT_TYPE_KEY, MAIN_PRODUCT_TYPE_KEY, "a productType for t-shirts", emptyList())
-                               .attributes(singletonList(nestedAttribute))
-                               .build();
+                MAIN_PRODUCT_TYPE_KEY,
+                MAIN_PRODUCT_TYPE_KEY,
+                "a productType for t-shirts",
+                emptyList())
+            .attributes(singletonList(nestedAttribute))
+            .build();
 
-    final ProductType mainProductType = sourceProjectClient
-        .execute(ProductTypeCreateCommand.of(productTypeDraft))
-        .toCompletableFuture()
-        .join();
+    final ProductType mainProductType =
+        sourceProjectClient
+            .execute(ProductTypeCreateCommand.of(productTypeDraft))
+            .toCompletableFuture()
+            .join();
 
     final CategoryDraft categoryDraft =
         CategoryDraftBuilder.of(ofEnglish("t-shirts"), ofEnglish("t-shirts"))
             .key(CATEGORY_KEY)
             .build();
 
-    final Category category = sourceProjectClient
-        .execute(CategoryCreateCommand.of(categoryDraft))
-        .toCompletableFuture()
-        .join();
+    final Category category =
+        sourceProjectClient
+            .execute(CategoryCreateCommand.of(categoryDraft))
+            .toCompletableFuture()
+            .join();
 
     final ArrayNode setAttributeValue = JsonNodeFactory.instance.arrayNode();
 
     final ArrayNode nestedAttributeValue = JsonNodeFactory.instance.arrayNode();
 
     final ArrayNode categoriesReferencesAttributeValue = JsonNodeFactory.instance.arrayNode();
-    categoriesReferencesAttributeValue.add(createReferenceObject(Category.referenceTypeId(), category.getId()));
+    categoriesReferencesAttributeValue.add(
+        createReferenceObject(Category.referenceTypeId(), category.getId()));
 
     final ArrayNode productTypesReferencesAttributeValue = JsonNodeFactory.instance.arrayNode();
-    productTypesReferencesAttributeValue.add(createReferenceObject(ProductType.referenceTypeId(),
-        mainProductType.getId()));
+    productTypesReferencesAttributeValue.add(
+        createReferenceObject(ProductType.referenceTypeId(), mainProductType.getId()));
 
     nestedAttributeValue.add(
         createAttributeObject(
@@ -152,28 +169,34 @@ class ProductSyncWithNestedReferences {
 
     setAttributeValue.add(nestedAttributeValue);
 
-    final AttributeDraft setOfNestedAttribute = AttributeDraft.of(nestedAttribute.getName(), setAttributeValue);
+    final AttributeDraft setOfNestedAttribute =
+        AttributeDraft.of(nestedAttribute.getName(), setAttributeValue);
 
     final ProductVariantDraft masterVariant =
         ProductVariantDraftBuilder.of()
-                                  .key(MAIN_PRODUCT_MASTER_VARIANT_KEY)
-                                  .sku(MAIN_PRODUCT_MASTER_VARIANT_KEY)
-                                  .attributes(setOfNestedAttribute)
-                                  .build();
+            .key(MAIN_PRODUCT_MASTER_VARIANT_KEY)
+            .sku(MAIN_PRODUCT_MASTER_VARIANT_KEY)
+            .attributes(setOfNestedAttribute)
+            .build();
 
     final ProductDraft productDraftWithNestedAttribute =
         ProductDraftBuilder.of(
-            mainProductType,
+                mainProductType,
                 ofEnglish(MAIN_PRODUCT_KEY),
-                ofEnglish(MAIN_PRODUCT_KEY), masterVariant)
+                ofEnglish(MAIN_PRODUCT_KEY),
+                masterVariant)
             .key(MAIN_PRODUCT_KEY)
             .build();
 
-    sourceProjectClient.execute(ProductCreateCommand.of(productDraftWithNestedAttribute)).toCompletableFuture().join();
+    sourceProjectClient
+        .execute(ProductCreateCommand.of(productDraftWithNestedAttribute))
+        .toCompletableFuture()
+        .join();
   }
 
   @Nonnull
-  private static ObjectNode createReferenceObject(@Nonnull final String typeId, @Nonnull final String id) {
+  private static ObjectNode createReferenceObject(
+      @Nonnull final String typeId, @Nonnull final String id) {
     final ObjectNode referenceObject = JsonNodeFactory.instance.objectNode();
     referenceObject.set("typeId", JsonNodeFactory.instance.textNode(typeId));
     referenceObject.set("id", JsonNodeFactory.instance.textNode(id));
@@ -181,7 +204,8 @@ class ProductSyncWithNestedReferences {
   }
 
   @Nonnull
-  private static ObjectNode createAttributeObject(@Nonnull final String name, @Nonnull final ArrayNode value) {
+  private static ObjectNode createAttributeObject(
+      @Nonnull final String name, @Nonnull final ArrayNode value) {
     final ObjectNode attributeObject = JsonNodeFactory.instance.objectNode();
     attributeObject.set("name", JsonNodeFactory.instance.textNode(name));
     attributeObject.set("value", value);
@@ -210,28 +234,27 @@ class ProductSyncWithNestedReferences {
     // create clients again (for assertions and cleanup), since the run method closes the clients
     // after execution
     // is done.
-      try (final SphereClient postTargetClient = createClient(CTP_TARGET_CLIENT_CONFIG)) {
-        // assertions
+    try (final SphereClient postTargetClient = createClient(CTP_TARGET_CLIENT_CONFIG)) {
+      // assertions
 
-        assertThat(cliRunnerTestLogger.getAllLoggingEvents())
-            .allMatch(loggingEvent -> !Level.ERROR.equals(loggingEvent.getLevel()));
+      assertThat(cliRunnerTestLogger.getAllLoggingEvents())
+          .allMatch(loggingEvent -> !Level.ERROR.equals(loggingEvent.getLevel()));
 
-        assertThat(syncerTestLogger.getAllLoggingEvents())
-            .allMatch(loggingEvent -> !Level.ERROR.equals(loggingEvent.getLevel()));
+      assertThat(syncerTestLogger.getAllLoggingEvents())
+          .allMatch(loggingEvent -> !Level.ERROR.equals(loggingEvent.getLevel()));
 
-        assertTypeSyncerLoggingEvents(syncerTestLogger, 0);
-        assertProductTypeSyncerLoggingEvents(syncerTestLogger, 2);
-        assertCategorySyncerLoggingEvents(syncerTestLogger, 1);
-        assertProductSyncerLoggingEvents(syncerTestLogger, 1);
-        assertInventoryEntrySyncerLoggingEvents(syncerTestLogger, 0);
+      assertTypeSyncerLoggingEvents(syncerTestLogger, 0);
+      assertProductTypeSyncerLoggingEvents(syncerTestLogger, 2);
+      assertCategorySyncerLoggingEvents(syncerTestLogger, 1);
+      assertProductSyncerLoggingEvents(syncerTestLogger, 1);
+      assertInventoryEntrySyncerLoggingEvents(syncerTestLogger, 0);
 
-        // Every sync module (5 modules) is expected to have 2 logs (start and stats summary) = 10
-        assertThat(syncerTestLogger.getAllLoggingEvents()).hasSize(10);
+      // Every sync module (5 modules) is expected to have 2 logs (start and stats summary) = 10
+      assertThat(syncerTestLogger.getAllLoggingEvents()).hasSize(10);
 
-        assertAllResourcesAreSyncedToTarget(postTargetClient);
-      }
+      assertAllResourcesAreSyncedToTarget(postTargetClient);
+    }
   }
-
 
   private static void assertAllResourcesAreSyncedToTarget(
       @Nonnull final SphereClient targetClient) {
@@ -252,31 +275,43 @@ class ProductSyncWithNestedReferences {
                   product.getMasterData().getStaged().getMasterVariant();
               assertThat(stagedMasterVariant.getKey()).isEqualTo(MAIN_PRODUCT_MASTER_VARIANT_KEY);
               assertThat(stagedMasterVariant.getAttributes()).hasSize(1);
-              assertThat(stagedMasterVariant.getAttribute(NESTED_ATTRIBUTE_NAME)).satisfies(attribute -> {
-                final JsonNode attributeValue = attribute.getValueAsJsonNode();
-                assertThat(attributeValue).isExactlyInstanceOf(ArrayNode.class);
-                final ArrayNode attributeValueAsArray = (ArrayNode) attributeValue;
-                assertThat(attributeValueAsArray).hasSize(1);
+              assertThat(stagedMasterVariant.getAttribute(NESTED_ATTRIBUTE_NAME))
+                  .satisfies(
+                      attribute -> {
+                        final JsonNode attributeValue = attribute.getValueAsJsonNode();
+                        assertThat(attributeValue).isExactlyInstanceOf(ArrayNode.class);
+                        final ArrayNode attributeValueAsArray = (ArrayNode) attributeValue;
+                        assertThat(attributeValueAsArray).hasSize(1);
 
-                final JsonNode nestedAttributeElement = attributeValueAsArray.get(0);
-                assertThat(nestedAttributeElement).isExactlyInstanceOf(ArrayNode.class);
-                final ArrayNode nestedTypeAttributes = (ArrayNode) nestedAttributeElement;
-                assertThat(nestedTypeAttributes).hasSize(2);
+                        final JsonNode nestedAttributeElement = attributeValueAsArray.get(0);
+                        assertThat(nestedAttributeElement).isExactlyInstanceOf(ArrayNode.class);
+                        final ArrayNode nestedTypeAttributes = (ArrayNode) nestedAttributeElement;
+                        assertThat(nestedTypeAttributes).hasSize(2);
 
-                assertThat(nestedTypeAttributes.get(0).get("name").asText()).isEqualTo("categories");
-                assertThat(nestedTypeAttributes.get(0).get("value")).isExactlyInstanceOf(ArrayNode.class);
-                final ArrayNode categoryReferences = (ArrayNode) (nestedTypeAttributes.get(0).get("value"));
-                assertThat(categoryReferences).hasOnlyOneElementSatisfying(categoryReference -> assertThat(categoryReference.get("id").asText()).isEqualTo(category.getId()));
+                        assertThat(nestedTypeAttributes.get(0).get("name").asText())
+                            .isEqualTo("categories");
+                        assertThat(nestedTypeAttributes.get(0).get("value"))
+                            .isExactlyInstanceOf(ArrayNode.class);
+                        final ArrayNode categoryReferences =
+                            (ArrayNode) (nestedTypeAttributes.get(0).get("value"));
+                        assertThat(categoryReferences)
+                            .hasOnlyOneElementSatisfying(
+                                categoryReference ->
+                                    assertThat(categoryReference.get("id").asText())
+                                        .isEqualTo(category.getId()));
 
-                assertThat(nestedTypeAttributes.get(1).get("name").asText()).isEqualTo("productTypes");
-                assertThat(nestedTypeAttributes.get(1).get("value")).isExactlyInstanceOf(ArrayNode.class);
-                final ArrayNode productTypeReferences = (ArrayNode) (nestedTypeAttributes.get(1).get("value"));
-                assertThat(productTypeReferences).hasOnlyOneElementSatisfying(productTypeReference -> assertThat(productTypeReference.get("id").asText()).isEqualTo(productType.getId()));
-              });
+                        assertThat(nestedTypeAttributes.get(1).get("name").asText())
+                            .isEqualTo("productTypes");
+                        assertThat(nestedTypeAttributes.get(1).get("value"))
+                            .isExactlyInstanceOf(ArrayNode.class);
+                        final ArrayNode productTypeReferences =
+                            (ArrayNode) (nestedTypeAttributes.get(1).get("value"));
+                        assertThat(productTypeReferences)
+                            .hasOnlyOneElementSatisfying(
+                                productTypeReference ->
+                                    assertThat(productTypeReference.get("id").asText())
+                                        .isEqualTo(productType.getId()));
+                      });
             });
   }
-
-
-
-
 }
