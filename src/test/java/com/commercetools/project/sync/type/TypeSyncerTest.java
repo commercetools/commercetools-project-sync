@@ -1,20 +1,22 @@
 package com.commercetools.project.sync.type;
 
-import static com.commercetools.project.sync.util.TestUtils.getMockedClock;
-import static io.sphere.sdk.json.SphereJsonUtils.readObjectFromResource;
-import static java.util.Arrays.asList;
-import static java.util.stream.Collectors.toList;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
-
 import com.commercetools.sync.types.TypeSync;
 import io.sphere.sdk.client.SphereClient;
 import io.sphere.sdk.types.Type;
 import io.sphere.sdk.types.TypeDraft;
 import io.sphere.sdk.types.TypeDraftBuilder;
 import io.sphere.sdk.types.queries.TypeQuery;
-import java.util.List;
 import org.junit.jupiter.api.Test;
+
+import java.util.List;
+import java.util.concurrent.CompletionStage;
+
+import static com.commercetools.project.sync.util.TestUtils.getMockedClock;
+import static io.sphere.sdk.json.SphereJsonUtils.readObjectFromResource;
+import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.toList;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
 
 class TypeSyncerTest {
   @Test
@@ -40,11 +42,11 @@ class TypeSyncerTest {
             readObjectFromResource("type-key-2.json", Type.class));
 
     // test
-    final List<TypeDraft> draftsFromPage = typeSyncer.transform(typePage);
+    final CompletionStage<List<TypeDraft>> draftsFromPageStage = typeSyncer.transform(typePage);
 
     // assertions
-    assertThat(draftsFromPage)
-        .isEqualTo(
+    assertThat(draftsFromPageStage)
+        .isCompletedWithValue(
             typePage
                 .stream()
                 .map(
