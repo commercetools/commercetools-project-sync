@@ -95,22 +95,22 @@ public final class ProductSyncer
   private CompletionStage<Void> replaceAttributeReferenceIdsWithKeys(
       @Nonnull final List<Product> page) {
 
-    final Set<JsonNode> allAttributeReferences =
+    final List<JsonNode> allAttributeReferences =
         page.stream()
             .map(Product::getMasterData)
             .map(ProductCatalogData::getStaged)
             .map(ProductData::getAllVariants)
             .map(ProductSyncer::getAttributeReferences)
             .flatMap(Collection::stream)
-            .collect(Collectors.toSet());
+            .collect(Collectors.toList());
 
-    final Set<JsonNode> allProductReferences =
+    final List<JsonNode> allProductReferences =
         getReferencesByTypeId(allAttributeReferences, Product.referenceTypeId());
 
-    final Set<JsonNode> allCategoryReferences =
+    final List<JsonNode> allCategoryReferences =
         getReferencesByTypeId(allAttributeReferences, Category.referenceTypeId());
 
-    final Set<JsonNode> allProductTypeReferences =
+    final List<JsonNode> allProductTypeReferences =
         getReferencesByTypeId(allAttributeReferences, ProductType.referenceTypeId());
 
     final ReferencesService referencesService = new ReferencesServiceImpl(getSourceClient());
@@ -148,7 +148,7 @@ public final class ProductSyncer
   }
 
   private static void replaceReferences(
-      @Nonnull final Set<JsonNode> references, @Nonnull final Map<String, String> idToKey) {
+      @Nonnull final List<JsonNode> references, @Nonnull final Map<String, String> idToKey) {
 
     references.forEach(
         reference -> {
@@ -159,16 +159,16 @@ public final class ProductSyncer
   }
 
   @Nonnull
-  private Set<JsonNode> getReferencesByTypeId(
-      @Nonnull final Set<JsonNode> references, @Nonnull final String typeId) {
+  private List<JsonNode> getReferencesByTypeId(
+      @Nonnull final List<JsonNode> references, @Nonnull final String typeId) {
     return references
         .stream()
         .filter(reference -> typeId.equals(reference.get(REFERENCE_TYPE_ID_FIELD).asText()))
-        .collect(Collectors.toSet());
+        .collect(Collectors.toList());
   }
 
   @Nonnull
-  private static Set<String> getIds(@Nonnull final Set<JsonNode> references) {
+  private static Set<String> getIds(@Nonnull final List<JsonNode> references) {
     return references
         .stream()
         .map(ref -> ref.get(REFERENCE_ID_FIELD).asText())
