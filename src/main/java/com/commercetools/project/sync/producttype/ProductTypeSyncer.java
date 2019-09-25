@@ -72,6 +72,7 @@ public final class ProductTypeSyncer
   @Nonnull
   @Override
   protected ProductTypeQuery getQuery() {
-    return ProductTypeQuery.of();
+    // TODO: Set depth need to be configurable.
+    return ProductTypeReferenceReplacementUtils.buildProductTypeQuery(1);
   }
 }
