@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Objects;
 import java.util.Set;
-import javax.annotation.Nullable;
 
 public class ResultingResourcesContainer {
   private final Set<ReferenceIdKey> results;
@@ -19,7 +18,7 @@ public class ResultingResourcesContainer {
   }
 
   @Override
-  public boolean equals(@Nullable final Object other) {
+  public boolean equals(final Object other) {
     if (this == other) {
       return true;
     }

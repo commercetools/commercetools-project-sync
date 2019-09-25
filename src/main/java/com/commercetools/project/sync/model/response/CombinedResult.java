@@ -3,7 +3,6 @@ package com.commercetools.project.sync.model.response;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Objects;
-import javax.annotation.Nullable;
 
 public class CombinedResult {
   private final ResultingResourcesContainer products;
@@ -34,7 +33,7 @@ public class CombinedResult {
   }
 
   @Override
-  public boolean equals(@Nullable final Object other) {
+  public boolean equals(final Object other) {
     if (this == other) {
       return true;
     }
