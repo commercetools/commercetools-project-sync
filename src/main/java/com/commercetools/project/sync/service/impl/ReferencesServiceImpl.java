@@ -1,20 +1,23 @@
 package com.commercetools.project.sync.service.impl;
 
-import static java.lang.String.format;
-import static org.apache.commons.lang3.StringUtils.isBlank;
-
 import com.commercetools.project.sync.model.request.CombinedResourceKeysRequest;
+import com.commercetools.project.sync.model.response.CombinedResult;
+import com.commercetools.project.sync.model.response.ResultingResourcesContainer;
 import com.commercetools.project.sync.service.ReferencesService;
 import io.sphere.sdk.client.SphereClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.annotation.Nonnull;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
-import javax.annotation.Nonnull;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import static java.lang.String.format;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 public class ReferencesServiceImpl extends BaseServiceImpl implements ReferencesService {
   private final Map<String, String> idToKey = new ConcurrentHashMap<>();
@@ -57,8 +60,8 @@ public class ReferencesServiceImpl extends BaseServiceImpl implements References
       return CompletableFuture.completedFuture(idToKey);
     }
 
-    // TODO: Make sure each nonCached set has less than 500 resources, otherwise batch requests.
-    // otherwise, make a combined request with GraphQL to CTP for the non-cached ids.
+    // TODO: Make sure each nonCached set has less than 500 resources, otherwise batch requests
+    // https://github.com/commercetools/commercetools-project-sync/issues/42
     final CombinedResourceKeysRequest combinedResourceKeysRequest =
         new CombinedResourceKeysRequest(
             nonCachedProductIds, nonCachedCategoryIds, nonCachedProductTypeIds);
@@ -67,62 +70,7 @@ public class ReferencesServiceImpl extends BaseServiceImpl implements References
         .execute(combinedResourceKeysRequest)
         .thenApply(
             combinedResult -> {
-              combinedResult
-                  .getCategories()
-                  .getResults()
-                  .forEach(
-                      referenceIdKey -> {
-                        final String key = referenceIdKey.getKey();
-                        final String id = referenceIdKey.getId();
-                        if (isBlank(key)) {
-                          LOGGER.error(
-                              format(
-                                  "The key for the category with id '%s' is blank. Please make sure all "
-                                      + "categories, in the source project with key '%s', have non-blank (not null and not "
-                                      + "empty string) keys.",
-                                  id, getCtpClient().getConfig().getProjectKey()));
-                        } else {
-                          idToKey.put(id, key);
-                        }
-                      });
-
-              combinedResult
-                  .getProducts()
-                  .getResults()
-                  .forEach(
-                      referenceIdKey -> {
-                        final String key = referenceIdKey.getKey();
-                        final String id = referenceIdKey.getId();
-                        if (isBlank(key)) {
-                          LOGGER.error(
-                              format(
-                                  "The key for the product with id '%s' is blank. Please make sure all "
-                                      + "products, in the source project with key '%s', have non-blank (not null and not "
-                                      + "empty string) keys.",
-                                  id, getCtpClient().getConfig().getProjectKey()));
-                        } else {
-                          idToKey.put(id, key);
-                        }
-                      });
-
-              combinedResult
-                  .getProductTypes()
-                  .getResults()
-                  .forEach(
-                      referenceIdKey -> {
-                        final String key = referenceIdKey.getKey();
-                        final String id = referenceIdKey.getId();
-                        if (isBlank(key)) {
-                          LOGGER.error(
-                              format(
-                                  "The key for the productTypes with id '%s' is blank. Please make sure all"
-                                      + " productTypes, in the source project with key '%s', have non-blank (not null and not "
-                                      + "empty string) keys.",
-                                  id, getCtpClient().getConfig().getProjectKey()));
-                        } else {
-                          idToKey.put(id, key);
-                        }
-                      });
+              cacheKeys(combinedResult);
               return idToKey;
             });
   }
@@ -130,5 +78,80 @@ public class ReferencesServiceImpl extends BaseServiceImpl implements References
   @Nonnull
   private Set<String> getNonCachedIds(@Nonnull final Set<String> ids) {
     return ids.stream().filter(id -> !idToKey.containsKey(id)).collect(Collectors.toSet());
+  }
+
+  private void cacheKeys(@Nonnull final CombinedResult combinedResult) {
+    cacheCategoryKeys(combinedResult);
+    cacheProductKeys(combinedResult);
+    cacheProductTypeKeys(combinedResult);
+  }
+
+  private void cacheProductTypeKeys(@Nonnull final CombinedResult combinedResult) {
+    final ResultingResourcesContainer productTypeResults = combinedResult.getProductTypes();
+    if (productTypeResults != null) {
+      productTypeResults
+          .getResults()
+          .forEach(
+              referenceIdKey -> {
+                final String key = referenceIdKey.getKey();
+                final String id = referenceIdKey.getId();
+                if (isBlank(key)) {
+                  LOGGER.error(
+                      format(
+                          "The key for the productTypes with id '%s' is blank. Please make sure all"
+                              + " productTypes, in the source project with key '%s', have non-blank (not null and not "
+                              + "empty string) keys.",
+                          id, getCtpClient().getConfig().getProjectKey()));
+                } else {
+                  idToKey.put(id, key);
+                }
+              });
+    }
+  }
+
+  private void cacheProductKeys(@Nonnull final CombinedResult combinedResult) {
+    final ResultingResourcesContainer productResults = combinedResult.getProducts();
+    if (productResults != null) {
+      productResults
+          .getResults()
+          .forEach(
+              referenceIdKey -> {
+                final String key = referenceIdKey.getKey();
+                final String id = referenceIdKey.getId();
+                if (isBlank(key)) {
+                  LOGGER.error(
+                      format(
+                          "The key for the product with id '%s' is blank. Please make sure all "
+                              + "products, in the source project with key '%s', have non-blank (not null and not "
+                              + "empty string) keys.",
+                          id, getCtpClient().getConfig().getProjectKey()));
+                } else {
+                  idToKey.put(id, key);
+                }
+              });
+    }
+  }
+
+  private void cacheCategoryKeys(@Nonnull final CombinedResult combinedResult) {
+    final ResultingResourcesContainer categoryResults = combinedResult.getCategories();
+    if (categoryResults != null) {
+      categoryResults
+          .getResults()
+          .forEach(
+              referenceIdKey -> {
+                final String key = referenceIdKey.getKey();
+                final String id = referenceIdKey.getId();
+                if (isBlank(key)) {
+                  LOGGER.error(
+                      format(
+                          "The key for the category with id '%s' is blank. Please make sure all "
+                              + "categories, in the source project with key '%s', have non-blank (not null and not "
+                              + "empty string) keys.",
+                          id, getCtpClient().getConfig().getProjectKey()));
+                } else {
+                  idToKey.put(id, key);
+                }
+              });
+    }
   }
 }
