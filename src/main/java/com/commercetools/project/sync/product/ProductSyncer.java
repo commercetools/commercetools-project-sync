@@ -1,7 +1,5 @@
 package com.commercetools.project.sync.product;
 
-import static com.commercetools.sync.products.utils.ProductReferenceReplacementUtils.replaceProductsReferenceIdsWithKeys;
-
 import com.commercetools.project.sync.Syncer;
 import com.commercetools.project.sync.service.CustomObjectService;
 import com.commercetools.project.sync.service.ReferencesService;
@@ -29,6 +27,10 @@ import io.sphere.sdk.products.commands.updateactions.Unpublish;
 import io.sphere.sdk.products.expansion.ProductExpansionModel;
 import io.sphere.sdk.products.queries.ProductQuery;
 import io.sphere.sdk.producttypes.ProductType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.annotation.Nonnull;
 import java.time.Clock;
 import java.util.Collection;
 import java.util.List;
@@ -36,9 +38,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletionStage;
 import java.util.stream.Collectors;
-import javax.annotation.Nonnull;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import static com.commercetools.sync.products.utils.ProductReferenceReplacementUtils.replaceProductsReferenceIdsWithKeys;
 
 public final class ProductSyncer
     extends Syncer<
@@ -87,6 +88,16 @@ public final class ProductSyncer
   @Nonnull
   protected CompletionStage<List<ProductDraft>> transform(@Nonnull final List<Product> page) {
     return replaceAttributeReferenceIdsWithKeys(page)
+        .whenComplete(
+            ((aVoid, throwable) -> {
+              if (throwable != null) {
+                LOGGER.error(
+                    "Failed to replace referenced resource ids with keys on the attributes of the products in "
+                        + "the current fetched page from the source project. This page of products will not be synced to "
+                        + "the target project.",
+                    throwable);
+              }
+            }))
         .thenApply(aVoid -> replaceProductsReferenceIdsWithKeys(page));
   }
 
