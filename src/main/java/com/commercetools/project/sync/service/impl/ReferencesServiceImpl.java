@@ -13,14 +13,19 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class ReferencesServiceImpl extends BaseServiceImpl implements ReferencesService {
   private final Map<String, String> idToKey = new HashMap<>();
   private static final Logger LOGGER = LoggerFactory.getLogger(ReferencesServiceImpl.class);
+  private static final String BLANK_KEY_ERROR_MSG =
+      "The key for the %s with id '%s' is blank. Please make sure all %s, in the source project with key '%s', "
+          + "have non-blank (i.e. non-null and non-empty) keys.";
 
   public ReferencesServiceImpl(@Nonnull final SphereClient ctpClient) {
     super(ctpClient);
@@ -79,74 +84,59 @@ public class ReferencesServiceImpl extends BaseServiceImpl implements References
     return ids.stream().filter(id -> !idToKey.containsKey(id)).collect(Collectors.toSet());
   }
 
-  private void cacheKeys(@Nonnull final CombinedResult combinedResult) {
-    cacheCategoryKeys(combinedResult);
-    cacheProductKeys(combinedResult);
-    cacheProductTypeKeys(combinedResult);
-  }
+  private void cacheKeys(@Nullable final CombinedResult combinedResult) {
+    if (combinedResult != null) {
 
-  private void cacheProductTypeKeys(@Nonnull final CombinedResult combinedResult) {
-    final ResultingResourcesContainer productTypeResults = combinedResult.getProductTypes();
-    if (productTypeResults != null) {
-      productTypeResults
-          .getResults()
-          .forEach(
-              referenceIdKey -> {
-                final String key = referenceIdKey.getKey();
-                final String id = referenceIdKey.getId();
-                if (isBlank(key)) {
-                  LOGGER.error(
-                      format(
-                          "The key for the productTypes with id '%s' is blank. Please make sure all"
-                              + " productTypes, in the source project with key '%s', have non-blank"
-                              + "(i.e. non-null and non-empty) keys.",
-                          id, getCtpClient().getConfig().getProjectKey()));
-                } else {
-                  idToKey.put(id, key);
-                }
-              });
+      cacheKeys(
+          combinedResult,
+          CombinedResult::getProducts,
+          id ->
+              format(
+                  BLANK_KEY_ERROR_MSG,
+                  "product",
+                  id,
+                  "products",
+                  getCtpClient().getConfig().getProjectKey()));
+
+      cacheKeys(
+          combinedResult,
+          CombinedResult::getCategories,
+          id ->
+              format(
+                  BLANK_KEY_ERROR_MSG,
+                  "category",
+                  id,
+                  "categories",
+                  getCtpClient().getConfig().getProjectKey()));
+
+      cacheKeys(
+          combinedResult,
+          CombinedResult::getProductTypes,
+          id ->
+              format(
+                  BLANK_KEY_ERROR_MSG,
+                  "productType",
+                  id,
+                  "productTypes",
+                  getCtpClient().getConfig().getProjectKey()));
     }
   }
 
-  private void cacheProductKeys(@Nonnull final CombinedResult combinedResult) {
-    final ResultingResourcesContainer productResults = combinedResult.getProducts();
-    if (productResults != null) {
-      productResults
+  private void cacheKeys(
+      @Nonnull final CombinedResult combinedResult,
+      @Nonnull final Function<CombinedResult, ResultingResourcesContainer> resultsContainerMapper,
+      @Nonnull final Function<String, String> errorMessageMapper) {
+    final ResultingResourcesContainer resultsContainer =
+        resultsContainerMapper.apply(combinedResult);
+    if (resultsContainer != null) {
+      resultsContainer
           .getResults()
           .forEach(
               referenceIdKey -> {
                 final String key = referenceIdKey.getKey();
                 final String id = referenceIdKey.getId();
                 if (isBlank(key)) {
-                  LOGGER.error(
-                      format(
-                          "The key for the product with id '%s' is blank. Please make sure all "
-                              + "products, in the source project with key '%s', have non-blank"
-                              + "(i.e. non-null and non-empty) keys.",
-                          id, getCtpClient().getConfig().getProjectKey()));
-                } else {
-                  idToKey.put(id, key);
-                }
-              });
-    }
-  }
-
-  private void cacheCategoryKeys(@Nonnull final CombinedResult combinedResult) {
-    final ResultingResourcesContainer categoryResults = combinedResult.getCategories();
-    if (categoryResults != null) {
-      categoryResults
-          .getResults()
-          .forEach(
-              referenceIdKey -> {
-                final String key = referenceIdKey.getKey();
-                final String id = referenceIdKey.getId();
-                if (isBlank(key)) {
-                  LOGGER.error(
-                      format(
-                          "The key for the category with id '%s' is blank. Please make sure all "
-                              + "categories, in the source project with key '%s', have non-blank"
-                              + "(i.e. non-null and non-empty) keys.",
-                          id, getCtpClient().getConfig().getProjectKey()));
+                  LOGGER.error(errorMessageMapper.apply(id));
                 } else {
                   idToKey.put(id, key);
                 }
