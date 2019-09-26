@@ -16,6 +16,7 @@ import com.commercetools.project.sync.model.response.CombinedResult;
 import com.commercetools.project.sync.model.response.ReferenceIdKey;
 import com.commercetools.project.sync.model.response.ResultingResourcesContainer;
 import com.commercetools.project.sync.service.ReferencesService;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.sphere.sdk.client.SphereApiConfig;
 import io.sphere.sdk.client.SphereClient;
 import java.util.HashMap;
@@ -72,6 +73,8 @@ class ReferencesServiceImplTest {
     verify(ctpClient, times(1)).execute(any(CombinedResourceKeysRequest.class));
   }
 
+  @SuppressFBWarnings(
+      "NP_NONNULL_PARAM_VIOLATION") // https://github.com/findbugsproject/findbugs/issues/79
   @Test
   void getIdToKeys_WithNullResponse_ShouldReturnCurrentCacheWithoutCachingNewIds() {
     // preparation
