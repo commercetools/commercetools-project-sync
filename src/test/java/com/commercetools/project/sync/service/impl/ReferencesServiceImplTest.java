@@ -48,6 +48,49 @@ class ReferencesServiceImplTest {
   }
 
   @Test
+  void getIdToKeys_WithOnlyProductTypeIds_ShouldFetchOnceAndCacheIds() {
+    // preparation
+    final SphereClient ctpClient = mock(SphereClient.class);
+    final CombinedResult mockResult =
+        new CombinedResult(
+            null,
+            null,
+            new ResultingResourcesContainer(
+                asSet(new ReferenceIdKey("productTypeId", "productTypeKey"))));
+    when(ctpClient.execute(any(CombinedResourceKeysRequest.class)))
+        .thenReturn(CompletableFuture.completedFuture(mockResult));
+    final ReferencesService referencesService = new ReferencesServiceImpl(ctpClient);
+
+    // test
+    final CompletionStage<Map<String, String>> idToKeysStage =
+        referencesService.getIdToKeys(emptySet(), emptySet(), asSet("productTypeId"));
+
+    // assertion
+    final HashMap<String, String> expectedCache = new HashMap<>();
+    expectedCache.put("productTypeId", "productTypeKey");
+    assertThat(idToKeysStage).isCompletedWithValue(expectedCache);
+    verify(ctpClient, times(1)).execute(any(CombinedResourceKeysRequest.class));
+  }
+
+  @Test
+  void getIdToKeys_WithNullResponse_ShouldReturnCurrentCacheWithoutCachingNewIds() {
+    // preparation
+    final SphereClient ctpClient = mock(SphereClient.class);
+    when(ctpClient.execute(any(CombinedResourceKeysRequest.class)))
+        .thenReturn(CompletableFuture.completedFuture(null));
+    final ReferencesService referencesService = new ReferencesServiceImpl(ctpClient);
+
+    // test
+    final CompletionStage<Map<String, String>> idToKeysStage =
+        referencesService.getIdToKeys(
+            asSet("productId"), asSet("categoryId"), asSet("productTypeId"));
+
+    // assertion
+    assertThat(idToKeysStage).isCompletedWithValue(new HashMap<>());
+    verify(ctpClient, times(1)).execute(any(CombinedResourceKeysRequest.class));
+  }
+
+  @Test
   void getIdToKeys_WithNonCachedIds_ShouldFetchOnceAndCacheIds() {
     // preparation
     final SphereClient ctpClient = mock(SphereClient.class);
