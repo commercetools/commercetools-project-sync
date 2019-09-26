@@ -1,5 +1,12 @@
 package com.commercetools.project.sync.model.request;
 
+import static io.sphere.sdk.utils.SphereInternalUtils.asSet;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 import com.commercetools.project.sync.model.response.CombinedResult;
 import com.commercetools.project.sync.model.response.ReferenceIdKey;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -8,18 +15,10 @@ import io.sphere.sdk.client.HttpRequestIntent;
 import io.sphere.sdk.http.HttpMethod;
 import io.sphere.sdk.http.HttpResponse;
 import io.sphere.sdk.http.StringHttpRequestBody;
-import org.junit.jupiter.api.Test;
-
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
-
-import static io.sphere.sdk.utils.SphereInternalUtils.asSet;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import org.junit.jupiter.api.Test;
 
 class CombinedResourceKeysRequestTest {
 

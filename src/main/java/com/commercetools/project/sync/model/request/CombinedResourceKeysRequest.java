@@ -1,5 +1,9 @@
 package com.commercetools.project.sync.model.request;
 
+import static java.lang.String.format;
+import static java.util.Objects.requireNonNull;
+import static java.util.stream.Collectors.joining;
+
 import com.commercetools.project.sync.model.response.CombinedResult;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -8,16 +12,11 @@ import io.sphere.sdk.client.SphereRequest;
 import io.sphere.sdk.http.HttpMethod;
 import io.sphere.sdk.http.HttpResponse;
 import io.sphere.sdk.json.SphereJsonUtils;
-import org.apache.commons.lang3.StringUtils;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.util.Set;
 import java.util.stream.Stream;
-
-import static java.lang.String.format;
-import static java.util.Objects.requireNonNull;
-import static java.util.stream.Collectors.joining;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import org.apache.commons.lang3.StringUtils;
 
 public class CombinedResourceKeysRequest implements SphereRequest<CombinedResult> {
   private final Set<String> productIds;
@@ -52,13 +51,15 @@ public class CombinedResourceKeysRequest implements SphereRequest<CombinedResult
     }
 
     final String productQuery = productIds.isEmpty() ? "" : createProductsGraphQlQuery(productIds);
-    final String categoryQuery = categoryIds.isEmpty() ? "" : createCategoriesGraphQlQuery(categoryIds);
-    final String productTypeQuery = productTypeIds.isEmpty() ? "" : createProductTypesGraphQlQuery(productTypeIds);
+    final String categoryQuery =
+        categoryIds.isEmpty() ? "" : createCategoriesGraphQlQuery(categoryIds);
+    final String productTypeQuery =
+        productTypeIds.isEmpty() ? "" : createProductTypesGraphQlQuery(productTypeIds);
 
-    final String queryValue = Stream
-        .of(productQuery, categoryQuery, productTypeQuery)
-        .filter(StringUtils::isNotBlank)
-        .collect(joining(", ", "{ ", " }"));
+    final String queryValue =
+        Stream.of(productQuery, categoryQuery, productTypeQuery)
+            .filter(StringUtils::isNotBlank)
+            .collect(joining(", ", "{ ", " }"));
 
     final String body = format("{\"query\": \"%s\"}", queryValue);
 
@@ -83,7 +84,8 @@ public class CombinedResourceKeysRequest implements SphereRequest<CombinedResult
 
   @Nonnull
   private static String createWhereQuery(@Nonnull final Set<String> ids) {
-    // The where in the graphql query should look like this in the end =>  `where: id (\"id1\", \"id2\")`
+    // The where in the graphql query should look like this in the end =>  `where: id (\"id1\",
+    // \"id2\")`
     // So we need an escaping backslash before the quote. So to add this:
     // We need 1 backslash (2 in java) to escape the quote in the graphql query.
     // We need 2 backslashes (4 in java) to escape the backslash in the JSON payload string.
@@ -91,8 +93,13 @@ public class CombinedResourceKeysRequest implements SphereRequest<CombinedResult
     // hence: 7 backslashes:
     final String backslashQuote = "\\\\\\\"";
     final String commaSeparatedIds =
-        ids.stream().distinct()
-           .collect(joining(format("%s, %s", backslashQuote, backslashQuote), backslashQuote, backslashQuote));
+        ids.stream()
+            .distinct()
+            .collect(
+                joining(
+                    format("%s, %s", backslashQuote, backslashQuote),
+                    backslashQuote,
+                    backslashQuote));
 
     return createWhereQuery(commaSeparatedIds);
   }
