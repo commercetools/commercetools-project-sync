@@ -1,7 +1,6 @@
 package com.commercetools.project.sync.product;
 
 import static com.commercetools.project.sync.util.TestUtils.getMockedClock;
-import static com.commercetools.sync.products.utils.ProductReferenceReplacementUtils.buildProductQuery;
 import static com.commercetools.sync.products.utils.ProductReferenceReplacementUtils.replaceProductsReferenceIdsWithKeys;
 import static io.sphere.sdk.json.SphereJsonUtils.readObjectFromResource;
 import static io.sphere.sdk.models.LocalizedString.ofEnglish;
@@ -13,6 +12,7 @@ import static org.mockito.Mockito.when;
 import com.commercetools.sync.products.ProductSync;
 import io.sphere.sdk.client.SphereClient;
 import io.sphere.sdk.commands.UpdateAction;
+import io.sphere.sdk.expansion.ExpansionPath;
 import io.sphere.sdk.products.Product;
 import io.sphere.sdk.products.ProductCatalogData;
 import io.sphere.sdk.products.ProductDraft;
@@ -35,8 +35,8 @@ class ProductSyncerTest {
 
     // assertions
     assertThat(productSyncer).isNotNull();
-    assertThat(productSyncer.getQuery()).isEqualTo(buildProductQuery());
-    assertThat(productSyncer.getSync()).isInstanceOf(ProductSync.class);
+    assertThat(productSyncer.getQuery()).isInstanceOf(ProductQuery.class);
+    assertThat(productSyncer.getSync()).isExactlyInstanceOf(ProductSync.class);
   }
 
   @Test
@@ -68,7 +68,18 @@ class ProductSyncerTest {
     final ProductQuery query = productSyncer.getQuery();
 
     // assertion
-    assertThat(query).isEqualTo(buildProductQuery());
+    assertThat(query.expansionPaths())
+        .containsExactly(
+            ExpansionPath.of("productType"),
+            ExpansionPath.of("taxCategory"),
+            ExpansionPath.of("state"),
+            ExpansionPath.of("masterData.staged.categories[*]"),
+            ExpansionPath.of("masterData.staged.masterVariant.prices[*].channel"),
+            ExpansionPath.of("masterData.staged.variants[*].prices[*].channel"),
+            ExpansionPath.of("masterData.staged.masterVariant.prices[*].custom.type"),
+            ExpansionPath.of("masterData.staged.variants[*].prices[*].custom.type"),
+            ExpansionPath.of("masterData.staged.masterVariant.assets[*].custom.type"),
+            ExpansionPath.of("masterData.staged.variants[*].assets[*].custom.type"));
   }
 
   @Test

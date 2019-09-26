@@ -8,6 +8,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
 import com.commercetools.sync.producttypes.ProductTypeSync;
+import com.commercetools.sync.producttypes.utils.ProductTypeReferenceReplacementUtils;
 import io.sphere.sdk.client.SphereClient;
 import io.sphere.sdk.producttypes.ProductType;
 import io.sphere.sdk.producttypes.ProductTypeDraft;
@@ -26,8 +27,8 @@ class ProductTypeSyncerTest {
 
     // assertions
     assertThat(productTypeSyncer).isNotNull();
-    assertThat(productTypeSyncer.getQuery()).isEqualTo(ProductTypeQuery.of());
-    assertThat(productTypeSyncer.getSync()).isInstanceOf(ProductTypeSync.class);
+    assertThat(productTypeSyncer.getQuery()).isInstanceOf(ProductTypeQuery.class);
+    assertThat(productTypeSyncer.getSync()).isExactlyInstanceOf(ProductTypeSync.class);
   }
 
   @Test
@@ -64,6 +65,6 @@ class ProductTypeSyncerTest {
     final ProductTypeQuery query = productTypeSyncer.getQuery();
 
     // assertion
-    assertThat(query).isEqualTo(ProductTypeQuery.of());
+    assertThat(query).isEqualTo(ProductTypeReferenceReplacementUtils.buildProductTypeQuery(1));
   }
 }

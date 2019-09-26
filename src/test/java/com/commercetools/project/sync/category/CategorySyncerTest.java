@@ -27,7 +27,7 @@ class CategorySyncerTest {
     // assertions
     assertThat(categorySyncer).isNotNull();
     assertThat(categorySyncer.getQuery()).isEqualTo(buildCategoryQuery());
-    assertThat(categorySyncer.getSync()).isInstanceOf(CategorySync.class);
+    assertThat(categorySyncer.getSync()).isExactlyInstanceOf(CategorySync.class);
   }
 
   @Test

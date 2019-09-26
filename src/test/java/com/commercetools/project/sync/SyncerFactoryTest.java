@@ -378,8 +378,9 @@ class SyncerFactoryTest {
                     && loggingEvent
                         .getMessage()
                         .contains(
-                            "Summary: 0 product types were processed in total (0 created, 0 updated "
-                                + "and 0 failed to sync)."),
+                            "Summary: 0 product types were processed in total (0 created, 0 updated, 0 failed to sync"
+                                + " and 0 product types with at least one NestedType or a Set of NestedType attribute"
+                                + " definition(s) referencing a missing product type)."),
             "statistics log");
 
     assertThat(syncerTestLogger.getAllLoggingEvents())
