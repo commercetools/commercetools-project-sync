@@ -15,6 +15,7 @@ import com.commercetools.project.sync.model.response.CombinedResult;
 import com.commercetools.project.sync.model.response.ReferenceIdKey;
 import com.commercetools.project.sync.model.response.ResultingResourcesContainer;
 import com.commercetools.sync.products.ProductSync;
+import com.commercetools.sync.products.utils.ProductReferenceReplacementUtils;
 import io.sphere.sdk.client.BadGatewayException;
 import io.sphere.sdk.client.SphereClient;
 import io.sphere.sdk.commands.UpdateAction;
@@ -138,17 +139,18 @@ class ProductSyncerTest {
 
     // assertions
     assertThat(draftsFromPageStage)
-        .hasFailedWithThrowableThat()
-        .isExactlyInstanceOf(BadGatewayException.class)
-        .hasMessageContaining("Failed Graphql request");
+        .isCompletedWithValue(
+            ProductReferenceReplacementUtils.replaceProductsReferenceIdsWithKeys(productPage));
     assertThat(testLogger.getAllLoggingEvents())
         .hasOnlyOneElementSatisfying(
-            loggingEvent ->
-                assertThat(loggingEvent.getMessage())
-                    .contains(
-                        "Failed to replace referenced resource ids with keys on the"
-                            + " attributes of the products in the current fetched page from the source project. This page of "
-                            + "products will not be synced to the target project."));
+            loggingEvent -> {
+              assertThat(loggingEvent.getMessage())
+                  .contains(
+                      "Failed to replace referenced resource ids with keys on the"
+                          + " attributes of the products in the current fetched page from the source project.");
+              assertThat(loggingEvent.getThrowable().isPresent()).isTrue();
+              assertThat(loggingEvent.getThrowable().get()).isEqualTo(badGatewayException);
+            });
   }
 
   @Test
