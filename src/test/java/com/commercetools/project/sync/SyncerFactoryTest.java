@@ -11,6 +11,7 @@ import static com.commercetools.project.sync.util.TestUtils.mockLastSyncCustomOb
 import static com.commercetools.project.sync.util.TestUtils.stubClientsCustomObjectService;
 import static com.commercetools.project.sync.util.TestUtils.verifyInteractionsWithClientAfterSync;
 import static java.lang.String.format;
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
@@ -18,7 +19,10 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.commercetools.project.sync.model.request.CombinedResourceKeysRequest;
 import com.commercetools.project.sync.model.response.LastSyncCustomObject;
+import com.commercetools.project.sync.product.ProductSyncer;
+import com.commercetools.project.sync.util.MockPagedQueryResult;
 import com.commercetools.sync.products.helpers.ProductSyncStatistics;
 import io.sphere.sdk.categories.queries.CategoryQuery;
 import io.sphere.sdk.client.BadGatewayException;
@@ -29,6 +33,9 @@ import io.sphere.sdk.customobjects.CustomObjectDraft;
 import io.sphere.sdk.customobjects.commands.CustomObjectUpsertCommand;
 import io.sphere.sdk.customobjects.queries.CustomObjectQuery;
 import io.sphere.sdk.inventory.queries.InventoryEntryQuery;
+import io.sphere.sdk.json.SphereJsonUtils;
+import io.sphere.sdk.products.Product;
+import io.sphere.sdk.products.commands.ProductCreateCommand;
 import io.sphere.sdk.products.queries.ProductQuery;
 import io.sphere.sdk.producttypes.queries.ProductTypeQuery;
 import io.sphere.sdk.queries.PagedQueryResult;
@@ -36,8 +43,11 @@ import io.sphere.sdk.queries.QueryPredicate;
 import io.sphere.sdk.types.queries.TypeQuery;
 import io.sphere.sdk.utils.CompletableFutureUtils;
 import java.time.ZonedDateTime;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import javax.annotation.Nonnull;
 import org.assertj.core.api.Condition;
 import org.junit.jupiter.api.AfterEach;
@@ -224,6 +234,151 @@ class SyncerFactoryTest {
         .hasSize(2)
         .haveExactly(1, startLog)
         .haveExactly(1, statisticsLog);
+  }
+
+  @Test
+  void
+      sync_AsProductsFullSyncWithExceptionDuringAttributeReferenceReplacement_ShouldBuildSyncerAndExecuteSync() {
+    // preparation
+    final SphereClient sourceClient = mock(SphereClient.class);
+    when(sourceClient.getConfig()).thenReturn(SphereClientConfig.of("foo", "foo", "foo"));
+
+    final SphereClient targetClient = mock(SphereClient.class);
+    when(targetClient.getConfig()).thenReturn(SphereClientConfig.of("bar", "bar", "bar"));
+
+    final Product product1 =
+        SphereJsonUtils.readObjectFromResource("product-key-1.json", Product.class);
+    final Product product2 =
+        SphereJsonUtils.readObjectFromResource("product-key-2.json", Product.class);
+    final PagedQueryResult<Product> twoProductResult =
+        MockPagedQueryResult.of(asList(product1, product2));
+
+    when(sourceClient.execute(any(ProductQuery.class)))
+        .thenReturn(CompletableFuture.completedFuture(twoProductResult));
+
+    when(targetClient.execute(any())).thenReturn(CompletableFuture.completedFuture(null));
+    final BadGatewayException badGatewayException = new BadGatewayException("Error!");
+    when(targetClient.execute(any(ProductCreateCommand.class)))
+        .thenReturn(CompletableFutureUtils.failed(badGatewayException));
+    when(sourceClient.execute(any(CombinedResourceKeysRequest.class)))
+        .thenReturn(CompletableFutureUtils.failed(badGatewayException));
+
+    final SyncerFactory syncerFactory =
+        SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock());
+
+    // test
+    syncerFactory.sync("products", "myRunnerName", true);
+
+    // assertions
+    verify(sourceClient, times(1)).execute(any(ProductQuery.class));
+    verify(sourceClient, times(1)).execute(any(CombinedResourceKeysRequest.class));
+    verifyInteractionsWithClientAfterSync(sourceClient, 1);
+
+    final Condition<LoggingEvent> startLog =
+        new Condition<>(
+            loggingEvent ->
+                Level.INFO.equals(loggingEvent.getLevel())
+                    && loggingEvent.getMessage().contains("Starting ProductSync"),
+            "start log");
+
+    final Condition<LoggingEvent> statisticsLog =
+        new Condition<>(
+            loggingEvent ->
+                Level.INFO.equals(loggingEvent.getLevel())
+                    && loggingEvent
+                        .getMessage()
+                        .contains(
+                            "Summary: 2 products were processed in total (0 created, 0 updated "
+                                + "and 2 failed to sync)."),
+            "statistics log");
+
+    assertThat(syncerTestLogger.getAllLoggingEvents())
+        .hasSize(2)
+        .haveExactly(1, startLog)
+        .haveExactly(1, statisticsLog);
+
+    assertThat(TestLoggerFactory.getTestLogger(ProductSyncer.class).getAllLoggingEvents())
+        .contains(
+            LoggingEvent.error(
+                badGatewayException,
+                "Failed to replace referenced resource ids with keys on the attributes of the products in "
+                    + "the current fetched page from the source project."));
+  }
+
+  @Test
+  void
+      sync_AsProductsFullSyncWithExceptionDuringAttributeReferenceReplacement_ShouldContinueWithPages() {
+    // preparation
+    final SphereClient sourceClient = mock(SphereClient.class);
+    when(sourceClient.getConfig()).thenReturn(SphereClientConfig.of("foo", "foo", "foo"));
+
+    final SphereClient targetClient = mock(SphereClient.class);
+    when(targetClient.getConfig()).thenReturn(SphereClientConfig.of("bar", "bar", "bar"));
+
+    final Product product1 =
+        SphereJsonUtils.readObjectFromResource("product-key-1.json", Product.class);
+    final Product product2 =
+        SphereJsonUtils.readObjectFromResource("product-key-2.json", Product.class);
+
+    final List<Product> fullPageOfProducts =
+        IntStream.range(0, 500).mapToObj(o -> product1).collect(Collectors.toList());
+
+    when(sourceClient.execute(any(ProductQuery.class)))
+        .thenReturn(CompletableFuture.completedFuture(MockPagedQueryResult.of(fullPageOfProducts)))
+        .thenReturn(
+            CompletableFuture.completedFuture(MockPagedQueryResult.of(asList(product1, product2))));
+
+    when(targetClient.execute(any())).thenReturn(CompletableFuture.completedFuture(null));
+    final BadGatewayException badGatewayException = new BadGatewayException("Error!");
+    when(targetClient.execute(any(ProductCreateCommand.class)))
+        .thenReturn(CompletableFutureUtils.failed(badGatewayException));
+    when(sourceClient.execute(any(CombinedResourceKeysRequest.class)))
+        .thenReturn(CompletableFutureUtils.failed(badGatewayException));
+
+    final SyncerFactory syncerFactory =
+        SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock());
+
+    // test
+    syncerFactory.sync("products", "myRunnerName", true);
+
+    // assertions
+    verify(sourceClient, times(2)).execute(any(ProductQuery.class));
+    verify(sourceClient, times(2)).execute(any(CombinedResourceKeysRequest.class));
+    verifyInteractionsWithClientAfterSync(sourceClient, 1);
+
+    final Condition<LoggingEvent> startLog =
+        new Condition<>(
+            loggingEvent ->
+                Level.INFO.equals(loggingEvent.getLevel())
+                    && loggingEvent.getMessage().contains("Starting ProductSync"),
+            "start log");
+
+    final Condition<LoggingEvent> statisticsLog =
+        new Condition<>(
+            loggingEvent ->
+                Level.INFO.equals(loggingEvent.getLevel())
+                    && loggingEvent
+                        .getMessage()
+                        .contains(
+                            "Summary: 502 products were processed in total (0 created, 0 updated "
+                                + "and 19 failed to sync)."),
+            "statistics log");
+
+    assertThat(syncerTestLogger.getAllLoggingEvents())
+        .hasSize(2)
+        .haveExactly(1, startLog)
+        .haveExactly(1, statisticsLog);
+
+    assertThat(TestLoggerFactory.getTestLogger(ProductSyncer.class).getAllLoggingEvents())
+        .contains(
+            LoggingEvent.error(
+                badGatewayException,
+                "Failed to replace referenced resource ids with keys on the attributes of the products in "
+                    + "the current fetched page from the source project."),
+            LoggingEvent.error(
+                badGatewayException,
+                "Failed to replace referenced resource ids with keys on the attributes of the products in "
+                    + "the current fetched page from the source project."));
   }
 
   private static void verifyTimestampGeneratorCustomObjectUpsert(
