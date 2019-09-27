@@ -34,6 +34,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.CompletionStage;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
@@ -52,6 +53,7 @@ public final class ProductSyncer
   private static final Logger LOGGER = LoggerFactory.getLogger(ProductSyncer.class);
   private static final String REFERENCE_TYPE_ID_FIELD = "typeId";
   private static final String REFERENCE_ID_FIELD = "id";
+  private final ReferencesService referencesService;
 
   /** Instantiates a {@link Syncer} instance. */
   private ProductSyncer(
@@ -59,8 +61,10 @@ public final class ProductSyncer
       @Nonnull final SphereClient sourceClient,
       @Nonnull final SphereClient targetClient,
       @Nonnull final CustomObjectService customObjectService,
+      @Nonnull final ReferencesService referencesService,
       @Nonnull final Clock clock) {
     super(productSync, sourceClient, targetClient, customObjectService, clock);
+    this.referencesService = referencesService;
   }
 
   @Nonnull
@@ -80,24 +84,33 @@ public final class ProductSyncer
 
     final CustomObjectService customObjectService = new CustomObjectServiceImpl(targetClient);
 
-    return new ProductSyncer(productSync, sourceClient, targetClient, customObjectService, clock);
+    final ReferencesService referencesService = new ReferencesServiceImpl(sourceClient);
+
+    return new ProductSyncer(
+        productSync, sourceClient, targetClient, customObjectService, referencesService, clock);
   }
 
   @Override
   @Nonnull
   protected CompletionStage<List<ProductDraft>> transform(@Nonnull final List<Product> page) {
     return replaceAttributeReferenceIdsWithKeys(page)
-        .whenComplete(
-            ((aVoid, throwable) -> {
-              if (throwable != null) {
-                LOGGER.error(
-                    "Failed to replace referenced resource ids with keys on the attributes of the products in "
-                        + "the current fetched page from the source project. This page of products will not be synced to "
-                        + "the target project.",
-                    throwable);
-              }
-            }))
+        .exceptionally(
+            throwable -> {
+              LOGGER.error(
+                  "Failed to replace referenced resource ids with keys on the attributes of the products in "
+                      + "the current fetched page from the source project.",
+                  getCompletionExceptionCause(throwable));
+              return null;
+            })
         .thenApply(aVoid -> replaceProductsReferenceIdsWithKeys(page));
+  }
+
+  @Nonnull
+  private static Throwable getCompletionExceptionCause(@Nonnull final Throwable exception) {
+    if (exception instanceof CompletionException) {
+      return getCompletionExceptionCause(exception.getCause());
+    }
+    return exception;
   }
 
   @Nonnull
@@ -121,8 +134,6 @@ public final class ProductSyncer
 
     final List<JsonNode> allProductTypeReferences =
         getReferencesByTypeId(allAttributeReferences, ProductType.referenceTypeId());
-
-    final ReferencesService referencesService = new ReferencesServiceImpl(getSourceClient());
 
     return referencesService
         .getIdToKeys(

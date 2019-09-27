@@ -226,7 +226,6 @@ public abstract class Syncer<
    */
   @Nonnull
   private U syncPage(@Nonnull final List<T> page) {
-
     return transform(page).thenCompose(sync::sync).toCompletableFuture().join();
   }
 
@@ -246,9 +245,5 @@ public abstract class Syncer<
 
   public B getSync() {
     return sync;
-  }
-
-  public SphereClient getSourceClient() {
-    return sourceClient;
   }
 }
