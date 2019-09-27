@@ -3,6 +3,8 @@ package com.commercetools.project.sync.model.response;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Objects;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 public class ReferenceIdKey {
   private final String id;
@@ -10,7 +12,8 @@ public class ReferenceIdKey {
 
   @JsonCreator
   public ReferenceIdKey(
-      @JsonProperty("id") final String id, @JsonProperty("key") final String key) {
+      @JsonProperty("id") @Nonnull final String id,
+      @JsonProperty("key") @Nullable final String key) {
     this.id = id;
     this.key = key;
   }
