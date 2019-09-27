@@ -118,7 +118,7 @@ class ProductSyncerTest {
   }
 
   @Test
-  void transform_WithErrorOnGraphQlRequest_ShouldCompleteExceptionallyAndLogError() {
+  void transform_WithErrorOnGraphQlRequest_ShouldContinueAndLogError() {
     // preparation
     final SphereClient sourceClient = mock(SphereClient.class);
     final ProductSyncer productSyncer =
@@ -142,7 +142,7 @@ class ProductSyncerTest {
         .isCompletedWithValue(
             ProductReferenceReplacementUtils.replaceProductsReferenceIdsWithKeys(productPage));
     assertThat(testLogger.getAllLoggingEvents())
-        .hasOnlyOneElementSatisfying(
+        .anySatisfy(
             loggingEvent -> {
               assertThat(loggingEvent.getMessage())
                   .contains(
