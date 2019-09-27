@@ -1,6 +1,6 @@
 buildscript {
     ext {
-        shadowJarVersion = '5.0.0'
+        shadowJarVersion = '5.1.0'
     }
     repositories {
         jcenter()
@@ -11,10 +11,10 @@ buildscript {
 }
 
 plugins {
-    id "com.github.ben-manes.versions" version '0.21.0'
+    id "com.github.ben-manes.versions" version '0.25.0'
     id 'com.adarshr.test-logger' version '1.7.0'
-    id "com.diffplug.gradle.spotless" version '3.23.0'
-    id 'com.bmuschko.docker-java-application' version '4.9.0'
+    id "com.diffplug.gradle.spotless" version '3.24.3'
+    id 'com.bmuschko.docker-java-application' version '5.0.0'
 }
 
 apply from: "$rootDir/gradle-scripts/extensions.gradle"
