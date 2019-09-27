@@ -24,6 +24,7 @@ import com.commercetools.project.sync.model.response.LastSyncCustomObject;
 import com.commercetools.project.sync.product.ProductSyncer;
 import com.commercetools.project.sync.util.MockPagedQueryResult;
 import com.commercetools.sync.products.helpers.ProductSyncStatistics;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.sphere.sdk.categories.queries.CategoryQuery;
 import io.sphere.sdk.client.BadGatewayException;
 import io.sphere.sdk.client.SphereClient;
@@ -236,6 +237,8 @@ class SyncerFactoryTest {
         .haveExactly(1, statisticsLog);
   }
 
+  @SuppressFBWarnings(
+      "NP_NONNULL_PARAM_VIOLATION") // https://github.com/findbugsproject/findbugs/issues/79
   @Test
   void
       sync_AsProductsFullSyncWithExceptionDuringAttributeReferenceReplacement_ShouldBuildSyncerAndExecuteSync() {
@@ -305,6 +308,8 @@ class SyncerFactoryTest {
                     + "the current fetched page from the source project."));
   }
 
+  @SuppressFBWarnings(
+      "NP_NONNULL_PARAM_VIOLATION") // https://github.com/findbugsproject/findbugs/issues/79
   @Test
   void
       sync_AsProductsFullSyncWithExceptionDuringAttributeReferenceReplacement_ShouldContinueWithPages() {

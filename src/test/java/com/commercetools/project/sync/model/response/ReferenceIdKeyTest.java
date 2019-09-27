@@ -50,7 +50,7 @@ class ReferenceIdKeyTest {
   void equals_WithDiffType_ShouldReturnFalse() {
     // preparation
     final ReferenceIdKey referenceIdKey = new ReferenceIdKey(UUID.randomUUID().toString(), "foo");
-    final Object other = "";
+    final Object other = new Object();
 
     // test
     final boolean result = referenceIdKey.equals(other);

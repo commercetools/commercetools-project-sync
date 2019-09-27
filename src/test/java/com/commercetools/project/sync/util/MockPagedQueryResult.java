@@ -31,6 +31,7 @@ public final class MockPagedQueryResult<T> implements PagedQueryResult<T> {
     return null;
   }
 
+  @Deprecated
   @Override
   public Long size() {
     return (long) results.size();
