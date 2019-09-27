@@ -2,7 +2,6 @@ package com.commercetools.project.sync.model.response;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import java.util.Objects;
 
 public class CombinedResult {
   private final ResultingResourcesContainer products;
@@ -30,24 +29,5 @@ public class CombinedResult {
 
   public ResultingResourcesContainer getProductTypes() {
     return productTypes;
-  }
-
-  @Override
-  public boolean equals(final Object other) {
-    if (this == other) {
-      return true;
-    }
-    if (!(other instanceof CombinedResult)) {
-      return false;
-    }
-    final CombinedResult that = (CombinedResult) other;
-    return getProducts().equals(that.getProducts())
-        && getCategories().equals(that.getCategories())
-        && getProductTypes().equals(that.getProductTypes());
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(getProducts(), getCategories(), getProductTypes());
   }
 }

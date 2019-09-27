@@ -2,7 +2,7 @@ package com.commercetools.project.sync.model.response;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import java.util.Objects;
+
 import java.util.Set;
 
 public class ResultingResourcesContainer {
@@ -15,22 +15,5 @@ public class ResultingResourcesContainer {
 
   public Set<ReferenceIdKey> getResults() {
     return results;
-  }
-
-  @Override
-  public boolean equals(final Object other) {
-    if (this == other) {
-      return true;
-    }
-    if (!(other instanceof ResultingResourcesContainer)) {
-      return false;
-    }
-    final ResultingResourcesContainer that = (ResultingResourcesContainer) other;
-    return getResults().equals(that.getResults());
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(getResults());
   }
 }
