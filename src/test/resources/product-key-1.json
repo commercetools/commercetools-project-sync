@@ -111,10 +111,16 @@
           },
           {
             "name": "productReference",
-            "value": {
-              "id": "53c4a8b4-754f-4b95-b6f2-3e1e70e3d0c1",
-              "typeId": "product"
-            }
+            "value": [
+              {
+                "id": "53c4a8b4-754f-4b95-b6f2-3e1e70e3d0c1",
+                "typeId": "product"
+              },
+              {
+                "id": "53c4a8b4-754f-4b95-b6f2-3e1e70e3d0c5",
+                "typeId": "product"
+              }
+            ]
           },
           {
             "name": "productTypeReference",
@@ -125,10 +131,16 @@
           },
           {
             "name": "categoryReference",
-            "value": {
-              "id": "53c4a8b4-754f-4b95-b6f2-3e1e70e3d0c3",
-              "typeId": "category"
-            }
+            "value": [
+              {
+                "id": "53c4a8b4-754f-4b95-b6f2-3e1e70e3d0c3",
+                "typeId": "category"
+              },
+              {
+                "id": "53c4a8b4-754f-4b95-b6f2-3e1e70e3d0c4",
+                "typeId": "category"
+              }
+            ]
           }
         ],
         "assets": [],

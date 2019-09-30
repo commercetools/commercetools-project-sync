@@ -17,6 +17,7 @@ import com.commercetools.project.sync.model.response.ResultingResourcesContainer
 import com.commercetools.sync.products.ProductSync;
 import com.commercetools.sync.products.utils.ProductReferenceReplacementUtils;
 import io.sphere.sdk.client.BadGatewayException;
+import io.sphere.sdk.client.SphereApiConfig;
 import io.sphere.sdk.client.SphereClient;
 import io.sphere.sdk.commands.UpdateAction;
 import io.sphere.sdk.expansion.ExpansionPath;
@@ -56,6 +57,73 @@ class ProductSyncerTest {
   void transform_WithAttributeReferences_ShouldReplaceProductReferenceIdsWithKeys() {
     // preparation
     final SphereClient sourceClient = mock(SphereClient.class);
+    final ProductSyncer productSyncer =
+        ProductSyncer.of(sourceClient, mock(SphereClient.class), getMockedClock());
+    final List<Product> productPage =
+        asList(
+            readObjectFromResource("product-key-1.json", Product.class),
+            readObjectFromResource("product-key-2.json", Product.class));
+
+    final ResultingResourcesContainer productsResult =
+        new ResultingResourcesContainer(
+            asSet(new ReferenceIdKey("53c4a8b4-754f-4b95-b6f2-3e1e70e3d0c1", "prod1")));
+    final ResultingResourcesContainer productTypesResult =
+        new ResultingResourcesContainer(
+            asSet(new ReferenceIdKey("53c4a8b4-754f-4b95-b6f2-3e1e70e3d0c2", "prodType1")));
+    final ResultingResourcesContainer categoriesResult =
+        new ResultingResourcesContainer(
+            asSet(new ReferenceIdKey("53c4a8b4-754f-4b95-b6f2-3e1e70e3d0c3", "cat1")));
+
+    when(sourceClient.execute(any(CombinedResourceKeysRequest.class)))
+        .thenReturn(
+            CompletableFuture.completedFuture(
+                new CombinedResult(productsResult, categoriesResult, productTypesResult)));
+
+    // test
+    final List<ProductDraft> draftsFromPageStage =
+        productSyncer.transform(productPage).toCompletableFuture().join();
+
+    // assertions
+    assertThat(draftsFromPageStage)
+        .anySatisfy(
+            productDraft ->
+                assertThat(productDraft.getMasterVariant().getAttributes())
+                    .anySatisfy(
+                        attributeDraft -> {
+                          assertThat(attributeDraft.getName()).isEqualTo("productReference");
+                          assertThat(attributeDraft.getValue().get("id").asText())
+                              .isEqualTo("prod1");
+                        }));
+
+    assertThat(draftsFromPageStage)
+        .anySatisfy(
+            productDraft ->
+                assertThat(productDraft.getMasterVariant().getAttributes())
+                    .anySatisfy(
+                        attributeDraft -> {
+                          assertThat(attributeDraft.getName()).isEqualTo("categoryReference");
+                          assertThat(attributeDraft.getValue().get("id").asText())
+                              .isEqualTo("cat1");
+                        }));
+
+    assertThat(draftsFromPageStage)
+        .anySatisfy(
+            productDraft ->
+                assertThat(productDraft.getMasterVariant().getAttributes())
+                    .anySatisfy(
+                        attributeDraft -> {
+                          assertThat(attributeDraft.getName()).isEqualTo("productTypeReference");
+                          assertThat(attributeDraft.getValue().get("id").asText())
+                              .isEqualTo("prodType1");
+                        }));
+  }
+
+  @Test
+  void
+      transform_WithIrresolvableAttributeReferences_ShouldSkipProductsWithIrresolvableReferences() {
+    // preparation
+    final SphereClient sourceClient = mock(SphereClient.class);
+    when(sourceClient.getConfig()).thenReturn(SphereApiConfig.of("test-project"));
     final ProductSyncer productSyncer =
         ProductSyncer.of(sourceClient, mock(SphereClient.class), getMockedClock());
     final List<Product> productPage =

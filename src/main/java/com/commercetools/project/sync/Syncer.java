@@ -246,4 +246,9 @@ public abstract class Syncer<
   public B getSync() {
     return sync;
   }
+
+  @Nonnull
+  public SphereClient getSourceClient() {
+    return sourceClient;
+  }
 }
