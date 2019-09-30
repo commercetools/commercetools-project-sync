@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import uk.org.lidalia.slf4jtest.LoggingEvent;
 import uk.org.lidalia.slf4jtest.TestLogger;
@@ -32,6 +33,11 @@ class ReferencesServiceImplTest {
 
   private static final TestLogger testLogger =
       TestLoggerFactory.getTestLogger(ReferencesServiceImpl.class);
+
+  @AfterEach
+  void tearDownTest() {
+    testLogger.clearAll();
+  }
 
   @Test
   void getIdToKeys_WithAllEmptyIds_ShouldReturnCompletedFutureOfCacheWithoutMakingCtpRequest() {
@@ -71,14 +77,17 @@ class ReferencesServiceImplTest {
     expectedCache.put("productTypeId", "productTypeKey");
     assertThat(idToKeysStage).isCompletedWithValue(expectedCache);
     verify(ctpClient, times(1)).execute(any(CombinedResourceKeysRequest.class));
+    assertThat(testLogger.getAllLoggingEvents()).isEmpty();
   }
 
   @SuppressFBWarnings(
       "NP_NONNULL_PARAM_VIOLATION") // https://github.com/findbugsproject/findbugs/issues/79
   @Test
-  void getIdToKeys_WithNullResponse_ShouldReturnCurrentCacheWithoutCachingNewIds() {
+  void
+      getIdToKeys_WithNullResponse_ShouldReturnCurrentCacheWithoutCachingNewIdsAndLogNonExistentReferences() {
     // preparation
     final SphereClient ctpClient = mock(SphereClient.class);
+    when(ctpClient.getConfig()).thenReturn(SphereApiConfig.of("test-project"));
     when(ctpClient.execute(any(CombinedResourceKeysRequest.class)))
         .thenReturn(CompletableFuture.completedFuture(null));
     final ReferencesService referencesService = new ReferencesServiceImpl(ctpClient);
@@ -91,6 +100,23 @@ class ReferencesServiceImplTest {
     // assertion
     assertThat(idToKeysStage).isCompletedWithValue(new HashMap<>());
     verify(ctpClient, times(1)).execute(any(CombinedResourceKeysRequest.class));
+    assertThat(testLogger.getAllLoggingEvents())
+        .containsExactlyInAnyOrder(
+            LoggingEvent.error(
+                "Some attribute references point to either a non-existent product (or one with a blank"
+                    + " key) on the source project 'test-project'. These are the reference ids: ('productId')."
+                    + " Please make sure they are existing in the source project and have non-blank (i.e. non-null and"
+                    + " non-empty) keys."),
+            LoggingEvent.error(
+                "Some attribute references point to either a non-existent category (or one with a blank"
+                    + " key) on the source project 'test-project'. These are the reference ids: ('categoryId')."
+                    + " Please make sure they are existing in the source project and have non-blank (i.e. non-null and"
+                    + " non-empty) keys."),
+            LoggingEvent.error(
+                "Some attribute references point to either a non-existent product-type (or one with a blank"
+                    + " key) on the source project 'test-project'. These are the reference ids: ('productTypeId')."
+                    + " Please make sure they are existing in the source project and have non-blank (i.e. non-null and"
+                    + " non-empty) keys."));
   }
 
   @Test
@@ -121,6 +147,7 @@ class ReferencesServiceImplTest {
     expectedCache.put("productTypeId", "productTypeKey");
     assertThat(idToKeysStage).isCompletedWithValue(expectedCache);
     verify(ctpClient, times(1)).execute(any(CombinedResourceKeysRequest.class));
+    assertThat(testLogger.getAllLoggingEvents()).isEmpty();
   }
 
   @Test
@@ -152,10 +179,11 @@ class ReferencesServiceImplTest {
     expectedCache.put("productTypeId", "productTypeKey");
     assertThat(idToKeysStage).isCompletedWithValue(expectedCache);
     verify(ctpClient, times(2)).execute(any(CombinedResourceKeysRequest.class));
+    assertThat(testLogger.getAllLoggingEvents()).isEmpty();
   }
 
   @Test
-  void getIdToKeys_WithSomeBlankKeys_ShouldCacheNonBlankKeysAndLogErrors() {
+  void getIdToKeys_WithSomeBlankKeysAndNonExistentIds_ShouldCacheNonBlankKeysAndLogErrors() {
     // preparation
     final SphereClient ctpClient = mock(SphereClient.class);
     when(ctpClient.getConfig()).thenReturn(SphereApiConfig.of("test-project"));
@@ -174,7 +202,9 @@ class ReferencesServiceImplTest {
     // test
     final CompletionStage<Map<String, String>> idToKeysStage =
         referencesService.getIdToKeys(
-            asSet("productId"), asSet("categoryId"), asSet("productTypeId"));
+            asSet("productId", "productId2", "productId3"),
+            asSet("categoryId"),
+            asSet("productTypeId"));
 
     // assertion
     final HashMap<String, String> expectedCache = new HashMap<>();
@@ -184,16 +214,67 @@ class ReferencesServiceImplTest {
     assertThat(testLogger.getAllLoggingEvents())
         .containsExactlyInAnyOrder(
             LoggingEvent.error(
-                "The key for the category with id 'categoryId' is blank. Please make sure all "
-                    + "categories, in the source project with key 'test-project', have non-blank "
-                    + "(i.e. non-null and non-empty) keys."),
+                "Some attribute references point to either a non-existent product (or one with a blank"
+                    + " key) on the source project 'test-project'. These are the reference ids: ('productId2', 'productId3')."
+                    + " Please make sure they are existing in the source project and have non-blank (i.e. non-null and"
+                    + " non-empty) keys."),
             LoggingEvent.error(
-                "The key for the product with id 'productId2' is blank. Please make sure all "
-                    + "products, in the source project with key 'test-project', have non-blank "
-                    + "(i.e. non-null and non-empty) keys."),
+                "Some attribute references point to either a non-existent category (or one with a blank"
+                    + " key) on the source project 'test-project'. These are the reference ids: ('categoryId')."
+                    + " Please make sure they are existing in the source project and have non-blank (i.e. non-null and"
+                    + " non-empty) keys."),
             LoggingEvent.error(
-                "The key for the productType with id 'productTypeId' is blank. Please make sure all "
-                    + "productTypes, in the source project with key 'test-project', have non-blank "
-                    + "(i.e. non-null and non-empty) keys."));
+                "Some attribute references point to either a non-existent product-type (or one with a blank"
+                    + " key) on the source project 'test-project'. These are the reference ids: ('productTypeId')."
+                    + " Please make sure they are existing in the source project and have non-blank (i.e. non-null and"
+                    + " non-empty) keys."));
+  }
+
+  @Test
+  void getIdToKeys_WithSomeNonExistent_ShouldLogErrorsAndReturnExistingCacheWithExistingIds() {
+    // preparation
+    final SphereClient ctpClient = mock(SphereClient.class);
+    when(ctpClient.getConfig()).thenReturn(SphereApiConfig.of("test-project"));
+    final CombinedResult mockResult =
+        new CombinedResult(
+            new ResultingResourcesContainer(asSet(new ReferenceIdKey("productId", "productKey"))),
+            new ResultingResourcesContainer(asSet(new ReferenceIdKey("categoryId", "categoryKey"))),
+            new ResultingResourcesContainer(
+                asSet(new ReferenceIdKey("productTypeId", "productTypeKey"))));
+    when(ctpClient.execute(any(CombinedResourceKeysRequest.class)))
+        .thenReturn(CompletableFuture.completedFuture(mockResult));
+    final ReferencesService referencesService = new ReferencesServiceImpl(ctpClient);
+
+    // test
+    final CompletionStage<Map<String, String>> idToKeysStage =
+        referencesService.getIdToKeys(
+            asSet("productId", "productId1"),
+            asSet("categoryId", "categoryId1"),
+            asSet("productTypeId", "productTypeId1"));
+
+    // assertion
+    final HashMap<String, String> expectedCache = new HashMap<>();
+    expectedCache.put("productId", "productKey");
+    expectedCache.put("categoryId", "categoryKey");
+    expectedCache.put("productTypeId", "productTypeKey");
+    assertThat(idToKeysStage).isCompletedWithValue(expectedCache);
+    verify(ctpClient, times(1)).execute(any(CombinedResourceKeysRequest.class));
+    assertThat(testLogger.getAllLoggingEvents())
+        .containsExactlyInAnyOrder(
+            LoggingEvent.error(
+                "Some attribute references point to either a non-existent product (or one with a blank"
+                    + " key) on the source project 'test-project'. These are the reference ids: ('productId1')."
+                    + " Please make sure they are existing in the source project and have non-blank (i.e. non-null and"
+                    + " non-empty) keys."),
+            LoggingEvent.error(
+                "Some attribute references point to either a non-existent category (or one with a blank"
+                    + " key) on the source project 'test-project'. These are the reference ids: ('categoryId1')."
+                    + " Please make sure they are existing in the source project and have non-blank (i.e. non-null and"
+                    + " non-empty) keys."),
+            LoggingEvent.error(
+                "Some attribute references point to either a non-existent product-type (or one with a blank"
+                    + " key) on the source project 'test-project'. These are the reference ids: ('productTypeId1')."
+                    + " Please make sure they are existing in the source project and have non-blank (i.e. non-null and"
+                    + " non-empty) keys."));
   }
 }
