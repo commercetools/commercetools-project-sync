@@ -1,16 +1,13 @@
 package com.commercetools.project.sync.service.impl;
 
-import static java.lang.String.format;
-import static org.apache.commons.lang3.StringUtils.isBlank;
-
 import com.commercetools.project.sync.model.request.CombinedResourceKeysRequest;
 import com.commercetools.project.sync.model.response.CombinedResult;
 import com.commercetools.project.sync.model.response.ResultingResourcesContainer;
 import com.commercetools.project.sync.service.ReferencesService;
-import io.sphere.sdk.categories.Category;
 import io.sphere.sdk.client.SphereClient;
-import io.sphere.sdk.products.Product;
-import io.sphere.sdk.producttypes.ProductType;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -18,18 +15,11 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 public class ReferencesServiceImpl extends BaseServiceImpl implements ReferencesService {
   private final Map<String, String> idToKey = new HashMap<>();
-  private static final Logger LOGGER = LoggerFactory.getLogger(ReferencesServiceImpl.class);
-  private static final String NON_EXISTENT_IDS_ERROR_MSG =
-      "Some attribute references point to either a non-existent %s (or one with a blank key) on the source "
-          + "project '%s'. These are the reference ids: %s. Please make sure they are existing in the source project "
-          + "and have non-blank (i.e. non-null and non-empty) keys.";
 
   public ReferencesServiceImpl(@Nonnull final SphereClient ctpClient) {
     super(ctpClient);
@@ -79,7 +69,6 @@ public class ReferencesServiceImpl extends BaseServiceImpl implements References
         .thenApply(
             combinedResult -> {
               cacheKeys(combinedResult);
-              logErrorsForNonExistentRefIds(productIds, categoryIds, productTypeIds);
               return idToKey;
             });
   }
@@ -114,48 +103,5 @@ public class ReferencesServiceImpl extends BaseServiceImpl implements References
                 }
               });
     }
-  }
-
-  private void logErrorsForNonExistentRefIds(
-      @Nonnull final Set<String> productIds,
-      @Nonnull final Set<String> categoryIds,
-      @Nonnull final Set<String> productTypeIds) {
-
-    if (LOGGER.isErrorEnabled()) {
-
-      final Set<String> nonExistentProductRefIds = getNonCachedIds(productIds);
-      final Set<String> nonExistentCategoryRefIds = getNonCachedIds(categoryIds);
-      final Set<String> nonExistentProductTypesRefIds = getNonCachedIds(productTypeIds);
-
-      if (!nonExistentProductRefIds.isEmpty()) {
-        LOGGER.error(getNonExistentIdErrorMsg(nonExistentProductRefIds, Product.referenceTypeId()));
-      }
-
-      if (!nonExistentCategoryRefIds.isEmpty()) {
-        LOGGER.error(
-            getNonExistentIdErrorMsg(nonExistentCategoryRefIds, Category.referenceTypeId()));
-      }
-
-      if (!nonExistentProductTypesRefIds.isEmpty()) {
-        LOGGER.error(
-            getNonExistentIdErrorMsg(nonExistentProductTypesRefIds, ProductType.referenceTypeId()));
-      }
-    }
-  }
-
-  @Nonnull
-  private String getNonExistentIdErrorMsg(
-      @Nonnull final Set<String> nonExistentIds, @Nonnull final String referenceTypeId) {
-
-    return format(
-        NON_EXISTENT_IDS_ERROR_MSG,
-        referenceTypeId,
-        getCtpClient().getConfig().getProjectKey(),
-        asCommaSeparatedString(nonExistentIds));
-  }
-
-  @Nonnull
-  private String asCommaSeparatedString(@Nonnull final Set<String> nonExistentProductRefIds) {
-    return nonExistentProductRefIds.stream().collect(Collectors.joining("', '", "('", "')"));
   }
 }
