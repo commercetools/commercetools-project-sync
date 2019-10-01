@@ -56,7 +56,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import javax.annotation.Nonnull;
 import org.assertj.core.api.Condition;
-import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import uk.org.lidalia.slf4jext.Level;
@@ -71,7 +71,7 @@ class SyncerFactoryTest {
   private static final TestLogger cliRunnerTestLogger =
       TestLoggerFactory.getTestLogger(CliRunner.class);
 
-  @AfterEach
+  @BeforeEach
   void tearDownTest() {
     syncerTestLogger.clearAll();
     cliRunnerTestLogger.clearAll();

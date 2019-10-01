@@ -35,7 +35,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
-import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import uk.org.lidalia.slf4jtest.TestLogger;
 import uk.org.lidalia.slf4jtest.TestLoggerFactory;
@@ -44,7 +44,7 @@ class ProductSyncerTest {
 
   private static final TestLogger testLogger = TestLoggerFactory.getTestLogger(ProductSyncer.class);
 
-  @AfterEach
+  @BeforeEach
   void tearDownTest() {
     testLogger.clearAll();
   }
