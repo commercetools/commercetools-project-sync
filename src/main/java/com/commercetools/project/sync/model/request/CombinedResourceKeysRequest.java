@@ -84,8 +84,8 @@ public class CombinedResourceKeysRequest implements SphereRequest<CombinedResult
 
   @Nonnull
   private static String createWhereQuery(@Nonnull final Set<String> ids) {
-    // The where in the graphql query should look like this in the end =>  `where: id (\"id1\",
-    // \"id2\")`
+    // The where in the graphql query should look like this in the end =>  `where: "id in (\"id1\",
+    // \"id2\")"`
     // So we need an escaping backslash before the quote. So to add this:
     // We need 1 backslash (2 in java) to escape the quote in the graphql query.
     // We need 2 backslashes (4 in java) to escape the backslash in the JSON payload string.
