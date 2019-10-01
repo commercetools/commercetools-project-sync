@@ -6,6 +6,7 @@ import com.commercetools.sync.categories.helpers.CategorySyncStatistics;
 import com.commercetools.sync.commons.helpers.BaseSyncStatistics;
 import com.commercetools.sync.products.helpers.ProductSyncStatistics;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import uk.org.lidalia.slf4jext.Level;
 import uk.org.lidalia.slf4jtest.LoggingEvent;
@@ -16,6 +17,11 @@ class StatisticsUtilsTest {
   private static final TestLogger testLogger =
       TestLoggerFactory.getTestLogger(StatisticsUtils.class);
   private BaseSyncStatistics syncStatistics;
+
+  @AfterEach
+  void tearDownTest() {
+    testLogger.clearAll();
+  }
 
   @Test
   void logStatistics_WithProductSyncStatistics_ShouldLogStatistics()

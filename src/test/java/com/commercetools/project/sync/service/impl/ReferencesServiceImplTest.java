@@ -23,20 +23,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
-import uk.org.lidalia.slf4jtest.TestLogger;
-import uk.org.lidalia.slf4jtest.TestLoggerFactory;
 
 class ReferencesServiceImplTest {
-
-  private static final TestLogger testLogger =
-      TestLoggerFactory.getTestLogger(ReferencesServiceImpl.class);
-
-  @AfterEach
-  void tearDownTest() {
-    testLogger.clearAll();
-  }
 
   @Test
   void getIdToKeys_WithAllEmptyIds_ShouldReturnCompletedFutureOfCacheWithoutMakingCtpRequest() {
@@ -76,7 +65,6 @@ class ReferencesServiceImplTest {
     expectedCache.put("productTypeId", "productTypeKey");
     assertThat(idToKeysStage).isCompletedWithValue(expectedCache);
     verify(ctpClient, times(1)).execute(any(CombinedResourceKeysRequest.class));
-    assertThat(testLogger.getAllLoggingEvents()).isEmpty();
   }
 
   @SuppressFBWarnings(
@@ -98,7 +86,6 @@ class ReferencesServiceImplTest {
     // assertion
     assertThat(idToKeysStage).isCompletedWithValue(new HashMap<>());
     verify(ctpClient, times(1)).execute(any(CombinedResourceKeysRequest.class));
-    assertThat(testLogger.getAllLoggingEvents()).isEmpty();
   }
 
   @Test
@@ -129,7 +116,6 @@ class ReferencesServiceImplTest {
     expectedCache.put("productTypeId", "productTypeKey");
     assertThat(idToKeysStage).isCompletedWithValue(expectedCache);
     verify(ctpClient, times(1)).execute(any(CombinedResourceKeysRequest.class));
-    assertThat(testLogger.getAllLoggingEvents()).isEmpty();
   }
 
   @Test
@@ -161,7 +147,6 @@ class ReferencesServiceImplTest {
     expectedCache.put("productTypeId", "productTypeKey");
     assertThat(idToKeysStage).isCompletedWithValue(expectedCache);
     verify(ctpClient, times(2)).execute(any(CombinedResourceKeysRequest.class));
-    assertThat(testLogger.getAllLoggingEvents()).isEmpty();
   }
 
   @Test
@@ -193,6 +178,5 @@ class ReferencesServiceImplTest {
     expectedCache.put("productId", "productKey");
     assertThat(idToKeysStage).isCompletedWithValue(expectedCache);
     verify(ctpClient, times(1)).execute(any(CombinedResourceKeysRequest.class));
-    assertThat(testLogger.getAllLoggingEvents()).isEmpty();
   }
 }
