@@ -123,6 +123,16 @@ public final class ProductSyncer
     return exception;
   }
 
+  /**
+   * Replaces the ids on attribute references with keys. If a product has at least one irresolvable
+   * reference, it will be filtered out and not returned in the new list.
+   *
+   * <p>Note: this method mutates the products passed by changing the reference keys with ids.
+   *
+   * @param products the products to replace the reference attributes ids with keys on.
+   * @return a new list which contains only products which have all their attributes references
+   *     resolvable and already replaced with keys.
+   */
   @Nonnull
   private CompletionStage<List<Product>> replaceAttributeReferenceIdsWithKeys(
       @Nonnull final List<Product> page) {
