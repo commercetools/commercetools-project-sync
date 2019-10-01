@@ -1,0 +1,20 @@
+{
+  "data": {
+    "products": {
+      "results": [
+        {
+          "id": "c327eb8d-4924-4d47-9b31-d0caed2425ed",
+          "key": "one"
+        },
+        {
+          "id": "c327eb8d-4924-4d47-9b31-d0caed2425ed",
+          "key": "two"
+        },
+        {
+          "id": "c327eb8d-4924-4d47-9b31-d0caed2425ed",
+          "key": "three"
+        }
+      ]
+    }
+  }
+}

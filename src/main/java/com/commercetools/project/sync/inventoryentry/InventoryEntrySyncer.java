@@ -17,6 +17,8 @@ import io.sphere.sdk.inventory.expansion.InventoryEntryExpansionModel;
 import io.sphere.sdk.inventory.queries.InventoryEntryQuery;
 import java.time.Clock;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
 import javax.annotation.Nonnull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,8 +65,9 @@ public final class InventoryEntrySyncer
 
   @Nonnull
   @Override
-  protected List<InventoryEntryDraft> transform(@Nonnull final List<InventoryEntry> page) {
-    return replaceInventoriesReferenceIdsWithKeys(page);
+  protected CompletionStage<List<InventoryEntryDraft>> transform(
+      @Nonnull final List<InventoryEntry> page) {
+    return CompletableFuture.completedFuture(replaceInventoriesReferenceIdsWithKeys(page));
   }
 
   @Nonnull

@@ -14,6 +14,8 @@ import io.sphere.sdk.types.TypeDraftBuilder;
 import io.sphere.sdk.types.queries.TypeQuery;
 import java.time.Clock;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import org.slf4j.Logger;
@@ -61,8 +63,9 @@ public final class TypeSyncer
 
   @Nonnull
   @Override
-  protected List<TypeDraft> transform(@Nonnull final List<Type> page) {
-    return page.stream().map(TypeSyncer::typeToDraft).collect(Collectors.toList());
+  protected CompletionStage<List<TypeDraft>> transform(@Nonnull final List<Type> page) {
+    return CompletableFuture.completedFuture(
+        page.stream().map(TypeSyncer::typeToDraft).collect(Collectors.toList()));
   }
 
   @Nonnull

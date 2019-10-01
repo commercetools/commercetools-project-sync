@@ -1,6 +1,6 @@
 package com.commercetools.project.sync.service;
 
-import com.commercetools.project.sync.model.LastSyncCustomObject;
+import com.commercetools.project.sync.model.response.LastSyncCustomObject;
 import io.sphere.sdk.customobjects.CustomObject;
 import java.time.ZonedDateTime;
 import java.util.Optional;

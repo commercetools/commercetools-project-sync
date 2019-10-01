@@ -4,8 +4,10 @@ import static com.commercetools.project.sync.service.impl.CustomObjectServiceImp
 import static com.commercetools.project.sync.service.impl.CustomObjectServiceImpl.TIMESTAMP_GENERATOR_KEY;
 import static com.commercetools.project.sync.service.impl.CustomObjectServiceImpl.TIMESTAMP_GENERATOR_VALUE;
 import static com.commercetools.project.sync.util.ClientConfigurationUtils.createClient;
-import static com.commercetools.project.sync.util.IntegrationTestUtils.deleteLastSyncCustomObjects;
-import static com.commercetools.project.sync.util.QueryUtils.queryAndExecute;
+import static com.commercetools.project.sync.util.IntegrationTestUtils.assertCategoryExists;
+import static com.commercetools.project.sync.util.IntegrationTestUtils.assertProductExists;
+import static com.commercetools.project.sync.util.IntegrationTestUtils.assertProductTypeExists;
+import static com.commercetools.project.sync.util.IntegrationTestUtils.cleanUpProjects;
 import static com.commercetools.project.sync.util.SphereClientUtils.CTP_SOURCE_CLIENT_CONFIG;
 import static com.commercetools.project.sync.util.SphereClientUtils.CTP_TARGET_CLIENT_CONFIG;
 import static com.commercetools.project.sync.util.SyncUtils.APPLICATION_DEFAULT_NAME;
@@ -16,15 +18,12 @@ import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.commercetools.project.sync.model.LastSyncCustomObject;
+import com.commercetools.project.sync.model.response.LastSyncCustomObject;
 import com.commercetools.sync.commons.helpers.BaseSyncStatistics;
 import com.commercetools.sync.products.helpers.ProductSyncStatistics;
-import io.sphere.sdk.categories.Category;
 import io.sphere.sdk.categories.CategoryDraft;
 import io.sphere.sdk.categories.CategoryDraftBuilder;
 import io.sphere.sdk.categories.commands.CategoryCreateCommand;
-import io.sphere.sdk.categories.commands.CategoryDeleteCommand;
-import io.sphere.sdk.categories.queries.CategoryQuery;
 import io.sphere.sdk.client.SphereClient;
 import io.sphere.sdk.customobjects.CustomObject;
 import io.sphere.sdk.customobjects.queries.CustomObjectQuery;
@@ -32,21 +31,15 @@ import io.sphere.sdk.inventory.InventoryEntry;
 import io.sphere.sdk.inventory.InventoryEntryDraft;
 import io.sphere.sdk.inventory.InventoryEntryDraftBuilder;
 import io.sphere.sdk.inventory.commands.InventoryEntryCreateCommand;
-import io.sphere.sdk.inventory.commands.InventoryEntryDeleteCommand;
 import io.sphere.sdk.inventory.queries.InventoryEntryQuery;
-import io.sphere.sdk.products.Product;
 import io.sphere.sdk.products.ProductDraft;
 import io.sphere.sdk.products.ProductDraftBuilder;
-import io.sphere.sdk.products.ProductVariant;
 import io.sphere.sdk.products.ProductVariantDraftBuilder;
 import io.sphere.sdk.products.commands.ProductCreateCommand;
-import io.sphere.sdk.products.commands.ProductDeleteCommand;
-import io.sphere.sdk.products.queries.ProductQuery;
 import io.sphere.sdk.producttypes.ProductType;
 import io.sphere.sdk.producttypes.ProductTypeDraft;
 import io.sphere.sdk.producttypes.ProductTypeDraftBuilder;
 import io.sphere.sdk.producttypes.commands.ProductTypeCreateCommand;
-import io.sphere.sdk.producttypes.commands.ProductTypeDeleteCommand;
 import io.sphere.sdk.producttypes.queries.ProductTypeQuery;
 import io.sphere.sdk.queries.PagedQueryResult;
 import io.sphere.sdk.queries.QueryPredicate;
@@ -55,7 +48,6 @@ import io.sphere.sdk.types.Type;
 import io.sphere.sdk.types.TypeDraft;
 import io.sphere.sdk.types.TypeDraftBuilder;
 import io.sphere.sdk.types.commands.TypeCreateCommand;
-import io.sphere.sdk.types.commands.TypeDeleteCommand;
 import io.sphere.sdk.types.queries.TypeQuery;
 import java.time.Clock;
 import java.time.ZonedDateTime;
@@ -131,22 +123,6 @@ class CliRunnerIT {
         .execute(InventoryEntryCreateCommand.of(inventoryEntryDraft))
         .toCompletableFuture()
         .join();
-  }
-
-  private static void cleanUpProjects(
-      @Nonnull final SphereClient sourceClient, @Nonnull final SphereClient targetClient) {
-
-    deleteProjectData(sourceClient);
-    deleteProjectData(targetClient);
-    deleteLastSyncCustomObjects(targetClient, sourceClient.getConfig().getProjectKey());
-  }
-
-  private static void deleteProjectData(@Nonnull final SphereClient client) {
-    queryAndExecute(client, CategoryQuery.of(), CategoryDeleteCommand::of);
-    queryAndExecute(client, ProductQuery.of(), ProductDeleteCommand::of);
-    queryAndExecute(client, ProductTypeQuery.of(), ProductTypeDeleteCommand::of);
-    queryAndExecute(client, TypeQuery.of(), TypeDeleteCommand::of);
-    queryAndExecute(client, InventoryEntryQuery.of(), InventoryEntryDeleteCommand::of);
   }
 
   @AfterAll
@@ -443,16 +419,9 @@ class CliRunnerIT {
   private static void assertAllResourcesAreSyncedToTarget(
       @Nonnull final SphereClient targetClient) {
 
-    final PagedQueryResult<ProductType> productTypeQueryResult =
-        targetClient
-            .execute(ProductTypeQuery.of().byKey(RESOURCE_KEY))
-            .toCompletableFuture()
-            .join();
-
-    assertThat(productTypeQueryResult.getResults())
-        .hasSize(1)
-        .hasOnlyOneElementSatisfying(
-            productType -> assertThat(productType.getKey()).isEqualTo(RESOURCE_KEY));
+    assertProductTypeExists(targetClient, RESOURCE_KEY);
+    assertCategoryExists(targetClient, RESOURCE_KEY);
+    assertProductExists(targetClient, RESOURCE_KEY, RESOURCE_KEY, RESOURCE_KEY);
 
     final String queryPredicate = format("key=\"%s\"", RESOURCE_KEY);
 
@@ -465,31 +434,6 @@ class CliRunnerIT {
     assertThat(typeQueryResult.getResults())
         .hasSize(1)
         .hasOnlyOneElementSatisfying(type -> assertThat(type.getKey()).isEqualTo(RESOURCE_KEY));
-
-    final PagedQueryResult<Category> categoryQueryResult =
-        targetClient
-            .execute(CategoryQuery.of().withPredicates(QueryPredicate.of(queryPredicate)))
-            .toCompletableFuture()
-            .join();
-
-    assertThat(categoryQueryResult.getResults())
-        .hasSize(1)
-        .hasOnlyOneElementSatisfying(
-            category -> assertThat(category.getKey()).isEqualTo(RESOURCE_KEY));
-
-    final PagedQueryResult<Product> productQueryResult =
-        targetClient.execute(ProductQuery.of()).toCompletableFuture().join();
-
-    assertThat(productQueryResult.getResults())
-        .hasSize(1)
-        .hasOnlyOneElementSatisfying(
-            product -> {
-              assertThat(product.getKey()).isEqualTo(RESOURCE_KEY);
-              final ProductVariant stagedMasterVariant =
-                  product.getMasterData().getStaged().getMasterVariant();
-              assertThat(stagedMasterVariant.getKey()).isEqualTo(RESOURCE_KEY);
-              assertThat(stagedMasterVariant.getSku()).isEqualTo(RESOURCE_KEY);
-            });
 
     final PagedQueryResult<InventoryEntry> inventoryEntryQueryResult =
         targetClient

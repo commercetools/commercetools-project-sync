@@ -1,4 +1,4 @@
-package com.commercetools.project.sync.model;
+package com.commercetools.project.sync.model.response;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

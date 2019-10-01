@@ -1,24 +1,43 @@
 package com.commercetools.project.sync.product;
 
-import static com.commercetools.sync.products.utils.ProductReferenceReplacementUtils.buildProductQuery;
-import static com.commercetools.sync.products.utils.ProductReferenceReplacementUtils.replaceProductsReferenceIdsWithKeys;
+import static java.lang.String.format;
+import static java.util.stream.Collectors.toSet;
 
 import com.commercetools.project.sync.Syncer;
 import com.commercetools.project.sync.service.CustomObjectService;
+import com.commercetools.project.sync.service.ReferencesService;
 import com.commercetools.project.sync.service.impl.CustomObjectServiceImpl;
+import com.commercetools.project.sync.service.impl.ReferencesServiceImpl;
 import com.commercetools.sync.products.ProductSync;
 import com.commercetools.sync.products.ProductSyncOptions;
 import com.commercetools.sync.products.ProductSyncOptionsBuilder;
 import com.commercetools.sync.products.helpers.ProductSyncStatistics;
+import com.commercetools.sync.products.utils.ProductReferenceReplacementUtils;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import io.sphere.sdk.categories.Category;
 import io.sphere.sdk.client.SphereClient;
 import io.sphere.sdk.commands.UpdateAction;
+import io.sphere.sdk.expansion.ExpansionPath;
+import io.sphere.sdk.products.AttributeContainer;
 import io.sphere.sdk.products.Product;
 import io.sphere.sdk.products.ProductDraft;
+import io.sphere.sdk.products.ProductVariant;
+import io.sphere.sdk.products.attributes.Attribute;
 import io.sphere.sdk.products.commands.updateactions.Publish;
 import io.sphere.sdk.products.commands.updateactions.Unpublish;
+import io.sphere.sdk.products.expansion.ProductExpansionModel;
 import io.sphere.sdk.products.queries.ProductQuery;
+import io.sphere.sdk.producttypes.ProductType;
 import java.time.Clock;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.CompletionStage;
+import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,6 +52,14 @@ public final class ProductSyncer
         ProductSync> {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(ProductSyncer.class);
+  private static final String REFERENCE_TYPE_ID_FIELD = "typeId";
+  private static final String REFERENCE_ID_FIELD = "id";
+  private static final String WITH_IRRESOLVABLE_REFS_ERROR_MSG =
+      "The product with id '%s' on the source project ('%s') will "
+          + "not be synced because it has the following reference attribute(s): \n"
+          + "%s.\nThese references are either pointing to a non-existent resource or to an existing one but with a blank key. "
+          + "Please make sure these referenced resources are existing and have non-blank (i.e. non-null and non-empty) keys.";
+  private final ReferencesService referencesService;
 
   /** Instantiates a {@link Syncer} instance. */
   private ProductSyncer(
@@ -40,8 +67,10 @@ public final class ProductSyncer
       @Nonnull final SphereClient sourceClient,
       @Nonnull final SphereClient targetClient,
       @Nonnull final CustomObjectService customObjectService,
+      @Nonnull final ReferencesService referencesService,
       @Nonnull final Clock clock) {
     super(productSync, sourceClient, targetClient, customObjectService, clock);
+    this.referencesService = referencesService;
   }
 
   @Nonnull
@@ -61,21 +90,195 @@ public final class ProductSyncer
 
     final CustomObjectService customObjectService = new CustomObjectServiceImpl(targetClient);
 
-    return new ProductSyncer(productSync, sourceClient, targetClient, customObjectService, clock);
-    // TODO: Instead of reference expansion, we could cache all keys and replace references
-    // manually.
+    final ReferencesService referencesService = new ReferencesServiceImpl(sourceClient);
+
+    return new ProductSyncer(
+        productSync, sourceClient, targetClient, customObjectService, referencesService, clock);
   }
 
   @Override
   @Nonnull
-  protected List<ProductDraft> transform(@Nonnull final List<Product> page) {
-    return replaceProductsReferenceIdsWithKeys(page);
+  protected CompletionStage<List<ProductDraft>> transform(@Nonnull final List<Product> page) {
+    return replaceAttributeReferenceIdsWithKeys(page)
+        .handle(
+            (products, throwable) -> {
+              if (throwable != null) {
+                LOGGER.warn(
+                    "Failed to replace referenced resource ids with keys on the attributes of the products in "
+                        + "the current fetched page from the source project. This page will not be synced to the target "
+                        + "project.",
+                    getCompletionExceptionCause(throwable));
+                return Collections.<Product>emptyList();
+              }
+              return products;
+            })
+        .thenApply(ProductReferenceReplacementUtils::replaceProductsReferenceIdsWithKeys);
+  }
+
+  @Nonnull
+  private static Throwable getCompletionExceptionCause(@Nonnull final Throwable exception) {
+    if (exception instanceof CompletionException) {
+      return getCompletionExceptionCause(exception.getCause());
+    }
+    return exception;
+  }
+
+  /**
+   * Replaces the ids on attribute references with keys. If a product has at least one irresolvable
+   * reference, it will be filtered out and not returned in the new list.
+   *
+   * <p>Note: this method mutates the products passed by changing the reference keys with ids.
+   *
+   * @param products the products to replace the reference attributes ids with keys on.
+   * @return a new list which contains only products which have all their attributes references
+   *     resolvable and already replaced with keys.
+   */
+  @Nonnull
+  private CompletionStage<List<Product>> replaceAttributeReferenceIdsWithKeys(
+      @Nonnull final List<Product> products) {
+
+    final List<JsonNode> allAttributeReferences = getAllReferences(products);
+
+    final List<JsonNode> allProductReferences =
+        getReferencesByTypeId(allAttributeReferences, Product.referenceTypeId());
+
+    final List<JsonNode> allCategoryReferences =
+        getReferencesByTypeId(allAttributeReferences, Category.referenceTypeId());
+
+    final List<JsonNode> allProductTypeReferences =
+        getReferencesByTypeId(allAttributeReferences, ProductType.referenceTypeId());
+
+    return this.referencesService
+        .getIdToKeys(
+            getIds(allProductReferences),
+            getIds(allCategoryReferences),
+            getIds(allProductTypeReferences))
+        .thenApply(
+            idToKey -> {
+              final List<Product> validProducts =
+                  filterOutWithIrresolvableReferences(products, idToKey);
+              replaceReferences(getAllReferences(validProducts), idToKey);
+              return validProducts;
+            });
+  }
+
+  @Nonnull
+  private List<JsonNode> getAllReferences(@Nonnull final List<Product> products) {
+    return products
+        .stream()
+        .map(this::getAllReferences)
+        .flatMap(Collection::stream)
+        .collect(Collectors.toList());
+  }
+
+  @Nonnull
+  private List<JsonNode> getAllReferences(@Nonnull final Product product) {
+    final List<ProductVariant> allVariants = product.getMasterData().getStaged().getAllVariants();
+    return getAttributeReferences(allVariants);
+  }
+
+  @Nonnull
+  private static List<JsonNode> getAttributeReferences(
+      @Nonnull final List<ProductVariant> variants) {
+
+    return variants
+        .stream()
+        .map(AttributeContainer::getAttributes)
+        .flatMap(Collection::stream)
+        .map(Attribute::getValueAsJsonNode)
+        .map(ProductSyncer::getReferences)
+        .flatMap(Collection::stream)
+        .collect(Collectors.toList());
+  }
+
+  @Nonnull
+  private static List<JsonNode> getReferences(@Nonnull final JsonNode attributeValue) {
+    // This will only work if the reference is not expanded, otherwise behaviour is not guaranteed.
+    return attributeValue.findParents(REFERENCE_TYPE_ID_FIELD);
+  }
+
+  @Nonnull
+  private List<JsonNode> getReferencesByTypeId(
+      @Nonnull final List<JsonNode> references, @Nonnull final String typeId) {
+    return references
+        .stream()
+        .filter(reference -> typeId.equals(reference.get(REFERENCE_TYPE_ID_FIELD).asText()))
+        .collect(Collectors.toList());
+  }
+
+  @Nonnull
+  private static Set<String> getIds(@Nonnull final List<JsonNode> references) {
+    return references.stream().map(ProductSyncer::getId).collect(toSet());
+  }
+
+  @Nonnull
+  private static String getId(@Nonnull final JsonNode ref) {
+    return ref.get(REFERENCE_ID_FIELD).asText();
+  }
+
+  @Nonnull
+  private List<Product> filterOutWithIrresolvableReferences(
+      @Nonnull final List<Product> products, @Nonnull final Map<String, String> idToKey) {
+
+    return products
+        .stream()
+        .filter(
+            product -> {
+              final Set<JsonNode> irresolvableReferences =
+                  getIrresolvableReferences(product, idToKey);
+              final boolean hasIrresolvableReferences = !irresolvableReferences.isEmpty();
+              if (hasIrresolvableReferences) {
+                LOGGER.warn(
+                    format(
+                        WITH_IRRESOLVABLE_REFS_ERROR_MSG,
+                        product.getId(),
+                        getSourceClient().getConfig().getProjectKey(),
+                        irresolvableReferences));
+              }
+              return !hasIrresolvableReferences;
+            })
+        .collect(Collectors.toList());
+  }
+
+  private Set<JsonNode> getIrresolvableReferences(
+      @Nonnull final Product product, @Nonnull final Map<String, String> idToKey) {
+
+    return getAllReferences(product)
+        .stream()
+        .filter(reference -> !idToKey.containsKey(getId(reference)))
+        .collect(toSet());
+  }
+
+  private static void replaceReferences(
+      @Nonnull final List<JsonNode> references, @Nonnull final Map<String, String> idToKey) {
+
+    references.forEach(
+        reference -> {
+          final String id = reference.get(REFERENCE_ID_FIELD).asText();
+          final String key = idToKey.get(id);
+          ((ObjectNode) reference).put(REFERENCE_ID_FIELD, key);
+        });
   }
 
   @Nonnull
   @Override
   protected ProductQuery getQuery() {
-    return buildProductQuery();
+    // TODO: Eventually don't expand all references and cache references for replacement.
+    // https://github.com/commercetools/commercetools-project-sync/issues/49
+    return ProductQuery.of()
+        .withExpansionPaths(ProductExpansionModel::productType)
+        .plusExpansionPaths(ProductExpansionModel::taxCategory)
+        .plusExpansionPaths(ExpansionPath.of("state"))
+        .plusExpansionPaths(expansionModel -> expansionModel.masterData().staged().categories())
+        .plusExpansionPaths(
+            expansionModel -> expansionModel.masterData().staged().allVariants().prices().channel())
+        .plusExpansionPaths(
+            ExpansionPath.of("masterData.staged.masterVariant.prices[*].custom.type"))
+        .plusExpansionPaths(ExpansionPath.of("masterData.staged.variants[*].prices[*].custom.type"))
+        .plusExpansionPaths(
+            ExpansionPath.of("masterData.staged.masterVariant.assets[*].custom.type"))
+        .plusExpansionPaths(
+            ExpansionPath.of("masterData.staged.variants[*].assets[*].custom.type"));
   }
 
   /**

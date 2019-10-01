@@ -5,7 +5,7 @@ import static com.commercetools.project.sync.util.SyncUtils.getSyncModuleName;
 import static com.commercetools.sync.commons.utils.CtpQueryUtils.queryAll;
 import static java.lang.String.format;
 
-import com.commercetools.project.sync.model.LastSyncCustomObject;
+import com.commercetools.project.sync.model.response.LastSyncCustomObject;
 import com.commercetools.project.sync.service.CustomObjectService;
 import com.commercetools.sync.commons.BaseSync;
 import com.commercetools.sync.commons.BaseSyncOptions;
@@ -226,9 +226,7 @@ public abstract class Syncer<
    */
   @Nonnull
   private U syncPage(@Nonnull final List<T> page) {
-
-    final List<S> draftsWithKeysInReferences = transform(page);
-    return sync.sync(draftsWithKeysInReferences).toCompletableFuture().join();
+    return transform(page).thenCompose(sync::sync).toCompletableFuture().join();
   }
 
   /**
@@ -236,15 +234,21 @@ public abstract class Syncer<
    * a list of drafts of type {@link S} where reference ids of the references are replaced with keys
    * and are ready for reference resolution by the sync process.
    *
-   * @return list of drafts of type {@link S}.
+   * @return a {@link CompletionStage} containing a list of drafts of type {@link S} after being
+   *     transformed from type {@link T}.
    */
   @Nonnull
-  protected abstract List<S> transform(@Nonnull final List<T> page);
+  protected abstract CompletionStage<List<S>> transform(@Nonnull final List<T> page);
 
   @Nonnull
   protected abstract C getQuery();
 
   public B getSync() {
     return sync;
+  }
+
+  @Nonnull
+  public SphereClient getSourceClient() {
+    return sourceClient;
   }
 }

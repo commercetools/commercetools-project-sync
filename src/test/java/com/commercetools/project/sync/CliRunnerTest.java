@@ -44,8 +44,8 @@ import java.time.ZonedDateTime;
 import java.util.concurrent.CompletableFuture;
 import org.apache.commons.cli.MissingArgumentException;
 import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InOrder;
 import org.mockito.Mockito;
@@ -70,7 +70,7 @@ class CliRunnerTest {
     System.setOut(originalSystemOut);
   }
 
-  @AfterEach
+  @BeforeEach
   void tearDownTest() {
     testLogger.clearAll();
   }

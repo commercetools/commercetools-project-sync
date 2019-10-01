@@ -1,6 +1,7 @@
 # commercetools-project-sync
 [![Build Status](https://travis-ci.org/commercetools/commercetools-project-sync.svg?branch=master)](https://travis-ci.org/commercetools/commercetools-project-sync)
 [![codecov](https://codecov.io/gh/commercetools/commercetools-project-sync/branch/master/graph/badge.svg)](https://codecov.io/gh/commercetools/commercetools-project-sync)
+[![Docker Pulls](https://img.shields.io/docker/pulls/commercetools/commercetools-project-sync)](https://cloud.docker.com/u/commercetools/repository/docker/commercetools/commercetools-project-sync)
 
 Dockerized CLI application which allows to automatically sync different resources between commercetools projects
 
@@ -35,12 +36,17 @@ Dockerized CLI application which allows to automatically sync different resource
  
  - Set the following environment variables before running the application
    ```bash
-   export SOURCE_PROJECT_KEY = xxxxxxxxxxxxx
-   export SOURCE_CLIENT_ID = xxxxxxxxxxxxxxx
-   export SOURCE_CLIENT_SECRET = xxxxxxxxxxx
-   export TARGET_PROJECT_KEY = xxxxxxxxxxxxx
-   export TARGET_CLIENT_ID = xxxxxxxxxxxxxxx
-   export TARGET_CLIENT_SECRET = xxxxxxxxxxx
+   export SOURCE_PROJECT_KEY = "source-project-key"
+   export SOURCE_CLIENT_ID = "sourceClientId"
+   export SOURCE_CLIENT_SECRET = "sourceClientSecret"
+   export SOURCE_AUTH_URL = "https://auth.sphere.io/" #optional parameter
+   export SOURCE_API_URL = "https://api.sphere.io/" #optional parameter
+   
+   export TARGET_PROJECT_KEY = "target-project-key"
+   export TARGET_CLIENT_ID = "targetClientId"
+   export TARGET_CLIENT_SECRET = "targetClientSecret"
+   export TARGET_AUTH_URL = "https://auth.sphere.io/" #optional parameter
+   export TARGET_API_URL = "https://api.sphere.io/" #optional parameter
    ```
 
 ### Usage
