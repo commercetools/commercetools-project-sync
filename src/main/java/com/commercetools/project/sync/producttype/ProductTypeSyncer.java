@@ -7,14 +7,15 @@ import com.commercetools.sync.producttypes.ProductTypeSync;
 import com.commercetools.sync.producttypes.ProductTypeSyncOptions;
 import com.commercetools.sync.producttypes.ProductTypeSyncOptionsBuilder;
 import com.commercetools.sync.producttypes.helpers.ProductTypeSyncStatistics;
+import com.commercetools.sync.producttypes.utils.ProductTypeReferenceReplacementUtils;
 import io.sphere.sdk.client.SphereClient;
 import io.sphere.sdk.producttypes.ProductType;
 import io.sphere.sdk.producttypes.ProductTypeDraft;
-import io.sphere.sdk.producttypes.ProductTypeDraftBuilder;
 import io.sphere.sdk.producttypes.queries.ProductTypeQuery;
 import java.time.Clock;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
 import javax.annotation.Nonnull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,15 +63,17 @@ public final class ProductTypeSyncer
 
   @Nonnull
   @Override
-  protected List<ProductTypeDraft> transform(@Nonnull final List<ProductType> page) {
-    return page.stream()
-        .map(productType -> ProductTypeDraftBuilder.of(productType).build())
-        .collect(Collectors.toList());
+  protected CompletionStage<List<ProductTypeDraft>> transform(
+      @Nonnull final List<ProductType> page) {
+    return CompletableFuture.completedFuture(
+        ProductTypeReferenceReplacementUtils.replaceProductTypesReferenceIdsWithKeys(page));
   }
 
   @Nonnull
   @Override
   protected ProductTypeQuery getQuery() {
-    return ProductTypeQuery.of();
+    // TODO: Set depth need to be configurable.
+    // https://github.com/commercetools/commercetools-project-sync/issues/44
+    return ProductTypeReferenceReplacementUtils.buildProductTypeQuery(1);
   }
 }

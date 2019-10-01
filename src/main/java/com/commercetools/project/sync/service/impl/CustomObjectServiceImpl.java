@@ -4,7 +4,7 @@ import static com.commercetools.project.sync.util.SyncUtils.getApplicationName;
 import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
 
-import com.commercetools.project.sync.model.LastSyncCustomObject;
+import com.commercetools.project.sync.model.response.LastSyncCustomObject;
 import com.commercetools.project.sync.service.CustomObjectService;
 import io.sphere.sdk.client.SphereClient;
 import io.sphere.sdk.customobjects.CustomObject;
@@ -23,17 +23,15 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import org.apache.commons.lang3.StringUtils;
 
-public class CustomObjectServiceImpl implements CustomObjectService {
+public class CustomObjectServiceImpl extends BaseServiceImpl implements CustomObjectService {
 
   public static final String TIMESTAMP_GENERATOR_KEY = "timestampGenerator";
   public static final String TIMESTAMP_GENERATOR_VALUE = "";
   public static final String DEFAULT_RUNNER_NAME = "runnerName";
   private static final long MINUTES_BEFORE_CURRENT_TIMESTAMP = 2;
 
-  private SphereClient sphereClient;
-
   public CustomObjectServiceImpl(@Nonnull final SphereClient sphereClient) {
-    this.sphereClient = sphereClient;
+    super(sphereClient);
   }
 
   /**
@@ -82,7 +80,7 @@ public class CustomObjectServiceImpl implements CustomObjectService {
   @Nonnull
   private <T> CompletionStage<CustomObject<T>> createCustomObject(
       @Nonnull final CustomObjectDraft<T> customObjectDraft) {
-    return sphereClient.execute(CustomObjectUpsertCommand.of(customObjectDraft));
+    return getCtpClient().execute(CustomObjectUpsertCommand.of(customObjectDraft));
   }
 
   /**
@@ -115,7 +113,7 @@ public class CustomObjectServiceImpl implements CustomObjectService {
                 buildLastSyncTimestampContainerName(syncModuleName, getRunnerNameValue(runnerName)),
                 sourceProjectKey));
 
-    return sphereClient
+    return getCtpClient()
         .execute(CustomObjectQuery.of(LastSyncCustomObject.class).plusPredicates(queryPredicate))
         .thenApply(PagedQueryResult::getResults)
         .thenApply(Collection::stream)

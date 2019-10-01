@@ -15,6 +15,7 @@ import io.sphere.sdk.inventory.InventoryEntryDraft;
 import io.sphere.sdk.inventory.expansion.InventoryEntryExpansionModel;
 import io.sphere.sdk.inventory.queries.InventoryEntryQuery;
 import java.util.List;
+import java.util.concurrent.CompletionStage;
 import org.junit.jupiter.api.Test;
 
 class InventoryEntrySyncerTest {
@@ -49,12 +50,13 @@ class InventoryEntrySyncerTest {
             readObjectFromResource("inventory-sku-2.json", InventoryEntry.class));
 
     // test
-    final List<InventoryEntryDraft> draftsFromPage = inventoryEntrySyncer.transform(inventoryPage);
+    final CompletionStage<List<InventoryEntryDraft>> draftsFromPageStage =
+        inventoryEntrySyncer.transform(inventoryPage);
 
     // assertions
     final List<InventoryEntryDraft> expectedResult =
         replaceInventoriesReferenceIdsWithKeys(inventoryPage);
-    assertThat(draftsFromPage).isEqualTo(expectedResult);
+    assertThat(draftsFromPageStage).isCompletedWithValue(expectedResult);
   }
 
   @Test

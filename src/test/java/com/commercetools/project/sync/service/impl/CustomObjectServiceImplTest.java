@@ -9,7 +9,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
-import com.commercetools.project.sync.model.LastSyncCustomObject;
+import com.commercetools.project.sync.model.response.LastSyncCustomObject;
 import com.commercetools.project.sync.service.CustomObjectService;
 import com.commercetools.sync.products.helpers.ProductSyncStatistics;
 import io.sphere.sdk.client.BadGatewayException;

@@ -1,4 +1,4 @@
-package com.commercetools.project.sync.model;
+package com.commercetools.project.sync.model.response;
 
 import com.commercetools.project.sync.util.SyncUtils;
 import com.commercetools.sync.commons.helpers.BaseSyncStatistics;
@@ -95,7 +95,7 @@ public final class LastSyncCustomObject<T extends BaseSyncStatistics> {
     this.lastSyncTimestamp = lastSyncTimestamp;
   }
 
-  // TODO: Implement a settter for lastSyncStatistics too to be able to deserialize statisitcs. It
+  // TODO: Implement a setter for lastSyncStatistics too to be able to deserialize statisitcs. It
   // needs a
   // customized deserializer for because BaseSyncStatistics is an abstract class:
   // https://www.baeldung.com/jackson-inheritance

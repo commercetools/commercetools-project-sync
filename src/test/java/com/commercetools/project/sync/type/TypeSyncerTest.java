@@ -14,6 +14,7 @@ import io.sphere.sdk.types.TypeDraft;
 import io.sphere.sdk.types.TypeDraftBuilder;
 import io.sphere.sdk.types.queries.TypeQuery;
 import java.util.List;
+import java.util.concurrent.CompletionStage;
 import org.junit.jupiter.api.Test;
 
 class TypeSyncerTest {
@@ -40,11 +41,11 @@ class TypeSyncerTest {
             readObjectFromResource("type-key-2.json", Type.class));
 
     // test
-    final List<TypeDraft> draftsFromPage = typeSyncer.transform(typePage);
+    final CompletionStage<List<TypeDraft>> draftsFromPageStage = typeSyncer.transform(typePage);
 
     // assertions
-    assertThat(draftsFromPage)
-        .isEqualTo(
+    assertThat(draftsFromPageStage)
+        .isCompletedWithValue(
             typePage
                 .stream()
                 .map(
