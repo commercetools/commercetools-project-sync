@@ -14,6 +14,7 @@ import io.sphere.sdk.categories.CategoryDraft;
 import io.sphere.sdk.categories.queries.CategoryQuery;
 import io.sphere.sdk.client.SphereClient;
 import java.util.List;
+import java.util.concurrent.CompletionStage;
 import org.junit.jupiter.api.Test;
 
 class CategorySyncerTest {
@@ -26,7 +27,7 @@ class CategorySyncerTest {
     // assertions
     assertThat(categorySyncer).isNotNull();
     assertThat(categorySyncer.getQuery()).isEqualTo(buildCategoryQuery());
-    assertThat(categorySyncer.getSync()).isInstanceOf(CategorySync.class);
+    assertThat(categorySyncer.getSync()).isExactlyInstanceOf(CategorySync.class);
   }
 
   @Test
@@ -40,11 +41,12 @@ class CategorySyncerTest {
             readObjectFromResource("category-key-2.json", Category.class));
 
     // test
-    final List<CategoryDraft> draftsFromPage = categorySyncer.transform(categoryPage);
+    final CompletionStage<List<CategoryDraft>> draftsFromPageStage =
+        categorySyncer.transform(categoryPage);
 
     // assertions
     final List<CategoryDraft> expectedResult = replaceCategoriesReferenceIdsWithKeys(categoryPage);
-    assertThat(draftsFromPage).isEqualTo(expectedResult);
+    assertThat(draftsFromPageStage).isCompletedWithValue(expectedResult);
   }
 
   @Test

@@ -1,0 +1,52 @@
+{
+  "data": {
+    "products": {
+      "results": [
+        {
+          "id": "c327eb8d-4924-4d47-9b31-d0caed2425ed",
+          "key": "one"
+        },
+        {
+          "id": "c327eb8d-4924-4d47-9b31-d0caed2425ed",
+          "key": "two"
+        },
+        {
+          "id": "c327eb8d-4924-4d47-9b31-d0caed2425ed",
+          "key": "three"
+        }
+      ]
+    },
+    "categories": {
+      "results": [
+        {
+          "id": "c327eb8d-4924-4d47-9b31-d0caed2425ed",
+          "key": "cat-1"
+        },
+        {
+          "id": "c327eb8d-4924-4d47-9b31-d0caed2425ed",
+          "key": "cat-2"
+        },
+        {
+          "id": "c327eb8d-4924-4d47-9b31-d0caed2425ed",
+          "key": "cat-3"
+        }
+      ]
+    },
+    "productTypes": {
+      "results": [
+        {
+          "id": "c327eb8d-4924-4d47-9b31-d0caed2425ed",
+          "key": "productType-1"
+        },
+        {
+          "id": "c327eb8d-4924-4d47-9b31-d0caed2425ed",
+          "key": "productType-2"
+        },
+        {
+          "id": "c327eb8d-4924-4d47-9b31-d0caed2425ed",
+          "key": "productType-3"
+        }
+      ]
+    }
+  }
+}
