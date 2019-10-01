@@ -25,7 +25,7 @@ Dockerized CLI application which allows to automatically sync different resource
  - The following fields are **required** to be set on the following resources (and sub-resources), if they will be
   synced:
  
-     |  resource/ sub-resource |  required fields |
+     |  Resource/ Sub-resource |  Required Fields |
      |---|---|
      | Product | `key`, `sku` |
      | Product Variant  | `key`  |
