@@ -93,7 +93,6 @@ public class CombinedResourceKeysRequest implements SphereRequest<CombinedResult
     final String backslashQuote = "\\\\\\\"";
     final String commaSeparatedIds =
         ids.stream()
-            .distinct()
             .collect(
                 joining(
                     format("%s, %s", backslashQuote, backslashQuote),
