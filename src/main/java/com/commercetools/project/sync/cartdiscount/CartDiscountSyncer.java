@@ -16,6 +16,8 @@ import io.sphere.sdk.cartdiscounts.queries.CartDiscountQuery;
 import io.sphere.sdk.client.SphereClient;
 import java.time.Clock;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
 import javax.annotation.Nonnull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,8 +65,9 @@ public final class CartDiscountSyncer
 
   @Override
   @Nonnull
-  protected List<CartDiscountDraft> transform(@Nonnull final List<CartDiscount> page) {
-    return replaceCartDiscountsReferenceIdsWithKeys(page);
+  protected CompletionStage<List<CartDiscountDraft>> transform(
+      @Nonnull final List<CartDiscount> page) {
+    return CompletableFuture.completedFuture(replaceCartDiscountsReferenceIdsWithKeys(page));
   }
 
   @Nonnull
