@@ -57,7 +57,7 @@ public final class ProductSyncer
   private static final String WITH_IRRESOLVABLE_REFS_ERROR_MSG =
       "The product with id '%s' on the source project ('%s') will "
           + "not be synced because it has the following reference attribute(s): \n"
-          + "%s.\n These references are either pointing to a non-existent resource or to an existing one but with a blank key. "
+          + "%s.\nThese references are either pointing to a non-existent resource or to an existing one but with a blank key. "
           + "Please make sure these referenced resources are existing and have non-blank (i.e. non-null and non-empty) keys.";
   private final ReferencesService referencesService;
 

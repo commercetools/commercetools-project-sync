@@ -1,13 +1,12 @@
 package com.commercetools.project.sync.service.impl;
 
+import static org.apache.commons.lang3.StringUtils.isBlank;
+
 import com.commercetools.project.sync.model.request.CombinedResourceKeysRequest;
 import com.commercetools.project.sync.model.response.CombinedResult;
 import com.commercetools.project.sync.model.response.ResultingResourcesContainer;
 import com.commercetools.project.sync.service.ReferencesService;
 import io.sphere.sdk.client.SphereClient;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -15,8 +14,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-
-import static org.apache.commons.lang3.StringUtils.isBlank;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 public class ReferencesServiceImpl extends BaseServiceImpl implements ReferencesService {
   private final Map<String, String> idToKey = new HashMap<>();

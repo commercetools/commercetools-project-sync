@@ -15,7 +15,7 @@ import com.commercetools.project.sync.model.response.CombinedResult;
 import com.commercetools.project.sync.model.response.ReferenceIdKey;
 import com.commercetools.project.sync.model.response.ResultingResourcesContainer;
 import com.commercetools.sync.products.ProductSync;
-import com.commercetools.sync.products.utils.ProductReferenceReplacementUtils;
+import com.fasterxml.jackson.databind.JsonNode;
 import io.sphere.sdk.client.BadGatewayException;
 import io.sphere.sdk.client.SphereApiConfig;
 import io.sphere.sdk.client.SphereClient;
@@ -30,9 +30,12 @@ import io.sphere.sdk.products.commands.updateactions.Unpublish;
 import io.sphere.sdk.products.queries.ProductQuery;
 import io.sphere.sdk.utils.CompletableFutureUtils;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import uk.org.lidalia.slf4jtest.TestLogger;
 import uk.org.lidalia.slf4jtest.TestLoggerFactory;
@@ -40,6 +43,11 @@ import uk.org.lidalia.slf4jtest.TestLoggerFactory;
 class ProductSyncerTest {
 
   private static final TestLogger testLogger = TestLoggerFactory.getTestLogger(ProductSyncer.class);
+
+  @AfterEach
+  void tearDownTest() {
+    testLogger.clearAll();
+  }
 
   @Test
   void of_ShouldCreateProductSyncerInstance() {
@@ -66,13 +74,17 @@ class ProductSyncerTest {
 
     final ResultingResourcesContainer productsResult =
         new ResultingResourcesContainer(
-            asSet(new ReferenceIdKey("53c4a8b4-754f-4b95-b6f2-3e1e70e3d0c1", "prod1")));
+            asSet(
+                new ReferenceIdKey("53c4a8b4-754f-4b95-b6f2-3e1e70e3d0c1", "prod1"),
+                new ReferenceIdKey("53c4a8b4-754f-4b95-b6f2-3e1e70e3d0c5", "prod2")));
     final ResultingResourcesContainer productTypesResult =
         new ResultingResourcesContainer(
             asSet(new ReferenceIdKey("53c4a8b4-754f-4b95-b6f2-3e1e70e3d0c2", "prodType1")));
     final ResultingResourcesContainer categoriesResult =
         new ResultingResourcesContainer(
-            asSet(new ReferenceIdKey("53c4a8b4-754f-4b95-b6f2-3e1e70e3d0c3", "cat1")));
+            asSet(
+                new ReferenceIdKey("53c4a8b4-754f-4b95-b6f2-3e1e70e3d0c3", "cat1"),
+                new ReferenceIdKey("53c4a8b4-754f-4b95-b6f2-3e1e70e3d0c4", "cat2")));
 
     when(sourceClient.execute(any(CombinedResourceKeysRequest.class)))
         .thenReturn(
@@ -84,8 +96,68 @@ class ProductSyncerTest {
         productSyncer.transform(productPage).toCompletableFuture().join();
 
     // assertions
-    assertThat(draftsFromPageStage)
-        .anySatisfy(
+
+    final Optional<ProductDraft> productDraftKey1 =
+        draftsFromPageStage
+            .stream()
+            .filter(productDraft -> "productKey1".equals(productDraft.getKey()))
+            .findFirst();
+
+    assertThat(productDraftKey1)
+        .hasValueSatisfying(
+            productDraft ->
+                assertThat(productDraft.getMasterVariant().getAttributes())
+                    .anySatisfy(
+                        attributeDraft -> {
+                          assertThat(attributeDraft.getName()).isEqualTo("productReference");
+                          final JsonNode referenceSet = attributeDraft.getValue();
+                          assertThat(referenceSet)
+                              .anySatisfy(
+                                  reference ->
+                                      assertThat(reference.get("id").asText()).isEqualTo("prod1"));
+                          assertThat(referenceSet)
+                              .anySatisfy(
+                                  reference ->
+                                      assertThat(reference.get("id").asText()).isEqualTo("prod2"));
+                        }));
+
+    assertThat(productDraftKey1)
+        .hasValueSatisfying(
+            productDraft ->
+                assertThat(productDraft.getMasterVariant().getAttributes())
+                    .anySatisfy(
+                        attributeDraft -> {
+                          assertThat(attributeDraft.getName()).isEqualTo("categoryReference");
+                          final JsonNode referenceSet = attributeDraft.getValue();
+                          assertThat(referenceSet)
+                              .anySatisfy(
+                                  reference ->
+                                      assertThat(reference.get("id").asText()).isEqualTo("cat1"));
+                          assertThat(referenceSet)
+                              .anySatisfy(
+                                  reference ->
+                                      assertThat(reference.get("id").asText()).isEqualTo("cat2"));
+                        }));
+
+    assertThat(productDraftKey1)
+        .hasValueSatisfying(
+            productDraft ->
+                assertThat(productDraft.getMasterVariant().getAttributes())
+                    .anySatisfy(
+                        attributeDraft -> {
+                          assertThat(attributeDraft.getName()).isEqualTo("productTypeReference");
+                          assertThat(attributeDraft.getValue().get("id").asText())
+                              .isEqualTo("prodType1");
+                        }));
+
+    final Optional<ProductDraft> productDraftKey2 =
+        draftsFromPageStage
+            .stream()
+            .filter(productDraft -> "productKey2".equals(productDraft.getKey()))
+            .findFirst();
+
+    assertThat(productDraftKey2)
+        .hasValueSatisfying(
             productDraft ->
                 assertThat(productDraft.getMasterVariant().getAttributes())
                     .anySatisfy(
@@ -95,8 +167,8 @@ class ProductSyncerTest {
                               .isEqualTo("prod1");
                         }));
 
-    assertThat(draftsFromPageStage)
-        .anySatisfy(
+    assertThat(productDraftKey2)
+        .hasValueSatisfying(
             productDraft ->
                 assertThat(productDraft.getMasterVariant().getAttributes())
                     .anySatisfy(
@@ -106,8 +178,8 @@ class ProductSyncerTest {
                               .isEqualTo("cat1");
                         }));
 
-    assertThat(draftsFromPageStage)
-        .anySatisfy(
+    assertThat(productDraftKey2)
+        .hasValueSatisfying(
             productDraft ->
                 assertThat(productDraft.getMasterVariant().getAttributes())
                     .anySatisfy(
@@ -116,6 +188,8 @@ class ProductSyncerTest {
                           assertThat(attributeDraft.getValue().get("id").asText())
                               .isEqualTo("prodType1");
                         }));
+
+    assertThat(testLogger.getAllLoggingEvents()).isEmpty();
   }
 
   @Test
@@ -151,6 +225,7 @@ class ProductSyncerTest {
         productSyncer.transform(productPage).toCompletableFuture().join();
 
     // assertions
+    assertThat(draftsFromPageStage).hasSize(1);
     assertThat(draftsFromPageStage)
         .anySatisfy(
             productDraft ->
@@ -183,6 +258,18 @@ class ProductSyncerTest {
                           assertThat(attributeDraft.getValue().get("id").asText())
                               .isEqualTo("prodType1");
                         }));
+
+    assertThat(testLogger.getAllLoggingEvents())
+        .anySatisfy(
+            loggingEvent ->
+                assertThat(loggingEvent.getMessage())
+                    .contains(
+                        "The product with id 'ba81a6da-cf83-435b-a89e-2afab579846f' on the source project ('test-project') "
+                            + "will not be synced because it has the following reference attribute(s): \n"
+                            + "[{\"id\":\"53c4a8b4-754f-4b95-b6f2-3e1e70e3d0c5\",\"typeId\":\"product\"}, "
+                            + "{\"id\":\"53c4a8b4-754f-4b95-b6f2-3e1e70e3d0c4\",\"typeId\":\"category\"}].\n"
+                            + "These references are either pointing to a non-existent resource or to an existing one but with a blank key. "
+                            + "Please make sure these referenced resources are existing and have non-blank (i.e. non-null and non-empty) keys."));
   }
 
   @Test
@@ -206,9 +293,7 @@ class ProductSyncerTest {
         productSyncer.transform(productPage);
 
     // assertions
-    assertThat(draftsFromPageStage)
-        .isCompletedWithValue(
-            ProductReferenceReplacementUtils.replaceProductsReferenceIdsWithKeys(productPage));
+    assertThat(draftsFromPageStage).isCompletedWithValue(Collections.emptyList());
     assertThat(testLogger.getAllLoggingEvents())
         .anySatisfy(
             loggingEvent -> {
