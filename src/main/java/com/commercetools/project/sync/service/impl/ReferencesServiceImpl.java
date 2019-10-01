@@ -12,7 +12,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -79,17 +78,13 @@ public class ReferencesServiceImpl extends BaseServiceImpl implements References
 
   private void cacheKeys(@Nullable final CombinedResult combinedResult) {
     if (combinedResult != null) {
-      cacheKeys(combinedResult, CombinedResult::getProducts);
-      cacheKeys(combinedResult, CombinedResult::getCategories);
-      cacheKeys(combinedResult, CombinedResult::getProductTypes);
+      cacheKeys(combinedResult.getProducts());
+      cacheKeys(combinedResult.getCategories());
+      cacheKeys(combinedResult.getProductTypes());
     }
   }
 
-  private void cacheKeys(
-      @Nonnull final CombinedResult combinedResult,
-      @Nonnull final Function<CombinedResult, ResultingResourcesContainer> resultsContainerMapper) {
-    final ResultingResourcesContainer resultsContainer =
-        resultsContainerMapper.apply(combinedResult);
+  private void cacheKeys(@Nullable final ResultingResourcesContainer resultsContainer) {
     if (resultsContainer != null) {
       resultsContainer
           .getResults()
