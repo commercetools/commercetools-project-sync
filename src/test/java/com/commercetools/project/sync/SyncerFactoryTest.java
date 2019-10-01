@@ -310,7 +310,7 @@ class SyncerFactoryTest {
 
     assertThat(productSyncerTestLogger.getAllLoggingEvents())
         .containsExactly(
-            LoggingEvent.error(
+            LoggingEvent.warn(
                 badGatewayException,
                 "Failed to replace referenced resource ids with keys on the attributes of the products in "
                     + "the current fetched page from the source project. This page will not be synced to the target "
@@ -401,7 +401,7 @@ class SyncerFactoryTest {
         .hasSize(501)
         .containsOnlyElementsOf(
             singletonList(
-                LoggingEvent.error(
+                LoggingEvent.warn(
                     "The product with id "
                         + "'ba81a6da-cf83-435b-a89e-2afab579846f' on the source project ('foo') will not be synced because it "
                         + "has the following reference attribute(s): \n"

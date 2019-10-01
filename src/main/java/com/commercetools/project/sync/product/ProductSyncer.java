@@ -103,7 +103,7 @@ public final class ProductSyncer
         .handle(
             (products, throwable) -> {
               if (throwable != null) {
-                LOGGER.error(
+                LOGGER.warn(
                     "Failed to replace referenced resource ids with keys on the attributes of the products in "
                         + "the current fetched page from the source project. This page will not be synced to the target "
                         + "project.",
@@ -217,7 +217,7 @@ public final class ProductSyncer
                   getIrresolvableReferences(product, idToKey);
               final boolean hasIrresolvableReferences = !irresolvableReferences.isEmpty();
               if (hasIrresolvableReferences) {
-                LOGGER.error(
+                LOGGER.warn(
                     format(
                         WITH_IRRESOLVABLE_REFS_ERROR_MSG,
                         product.getId(),
