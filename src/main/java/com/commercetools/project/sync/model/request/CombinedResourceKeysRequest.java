@@ -5,7 +5,6 @@ import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.joining;
 
 import com.commercetools.project.sync.model.response.CombinedResult;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import io.sphere.sdk.client.HttpRequestIntent;
 import io.sphere.sdk.client.SphereRequest;
@@ -40,7 +39,7 @@ public class CombinedResourceKeysRequest implements SphereRequest<CombinedResult
       return null;
     }
     final JsonNode results = rootJsonNode.get("data");
-    return SphereJsonUtils.readObject(results, new TypeReference<CombinedResult>() {});
+    return SphereJsonUtils.readObject(results, CombinedResult.class);
   }
 
   @Override
