@@ -22,17 +22,20 @@ Dockerized CLI application which allows to automatically sync different resource
 ### Prerequisites
  
  - Make sure you have `JDK 8` installed.
- - The following fields are **required** to be set on the following resources (and sub-resources) that should be synced:
-    - `Product`
-        - `key`
-        - `Variant`
-            - `key`
-            - `Asset`
-                - `key`
-    - `ProductType`
-        - `key`
-    - `Category`
-        - `key`         
+ - The following fields are **required** to be set on the following resources (and sub-resources), if they will be
+  synced:
+ 
+     |  resource/ sub-resource |  required fields |
+     |---|---|
+     | Product | `key`, `sku` |
+     | Product Variant  | `key`  |
+     | Product Variant Asset (if it exists) | `key`  |
+     | ProductType  | `key`  |
+     | Type  | `key`  |
+     | Category  | `key`  |
+     | Category Asset (if it exists)  | `key`  |
+     | CartDiscount | `key`  |
+     | InventoryEntry  | `sku`  |
  
  - Set the following environment variables before running the application
    ```bash
