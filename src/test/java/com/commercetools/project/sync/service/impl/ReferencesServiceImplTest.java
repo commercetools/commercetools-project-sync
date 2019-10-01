@@ -1,23 +1,5 @@
 package com.commercetools.project.sync.service.impl;
 
-import com.commercetools.project.sync.model.request.CombinedResourceKeysRequest;
-import com.commercetools.project.sync.model.response.CombinedResult;
-import com.commercetools.project.sync.model.response.ReferenceIdKey;
-import com.commercetools.project.sync.model.response.ResultingResourcesContainer;
-import com.commercetools.project.sync.service.ReferencesService;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import io.sphere.sdk.client.SphereApiConfig;
-import io.sphere.sdk.client.SphereClient;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Test;
-import uk.org.lidalia.slf4jtest.TestLogger;
-import uk.org.lidalia.slf4jtest.TestLoggerFactory;
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
-
 import static io.sphere.sdk.utils.SphereInternalUtils.asSet;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.emptySet;
@@ -28,6 +10,23 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+
+import com.commercetools.project.sync.model.request.CombinedResourceKeysRequest;
+import com.commercetools.project.sync.model.response.CombinedResult;
+import com.commercetools.project.sync.model.response.ReferenceIdKey;
+import com.commercetools.project.sync.model.response.ResultingResourcesContainer;
+import com.commercetools.project.sync.service.ReferencesService;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.sphere.sdk.client.SphereApiConfig;
+import io.sphere.sdk.client.SphereClient;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
+import uk.org.lidalia.slf4jtest.TestLogger;
+import uk.org.lidalia.slf4jtest.TestLoggerFactory;
 
 class ReferencesServiceImplTest {
 

@@ -10,8 +10,10 @@ import static com.commercetools.project.sync.util.TestUtils.getMockedClock;
 import static com.commercetools.project.sync.util.TestUtils.mockLastSyncCustomObject;
 import static com.commercetools.project.sync.util.TestUtils.stubClientsCustomObjectService;
 import static com.commercetools.project.sync.util.TestUtils.verifyInteractionsWithClientAfterSync;
+import static io.sphere.sdk.utils.SphereInternalUtils.asSet;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
@@ -20,7 +22,10 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.commercetools.project.sync.model.request.CombinedResourceKeysRequest;
+import com.commercetools.project.sync.model.response.CombinedResult;
 import com.commercetools.project.sync.model.response.LastSyncCustomObject;
+import com.commercetools.project.sync.model.response.ReferenceIdKey;
+import com.commercetools.project.sync.model.response.ResultingResourcesContainer;
 import com.commercetools.project.sync.product.ProductSyncer;
 import com.commercetools.project.sync.util.MockPagedQueryResult;
 import com.commercetools.sync.products.helpers.ProductSyncStatistics;
@@ -294,8 +299,8 @@ class SyncerFactoryTest {
                     && loggingEvent
                         .getMessage()
                         .contains(
-                            "Summary: 2 products were processed in total (0 created, 0 updated "
-                                + "and 2 failed to sync)."),
+                            "Summary: 0 products were processed in total (0 created, 0 updated "
+                                + "and 0 failed to sync)."),
             "statistics log");
 
     assertThat(syncerTestLogger.getAllLoggingEvents())
@@ -304,11 +309,12 @@ class SyncerFactoryTest {
         .haveExactly(1, statisticsLog);
 
     assertThat(productSyncerTestLogger.getAllLoggingEvents())
-        .contains(
+        .containsExactly(
             LoggingEvent.error(
                 badGatewayException,
                 "Failed to replace referenced resource ids with keys on the attributes of the products in "
-                    + "the current fetched page from the source project."));
+                    + "the current fetched page from the source project. This page will not be synced to the target "
+                    + "project."));
   }
 
   @SuppressFBWarnings(
@@ -339,9 +345,23 @@ class SyncerFactoryTest {
     when(targetClient.execute(any())).thenReturn(CompletableFuture.completedFuture(null));
     final BadGatewayException badGatewayException = new BadGatewayException("Error!");
     when(targetClient.execute(any(ProductCreateCommand.class)))
-        .thenReturn(CompletableFutureUtils.failed(badGatewayException));
+        .thenReturn(CompletableFuture.completedFuture(product2));
     when(sourceClient.execute(any(CombinedResourceKeysRequest.class)))
         .thenReturn(CompletableFutureUtils.failed(badGatewayException));
+    final ResultingResourcesContainer productsResult =
+        new ResultingResourcesContainer(
+            asSet(new ReferenceIdKey("53c4a8b4-754f-4b95-b6f2-3e1e70e3d0c1", "prod1")));
+    final ResultingResourcesContainer productTypesResult =
+        new ResultingResourcesContainer(
+            asSet(new ReferenceIdKey("53c4a8b4-754f-4b95-b6f2-3e1e70e3d0c2", "prodType1")));
+    final ResultingResourcesContainer categoriesResult =
+        new ResultingResourcesContainer(
+            asSet(new ReferenceIdKey("53c4a8b4-754f-4b95-b6f2-3e1e70e3d0c3", "cat1")));
+
+    when(sourceClient.execute(any(CombinedResourceKeysRequest.class)))
+        .thenReturn(
+            CompletableFuture.completedFuture(
+                new CombinedResult(productsResult, categoriesResult, productTypesResult)));
 
     final SyncerFactory syncerFactory =
         SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock());
@@ -352,7 +372,7 @@ class SyncerFactoryTest {
     // assertions
     verify(sourceClient, times(2)).execute(any(ProductQuery.class));
     verify(sourceClient, times(2)).execute(any(CombinedResourceKeysRequest.class));
-    verifyInteractionsWithClientAfterSync(sourceClient, 1);
+    verifyInteractionsWithClientAfterSync(sourceClient, 502);
 
     final Condition<LoggingEvent> startLog =
         new Condition<>(
@@ -368,8 +388,8 @@ class SyncerFactoryTest {
                     && loggingEvent
                         .getMessage()
                         .contains(
-                            "Summary: 502 products were processed in total (0 created, 0 updated "
-                                + "and 19 failed to sync)."),
+                            "Summary: 1 products were processed in total (1 created, 0 updated "
+                                + "and 0 failed to sync)."),
             "statistics log");
 
     assertThat(syncerTestLogger.getAllLoggingEvents())
@@ -378,15 +398,18 @@ class SyncerFactoryTest {
         .haveExactly(1, statisticsLog);
 
     assertThat(productSyncerTestLogger.getAllLoggingEvents())
-        .contains(
-            LoggingEvent.error(
-                badGatewayException,
-                "Failed to replace referenced resource ids with keys on the attributes of the products in "
-                    + "the current fetched page from the source project."),
-            LoggingEvent.error(
-                badGatewayException,
-                "Failed to replace referenced resource ids with keys on the attributes of the products in "
-                    + "the current fetched page from the source project."));
+        .hasSize(501)
+        .containsOnlyElementsOf(
+            singletonList(
+                LoggingEvent.error(
+                    "The product with id "
+                        + "'ba81a6da-cf83-435b-a89e-2afab579846f' on the source project ('foo') will not be synced because it "
+                        + "has the following reference attribute(s): \n"
+                        + "[{\"id\":\"53c4a8b4-754f-4b95-b6f2-3e1e70e3d0c5\",\"typeId\":\"product\"}, "
+                        + "{\"id\":\"53c4a8b4-754f-4b95-b6f2-3e1e70e3d0c4\",\"typeId\":\"category\"}].\n"
+                        + "These references are either pointing to a non-existent resource or to an existing one but with a "
+                        + "blank key. Please make sure these referenced resources are existing and have non-blank (i.e. "
+                        + "non-null and non-empty) keys.")));
   }
 
   private static void verifyTimestampGeneratorCustomObjectUpsert(
