@@ -1,0 +1,64 @@
+{
+  "id": "9292f537-f543-4581-8cfa-2a1fa02c6a76",
+  "version": 1,
+  "createdAt": "2019-07-02T14:59:28.512Z",
+  "lastModifiedAt": "2019-07-02T14:59:28.512Z",
+  "lastModifiedBy": {
+    "clientId": "bYt7WtLyipj8Foll_k9s0UuU",
+    "isPlatformClient": false
+  },
+  "createdBy": {
+    "clientId": "bYt7WtLyipj8Foll_k9s0UuU",
+    "isPlatformClient": false
+  },
+  "value": {
+    "type": "relative",
+    "permyriad": 1000
+  },
+  "cartPredicate": "1=1",
+  "target": {
+    "type": "lineItems",
+    "predicate": "true = true"
+  },
+  "name": {
+    "en": "UPSELL_10%MEGA"
+  },
+  "description": {
+    "en": "UPSELL_10%MEGA"
+  },
+  "validFrom": "2019-01-01T05:00:00.000Z",
+  "stackingMode": "Stacking",
+  "isActive": true,
+  "requiresDiscountCode": true,
+  "sortOrder": "0.015039",
+  "references": [],
+  "attributeTypes": {},
+  "cartFieldTypes": {},
+  "lineItemFieldTypes": {},
+  "customLineItemFieldTypes": {},
+  "custom": {
+    "type": {
+      "typeId": "type",
+      "id": "63a386bf-41bf-4680-85e0-0f32bfd74273"
+    },
+    "fields": {
+      "displayName": {
+        "en": "UPSELL_10%MEGA"
+      },
+      "duration": 1,
+      "ioOffer": false,
+      "billingBenefitCode": "UP10MEGA",
+      "benefitTypeOrder": 5,
+      "isDependentPromo": false,
+      "billingBenefitId": "15039",
+      "secondaryBenefitCode": "7492931313",
+      "key": "UP10MEGA",
+      "benefitType": "Percentage Off",
+      "selfBenefit": true,
+      "parentOffers": [],
+      "period": "NoOfMonths",
+      "benefitCategory": "Product"
+    }
+  },
+  "key": "UP10MEGA"
+}

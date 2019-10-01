@@ -30,6 +30,7 @@ import com.commercetools.project.sync.product.ProductSyncer;
 import com.commercetools.project.sync.util.MockPagedQueryResult;
 import com.commercetools.sync.products.helpers.ProductSyncStatistics;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.sphere.sdk.cartdiscounts.queries.CartDiscountQuery;
 import io.sphere.sdk.categories.queries.CategoryQuery;
 import io.sphere.sdk.client.BadGatewayException;
 import io.sphere.sdk.client.SphereClient;
@@ -814,6 +815,8 @@ class SyncerFactoryTest {
         .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
     when(sourceClient.execute(any(ProductQuery.class)))
         .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
+    when(sourceClient.execute(any(CartDiscountQuery.class)))
+        .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
 
     final ZonedDateTime currentCtpTimestamp = ZonedDateTime.now();
     stubClientsCustomObjectService(targetClient, currentCtpTimestamp);
@@ -833,18 +836,23 @@ class SyncerFactoryTest {
     verifyTimestampGeneratorCustomObjectUpsert(targetClient, 1, "TypeSync", DEFAULT_RUNNER_NAME);
     verifyTimestampGeneratorCustomObjectUpsert(
         targetClient, 1, "InventorySync", DEFAULT_RUNNER_NAME);
-    verify(targetClient, times(10)).execute(any(CustomObjectUpsertCommand.class));
+    verifyTimestampGeneratorCustomObjectUpsert(
+        targetClient, 1, "CartDiscountSync", DEFAULT_RUNNER_NAME);
+    verify(targetClient, times(12)).execute(any(CustomObjectUpsertCommand.class));
     verifyLastSyncCustomObjectQuery(targetClient, "inventorySync", DEFAULT_RUNNER_NAME, "foo", 1);
     verifyLastSyncCustomObjectQuery(targetClient, "productTypeSync", DEFAULT_RUNNER_NAME, "foo", 1);
     verifyLastSyncCustomObjectQuery(targetClient, "productSync", DEFAULT_RUNNER_NAME, "foo", 1);
     verifyLastSyncCustomObjectQuery(targetClient, "categorySync", DEFAULT_RUNNER_NAME, "foo", 1);
     verifyLastSyncCustomObjectQuery(targetClient, "typeSync", DEFAULT_RUNNER_NAME, "foo", 1);
+    verifyLastSyncCustomObjectQuery(
+        targetClient, "cartDiscountSync", DEFAULT_RUNNER_NAME, "foo", 1);
     verify(sourceClient, times(1)).execute(any(ProductTypeQuery.class));
     verify(sourceClient, times(1)).execute(any(TypeQuery.class));
     verify(sourceClient, times(1)).execute(any(CategoryQuery.class));
     verify(sourceClient, times(1)).execute(any(ProductQuery.class));
     verify(sourceClient, times(1)).execute(any(InventoryEntryQuery.class));
-    verifyInteractionsWithClientAfterSync(sourceClient, 5);
+    verify(sourceClient, times(1)).execute(any(CartDiscountQuery.class));
+    verifyInteractionsWithClientAfterSync(sourceClient, 6);
     assertAllSyncersLoggingEvents(syncerTestLogger, cliRunnerTestLogger, 0);
   }
 }
