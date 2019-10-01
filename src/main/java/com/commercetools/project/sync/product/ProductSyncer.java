@@ -138,7 +138,7 @@ public final class ProductSyncer
     final List<JsonNode> allProductTypeReferences =
         getReferencesByTypeId(allAttributeReferences, ProductType.referenceTypeId());
 
-    return referencesService
+    return this.referencesService
         .getIdToKeys(
             getIds(allProductReferences),
             getIds(allCategoryReferences),
