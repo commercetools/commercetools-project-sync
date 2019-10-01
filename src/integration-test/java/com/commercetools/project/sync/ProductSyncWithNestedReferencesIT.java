@@ -6,6 +6,7 @@ import static com.commercetools.project.sync.util.IntegrationTestUtils.assertPro
 import static com.commercetools.project.sync.util.IntegrationTestUtils.cleanUpProjects;
 import static com.commercetools.project.sync.util.SphereClientUtils.CTP_SOURCE_CLIENT_CONFIG;
 import static com.commercetools.project.sync.util.SphereClientUtils.CTP_TARGET_CLIENT_CONFIG;
+import static com.commercetools.project.sync.util.TestUtils.assertCartDiscountSyncerLoggingEvents;
 import static com.commercetools.project.sync.util.TestUtils.assertCategorySyncerLoggingEvents;
 import static com.commercetools.project.sync.util.TestUtils.assertInventoryEntrySyncerLoggingEvents;
 import static com.commercetools.project.sync.util.TestUtils.assertProductSyncerLoggingEvents;
@@ -248,9 +249,10 @@ class ProductSyncWithNestedReferencesIT {
       assertCategorySyncerLoggingEvents(syncerTestLogger, 1);
       assertProductSyncerLoggingEvents(syncerTestLogger, 1);
       assertInventoryEntrySyncerLoggingEvents(syncerTestLogger, 0);
+      assertCartDiscountSyncerLoggingEvents(syncerTestLogger, 0);
 
-      // Every sync module (5 modules) is expected to have 2 logs (start and stats summary) = 10
-      assertThat(syncerTestLogger.getAllLoggingEvents()).hasSize(10);
+      // Every sync module (6 modules) is expected to have 2 logs (start and stats summary) = 12
+      assertThat(syncerTestLogger.getAllLoggingEvents()).hasSize(12);
 
       assertAllResourcesAreSyncedToTarget(postTargetClient);
     }

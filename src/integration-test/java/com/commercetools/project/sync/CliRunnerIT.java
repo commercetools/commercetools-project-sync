@@ -139,6 +139,7 @@ class CliRunnerIT {
                 ShippingCostTarget.of(),
                 "0.1",
                 true)
+            .key(RESOURCE_KEY)
             .build();
 
     sourceProjectClient
