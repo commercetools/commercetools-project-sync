@@ -253,6 +253,7 @@ public final class ProductSyncer
   @Override
   protected ProductQuery getQuery() {
     // TODO: Eventually don't expand all references and cache references for replacement.
+    // https://github.com/commercetools/commercetools-project-sync/issues/49
     return ProductQuery.of()
         .withExpansionPaths(ProductExpansionModel::productType)
         .plusExpansionPaths(ProductExpansionModel::taxCategory)
