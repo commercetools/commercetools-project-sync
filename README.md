@@ -3,20 +3,33 @@
 [![codecov](https://codecov.io/gh/commercetools/commercetools-project-sync/branch/master/graph/badge.svg)](https://codecov.io/gh/commercetools/commercetools-project-sync)
 [![Docker Pulls](https://img.shields.io/docker/pulls/commercetools/commercetools-project-sync)](https://cloud.docker.com/u/commercetools/repository/docker/commercetools/commercetools-project-sync)
 
-Dockerized CLI application which allows to automatically sync different resources between commercetools projects
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
 
+- [What is this?](#what-is-this)
 - [Prerequisites](#prerequisites)
 - [Usage](#usage)
+  - [Delta Sync](#delta-sync)
   - [Running the Docker Image](#running-the-docker-image)
     - [Download](#download)
     - [Run](#run)
 - [Examples](#examples)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
+### What is this?
+
+A Dockerized CLI application which allows you to automatically sync different resources between two commercetools projects.
+As of now, these are the supported resources:
+
+- CartDiscounts
+- Categories
+- InventoryEntries
+- Products
+- ProductTypes
+- Types
 
 
 ### Prerequisites
@@ -58,7 +71,7 @@ Dockerized CLI application which allows to automatically sync different resource
    usage: commercetools-project-sync
     -h,--help               Print help information.
     -s,--sync <arg>         Choose one of the following modules to run: "types", "productTypes", "categories", 
-                            "products", "inventoryEntries" or "all" (will run all the modules).
+                            "cartDiscounts", "products", "inventoryEntries" or "all" (will run all the modules).
     -r,--runnerName <arg>   name for the running sync instance. Please make sure the name is unique, otherwise running 
                             more than 1 sync instance with the same name would lead to an unexpected behaviour. 
                             (optional parameter) default: 'runnerName'.
