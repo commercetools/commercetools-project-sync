@@ -135,9 +135,9 @@ public final class ProductSyncer
    */
   @Nonnull
   private CompletionStage<List<Product>> replaceAttributeReferenceIdsWithKeys(
-      @Nonnull final List<Product> page) {
+      @Nonnull final List<Product> products) {
 
-    final List<JsonNode> allAttributeReferences = getAllReferences(page);
+    final List<JsonNode> allAttributeReferences = getAllReferences(products);
 
     final List<JsonNode> allProductReferences =
         getReferencesByTypeId(allAttributeReferences, Product.referenceTypeId());
@@ -155,10 +155,10 @@ public final class ProductSyncer
             getIds(allProductTypeReferences))
         .thenApply(
             idToKey -> {
-              final List<Product> products =
-                  filterOutWithIrresolvableReferences(page, idToKey); // traversal!
-              replaceReferences(getAllReferences(products), idToKey); // another traversal!!
-              return products;
+              final List<Product> validProducts =
+                  filterOutWithIrresolvableReferences(products, idToKey);
+              replaceReferences(getAllReferences(validProducts), idToKey);
+              return validProducts;
             });
   }
 
@@ -218,9 +218,10 @@ public final class ProductSyncer
 
   @Nonnull
   private List<Product> filterOutWithIrresolvableReferences(
-      @Nonnull final List<Product> page, @Nonnull final Map<String, String> idToKey) {
+      @Nonnull final List<Product> products, @Nonnull final Map<String, String> idToKey) {
 
-    return page.stream()
+    return products
+        .stream()
         .filter(
             product -> {
               final Set<JsonNode> irresolvableReferences =
