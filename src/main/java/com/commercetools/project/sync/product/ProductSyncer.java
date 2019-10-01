@@ -1,6 +1,7 @@
 package com.commercetools.project.sync.product;
 
-import static com.commercetools.sync.products.utils.ProductReferenceReplacementUtils.replaceProductsReferenceIdsWithKeys;
+import static java.lang.String.format;
+import static java.util.stream.Collectors.toSet;
 
 import com.commercetools.project.sync.Syncer;
 import com.commercetools.project.sync.service.CustomObjectService;
@@ -11,6 +12,7 @@ import com.commercetools.sync.products.ProductSync;
 import com.commercetools.sync.products.ProductSyncOptions;
 import com.commercetools.sync.products.ProductSyncOptionsBuilder;
 import com.commercetools.sync.products.helpers.ProductSyncStatistics;
+import com.commercetools.sync.products.utils.ProductReferenceReplacementUtils;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.sphere.sdk.categories.Category;
@@ -19,8 +21,6 @@ import io.sphere.sdk.commands.UpdateAction;
 import io.sphere.sdk.expansion.ExpansionPath;
 import io.sphere.sdk.products.AttributeContainer;
 import io.sphere.sdk.products.Product;
-import io.sphere.sdk.products.ProductCatalogData;
-import io.sphere.sdk.products.ProductData;
 import io.sphere.sdk.products.ProductDraft;
 import io.sphere.sdk.products.ProductVariant;
 import io.sphere.sdk.products.attributes.Attribute;
@@ -31,6 +31,7 @@ import io.sphere.sdk.products.queries.ProductQuery;
 import io.sphere.sdk.producttypes.ProductType;
 import java.time.Clock;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -53,6 +54,11 @@ public final class ProductSyncer
   private static final Logger LOGGER = LoggerFactory.getLogger(ProductSyncer.class);
   private static final String REFERENCE_TYPE_ID_FIELD = "typeId";
   private static final String REFERENCE_ID_FIELD = "id";
+  private static final String WITH_IRRESOLVABLE_REFS_ERROR_MSG =
+      "The product with id '%s' on the source project ('%s') will "
+          + "not be synced because it has the following reference attribute(s): \n"
+          + "%s.\n These references are either pointing to a non-existent resource or to an existing one but with a blank key. "
+          + "Please make sure these referenced resources are existing and have non-blank (i.e. non-null and non-empty) keys.";
   private final ReferencesService referencesService;
 
   /** Instantiates a {@link Syncer} instance. */
@@ -94,15 +100,19 @@ public final class ProductSyncer
   @Nonnull
   protected CompletionStage<List<ProductDraft>> transform(@Nonnull final List<Product> page) {
     return replaceAttributeReferenceIdsWithKeys(page)
-        .exceptionally(
-            throwable -> {
-              LOGGER.error(
-                  "Failed to replace referenced resource ids with keys on the attributes of the products in "
-                      + "the current fetched page from the source project.",
-                  getCompletionExceptionCause(throwable));
-              return null;
+        .handle(
+            (products, throwable) -> {
+              if (throwable != null) {
+                LOGGER.error(
+                    "Failed to replace referenced resource ids with keys on the attributes of the products in "
+                        + "the current fetched page from the source project. This page will not be synced to the target "
+                        + "project.",
+                    getCompletionExceptionCause(throwable));
+                return Collections.<Product>emptyList();
+              }
+              return products;
             })
-        .thenApply(aVoid -> replaceProductsReferenceIdsWithKeys(page));
+        .thenApply(ProductReferenceReplacementUtils::replaceProductsReferenceIdsWithKeys);
   }
 
   @Nonnull
@@ -114,17 +124,10 @@ public final class ProductSyncer
   }
 
   @Nonnull
-  private CompletionStage<Void> replaceAttributeReferenceIdsWithKeys(
+  private CompletionStage<List<Product>> replaceAttributeReferenceIdsWithKeys(
       @Nonnull final List<Product> page) {
 
-    final List<JsonNode> allAttributeReferences =
-        page.stream()
-            .map(Product::getMasterData)
-            .map(ProductCatalogData::getStaged)
-            .map(ProductData::getAllVariants)
-            .map(ProductSyncer::getAttributeReferences)
-            .flatMap(Collection::stream)
-            .collect(Collectors.toList());
+    final List<JsonNode> allAttributeReferences = getAllReferences(page);
 
     final List<JsonNode> allProductReferences =
         getReferencesByTypeId(allAttributeReferences, Product.referenceTypeId());
@@ -140,17 +143,34 @@ public final class ProductSyncer
             getIds(allProductReferences),
             getIds(allCategoryReferences),
             getIds(allProductTypeReferences))
-        .thenAccept(
+        .thenApply(
             idToKey -> {
-              replaceReferences(allProductReferences, idToKey);
-              replaceReferences(allCategoryReferences, idToKey);
-              replaceReferences(allProductTypeReferences, idToKey);
+              final List<Product> products =
+                  filterOutWithIrresolvableReferences(page, idToKey); // traversal!
+              replaceReferences(getAllReferences(products), idToKey); // another traversal!!
+              return products;
             });
+  }
+
+  @Nonnull
+  private List<JsonNode> getAllReferences(@Nonnull final List<Product> products) {
+    return products
+        .stream()
+        .map(this::getAllReferences)
+        .flatMap(Collection::stream)
+        .collect(Collectors.toList());
+  }
+
+  @Nonnull
+  private List<JsonNode> getAllReferences(@Nonnull final Product product) {
+    final List<ProductVariant> allVariants = product.getMasterData().getStaged().getAllVariants();
+    return getAttributeReferences(allVariants);
   }
 
   @Nonnull
   private static List<JsonNode> getAttributeReferences(
       @Nonnull final List<ProductVariant> variants) {
+
     return variants
         .stream()
         .map(AttributeContainer::getAttributes)
@@ -167,17 +187,6 @@ public final class ProductSyncer
     return attributeValue.findParents(REFERENCE_TYPE_ID_FIELD);
   }
 
-  private static void replaceReferences(
-      @Nonnull final List<JsonNode> references, @Nonnull final Map<String, String> idToKey) {
-
-    references.forEach(
-        reference -> {
-          final String id = reference.get(REFERENCE_ID_FIELD).asText();
-          final String key = idToKey.get(id);
-          ((ObjectNode) reference).put(REFERENCE_ID_FIELD, key);
-        });
-  }
-
   @Nonnull
   private List<JsonNode> getReferencesByTypeId(
       @Nonnull final List<JsonNode> references, @Nonnull final String typeId) {
@@ -189,10 +198,55 @@ public final class ProductSyncer
 
   @Nonnull
   private static Set<String> getIds(@Nonnull final List<JsonNode> references) {
-    return references
+    return references.stream().map(ProductSyncer::getId).collect(toSet());
+  }
+
+  @Nonnull
+  private static String getId(@Nonnull final JsonNode ref) {
+    return ref.get(REFERENCE_ID_FIELD).asText();
+  }
+
+  @Nonnull
+  private List<Product> filterOutWithIrresolvableReferences(
+      @Nonnull final List<Product> page, @Nonnull final Map<String, String> idToKey) {
+
+    return page.stream()
+        .filter(
+            product -> {
+              final Set<JsonNode> irresolvableReferences =
+                  getIrresolvableReferences(product, idToKey);
+              final boolean hasIrresolvableReferences = !irresolvableReferences.isEmpty();
+              if (hasIrresolvableReferences) {
+                LOGGER.error(
+                    format(
+                        WITH_IRRESOLVABLE_REFS_ERROR_MSG,
+                        product.getId(),
+                        getSourceClient().getConfig().getProjectKey(),
+                        irresolvableReferences));
+              }
+              return !hasIrresolvableReferences;
+            })
+        .collect(Collectors.toList());
+  }
+
+  private Set<JsonNode> getIrresolvableReferences(
+      @Nonnull final Product product, @Nonnull final Map<String, String> idToKey) {
+
+    return getAllReferences(product)
         .stream()
-        .map(ref -> ref.get(REFERENCE_ID_FIELD).asText())
-        .collect(Collectors.toSet());
+        .filter(reference -> !idToKey.containsKey(getId(reference)))
+        .collect(toSet());
+  }
+
+  private static void replaceReferences(
+      @Nonnull final List<JsonNode> references, @Nonnull final Map<String, String> idToKey) {
+
+    references.forEach(
+        reference -> {
+          final String id = reference.get(REFERENCE_ID_FIELD).asText();
+          final String key = idToKey.get(id);
+          ((ObjectNode) reference).put(REFERENCE_ID_FIELD, key);
+        });
   }
 
   @Nonnull

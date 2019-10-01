@@ -1,13 +1,13 @@
 package com.commercetools.project.sync.service.impl;
 
-import static java.lang.String.format;
-import static org.apache.commons.lang3.StringUtils.isBlank;
-
 import com.commercetools.project.sync.model.request.CombinedResourceKeysRequest;
 import com.commercetools.project.sync.model.response.CombinedResult;
 import com.commercetools.project.sync.model.response.ResultingResourcesContainer;
 import com.commercetools.project.sync.service.ReferencesService;
 import io.sphere.sdk.client.SphereClient;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -15,17 +15,11 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 public class ReferencesServiceImpl extends BaseServiceImpl implements ReferencesService {
   private final Map<String, String> idToKey = new HashMap<>();
-  private static final Logger LOGGER = LoggerFactory.getLogger(ReferencesServiceImpl.class);
-  private static final String BLANK_KEY_ERROR_MSG =
-      "The key for the %s with id '%s' is blank. Please make sure all %s, in the source project with key '%s', "
-          + "have non-blank (i.e. non-null and non-empty) keys.";
 
   public ReferencesServiceImpl(@Nonnull final SphereClient ctpClient) {
     super(ctpClient);
@@ -86,46 +80,15 @@ public class ReferencesServiceImpl extends BaseServiceImpl implements References
 
   private void cacheKeys(@Nullable final CombinedResult combinedResult) {
     if (combinedResult != null) {
-
-      cacheKeys(
-          combinedResult,
-          CombinedResult::getProducts,
-          id ->
-              format(
-                  BLANK_KEY_ERROR_MSG,
-                  "product",
-                  id,
-                  "products",
-                  getCtpClient().getConfig().getProjectKey()));
-
-      cacheKeys(
-          combinedResult,
-          CombinedResult::getCategories,
-          id ->
-              format(
-                  BLANK_KEY_ERROR_MSG,
-                  "category",
-                  id,
-                  "categories",
-                  getCtpClient().getConfig().getProjectKey()));
-
-      cacheKeys(
-          combinedResult,
-          CombinedResult::getProductTypes,
-          id ->
-              format(
-                  BLANK_KEY_ERROR_MSG,
-                  "productType",
-                  id,
-                  "productTypes",
-                  getCtpClient().getConfig().getProjectKey()));
+      cacheKeys(combinedResult, CombinedResult::getProducts);
+      cacheKeys(combinedResult, CombinedResult::getCategories);
+      cacheKeys(combinedResult, CombinedResult::getProductTypes);
     }
   }
 
   private void cacheKeys(
       @Nonnull final CombinedResult combinedResult,
-      @Nonnull final Function<CombinedResult, ResultingResourcesContainer> resultsContainerMapper,
-      @Nonnull final Function<String, String> errorMessageMapper) {
+      @Nonnull final Function<CombinedResult, ResultingResourcesContainer> resultsContainerMapper) {
     final ResultingResourcesContainer resultsContainer =
         resultsContainerMapper.apply(combinedResult);
     if (resultsContainer != null) {
@@ -135,9 +98,7 @@ public class ReferencesServiceImpl extends BaseServiceImpl implements References
               referenceIdKey -> {
                 final String key = referenceIdKey.getKey();
                 final String id = referenceIdKey.getId();
-                if (isBlank(key)) {
-                  LOGGER.error(errorMessageMapper.apply(id));
-                } else {
+                if (!isBlank(key)) {
                   idToKey.put(id, key);
                 }
               });

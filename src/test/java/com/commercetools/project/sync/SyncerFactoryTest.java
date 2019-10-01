@@ -61,6 +61,8 @@ import uk.org.lidalia.slf4jtest.TestLoggerFactory;
 
 class SyncerFactoryTest {
   private static final TestLogger syncerTestLogger = TestLoggerFactory.getTestLogger(Syncer.class);
+  private static final TestLogger productSyncerTestLogger =
+      TestLoggerFactory.getTestLogger(ProductSyncer.class);
   private static final TestLogger cliRunnerTestLogger =
       TestLoggerFactory.getTestLogger(CliRunner.class);
 
@@ -68,6 +70,7 @@ class SyncerFactoryTest {
   void tearDownTest() {
     syncerTestLogger.clearAll();
     cliRunnerTestLogger.clearAll();
+    productSyncerTestLogger.clearAll();
   }
 
   @Test
@@ -300,7 +303,7 @@ class SyncerFactoryTest {
         .haveExactly(1, startLog)
         .haveExactly(1, statisticsLog);
 
-    assertThat(TestLoggerFactory.getTestLogger(ProductSyncer.class).getAllLoggingEvents())
+    assertThat(productSyncerTestLogger.getAllLoggingEvents())
         .contains(
             LoggingEvent.error(
                 badGatewayException,
@@ -374,7 +377,7 @@ class SyncerFactoryTest {
         .haveExactly(1, startLog)
         .haveExactly(1, statisticsLog);
 
-    assertThat(TestLoggerFactory.getTestLogger(ProductSyncer.class).getAllLoggingEvents())
+    assertThat(productSyncerTestLogger.getAllLoggingEvents())
         .contains(
             LoggingEvent.error(
                 badGatewayException,
