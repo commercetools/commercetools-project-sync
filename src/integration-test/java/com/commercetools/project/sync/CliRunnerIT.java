@@ -21,6 +21,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.commercetools.project.sync.model.response.LastSyncCustomObject;
 import com.commercetools.sync.commons.helpers.BaseSyncStatistics;
 import com.commercetools.sync.products.helpers.ProductSyncStatistics;
+import io.sphere.sdk.cartdiscounts.CartDiscount;
+import io.sphere.sdk.cartdiscounts.CartDiscountDraft;
+import io.sphere.sdk.cartdiscounts.CartDiscountDraftBuilder;
+import io.sphere.sdk.cartdiscounts.CartDiscountValue;
+import io.sphere.sdk.cartdiscounts.ShippingCostTarget;
+import io.sphere.sdk.cartdiscounts.commands.CartDiscountCreateCommand;
+import io.sphere.sdk.cartdiscounts.queries.CartDiscountQuery;
 import io.sphere.sdk.categories.CategoryDraft;
 import io.sphere.sdk.categories.CategoryDraftBuilder;
 import io.sphere.sdk.categories.commands.CategoryCreateCommand;
@@ -121,6 +128,22 @@ class CliRunnerIT {
 
     sourceProjectClient
         .execute(InventoryEntryCreateCommand.of(inventoryEntryDraft))
+        .toCompletableFuture()
+        .join();
+
+    final CartDiscountDraft cartDiscountDraft =
+        CartDiscountDraftBuilder.of(
+                ofEnglish("my-cart-discount"),
+                "1 = 1",
+                CartDiscountValue.ofRelative(1),
+                ShippingCostTarget.of(),
+                "0.1",
+                true)
+            .key(RESOURCE_KEY)
+            .build();
+
+    sourceProjectClient
+        .execute(CartDiscountCreateCommand.of(cartDiscountDraft))
         .toCompletableFuture()
         .join();
   }
@@ -325,6 +348,9 @@ class CliRunnerIT {
         assertLastSyncCustomObjectExists(
             postTargetClient, sourceProjectKey, "inventorySync", "runnerName");
 
+        assertLastSyncCustomObjectExists(
+            postTargetClient, sourceProjectKey, "cartDiscountSync", "runnerName");
+
         cleanUpProjects(postSourceClient, postTargetClient);
       }
     }
@@ -447,5 +473,18 @@ class CliRunnerIT {
         .hasSize(1)
         .hasOnlyOneElementSatisfying(
             inventoryEntry -> assertThat(inventoryEntry.getSku()).isEqualTo(RESOURCE_KEY));
+
+    final PagedQueryResult<CartDiscount> cartDiscountPagedQueryResult =
+        targetClient
+            .execute(
+                CartDiscountQuery.of()
+                    .withPredicates(queryModel -> queryModel.key().is(RESOURCE_KEY)))
+            .toCompletableFuture()
+            .join();
+
+    assertThat(cartDiscountPagedQueryResult.getResults())
+        .hasSize(1)
+        .hasOnlyOneElementSatisfying(
+            cartDiscount -> assertThat(cartDiscount.getKey()).isEqualTo(RESOURCE_KEY));
   }
 }

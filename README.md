@@ -3,14 +3,15 @@
 [![codecov](https://codecov.io/gh/commercetools/commercetools-project-sync/branch/master/graph/badge.svg)](https://codecov.io/gh/commercetools/commercetools-project-sync)
 [![Docker Pulls](https://img.shields.io/docker/pulls/commercetools/commercetools-project-sync)](https://cloud.docker.com/u/commercetools/repository/docker/commercetools/commercetools-project-sync)
 
-Dockerized CLI application which allows to automatically sync different resources between commercetools projects
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
 
+- [What is this?](#what-is-this)
 - [Prerequisites](#prerequisites)
 - [Usage](#usage)
+  - [Delta Sync](#delta-sync)
   - [Running the Docker Image](#running-the-docker-image)
     - [Download](#download)
     - [Run](#run)
@@ -18,21 +19,36 @@ Dockerized CLI application which allows to automatically sync different resource
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
+### What is this?
+
+A Dockerized CLI application which allows you to automatically sync different resources between two commercetools projects.
+As of now, these are the supported resources:
+
+- CartDiscounts
+- Categories
+- InventoryEntries
+- Products
+- ProductTypes
+- Types
+
 
 ### Prerequisites
  
  - Make sure you have `JDK 8` installed.
- - The following fields are **required** to be set on the following resources (and sub-resources) that should be synced:
-    - `Product`
-        - `key`
-        - `Variant`
-            - `key`
-            - `Asset`
-                - `key`
-    - `ProductType`
-        - `key`
-    - `Category`
-        - `key`         
+ - The following fields are **required** to be set on the following resources (and sub-resources), if they will be
+  synced:
+ 
+     |  Resource/ Sub-resource |  Required Fields |
+     |---|---|
+     | Product | `key`, `sku` |
+     | Product Variant  | `key`  |
+     | Product Variant Asset (if exists) | `key`  |
+     | ProductType  | `key`  |
+     | Type  | `key`  |
+     | Category  | `key`  |
+     | Category Asset (if exists)  | `key`  |
+     | CartDiscount | `key`  |
+     | InventoryEntry  | `sku`  |
  
  - Set the following environment variables before running the application
    ```bash
@@ -55,7 +71,7 @@ Dockerized CLI application which allows to automatically sync different resource
    usage: commercetools-project-sync
     -h,--help               Print help information.
     -s,--sync <arg>         Choose one of the following modules to run: "types", "productTypes", "categories", 
-                            "products", "inventoryEntries" or "all" (will run all the modules).
+                            "cartDiscounts", "products", "inventoryEntries" or "all" (will run all the modules).
     -r,--runnerName <arg>   name for the running sync instance. Please make sure the name is unique, otherwise running 
                             more than 1 sync instance with the same name would lead to an unexpected behaviour. 
                             (optional parameter) default: 'runnerName'.
@@ -141,7 +157,8 @@ commercetools/commercetools-project-sync:2.0.0 -s all
  1. `Type` Sync and `ProductType` Sync in parallel.
  2. `Category` Sync.
  3. `Product` Sync.
- 4. `InventoryEntry` Sync.
+ 4. `CartDiscount` Sync.
+ 5. `InventoryEntry` Sync.
 
  - To run the type sync
    ```bash
@@ -161,6 +178,11 @@ commercetools/commercetools-project-sync:2.0.0 -s all
 - To run the product sync
    ```bash
    docker run commercetools/commercetools-project-sync:2.0.0 -s products
+   ```
+   
+- To run the cartDiscount sync
+   ```bash
+   docker run commercetools/commercetools-project-sync:2.0.0 -s cartDiscounts
    ```  
     
 - To run the inventoryEntry sync

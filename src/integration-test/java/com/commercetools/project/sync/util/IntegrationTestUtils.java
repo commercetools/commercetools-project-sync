@@ -7,6 +7,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.commercetools.project.sync.model.response.LastSyncCustomObject;
 import com.commercetools.sync.commons.utils.CtpQueryUtils;
+import io.sphere.sdk.cartdiscounts.commands.CartDiscountDeleteCommand;
+import io.sphere.sdk.cartdiscounts.queries.CartDiscountQuery;
 import io.sphere.sdk.categories.Category;
 import io.sphere.sdk.categories.commands.CategoryDeleteCommand;
 import io.sphere.sdk.categories.queries.CategoryQuery;
@@ -123,10 +125,11 @@ public final class IntegrationTestUtils {
     queryAndExecute(client, ProductQuery.of(), ProductDeleteCommand::of);
     queryAndExecute(client, TypeQuery.of(), TypeDeleteCommand::of);
     queryAndExecute(client, InventoryEntryQuery.of(), InventoryEntryDeleteCommand::of);
+    queryAndExecute(client, CartDiscountQuery.of(), CartDiscountDeleteCommand::of);
     deleteProductTypes(client);
   }
 
-  public static void deleteProductTypes(@Nonnull final SphereClient ctpClient) {
+  private static void deleteProductTypes(@Nonnull final SphereClient ctpClient) {
     deleteProductTypeAttributes(ctpClient);
     queryAndExecute(ctpClient, ProductTypeQuery.of(), ProductTypeDeleteCommand::of);
   }

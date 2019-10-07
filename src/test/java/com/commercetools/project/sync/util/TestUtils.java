@@ -45,9 +45,10 @@ public final class TestUtils {
     assertCategorySyncerLoggingEvents(syncerTestLogger, numberOfResources);
     assertProductSyncerLoggingEvents(syncerTestLogger, numberOfResources);
     assertInventoryEntrySyncerLoggingEvents(syncerTestLogger, numberOfResources);
+    assertCartDiscountSyncerLoggingEvents(syncerTestLogger, numberOfResources);
 
-    // Every sync module (5 modules) is expected to have 2 logs (start and stats summary)
-    assertThat(syncerTestLogger.getAllLoggingEvents()).hasSize(10);
+    // Every sync module (6 modules) is expected to have 2 logs (start and stats summary) = 12
+    assertThat(syncerTestLogger.getAllLoggingEvents()).hasSize(12);
   }
 
   public static void assertTypeSyncerLoggingEvents(
@@ -104,6 +105,17 @@ public final class TestUtils {
             numberOfResources, numberOfResources);
 
     assertSyncerLoggingEvents(syncerTestLogger, "InventorySync", inventoryStatsSummary);
+  }
+
+  public static void assertCartDiscountSyncerLoggingEvents(
+      @Nonnull final TestLogger syncerTestLogger, final int numberOfResources) {
+    final String cartDiscountStatsSummary =
+        format(
+            "Summary: %d cart discounts were processed in total (%d created, 0 updated "
+                + "and 0 failed to sync).",
+            numberOfResources, numberOfResources);
+
+    assertSyncerLoggingEvents(syncerTestLogger, "CartDiscount", cartDiscountStatsSummary);
   }
 
   public static void assertSyncerLoggingEvents(

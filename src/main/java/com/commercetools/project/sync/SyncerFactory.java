@@ -1,5 +1,6 @@
 package com.commercetools.project.sync;
 
+import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_CART_DISCOUNT_SYNC;
 import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_CATEGORY_SYNC;
 import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_DESCRIPTION;
 import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_INVENTORY_ENTRY_SYNC;
@@ -13,6 +14,7 @@ import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import com.commercetools.project.sync.cartdiscount.CartDiscountSyncer;
 import com.commercetools.project.sync.category.CategorySyncer;
 import com.commercetools.project.sync.inventoryentry.InventoryEntrySyncer;
 import com.commercetools.project.sync.product.ProductSyncer;
@@ -81,6 +83,10 @@ final class SyncerFactory {
                     .sync(runnerNameOptionValue, isFullSync))
         .thenCompose(
             ignored ->
+                CartDiscountSyncer.of(sourceClient, targetClient, clock)
+                    .sync(runnerNameOptionValue, isFullSync))
+        .thenCompose(
+            ignored ->
                 InventoryEntrySyncer.of(sourceClient, targetClient, clock)
                     .sync(runnerNameOptionValue, isFullSync))
         .whenComplete((syncResult, throwable) -> closeClients());
@@ -146,6 +152,8 @@ final class SyncerFactory {
 
     final String trimmedValue = syncOptionValue.trim();
     switch (trimmedValue) {
+      case SYNC_MODULE_OPTION_CART_DISCOUNT_SYNC:
+        return CartDiscountSyncer.of(sourceClientSupplier.get(), targetClientSupplier.get(), clock);
       case SYNC_MODULE_OPTION_PRODUCT_TYPE_SYNC:
         return ProductTypeSyncer.of(sourceClientSupplier.get(), targetClientSupplier.get(), clock);
       case SYNC_MODULE_OPTION_CATEGORY_SYNC:
