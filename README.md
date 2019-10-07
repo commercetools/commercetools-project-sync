@@ -42,11 +42,11 @@ As of now, these are the supported resources:
      |---|---|
      | Product | `key`, `sku` |
      | Product Variant  | `key`  |
-     | Product Variant Asset (if it exists) | `key`  |
+     | Product Variant Asset (if exists) | `key`  |
      | ProductType  | `key`  |
      | Type  | `key`  |
      | Category  | `key`  |
-     | Category Asset (if it exists)  | `key`  |
+     | Category Asset (if exists)  | `key`  |
      | CartDiscount | `key`  |
      | InventoryEntry  | `sku`  |
  
