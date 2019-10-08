@@ -16,6 +16,7 @@ dependencies {
     implementation "com.commercetools.sdk.jvm.core:commercetools-models:${commercetoolsJvmSdkVersion}"
     implementation "com.commercetools.sdk.jvm.core:commercetools-java-client:${commercetoolsJvmSdkVersion}"
     implementation "com.commercetools:commercetools-sync-java:${commercetoolsSyncJava}"
+    implementation "com.commercetools.sdk.jvm.core:commercetools-convenience:${commercetoolsJvmSdkVersion}"
     implementation "commons-cli:commons-cli:${apacheCliVersion}"
     implementation "org.slf4j:slf4j-api:${slf4jVersion}"
     implementation "org.slf4j:slf4j-simple:${slf4jVersion}"
