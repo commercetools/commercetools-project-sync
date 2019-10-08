@@ -89,8 +89,8 @@ public final class TestUtils {
       @Nonnull final TestLogger syncerTestLogger, final int numberOfResources) {
     final String productStatsSummary =
         format(
-            "Summary: %d products were processed in total (%d created, 0 updated "
-                + "and 0 failed to sync).",
+            "Summary: %d product(s) were processed in total (%d created, 0 updated, "
+                + "0 failed to sync and 0 product(s) with missing reference(s)).",
             numberOfResources, numberOfResources);
 
     assertSyncerLoggingEvents(syncerTestLogger, "ProductSync", productStatsSummary);
