@@ -21,6 +21,7 @@ public class CombinedResourceKeysRequest implements SphereRequest<CombinedResult
   private final Set<String> productIds;
   private final Set<String> categoryIds;
   private final Set<String> productTypeIds;
+  private static final int QUERY_LIMIT = 500;
 
   public CombinedResourceKeysRequest(
       @Nonnull final Set<String> productIds,
@@ -67,18 +68,23 @@ public class CombinedResourceKeysRequest implements SphereRequest<CombinedResult
 
   @Nonnull
   private static String createProductsGraphQlQuery(@Nonnull final Set<String> productIds) {
-    return format("products(where: %s) { results { id key } }", createWhereQuery(productIds));
+    return format(
+        "products(limit: %d, where: %s) { results { id key } }",
+        QUERY_LIMIT, createWhereQuery(productIds));
   }
 
   @Nonnull
   private static String createCategoriesGraphQlQuery(@Nonnull final Set<String> categoryIds) {
-    return format("categories(where: %s) { results { id key } }", createWhereQuery(categoryIds));
+    return format(
+        "categories(limit: %d, where: %s) { results { id key } }",
+        QUERY_LIMIT, createWhereQuery(categoryIds));
   }
 
   @Nonnull
   private static String createProductTypesGraphQlQuery(@Nonnull final Set<String> productTypeIds) {
     return format(
-        "productTypes(where: %s) { results { id key } }", createWhereQuery(productTypeIds));
+        "productTypes(limit: %d, where: %s) { results { id key } }",
+        QUERY_LIMIT, createWhereQuery(productTypeIds));
   }
 
   @Nonnull

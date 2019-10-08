@@ -104,8 +104,8 @@ class CombinedResourceKeysRequestTest {
     assertThat(requestBody.getString())
         .isEqualTo(
             "{\"query\": \"{ "
-                + "categories(where: \\\"id in (\\\\\\\"foo\\\\\\\", \\\\\\\"bar\\\\\\\")\\\") { results { id key } }, "
-                + "productTypes(where: \\\"id in (\\\\\\\"foo\\\\\\\", \\\\\\\"bar\\\\\\\")\\\") { results { id key } }"
+                + "categories(limit: 500, where: \\\"id in (\\\\\\\"foo\\\\\\\", \\\\\\\"bar\\\\\\\")\\\") { results { id key } }, "
+                + "productTypes(limit: 500, where: \\\"id in (\\\\\\\"foo\\\\\\\", \\\\\\\"bar\\\\\\\")\\\") { results { id key } }"
                 + " }\"}");
   }
 
@@ -129,7 +129,7 @@ class CombinedResourceKeysRequestTest {
     assertThat(requestBody.getString())
         .isEqualTo(
             "{\"query\": \"{ "
-                + "categories(where: \\\"id in (\\\\\\\"foo\\\\\\\", \\\\\\\"bar\\\\\\\")\\\") { results { id key } }"
+                + "categories(limit: 500, where: \\\"id in (\\\\\\\"foo\\\\\\\", \\\\\\\"bar\\\\\\\")\\\") { results { id key } }"
                 + " }\"}");
   }
 
@@ -153,7 +153,7 @@ class CombinedResourceKeysRequestTest {
     assertThat(requestBody.getString())
         .isEqualTo(
             "{\"query\": \"{ "
-                + "products(where: \\\"id in (\\\\\\\"foo\\\\\\\", \\\\\\\"bar\\\\\\\")\\\") { results { id key } }"
+                + "products(limit: 500, where: \\\"id in (\\\\\\\"foo\\\\\\\", \\\\\\\"bar\\\\\\\")\\\") { results { id key } }"
                 + " }\"}");
   }
 
@@ -177,9 +177,9 @@ class CombinedResourceKeysRequestTest {
     assertThat(requestBody.getString())
         .isEqualTo(
             "{\"query\": \"{ "
-                + "products(where: \\\"id in (\\\\\\\"foo\\\\\\\", \\\\\\\"bar\\\\\\\")\\\") { results { id key } }, "
-                + "categories(where: \\\"id in (\\\\\\\"foo\\\\\\\", \\\\\\\"bar\\\\\\\")\\\") { results { id key } }, "
-                + "productTypes(where: \\\"id in (\\\\\\\"foo\\\\\\\", \\\\\\\"bar\\\\\\\")\\\") { results { id key } }"
+                + "products(limit: 500, where: \\\"id in (\\\\\\\"foo\\\\\\\", \\\\\\\"bar\\\\\\\")\\\") { results { id key } }, "
+                + "categories(limit: 500, where: \\\"id in (\\\\\\\"foo\\\\\\\", \\\\\\\"bar\\\\\\\")\\\") { results { id key } }, "
+                + "productTypes(limit: 500, where: \\\"id in (\\\\\\\"foo\\\\\\\", \\\\\\\"bar\\\\\\\")\\\") { results { id key } }"
                 + " }\"}");
   }
 
