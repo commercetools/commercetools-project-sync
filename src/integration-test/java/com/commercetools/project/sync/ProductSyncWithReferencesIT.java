@@ -184,8 +184,8 @@ class ProductSyncWithReferencesIT {
     // after execution
     // is done.
     try (final SphereClient postTargetClient = createClient(CTP_TARGET_CLIENT_CONFIG)) {
-      // assertions
 
+      // assertions
       assertThat(cliRunnerTestLogger.getAllLoggingEvents())
           .allMatch(loggingEvent -> !Level.ERROR.equals(loggingEvent.getLevel()));
 
