@@ -7,6 +7,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.commercetools.project.sync.model.response.LastSyncCustomObject;
 import com.commercetools.sync.commons.utils.CtpQueryUtils;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.sphere.sdk.cartdiscounts.commands.CartDiscountDeleteCommand;
 import io.sphere.sdk.cartdiscounts.queries.CartDiscountQuery;
 import io.sphere.sdk.categories.Category;
@@ -224,6 +227,24 @@ public final class IntegrationTestUtils {
             });
 
     return productQueryResult.getResults().get(0);
+  }
+
+  @Nonnull
+  public static ObjectNode createReferenceObject(
+      @Nonnull final String typeId, @Nonnull final String id) {
+    final ObjectNode referenceObject = JsonNodeFactory.instance.objectNode();
+    referenceObject.set("typeId", JsonNodeFactory.instance.textNode(typeId));
+    referenceObject.set("id", JsonNodeFactory.instance.textNode(id));
+    return referenceObject;
+  }
+
+  @Nonnull
+  public static ObjectNode createAttributeObject(
+      @Nonnull final String name, @Nonnull final ArrayNode value) {
+    final ObjectNode attributeObject = JsonNodeFactory.instance.objectNode();
+    attributeObject.set("name", JsonNodeFactory.instance.textNode(name));
+    attributeObject.set("value", value);
+    return attributeObject;
   }
 
   private IntegrationTestUtils() {}

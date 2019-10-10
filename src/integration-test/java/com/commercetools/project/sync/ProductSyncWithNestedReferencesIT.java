@@ -4,6 +4,8 @@ import static com.commercetools.project.sync.util.ClientConfigurationUtils.creat
 import static com.commercetools.project.sync.util.IntegrationTestUtils.assertCategoryExists;
 import static com.commercetools.project.sync.util.IntegrationTestUtils.assertProductTypeExists;
 import static com.commercetools.project.sync.util.IntegrationTestUtils.cleanUpProjects;
+import static com.commercetools.project.sync.util.IntegrationTestUtils.createAttributeObject;
+import static com.commercetools.project.sync.util.IntegrationTestUtils.createReferenceObject;
 import static com.commercetools.project.sync.util.SphereClientUtils.CTP_SOURCE_CLIENT_CONFIG;
 import static com.commercetools.project.sync.util.SphereClientUtils.CTP_TARGET_CLIENT_CONFIG;
 import static com.commercetools.project.sync.util.TestUtils.assertCartDiscountSyncerLoggingEvents;
@@ -21,7 +23,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.sphere.sdk.categories.Category;
 import io.sphere.sdk.categories.CategoryDraft;
 import io.sphere.sdk.categories.CategoryDraftBuilder;
@@ -193,24 +194,6 @@ class ProductSyncWithNestedReferencesIT {
         .execute(ProductCreateCommand.of(productDraftWithNestedAttribute))
         .toCompletableFuture()
         .join();
-  }
-
-  @Nonnull
-  private static ObjectNode createReferenceObject(
-      @Nonnull final String typeId, @Nonnull final String id) {
-    final ObjectNode referenceObject = JsonNodeFactory.instance.objectNode();
-    referenceObject.set("typeId", JsonNodeFactory.instance.textNode(typeId));
-    referenceObject.set("id", JsonNodeFactory.instance.textNode(id));
-    return referenceObject;
-  }
-
-  @Nonnull
-  private static ObjectNode createAttributeObject(
-      @Nonnull final String name, @Nonnull final ArrayNode value) {
-    final ObjectNode attributeObject = JsonNodeFactory.instance.objectNode();
-    attributeObject.set("name", JsonNodeFactory.instance.textNode(name));
-    attributeObject.set("value", value);
-    return attributeObject;
   }
 
   @AfterAll
