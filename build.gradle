@@ -25,7 +25,24 @@ apply from: "$rootDir/gradle-scripts/repositories.gradle"
 apply from: "$rootDir/gradle-scripts/test.gradle"
 apply from: "$rootDir/gradle-scripts/integration-tests.gradle"
 apply from: "$rootDir/gradle-scripts/test-logger.gradle"
-apply from: "$rootDir/gradle-scripts/dependencies.gradle"
+
+
+ext {
+    commercetoolsJvmSdkVersion =  '1.47.0'
+    mockitoVersion = '3.1.0'
+    slf4jVersion = '1.7.25'
+    slf4jTestVersion = '1.2.0'
+    assertjVersion = '3.13.2'
+    pmdVersion = '5.6.1'
+    jacocoVersion = '0.7.9'
+    findbugsVersion = '3.0.1'
+    commercetoolsSyncJava='1.6.1'
+    apacheCliVersion = '1.4'
+    jupiterApiVersion = '5.5.2'
+}
+
+
+
 apply from: "$rootDir/gradle-scripts/spotless.gradle"
 apply from: "$rootDir/gradle-scripts/pmd.gradle"
 apply from: "$rootDir/gradle-scripts/jacoco.gradle"
@@ -46,4 +63,21 @@ import com.diffplug.gradle.spotless.SpotlessTask
 tasks.withType(SpotlessTask) {
     it.mustRunAfter compileIntegrationTestJava
     pmdMain.mustRunAfter it
+}
+
+dependencies {
+    implementation "com.commercetools.sdk.jvm.core:commercetools-models:${commercetoolsJvmSdkVersion}"
+    implementation "com.commercetools.sdk.jvm.core:commercetools-java-client:${commercetoolsJvmSdkVersion}"
+    implementation "com.commercetools:commercetools-sync-java:${commercetoolsSyncJava}"
+    implementation "com.commercetools.sdk.jvm.core:commercetools-convenience:${commercetoolsJvmSdkVersion}"
+    implementation "commons-cli:commons-cli:${apacheCliVersion}"
+    implementation "org.slf4j:slf4j-api:${slf4jVersion}"
+    implementation "org.slf4j:slf4j-simple:${slf4jVersion}"
+    implementation "com.google.code.findbugs:annotations:${findbugsVersion}"
+    testImplementation "uk.org.lidalia:slf4j-test:${slf4jTestVersion}"
+    testImplementation "org.mockito:mockito-core:${mockitoVersion}"
+    testImplementation "org.junit.jupiter:junit-jupiter-api:${jupiterApiVersion}"
+    testImplementation "org.junit.jupiter:junit-jupiter-params:${jupiterApiVersion}"
+    testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:${jupiterApiVersion}"
+    testImplementation "org.assertj:assertj-core:${assertjVersion}"
 }
