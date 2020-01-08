@@ -30,7 +30,7 @@ apply from: "$rootDir/gradle-scripts/test-logger.gradle"
 ext {
     commercetoolsJvmSdkVersion =  '1.47.0'
     mockitoVersion = '3.1.0'
-    slf4jVersion = '1.7.25'
+    slf4jVersion = '1.7.30'
     slf4jTestVersion = '1.2.0'
     assertjVersion = '3.13.2'
     pmdVersion = '5.6.1'
