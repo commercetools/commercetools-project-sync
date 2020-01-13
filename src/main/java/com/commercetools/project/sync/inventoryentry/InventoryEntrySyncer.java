@@ -72,7 +72,7 @@ public final class InventoryEntrySyncer
 
   @Nonnull
   @Override
-  protected InventoryEntryQuery getQuery() {
+  protected InventoryEntryQuery getQuery(String queryString) {
     return buildQuery();
   }
 

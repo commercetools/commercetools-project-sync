@@ -21,6 +21,20 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.time.ZonedDateTime;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+
+import javax.annotation.Nonnull;
+
+import org.assertj.core.api.Condition;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
+
 import com.commercetools.project.sync.model.request.CombinedResourceKeysRequest;
 import com.commercetools.project.sync.model.response.CombinedResult;
 import com.commercetools.project.sync.model.response.LastSyncCustomObject;
@@ -29,6 +43,7 @@ import com.commercetools.project.sync.model.response.ResultingResourcesContainer
 import com.commercetools.project.sync.product.ProductSyncer;
 import com.commercetools.project.sync.util.MockPagedQueryResult;
 import com.commercetools.sync.products.helpers.ProductSyncStatistics;
+
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.sphere.sdk.cartdiscounts.queries.CartDiscountQuery;
 import io.sphere.sdk.categories.queries.CategoryQuery;
@@ -51,17 +66,6 @@ import io.sphere.sdk.states.queries.StateQuery;
 import io.sphere.sdk.taxcategories.queries.TaxCategoryQuery;
 import io.sphere.sdk.types.queries.TypeQuery;
 import io.sphere.sdk.utils.CompletableFutureUtils;
-import java.time.ZonedDateTime;
-import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
-import javax.annotation.Nonnull;
-import org.assertj.core.api.Condition;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.Test;
 import uk.org.lidalia.slf4jext.Level;
 import uk.org.lidalia.slf4jtest.LoggingEvent;
 import uk.org.lidalia.slf4jtest.TestLogger;
@@ -88,7 +92,7 @@ class SyncerFactoryTest {
                     () -> mock(SphereClient.class),
                     () -> mock(SphereClient.class),
                     getMockedClock())
-                .sync(null, "myRunnerName", false))
+                .sync(null, "myRunnerName", false,null))
         .hasFailedWithThrowableThat()
         .isExactlyInstanceOf(IllegalArgumentException.class)
         .hasMessageContaining(
@@ -104,7 +108,7 @@ class SyncerFactoryTest {
                     () -> mock(SphereClient.class),
                     () -> mock(SphereClient.class),
                     getMockedClock())
-                .sync("", "myRunnerName", false))
+                .sync("", "myRunnerName", false,null))
         .hasFailedWithThrowableThat()
         .isExactlyInstanceOf(IllegalArgumentException.class)
         .hasMessageContaining(
@@ -122,7 +126,7 @@ class SyncerFactoryTest {
                     () -> mock(SphereClient.class),
                     () -> mock(SphereClient.class),
                     getMockedClock())
-                .sync(unknownOptionValue, "myRunnerName", false))
+                .sync(unknownOptionValue, "myRunnerName", false,null))
         .hasFailedWithThrowableThat()
         .isExactlyInstanceOf(IllegalArgumentException.class)
         .hasMessageContaining(
@@ -151,7 +155,7 @@ class SyncerFactoryTest {
     stubClientsCustomObjectService(targetClient, currentCtpTimestamp);
 
     // test
-    syncerFactory.sync("products", "myRunnerName", false);
+    syncerFactory.sync("products", "myRunnerName", false,null);
 
     // assertions
     verify(sourceClient, times(1)).execute(any(ProductQuery.class));
@@ -214,7 +218,7 @@ class SyncerFactoryTest {
     stubClientsCustomObjectService(targetClient, currentCtpTimestamp);
 
     // test
-    syncerFactory.sync("products", "myRunnerName", true);
+    syncerFactory.sync("products", "myRunnerName", true,null);
 
     // assertions
     verify(sourceClient, times(1)).execute(any(ProductQuery.class));
@@ -281,7 +285,7 @@ class SyncerFactoryTest {
         SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock());
 
     // test
-    syncerFactory.sync("products", "myRunnerName", true);
+    syncerFactory.sync("products", "myRunnerName", true,null);
 
     // assertions
     verify(sourceClient, times(1)).execute(any(ProductQuery.class));
@@ -383,7 +387,7 @@ class SyncerFactoryTest {
         SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock());
 
     // test
-    syncerFactory.sync("products", "myRunnerName", true);
+    syncerFactory.sync("products", "myRunnerName", true,null);
 
     // assertions
     verify(sourceClient, times(2)).execute(any(ProductQuery.class));
@@ -489,7 +493,7 @@ class SyncerFactoryTest {
     stubClientsCustomObjectService(targetClient, currentCtpTimestamp);
 
     // test
-    syncerFactory.sync("categories", null, false);
+    syncerFactory.sync("categories", null, false,null);
 
     // assertions
     verify(sourceClient, times(1)).execute(any(CategoryQuery.class));
@@ -552,7 +556,7 @@ class SyncerFactoryTest {
     stubClientsCustomObjectService(targetClient, currentCtpTimestamp);
 
     // test
-    syncerFactory.sync("productTypes", "", false);
+    syncerFactory.sync("productTypes", "", false,null);
 
     // assertions
     verify(sourceClient, times(1)).execute(any(ProductTypeQuery.class));
@@ -616,7 +620,7 @@ class SyncerFactoryTest {
         SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock());
 
     // test
-    syncerFactory.sync("types", "foo", false);
+    syncerFactory.sync("types", "foo", false,null);
 
     // assertions
     verify(sourceClient, times(1)).execute(any(TypeQuery.class));
@@ -678,7 +682,7 @@ class SyncerFactoryTest {
         SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock());
 
     // test
-    syncerFactory.sync("inventoryEntries", null, false);
+    syncerFactory.sync("inventoryEntries", null, false,null);
 
     // assertions
     verify(sourceClient, times(1)).execute(any(InventoryEntryQuery.class));
@@ -741,7 +745,7 @@ class SyncerFactoryTest {
         SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock());
 
     // test
-    final CompletionStage<Void> result = syncerFactory.sync("inventoryEntries", null, false);
+    final CompletionStage<Void> result = syncerFactory.sync("inventoryEntries", null, false,null);
 
     // assertions
     verifyTimestampGeneratorCustomObjectUpsert(
@@ -770,7 +774,7 @@ class SyncerFactoryTest {
         SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock());
 
     // test
-    final CompletionStage<Void> result = syncerFactory.sync("inventoryEntries", "", false);
+    final CompletionStage<Void> result = syncerFactory.sync("inventoryEntries", "", false,null);
 
     // assertions
     verifyTimestampGeneratorCustomObjectUpsert(
@@ -804,7 +808,7 @@ class SyncerFactoryTest {
         SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock());
 
     // test
-    final CompletionStage<Void> result = syncerFactory.sync("inventoryEntries", "bar", false);
+    final CompletionStage<Void> result = syncerFactory.sync("inventoryEntries", "bar", false,null);
 
     // assertions
     verifyTimestampGeneratorCustomObjectUpsert(targetClient, 1, "InventorySync", "bar");
@@ -845,7 +849,7 @@ class SyncerFactoryTest {
         SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock());
 
     // test
-    syncerFactory.syncAll(null, false);
+    syncerFactory.syncAll(null, false,null);
 
     // assertions
     verifyTimestampGeneratorCustomObjectUpsert(

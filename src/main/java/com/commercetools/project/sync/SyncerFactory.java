@@ -58,7 +58,7 @@ final class SyncerFactory {
 
   @Nonnull
   CompletableFuture<Void> syncAll(
-      @Nullable final String runnerNameOptionValue, final boolean isFullSync) {
+      @Nullable final String runnerNameOptionValue, final boolean isFullSync, final String querystring) {
 
     final SphereClient sourceClient = sourceClientSupplier.get();
     final SphereClient targetClient = targetClientSupplier.get();
@@ -66,29 +66,29 @@ final class SyncerFactory {
     final List<CompletableFuture<Void>> typeAndProductTypeSync =
         asList(
             ProductTypeSyncer.of(sourceClient, targetClient, clock)
-                .sync(runnerNameOptionValue, isFullSync)
+                .sync(runnerNameOptionValue, isFullSync,querystring)
                 .toCompletableFuture(),
             TypeSyncer.of(sourceClient, targetClient, clock)
-                .sync(runnerNameOptionValue, isFullSync)
+                .sync(runnerNameOptionValue, isFullSync,querystring)
                 .toCompletableFuture());
 
     return CompletableFuture.allOf(typeAndProductTypeSync.toArray(new CompletableFuture[0]))
         .thenCompose(
             ignored ->
                 CategorySyncer.of(sourceClient, targetClient, clock)
-                    .sync(runnerNameOptionValue, isFullSync))
+                    .sync(runnerNameOptionValue, isFullSync,querystring))
         .thenCompose(
             ignored ->
                 ProductSyncer.of(sourceClient, targetClient, clock)
-                    .sync(runnerNameOptionValue, isFullSync))
+                    .sync(runnerNameOptionValue, isFullSync,querystring))
         .thenCompose(
             ignored ->
                 CartDiscountSyncer.of(sourceClient, targetClient, clock)
-                    .sync(runnerNameOptionValue, isFullSync))
+                    .sync(runnerNameOptionValue, isFullSync,querystring))
         .thenCompose(
             ignored ->
                 InventoryEntrySyncer.of(sourceClient, targetClient, clock)
-                    .sync(runnerNameOptionValue, isFullSync))
+                    .sync(runnerNameOptionValue, isFullSync,querystring))
         .whenComplete((syncResult, throwable) -> closeClients());
   }
 
@@ -101,7 +101,8 @@ final class SyncerFactory {
   CompletionStage<Void> sync(
       @Nullable final String syncOptionValue,
       @Nullable final String runnerNameOptionValue,
-      final boolean isFullSync) {
+      final boolean isFullSync,
+      final String querystring) {
 
     if (isBlank(syncOptionValue)) {
       final String errorMessage =
@@ -129,7 +130,7 @@ final class SyncerFactory {
     }
 
     return syncer
-        .sync(runnerNameOptionValue, isFullSync)
+        .sync(runnerNameOptionValue, isFullSync,querystring)
         .whenComplete((syncResult, throwable) -> closeClients());
   }
 

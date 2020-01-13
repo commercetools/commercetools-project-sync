@@ -5,25 +5,29 @@ import static com.commercetools.project.sync.util.SyncUtils.getSyncModuleName;
 import static com.commercetools.sync.commons.utils.CtpQueryUtils.queryAll;
 import static java.lang.String.format;
 
-import com.commercetools.project.sync.model.response.LastSyncCustomObject;
-import com.commercetools.project.sync.service.CustomObjectService;
-import com.commercetools.sync.commons.BaseSync;
-import com.commercetools.sync.commons.BaseSyncOptions;
-import com.commercetools.sync.commons.helpers.BaseSyncStatistics;
-import io.sphere.sdk.client.SphereClient;
-import io.sphere.sdk.customobjects.CustomObject;
-import io.sphere.sdk.models.Resource;
-import io.sphere.sdk.queries.QueryDsl;
-import io.sphere.sdk.queries.QueryPredicate;
 import java.time.Clock;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
+
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.commercetools.project.sync.model.response.LastSyncCustomObject;
+import com.commercetools.project.sync.service.CustomObjectService;
+import com.commercetools.sync.commons.BaseSync;
+import com.commercetools.sync.commons.BaseSyncOptions;
+import com.commercetools.sync.commons.helpers.BaseSyncStatistics;
+
+import io.sphere.sdk.client.SphereClient;
+import io.sphere.sdk.customobjects.CustomObject;
+import io.sphere.sdk.models.Resource;
+import io.sphere.sdk.queries.QueryDsl;
+import io.sphere.sdk.queries.QueryPredicate;
 
 /**
  * Base class of the syncer that handles syncing a resource from a source CTP project to a target
@@ -106,7 +110,7 @@ public abstract class Syncer<
    * @return completion stage containing no result after the execution of the sync process and
    *     logging the result.
    */
-  public CompletionStage<Void> sync(@Nullable final String runnerName, final boolean isFullSync) {
+  public CompletionStage<Void> sync(@Nullable final String runnerName, final boolean isFullSync,final String querystring) {
 
     final String sourceProjectKey = sourceClient.getConfig().getProjectKey();
     final String syncModuleName = getSyncModuleName(sync.getClass());
@@ -120,7 +124,8 @@ public abstract class Syncer<
 
     final CompletionStage<Void> syncStage;
     if (isFullSync) {
-      syncStage = sync(getQuery()).thenAccept(result -> {});
+      C query = getQuery(querystring);
+      syncStage = sync(query).thenAccept(result -> {});
     } else {
       syncStage =
           customObjectService
@@ -128,7 +133,7 @@ public abstract class Syncer<
               .thenCompose(
                   currentCtpTimestamp ->
                       syncResourcesSinceLastSync(
-                          sourceProjectKey, syncModuleName, runnerName, currentCtpTimestamp));
+                          sourceProjectKey, syncModuleName, runnerName, currentCtpTimestamp,querystring));
     }
 
     return syncStage.thenAccept(
@@ -144,10 +149,11 @@ public abstract class Syncer<
       @Nonnull final String sourceProjectKey,
       @Nonnull final String syncModuleName,
       @Nullable final String runnerName,
-      @Nonnull final ZonedDateTime currentCtpTimestamp) {
+      @Nonnull final ZonedDateTime currentCtpTimestamp,
+      final String queryString) {
 
     return getQueryOfResourcesSinceLastSync(
-            sourceProjectKey, syncModuleName, runnerName, currentCtpTimestamp)
+            sourceProjectKey, syncModuleName, runnerName, currentCtpTimestamp,queryString)
         .thenCompose(this::sync)
         .thenCompose(
             syncDurationInMillis ->
@@ -165,7 +171,8 @@ public abstract class Syncer<
       @Nonnull final String sourceProjectKey,
       @Nonnull final String syncModuleName,
       @Nullable final String runnerName,
-      @Nonnull final ZonedDateTime currentSyncStartTimestamp) {
+      @Nonnull final ZonedDateTime currentSyncStartTimestamp,
+      final String queryString) {
 
     return customObjectService
         .getLastSyncCustomObject(sourceProjectKey, syncModuleName, runnerName)
@@ -177,20 +184,20 @@ public abstract class Syncer<
                     .map(
                         lastSyncTimestamp ->
                             getQueryWithTimeBoundedPredicate(
-                                lastSyncTimestamp, currentSyncStartTimestamp))
+                                lastSyncTimestamp, currentSyncStartTimestamp,queryString))
                     // If there is no last sync custom object, use base query to get all resources
-                    .orElseGet(this::getQuery));
+                    .orElseGet(() -> this.getQuery(queryString)));
   }
 
   @Nonnull
   private C getQueryWithTimeBoundedPredicate(
-      @Nonnull final ZonedDateTime lowerBound, @Nonnull final ZonedDateTime upperBound) {
+      @Nonnull final ZonedDateTime lowerBound, @Nonnull final ZonedDateTime upperBound,final String queryString) {
 
     final QueryPredicate<T> queryPredicate =
         QueryPredicate.of(
             format(
                 "lastModifiedAt >= \"%s\" AND lastModifiedAt <= \"%s\"", lowerBound, upperBound));
-    return getQuery().plusPredicates(queryPredicate);
+    return getQuery(queryString).plusPredicates(queryPredicate);
   }
 
   @Nonnull
@@ -241,7 +248,7 @@ public abstract class Syncer<
   protected abstract CompletionStage<List<S>> transform(@Nonnull final List<T> page);
 
   @Nonnull
-  protected abstract C getQuery();
+  protected abstract C getQuery(String queryString);
 
   public B getSync() {
     return sync;

@@ -7,16 +7,19 @@ import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
+import java.util.List;
+import java.util.concurrent.CompletionStage;
+
+import org.junit.jupiter.api.Test;
+
 import com.commercetools.sync.producttypes.ProductTypeSync;
 import com.commercetools.sync.producttypes.utils.ProductTypeReferenceReplacementUtils;
+
 import io.sphere.sdk.client.SphereClient;
 import io.sphere.sdk.producttypes.ProductType;
 import io.sphere.sdk.producttypes.ProductTypeDraft;
 import io.sphere.sdk.producttypes.ProductTypeDraftBuilder;
 import io.sphere.sdk.producttypes.queries.ProductTypeQuery;
-import java.util.List;
-import java.util.concurrent.CompletionStage;
-import org.junit.jupiter.api.Test;
 
 class ProductTypeSyncerTest {
   @Test
@@ -27,7 +30,7 @@ class ProductTypeSyncerTest {
 
     // assertions
     assertThat(productTypeSyncer).isNotNull();
-    assertThat(productTypeSyncer.getQuery()).isInstanceOf(ProductTypeQuery.class);
+    assertThat(productTypeSyncer.getQuery(null)).isInstanceOf(ProductTypeQuery.class);
     assertThat(productTypeSyncer.getSync()).isExactlyInstanceOf(ProductTypeSync.class);
   }
 
@@ -62,7 +65,7 @@ class ProductTypeSyncerTest {
         ProductTypeSyncer.of(mock(SphereClient.class), mock(SphereClient.class), getMockedClock());
 
     // test
-    final ProductTypeQuery query = productTypeSyncer.getQuery();
+    final ProductTypeQuery query = productTypeSyncer.getQuery(null);
 
     // assertion
     assertThat(query).isEqualTo(ProductTypeReferenceReplacementUtils.buildProductTypeQuery(1));

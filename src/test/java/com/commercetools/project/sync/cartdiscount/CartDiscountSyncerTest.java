@@ -8,14 +8,17 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
+import java.util.List;
+import java.util.concurrent.CompletionStage;
+
+import org.junit.jupiter.api.Test;
+
 import com.commercetools.sync.cartdiscounts.CartDiscountSync;
+
 import io.sphere.sdk.cartdiscounts.CartDiscount;
 import io.sphere.sdk.cartdiscounts.CartDiscountDraft;
 import io.sphere.sdk.cartdiscounts.queries.CartDiscountQuery;
 import io.sphere.sdk.client.SphereClient;
-import java.util.List;
-import java.util.concurrent.CompletionStage;
-import org.junit.jupiter.api.Test;
 
 class CartDiscountSyncerTest {
   @Test
@@ -26,7 +29,7 @@ class CartDiscountSyncerTest {
 
     // assertions
     assertThat(cartDiscountSyncer).isNotNull();
-    assertThat(cartDiscountSyncer.getQuery()).isEqualTo(buildCartDiscountQuery());
+    assertThat(cartDiscountSyncer.getQuery(null)).isEqualTo(buildCartDiscountQuery());
     assertThat(cartDiscountSyncer.getSync()).isExactlyInstanceOf(CartDiscountSync.class);
   }
 
@@ -57,7 +60,7 @@ class CartDiscountSyncerTest {
         CartDiscountSyncer.of(mock(SphereClient.class), mock(SphereClient.class), getMockedClock());
 
     // test
-    final CartDiscountQuery query = cartDiscountSyncer.getQuery();
+    final CartDiscountQuery query = cartDiscountSyncer.getQuery(null);
 
     // assertion
     assertThat(query).isEqualTo(buildCartDiscountQuery());

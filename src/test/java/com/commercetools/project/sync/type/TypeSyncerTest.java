@@ -7,15 +7,18 @@ import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
+import java.util.List;
+import java.util.concurrent.CompletionStage;
+
+import org.junit.jupiter.api.Test;
+
 import com.commercetools.sync.types.TypeSync;
+
 import io.sphere.sdk.client.SphereClient;
 import io.sphere.sdk.types.Type;
 import io.sphere.sdk.types.TypeDraft;
 import io.sphere.sdk.types.TypeDraftBuilder;
 import io.sphere.sdk.types.queries.TypeQuery;
-import java.util.List;
-import java.util.concurrent.CompletionStage;
-import org.junit.jupiter.api.Test;
 
 class TypeSyncerTest {
   @Test
@@ -26,7 +29,7 @@ class TypeSyncerTest {
 
     // assertions
     assertThat(typeSyncer).isNotNull();
-    assertThat(typeSyncer.getQuery()).isEqualTo(TypeQuery.of());
+    assertThat(typeSyncer.getQuery(null)).isEqualTo(TypeQuery.of());
     assertThat(typeSyncer.getSync()).isInstanceOf(TypeSync.class);
   }
 
@@ -65,7 +68,7 @@ class TypeSyncerTest {
         TypeSyncer.of(mock(SphereClient.class), mock(SphereClient.class), getMockedClock());
 
     // test
-    final TypeQuery query = typeSyncer.getQuery();
+    final TypeQuery query = typeSyncer.getQuery(null);
 
     // assertion
     assertThat(query).isEqualTo(TypeQuery.of());

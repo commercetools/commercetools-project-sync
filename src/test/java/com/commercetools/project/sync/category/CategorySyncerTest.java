@@ -8,14 +8,17 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
+import java.util.List;
+import java.util.concurrent.CompletionStage;
+
+import org.junit.jupiter.api.Test;
+
 import com.commercetools.sync.categories.CategorySync;
+
 import io.sphere.sdk.categories.Category;
 import io.sphere.sdk.categories.CategoryDraft;
 import io.sphere.sdk.categories.queries.CategoryQuery;
 import io.sphere.sdk.client.SphereClient;
-import java.util.List;
-import java.util.concurrent.CompletionStage;
-import org.junit.jupiter.api.Test;
 
 class CategorySyncerTest {
   @Test
@@ -26,7 +29,7 @@ class CategorySyncerTest {
 
     // assertions
     assertThat(categorySyncer).isNotNull();
-    assertThat(categorySyncer.getQuery()).isEqualTo(buildCategoryQuery());
+    assertThat(categorySyncer.getQuery(null)).isEqualTo(buildCategoryQuery());
     assertThat(categorySyncer.getSync()).isExactlyInstanceOf(CategorySync.class);
   }
 
@@ -56,7 +59,7 @@ class CategorySyncerTest {
         CategorySyncer.of(mock(SphereClient.class), mock(SphereClient.class), getMockedClock());
 
     // test
-    final CategoryQuery query = categorySyncer.getQuery();
+    final CategoryQuery query = categorySyncer.getQuery(null);
 
     // assertion
     assertThat(query).isEqualTo(buildCategoryQuery());

@@ -71,7 +71,7 @@ public final class ProductTypeSyncer
 
   @Nonnull
   @Override
-  protected ProductTypeQuery getQuery() {
+  protected ProductTypeQuery getQuery(String queryString) {
     // TODO: Set depth need to be configurable.
     // https://github.com/commercetools/commercetools-project-sync/issues/44
     return ProductTypeReferenceReplacementUtils.buildProductTypeQuery(1);

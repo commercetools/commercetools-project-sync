@@ -72,7 +72,7 @@ public final class CartDiscountSyncer
 
   @Nonnull
   @Override
-  protected CartDiscountQuery getQuery() {
+  protected CartDiscountQuery getQuery(String queryString) {
     return buildCartDiscountQuery();
   }
 }

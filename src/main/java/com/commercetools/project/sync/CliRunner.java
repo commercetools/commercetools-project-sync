@@ -25,12 +25,14 @@ final class CliRunner {
   static final String FULL_SYNC_OPTION_SHORT = "f";
   static final String HELP_OPTION_SHORT = "h";
   static final String VERSION_OPTION_SHORT = "v";
-
+  static final String QUERY_OPTION_SHORT = "q";
+  
   static final String SYNC_MODULE_OPTION_LONG = "sync";
   static final String RUNNER_NAME_OPTION_LONG = "runnerName";
   static final String FULL_SYNC_OPTION_LONG = "full";
   static final String HELP_OPTION_LONG = "help";
   static final String VERSION_OPTION_LONG = "version";
+  static final String QUERY_OPTION_LONG = "queryString";
 
   static final String SYNC_MODULE_OPTION_TYPE_SYNC = "types";
   static final String SYNC_MODULE_OPTION_PRODUCT_TYPE_SYNC = "productTypes";
@@ -39,6 +41,7 @@ final class CliRunner {
   static final String SYNC_MODULE_OPTION_PRODUCT_SYNC = "products";
   static final String SYNC_MODULE_OPTION_INVENTORY_ENTRY_SYNC = "inventoryEntries";
   static final String SYNC_MODULE_OPTION_ALL = "all";
+  static final String SYNC_QUERYSTRING = "queryString";
 
   static final String SYNC_MODULE_OPTION_DESCRIPTION =
       format(
@@ -59,7 +62,8 @@ final class CliRunner {
           + "entire data set.";
   static final String HELP_OPTION_DESCRIPTION = "Print help information.";
   static final String VERSION_OPTION_DESCRIPTION = "Print the version of the application.";
-
+  static final String QUERY_OPTION_DESCRIPTION = "Print the query String of the application.";
+  
   private static final Logger LOGGER = LoggerFactory.getLogger(CliRunner.class);
 
   @Nonnull
@@ -133,13 +137,21 @@ final class CliRunner {
             .longOpt(VERSION_OPTION_LONG)
             .desc(VERSION_OPTION_DESCRIPTION)
             .build();
+    
+    final Option queryOption =
+            Option.builder(QUERY_OPTION_SHORT)
+                .longOpt(QUERY_OPTION_LONG)
+                .desc(QUERY_OPTION_DESCRIPTION)
+                .hasArg()
+                .build();
 
     options.addOption(syncOption);
     options.addOption(fullSyncOption);
     options.addOption(runnerOption);
     options.addOption(helpOption);
     options.addOption(versionOption);
-
+    options.addOption(queryOption);
+    
     return options;
   }
 
@@ -187,10 +199,11 @@ final class CliRunner {
     final String syncOptionValue = commandLine.getOptionValue(SYNC_MODULE_OPTION_SHORT);
     final String runnerNameValue = commandLine.getOptionValue(RUNNER_NAME_OPTION_SHORT);
     final boolean isFullSync = commandLine.hasOption(FULL_SYNC_OPTION_SHORT);
-
+    final String querystring = commandLine.getOptionValue(QUERY_OPTION_SHORT);
+    
     return SYNC_MODULE_OPTION_ALL.equals(syncOptionValue)
-        ? syncerFactory.syncAll(runnerNameValue, isFullSync)
-        : syncerFactory.sync(syncOptionValue, runnerNameValue, isFullSync);
+        ? syncerFactory.syncAll(runnerNameValue, isFullSync, querystring)
+        : syncerFactory.sync(syncOptionValue, runnerNameValue, isFullSync, querystring);
   }
 
   private static void printHelpToStdOut(@Nonnull final Options cliOptions) {

@@ -28,7 +28,22 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
+import java.io.UnsupportedEncodingException;
+import java.time.ZonedDateTime;
+import java.util.concurrent.CompletableFuture;
+
+import org.apache.commons.cli.MissingArgumentException;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InOrder;
+import org.mockito.Mockito;
+
 import com.google.common.base.Optional;
+
 import io.sphere.sdk.cartdiscounts.queries.CartDiscountQuery;
 import io.sphere.sdk.categories.queries.CategoryQuery;
 import io.sphere.sdk.client.SphereClient;
@@ -38,18 +53,6 @@ import io.sphere.sdk.products.queries.ProductQuery;
 import io.sphere.sdk.producttypes.queries.ProductTypeQuery;
 import io.sphere.sdk.queries.PagedQueryResult;
 import io.sphere.sdk.types.queries.TypeQuery;
-import java.io.ByteArrayOutputStream;
-import java.io.PrintStream;
-import java.io.UnsupportedEncodingException;
-import java.time.ZonedDateTime;
-import java.util.concurrent.CompletableFuture;
-import org.apache.commons.cli.MissingArgumentException;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.mockito.InOrder;
-import org.mockito.Mockito;
 import uk.org.lidalia.slf4jext.Level;
 import uk.org.lidalia.slf4jtest.TestLogger;
 import uk.org.lidalia.slf4jtest.TestLoggerFactory;
@@ -215,9 +218,9 @@ class CliRunnerTest {
     CliRunner.of().run(new String[] {"-s", "products"}, syncerFactory);
 
     // assertions
-    verify(syncerFactory, times(1)).sync("products", null, false);
+    verify(syncerFactory, times(1)).sync("products", null, false,null);
     verify(sourceClient, times(1)).execute(any(ProductQuery.class));
-    verify(syncerFactory, never()).syncAll(null, false);
+    verify(syncerFactory, never()).syncAll(null, false,null);
   }
 
   @Test
@@ -241,9 +244,9 @@ class CliRunnerTest {
     CliRunner.of().run(new String[] {"-s", "products", "-f"}, syncerFactory);
 
     // assertions
-    verify(syncerFactory, times(1)).sync("products", null, true);
+    verify(syncerFactory, times(1)).sync("products", null, true,null);
     verify(sourceClient, times(1)).execute(any(ProductQuery.class));
-    verify(syncerFactory, never()).syncAll(null, true);
+    verify(syncerFactory, never()).syncAll(null, true,null);
   }
 
   @Test
@@ -267,9 +270,9 @@ class CliRunnerTest {
     CliRunner.of().run(new String[] {"-s", "cartDiscounts", "-f"}, syncerFactory);
 
     // assertions
-    verify(syncerFactory, times(1)).sync("cartDiscounts", null, true);
+    verify(syncerFactory, times(1)).sync("cartDiscounts", null, true,null);
     verify(sourceClient, times(1)).execute(any(CartDiscountQuery.class));
-    verify(syncerFactory, never()).syncAll(null, true);
+    verify(syncerFactory, never()).syncAll(null, true,null);
   }
 
   @Test
@@ -293,9 +296,9 @@ class CliRunnerTest {
     CliRunner.of().run(new String[] {"--sync", "products"}, syncerFactory);
 
     // assertions
-    verify(syncerFactory, times(1)).sync("products", null, false);
+    verify(syncerFactory, times(1)).sync("products", null, false,null);
     verify(sourceClient, times(1)).execute(any(ProductQuery.class));
-    verify(syncerFactory, never()).syncAll(null, false);
+    verify(syncerFactory, never()).syncAll(null, false,null);
   }
 
   @Test
@@ -319,9 +322,9 @@ class CliRunnerTest {
     CliRunner.of().run(new String[] {"--sync", "products", "-r", "Runner123"}, syncerFactory);
 
     // assertions
-    verify(syncerFactory, times(1)).sync("products", "Runner123", false);
+    verify(syncerFactory, times(1)).sync("products", "Runner123", false,null);
     verify(sourceClient, times(1)).execute(any(ProductQuery.class));
-    verify(syncerFactory, never()).syncAll("Runner123", false);
+    verify(syncerFactory, never()).syncAll("Runner123", false,null);
   }
 
   @Test
@@ -348,9 +351,9 @@ class CliRunnerTest {
             syncerFactory);
 
     // assertions
-    verify(syncerFactory, times(1)).sync("products", "Runner123", true);
+    verify(syncerFactory, times(1)).sync("products", "Runner123", true,null);
     verify(sourceClient, times(1)).execute(any(ProductQuery.class));
-    verify(syncerFactory, never()).syncAll("Runner123", true);
+    verify(syncerFactory, never()).syncAll("Runner123", true,null);
   }
 
   @Test
@@ -364,8 +367,8 @@ class CliRunnerTest {
     CliRunner.of().run(new String[] {"-u"}, syncerFactory);
 
     // Assert error log
-    verify(syncerFactory, never()).sync(any(), any(), anyBoolean());
-    verify(syncerFactory, never()).syncAll(any(), anyBoolean());
+    verify(syncerFactory, never()).sync(any(), any(), anyBoolean(),null);
+    verify(syncerFactory, never()).syncAll(any(), anyBoolean(),null);
   }
 
   @Test
@@ -405,7 +408,7 @@ class CliRunnerTest {
             format(
                 "-%s,--%s %s",
                 VERSION_OPTION_SHORT, VERSION_OPTION_LONG, VERSION_OPTION_DESCRIPTION));
-    verify(syncerFactory, never()).sync(any(), any(), anyBoolean());
+    verify(syncerFactory, never()).sync(any(), any(), anyBoolean(),null);
   }
 
   @Test
@@ -439,7 +442,7 @@ class CliRunnerTest {
     CliRunner.of().run(new String[] {"-s", "all"}, syncerFactory);
 
     // assertions
-    verify(syncerFactory, times(1)).syncAll(null, false);
+    verify(syncerFactory, times(1)).syncAll(null, false,null);
     verify(sourceClient, times(1)).execute(any(ProductTypeQuery.class));
     verify(sourceClient, times(1)).execute(any(TypeQuery.class));
     verify(sourceClient, times(1)).execute(any(CategoryQuery.class));
@@ -479,7 +482,7 @@ class CliRunnerTest {
     CliRunner.of().run(new String[] {"-s", "all", "-r", "myRunner"}, syncerFactory);
 
     // assertions
-    verify(syncerFactory, times(1)).syncAll("myRunner", false);
+    verify(syncerFactory, times(1)).syncAll("myRunner", false,null);
     verify(sourceClient, times(1)).execute(any(ProductTypeQuery.class));
     verify(sourceClient, times(1)).execute(any(TypeQuery.class));
     verify(sourceClient, times(1)).execute(any(CategoryQuery.class));
@@ -519,7 +522,7 @@ class CliRunnerTest {
     CliRunner.of().run(new String[] {"-s", "all", "-f"}, syncerFactory);
 
     // assertions
-    verify(syncerFactory, times(1)).syncAll(null, true);
+    verify(syncerFactory, times(1)).syncAll(null, true,null);
 
     final InOrder inOrder = Mockito.inOrder(sourceClient);
 

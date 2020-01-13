@@ -4,6 +4,20 @@ import static io.sphere.sdk.http.HttpStatusCode.BAD_GATEWAY_502;
 import static io.sphere.sdk.http.HttpStatusCode.GATEWAY_TIMEOUT_504;
 import static io.sphere.sdk.http.HttpStatusCode.SERVICE_UNAVAILABLE_503;
 
+import java.time.Duration;
+import java.util.Collections;
+import java.util.List;
+import java.util.Random;
+import java.util.concurrent.TimeUnit;
+
+import javax.annotation.Nonnull;
+
+import org.asynchttpclient.AsyncHttpClient;
+import org.asynchttpclient.AsyncHttpClientConfig;
+import org.asynchttpclient.DefaultAsyncHttpClient;
+import org.asynchttpclient.DefaultAsyncHttpClientConfig;
+import org.asynchttpclient.proxy.ProxyServer;
+
 import io.sphere.sdk.client.BlockingSphereClient;
 import io.sphere.sdk.client.QueueSphereClientDecorator;
 import io.sphere.sdk.client.RetrySphereClientDecorator;
@@ -15,15 +29,6 @@ import io.sphere.sdk.http.HttpClient;
 import io.sphere.sdk.retry.RetryAction;
 import io.sphere.sdk.retry.RetryPredicate;
 import io.sphere.sdk.retry.RetryRule;
-import java.time.Duration;
-import java.util.Collections;
-import java.util.List;
-import java.util.Random;
-import java.util.concurrent.TimeUnit;
-import javax.annotation.Nonnull;
-import org.asynchttpclient.AsyncHttpClient;
-import org.asynchttpclient.DefaultAsyncHttpClient;
-import org.asynchttpclient.DefaultAsyncHttpClientConfig;
 
 public final class ClientConfigurationUtils {
   private static final long DEFAULT_TIMEOUT = 30000;
@@ -37,12 +42,30 @@ public final class ClientConfigurationUtils {
    */
   public static SphereClient createClient(@Nonnull final SphereClientConfig clientConfig) {
 
-    final HttpClient httpClient = getHttpClient();
+    //final HttpClient httpClient = getHttpClient();
+    final HttpClient httpClient = createCustomHttpClient();
     final SphereAccessTokenSupplier tokenSupplier =
         SphereAccessTokenSupplier.ofAutoRefresh(clientConfig, httpClient, false);
     final SphereClient underlying = SphereClient.of(clientConfig, httpClient, tokenSupplier);
     final SphereClient retryClient = withRetry(underlying);
     return withLimitedParallelRequests(retryClient);
+  }
+  
+  /**
+   * Creates a {@link HttpClient} that can be used by the {@link SphereClient}.
+   * @return new http client with custom settings
+   */
+  public static HttpClient createCustomHttpClient() {
+      ProxyServer proxy = new ProxyServer("one.proxy.att.com", 8080, 8080, null, null);
+	final AsyncHttpClientConfig httpClientConfig = new DefaultAsyncHttpClientConfig.Builder()
+              .setEnabledProtocols(new String[]{"TLSv1.2"})//required
+              //examples for configuration
+              .setMaxConnections(500).setProxyServer(proxy)
+              .setConnectTimeout(10000)
+             .setProxyServer(proxy)
+              .build();
+      final AsyncHttpClient asyncHttpClient = new DefaultAsyncHttpClient(httpClientConfig);
+      return AsyncHttpClientAdapter.of(asyncHttpClient);
   }
 
   /**

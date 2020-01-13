@@ -7,16 +7,19 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
+import java.util.List;
+import java.util.concurrent.CompletionStage;
+
+import org.junit.jupiter.api.Test;
+
 import com.commercetools.sync.inventories.InventorySync;
+
 import io.sphere.sdk.client.SphereClient;
 import io.sphere.sdk.expansion.ExpansionPath;
 import io.sphere.sdk.inventory.InventoryEntry;
 import io.sphere.sdk.inventory.InventoryEntryDraft;
 import io.sphere.sdk.inventory.expansion.InventoryEntryExpansionModel;
 import io.sphere.sdk.inventory.queries.InventoryEntryQuery;
-import java.util.List;
-import java.util.concurrent.CompletionStage;
-import org.junit.jupiter.api.Test;
 
 class InventoryEntrySyncerTest {
   @Test
@@ -34,7 +37,7 @@ class InventoryEntrySyncerTest {
             .withExpansionPaths(InventoryEntryExpansionModel::supplyChannel)
             .plusExpansionPaths(ExpansionPath.of("custom.type"));
 
-    assertThat(inventorySyncer.getQuery()).isEqualTo(expectedQuery);
+    assertThat(inventorySyncer.getQuery(null)).isEqualTo(expectedQuery);
     assertThat(inventorySyncer.getSync()).isInstanceOf(InventorySync.class);
   }
 
@@ -67,7 +70,7 @@ class InventoryEntrySyncerTest {
             mock(SphereClient.class), mock(SphereClient.class), getMockedClock());
 
     // test
-    final InventoryEntryQuery query = inventoryEntrySyncer.getQuery();
+    final InventoryEntryQuery query = inventoryEntrySyncer.getQuery(null);
 
     // assertion
     assertThat(query)

@@ -71,7 +71,7 @@ public final class CategorySyncer
 
   @Nonnull
   @Override
-  protected CategoryQuery getQuery() {
+  protected CategoryQuery getQuery(String queryString) {
     return buildCategoryQuery();
   }
 }
