@@ -213,8 +213,18 @@ public abstract class Syncer<
       @Nonnull final ZonedDateTime newLastSyncTimestamp,
       final long syncDurationInMillis) {
 
+    /*
+     * The 2 minutes is an arbitrary number chosen to account for any potential delays of
+     * entries added to the CTP DB with older dates than now, since CTP timestamps are created on
+     * distributed APIs.
+     */
+    final long bufferInMinutes = 2;
+    final ZonedDateTime lastSyncTimestampMinusBuffer =
+        newLastSyncTimestamp.minusMinutes(bufferInMinutes);
+
     final LastSyncCustomObject<U> lastSyncCustomObject =
-        LastSyncCustomObject.of(newLastSyncTimestamp, sync.getStatistics(), syncDurationInMillis);
+        LastSyncCustomObject.of(
+            lastSyncTimestampMinusBuffer, sync.getStatistics(), syncDurationInMillis);
 
     return customObjectService.createLastSyncCustomObject(
         sourceProjectKey, syncModuleName, runnerName, lastSyncCustomObject);

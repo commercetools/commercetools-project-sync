@@ -47,7 +47,7 @@ class CustomObjectServiceImplTest {
 
   @Test
   @SuppressWarnings("unchecked")
-  void getCurrentCtpTimestamp_OnSuccessfulUpsert_ShouldCompleteWithCtpTimestampMinusTwoMinutes() {
+  void getCurrentCtpTimestamp_OnSuccessfulUpsert_ShouldCompleteWithCtpTimestamp() {
     // preparation
     when(CLIENT.execute(any(CustomObjectUpsertCommand.class)))
         .thenReturn(CompletableFuture.completedFuture(STRING_CUSTOM_OBJECT));
@@ -58,8 +58,7 @@ class CustomObjectServiceImplTest {
         customObjectService.getCurrentCtpTimestamp(DEFAULT_RUNNER_NAME, "");
 
     // assertions
-    assertThat(ctpTimestamp)
-        .isCompletedWithValue(STRING_CUSTOM_OBJECT.getLastModifiedAt().minusMinutes(2));
+    assertThat(ctpTimestamp).isCompletedWithValue(STRING_CUSTOM_OBJECT.getLastModifiedAt());
   }
 
   @Test
