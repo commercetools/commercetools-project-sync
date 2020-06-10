@@ -27,7 +27,6 @@ import io.sphere.sdk.products.ProductVariant;
 import io.sphere.sdk.products.commands.ProductDeleteCommand;
 import io.sphere.sdk.products.queries.ProductQuery;
 import io.sphere.sdk.producttypes.ProductType;
-import io.sphere.sdk.producttypes.commands.ProductTypeDeleteCommand;
 import io.sphere.sdk.producttypes.commands.ProductTypeUpdateCommand;
 import io.sphere.sdk.producttypes.commands.updateactions.RemoveAttributeDefinition;
 import io.sphere.sdk.producttypes.queries.ProductTypeQuery;
@@ -134,7 +133,7 @@ public final class IntegrationTestUtils {
 
   private static void deleteProductTypes(@Nonnull final SphereClient ctpClient) {
     deleteProductTypeAttributes(ctpClient);
-    queryAndExecute(ctpClient, ProductTypeQuery.of(), ProductTypeDeleteCommand::of);
+    ProductTypeITUtils.deleteProductTypes(ctpClient);
   }
 
   private static void deleteProductTypeAttributes(@Nonnull final SphereClient ctpClient) {
