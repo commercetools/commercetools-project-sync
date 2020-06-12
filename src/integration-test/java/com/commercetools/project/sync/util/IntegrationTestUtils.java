@@ -15,13 +15,16 @@ import io.sphere.sdk.cartdiscounts.queries.CartDiscountQuery;
 import io.sphere.sdk.categories.Category;
 import io.sphere.sdk.categories.commands.CategoryDeleteCommand;
 import io.sphere.sdk.categories.queries.CategoryQuery;
+import io.sphere.sdk.client.ConcurrentModificationException;
 import io.sphere.sdk.client.SphereClient;
+import io.sphere.sdk.client.SphereRequest;
 import io.sphere.sdk.commands.UpdateAction;
 import io.sphere.sdk.customobjects.CustomObject;
 import io.sphere.sdk.customobjects.commands.CustomObjectDeleteCommand;
 import io.sphere.sdk.customobjects.queries.CustomObjectQuery;
 import io.sphere.sdk.inventory.commands.InventoryEntryDeleteCommand;
 import io.sphere.sdk.inventory.queries.InventoryEntryQuery;
+import io.sphere.sdk.models.Versioned;
 import io.sphere.sdk.products.Product;
 import io.sphere.sdk.products.ProductVariant;
 import io.sphere.sdk.products.commands.ProductDeleteCommand;
@@ -37,10 +40,12 @@ import io.sphere.sdk.types.commands.TypeDeleteCommand;
 import io.sphere.sdk.types.queries.TypeQuery;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 
@@ -134,7 +139,40 @@ public final class IntegrationTestUtils {
 
   private static void deleteProductTypes(@Nonnull final SphereClient ctpClient) {
     deleteProductTypeAttributes(ctpClient);
-    queryAndExecute(ctpClient, ProductTypeQuery.of(), ProductTypeDeleteCommand::of);
+    deleteProductTypesWithRetry(ctpClient);
+  }
+
+  private static void deleteProductTypesWithRetry(@Nonnull final SphereClient ctpClient) {
+    final Consumer<List<ProductType>> pageConsumer =
+        pageElements ->
+            CompletableFuture.allOf(
+                    pageElements
+                        .stream()
+                        .map(productType -> deleteProductTypeWithRetry(ctpClient, productType))
+                        .map(CompletionStage::toCompletableFuture)
+                        .toArray(CompletableFuture[]::new))
+                .join();
+
+    CtpQueryUtils.queryAll(ctpClient, ProductTypeQuery.of(), pageConsumer)
+        .toCompletableFuture()
+        .join();
+  }
+
+  private static CompletionStage<ProductType> deleteProductTypeWithRetry(
+      @Nonnull final SphereClient ctpClient, @Nonnull final ProductType productType) {
+    return ctpClient
+        .execute(ProductTypeDeleteCommand.of(productType))
+        .handle(
+            (result, throwable) -> {
+              if (throwable instanceof ConcurrentModificationException) {
+                Long currentVersion =
+                    ((ConcurrentModificationException) throwable).getCurrentVersion();
+                SphereRequest<ProductType> retry =
+                    ProductTypeDeleteCommand.of(Versioned.of(productType.getId(), currentVersion));
+                ctpClient.execute(retry);
+              }
+              return result;
+            });
   }
 
   private static void deleteProductTypeAttributes(@Nonnull final SphereClient ctpClient) {
@@ -164,14 +202,30 @@ public final class IntegrationTestUtils {
                     productTypesToUpdate
                         .entrySet()
                         .stream()
-                        .map(
-                            entry ->
-                                ctpClient.execute(
-                                    ProductTypeUpdateCommand.of(
-                                        entry.getKey(), new ArrayList<>(entry.getValue()))))
+                        .map(entry -> updateProductTypeWithRetry(ctpClient, entry))
                         .toArray(CompletableFuture[]::new)))
         .toCompletableFuture()
         .join();
+  }
+
+  private static CompletionStage<ProductType> updateProductTypeWithRetry(
+      @Nonnull final SphereClient ctpClient,
+      @Nonnull final Map.Entry<ProductType, Set<UpdateAction<ProductType>>> entry) {
+    return ctpClient
+        .execute(ProductTypeUpdateCommand.of(entry.getKey(), new ArrayList<>(entry.getValue())))
+        .handle(
+            (result, throwable) -> {
+              if (throwable instanceof ConcurrentModificationException) {
+                Long currentVersion =
+                    ((ConcurrentModificationException) throwable).getCurrentVersion();
+                SphereRequest<ProductType> retry =
+                    ProductTypeUpdateCommand.of(
+                        Versioned.of(entry.getKey().getId(), currentVersion),
+                        new ArrayList<>(entry.getValue()));
+                ctpClient.execute(retry);
+              }
+              return result;
+            });
   }
 
   @Nonnull
