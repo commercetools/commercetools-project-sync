@@ -40,6 +40,7 @@ import io.sphere.sdk.types.commands.TypeDeleteCommand;
 import io.sphere.sdk.types.queries.TypeQuery;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
@@ -201,14 +202,30 @@ public final class IntegrationTestUtils {
                     productTypesToUpdate
                         .entrySet()
                         .stream()
-                        .map(
-                            entry ->
-                                ctpClient.execute(
-                                    ProductTypeUpdateCommand.of(
-                                        entry.getKey(), new ArrayList<>(entry.getValue()))))
+                        .map(entry -> updateProductTypeWithRetry(ctpClient, entry))
                         .toArray(CompletableFuture[]::new)))
         .toCompletableFuture()
         .join();
+  }
+
+  private static CompletionStage<ProductType> updateProductTypeWithRetry(
+      @Nonnull final SphereClient ctpClient,
+      @Nonnull final Map.Entry<ProductType, Set<UpdateAction<ProductType>>> entry) {
+    return ctpClient
+        .execute(ProductTypeUpdateCommand.of(entry.getKey(), new ArrayList<>(entry.getValue())))
+        .handle(
+            (result, throwable) -> {
+              if (throwable instanceof ConcurrentModificationException) {
+                Long currentVersion =
+                    ((ConcurrentModificationException) throwable).getCurrentVersion();
+                SphereRequest<ProductType> retry =
+                    ProductTypeUpdateCommand.of(
+                        Versioned.of(entry.getKey().getId(), currentVersion),
+                        new ArrayList<>(entry.getValue()));
+                ctpClient.execute(retry);
+              }
+              return result;
+            });
   }
 
   @Nonnull
