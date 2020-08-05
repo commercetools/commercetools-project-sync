@@ -32,7 +32,6 @@ class StateSyncerTest {
 
         // assertions
         assertThat(stateSyncer).isNotNull();
-        assertThat(stateSyncer.getQuery()).isEqualTo(StateQuery.of());
         assertThat(stateSyncer.getSync()).isInstanceOf(StateSync.class);
     }
 
@@ -65,7 +64,7 @@ class StateSyncerTest {
     }
 
     @Test
-    void getQuery_ShouldBuildTypeQuery() {
+    void getQuery_ShouldBuildStateQuery() {
         // preparation
         final StateSyncer stateSyncer =
                 StateSyncer.of(mock(SphereClient.class), mock(SphereClient.class), getMockedClock());

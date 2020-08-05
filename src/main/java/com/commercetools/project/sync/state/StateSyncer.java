@@ -1,7 +1,6 @@
 package com.commercetools.project.sync.state;
 
 import com.commercetools.project.sync.Syncer;
-import com.commercetools.project.sync.producttype.ProductTypeSyncer;
 import com.commercetools.project.sync.service.CustomObjectService;
 import com.commercetools.project.sync.service.impl.CustomObjectServiceImpl;
 import com.commercetools.sync.states.StateSync;
@@ -23,7 +22,7 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
-public class StateSyncer
+public final class StateSyncer
         extends Syncer<
         State,
         StateDraft,
@@ -32,7 +31,7 @@ public class StateSyncer
         StateQuery,
         StateSync> {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(ProductTypeSyncer.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(StateSyncer.class);
 
     private StateSyncer(@Nonnull StateSync sync,
                         @Nonnull SphereClient sourceClient,
