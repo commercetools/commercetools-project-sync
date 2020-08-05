@@ -35,7 +35,7 @@ class StateSyncerTest {
   }
 
   @Test
-  void transform_ShouldReplaceReferenceIdsWithKeys() {
+  void transform_ShouldReplaceStateTransitionIdsWithKeys() {
     final StateSyncer stateSyncer =
         StateSyncer.of(mock(SphereClient.class), mock(SphereClient.class), getMockedClock());
     final List<State> states =
