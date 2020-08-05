@@ -64,7 +64,7 @@ class StateSyncerTest {
     }
 
     @Test
-    void getQuery_ShouldBuildStateQuery() {
+    void getQuery_ShouldBuildStateQueryWithTransitionsExpanded() {
         // preparation
         final StateSyncer stateSyncer =
                 StateSyncer.of(mock(SphereClient.class), mock(SphereClient.class), getMockedClock());
