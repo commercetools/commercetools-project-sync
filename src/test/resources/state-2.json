@@ -1,0 +1,35 @@
+{
+  "key": "State 2",
+  "type": "LineItemState",
+  "roles": [],
+  "name": {
+    "en": "State 2"
+  },
+  "description": {
+    "en": "State 2"
+  },
+  "initial": false,
+  "transitions": [
+    {
+      "typeId": "state",
+      "id": "ab949f1b-c441-4c70-9cf0-4182c36d6a6c",
+      "obj": {
+        "id": "ab949f1b-c441-4c70-9cf0-4182c36d6a6c",
+        "version": 1,
+        "createdAt": "2017-09-26T08:02:52.375Z",
+        "lastModifiedAt": "2017-09-26T08:02:52.375Z",
+        "key": "Initial",
+        "type": "LineItemState",
+        "roles": [],
+        "name": {
+          "en": "Initial"
+        },
+        "description": {
+          "en": "Initial is the first that (custom) line item gets after it's creation"
+        },
+        "builtIn": true,
+        "initial": true
+      }
+    }
+  ]
+}
