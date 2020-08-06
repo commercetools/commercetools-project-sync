@@ -1,14 +1,6 @@
 package com.commercetools.project.sync;
 
-import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_CART_DISCOUNT_SYNC;
-import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_CATEGORY_SYNC;
-import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_DESCRIPTION;
-import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_INVENTORY_ENTRY_SYNC;
-import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_LONG;
-import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_PRODUCT_SYNC;
-import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_PRODUCT_TYPE_SYNC;
-import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_SHORT;
-import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_TYPE_SYNC;
+import static com.commercetools.project.sync.CliRunner.*;
 import static io.sphere.sdk.utils.CompletableFutureUtils.exceptionallyCompletedFuture;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
@@ -19,6 +11,7 @@ import com.commercetools.project.sync.category.CategorySyncer;
 import com.commercetools.project.sync.inventoryentry.InventoryEntrySyncer;
 import com.commercetools.project.sync.product.ProductSyncer;
 import com.commercetools.project.sync.producttype.ProductTypeSyncer;
+import com.commercetools.project.sync.state.StateSyncer;
 import com.commercetools.project.sync.type.TypeSyncer;
 import com.commercetools.sync.commons.BaseSync;
 import com.commercetools.sync.commons.BaseSyncOptions;
@@ -69,6 +62,9 @@ final class SyncerFactory {
                 .sync(runnerNameOptionValue, isFullSync)
                 .toCompletableFuture(),
             TypeSyncer.of(sourceClient, targetClient, clock)
+                .sync(runnerNameOptionValue, isFullSync)
+                .toCompletableFuture(),
+            StateSyncer.of(sourceClient, targetClient, clock)
                 .sync(runnerNameOptionValue, isFullSync)
                 .toCompletableFuture());
 
@@ -165,6 +161,8 @@ final class SyncerFactory {
             sourceClientSupplier.get(), targetClientSupplier.get(), clock);
       case SYNC_MODULE_OPTION_TYPE_SYNC:
         return TypeSyncer.of(sourceClientSupplier.get(), targetClientSupplier.get(), clock);
+      case SYNC_MODULE_OPTION_STATE_SYNC:
+        return StateSyncer.of(sourceClientSupplier.get(), targetClientSupplier.get(), clock);
       default:
         final String errorMessage =
             format(

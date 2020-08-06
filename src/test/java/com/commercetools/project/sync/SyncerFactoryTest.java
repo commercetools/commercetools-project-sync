@@ -415,22 +415,21 @@ class SyncerFactoryTest {
 
     assertThat(productSyncerTestLogger.getAllLoggingEvents())
         .hasSize(2)
-        .containsOnlyElementsOf(
-            asList(
-                LoggingEvent.warn(
-                    "The product with id "
-                        + "'ba81a6da-cf83-435b-a89e-2afab579846f' on the source project ('foo') will not be synced because it "
-                        + "has the following reference attribute(s): \n"
-                        + "[{\"id\":\"53c4a8b4-754f-4b95-b6f2-3e1e70e3d0c5\",\"typeId\":\"product\"}, "
-                        + "{\"id\":\"53c4a8b4-754f-4b95-b6f2-3e1e70e3d0c4\",\"typeId\":\"category\"}].\n"
-                        + "These references are either pointing to a non-existent resource or to an existing one but with a "
-                        + "blank key. Please make sure these referenced resources are existing and have non-blank (i.e. "
-                        + "non-null and non-empty) keys."),
-                LoggingEvent.warn(
-                    badGatewayException,
-                    "Failed to replace referenced resource ids with keys on the attributes of the products"
-                        + " in the current fetched page from the source project. This page will not be synced to the target"
-                        + " project.")));
+        .containsOnly(
+            LoggingEvent.warn(
+                "The product with id "
+                    + "'ba81a6da-cf83-435b-a89e-2afab579846f' on the source project ('foo') will not be synced because it "
+                    + "has the following reference attribute(s): \n"
+                    + "[{\"id\":\"53c4a8b4-754f-4b95-b6f2-3e1e70e3d0c5\",\"typeId\":\"product\"}, "
+                    + "{\"id\":\"53c4a8b4-754f-4b95-b6f2-3e1e70e3d0c4\",\"typeId\":\"category\"}].\n"
+                    + "These references are either pointing to a non-existent resource or to an existing one but with a "
+                    + "blank key. Please make sure these referenced resources are existing and have non-blank (i.e. "
+                    + "non-null and non-empty) keys."),
+            LoggingEvent.warn(
+                badGatewayException,
+                "Failed to replace referenced resource ids with keys on the attributes of the products"
+                    + " in the current fetched page from the source project. This page will not be synced to the target"
+                    + " project."));
   }
 
   private static void verifyTimestampGeneratorCustomObjectUpsert(

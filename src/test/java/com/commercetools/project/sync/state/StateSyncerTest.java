@@ -12,7 +12,6 @@ import io.sphere.sdk.models.LocalizedString;
 import io.sphere.sdk.states.State;
 import io.sphere.sdk.states.StateDraft;
 import io.sphere.sdk.states.StateDraftBuilder;
-import io.sphere.sdk.states.StateDraftDsl;
 import io.sphere.sdk.states.StateType;
 import io.sphere.sdk.states.expansion.StateExpansionModel;
 import io.sphere.sdk.states.queries.StateQuery;
@@ -44,7 +43,7 @@ class StateSyncerTest {
             readObjectFromResource("state-2.json", State.class));
 
     final CompletionStage<List<StateDraft>> stateDrafts = stateSyncer.transform(states);
-    final StateDraftDsl draft1 =
+    final StateDraft draft1 =
         StateDraftBuilder.of("State 1", StateType.LINE_ITEM_STATE)
             .roles(Collections.emptySet())
             .description(LocalizedString.ofEnglish("State 1"))
@@ -52,7 +51,7 @@ class StateSyncerTest {
             .initial(true)
             .transitions(Collections.emptySet())
             .build();
-    final StateDraftDsl draft2 =
+    final StateDraft draft2 =
         StateDraftBuilder.of("State 2", StateType.LINE_ITEM_STATE)
             .roles(Collections.emptySet())
             .description(LocalizedString.ofEnglish("State 2"))
