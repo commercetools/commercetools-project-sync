@@ -10,7 +10,16 @@
       "includedInPrice": true,
       "country": "US",
       "id": "ak80m7Jk",
-      "subRates": []
+      "subRates": [
+        {
+          "name": "sub-rate 01",
+          "amount": "0.05"
+        },
+        {
+          "name": "sub-rate 02",
+          "amount": "0.001"
+        }
+      ]
     },
     {
       "name": "19% MwSt test",
@@ -18,7 +27,16 @@
       "includedInPrice": false,
       "country": "DE",
       "id": "IZV0fDOU",
-      "subRates": []
+      "subRates": [
+        {
+          "name": "sub-rate 01",
+          "amount": "0.18"
+        },
+        {
+          "name": "sub-rate 02",
+          "amount": "0.01"
+        }
+      ]
     }
   ]
 }

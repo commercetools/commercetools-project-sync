@@ -61,7 +61,8 @@ class TaxCategorySyncerTest {
                               .map(taxRate -> TaxRateDraftBuilder.of(taxRate).build())
                               .collect(Collectors.toList());
                       return TaxCategoryDraftBuilder.of(
-                          taxCategory.getName(), taxRateDrafts, taxCategory.getDescription());
+                              taxCategory.getName(), taxRateDrafts, taxCategory.getDescription())
+                          .key(taxCategory.getKey());
                     })
                 .map(TaxCategoryDraftBuilder::build)
                 .collect(toList()));

@@ -68,19 +68,18 @@ public final class TaxCategorySyncer
       @Nonnull final List<TaxCategory> page) {
     return CompletableFuture.completedFuture(
         page.stream()
-            .map(TaxCategorySyncer::convertTaxCaetegoryToTaxCategoryDraft)
+            .map(TaxCategorySyncer::convertTaxCategoryToTaxCategoryDraft)
             .collect(Collectors.toList()));
   }
 
   @Nonnull
-  private static TaxCategoryDraft convertTaxCaetegoryToTaxCategoryDraft(
+  private static TaxCategoryDraft convertTaxCategoryToTaxCategoryDraft(
       @Nonnull final TaxCategory taxCategory) {
     List<TaxRateDraft> taxRateDrafts = null;
-    if (taxCategory.getTaxRates() != null) {
-      taxRateDrafts = convertTaxRateToTaxRateDraft(taxCategory.getTaxRates());
-    }
+    taxRateDrafts = convertTaxRateToTaxRateDraft(taxCategory.getTaxRates());
     return TaxCategoryDraftBuilder.of(
             taxCategory.getName(), taxRateDrafts, taxCategory.getDescription())
+        .key(taxCategory.getKey())
         .build();
   }
 
