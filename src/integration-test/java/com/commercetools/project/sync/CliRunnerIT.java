@@ -39,7 +39,6 @@ import io.sphere.sdk.inventory.InventoryEntryDraft;
 import io.sphere.sdk.inventory.InventoryEntryDraftBuilder;
 import io.sphere.sdk.inventory.commands.InventoryEntryCreateCommand;
 import io.sphere.sdk.inventory.queries.InventoryEntryQuery;
-import io.sphere.sdk.models.LocalizedString;
 import io.sphere.sdk.products.ProductDraft;
 import io.sphere.sdk.products.ProductDraftBuilder;
 import io.sphere.sdk.products.ProductVariantDraftBuilder;
@@ -368,7 +367,7 @@ class CliRunnerIT {
             postTargetClient, sourceProjectKey, "cartDiscountSync", "runnerName");
 
         assertLastSyncCustomObjectExists(
-                postTargetClient, sourceProjectKey, "stateSync", "runnerName");
+            postTargetClient, sourceProjectKey, "stateSync", "runnerName");
       }
     }
   }
@@ -504,16 +503,14 @@ class CliRunnerIT {
             cartDiscount -> assertThat(cartDiscount.getKey()).isEqualTo(RESOURCE_KEY));
 
     final PagedQueryResult<State> statePagedQueryResult =
-            targetClient
-                    .execute(
-                            StateQuery.of()
-                                      .withPredicates(queryModel -> queryModel.key().is(RESOURCE_KEY)))
-                    .toCompletableFuture()
-                    .join();
+        targetClient
+            .execute(
+                StateQuery.of().withPredicates(queryModel -> queryModel.key().is(RESOURCE_KEY)))
+            .toCompletableFuture()
+            .join();
 
     assertThat(statePagedQueryResult.getResults())
-            .hasSize(1)
-            .hasOnlyOneElementSatisfying(
-                    state -> assertThat(state.getKey()).isEqualTo(RESOURCE_KEY));
+        .hasSize(1)
+        .hasOnlyOneElementSatisfying(state -> assertThat(state.getKey()).isEqualTo(RESOURCE_KEY));
   }
 }
