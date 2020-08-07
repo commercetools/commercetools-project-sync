@@ -50,7 +50,7 @@ public final class TestUtils {
         syncerTestLogger,
         numberOfResources + 1); // +1 state is a built-in state and it cant be deleted
 
-    // Every sync module (6 modules) is expected to have 2 logs (start and stats summary) = 12
+    // Every sync module is expected to have 2 logs (start and stats summary)
     assertThat(syncerTestLogger.getAllLoggingEvents()).hasSize(14);
   }
 

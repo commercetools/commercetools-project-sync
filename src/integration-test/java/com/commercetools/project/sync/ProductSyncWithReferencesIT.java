@@ -202,7 +202,7 @@ class ProductSyncWithReferencesIT {
       assertStateSyncerLoggingEvents(
           syncerTestLogger, 1); // 1 state is built-in and it cant be deleted
 
-      // Every sync module (7 modules) is expected to have 2 logs (start and stats summary) = 12
+      // Every sync module is expected to have 2 logs (start and stats summary)
       assertThat(syncerTestLogger.getAllLoggingEvents()).hasSize(14);
 
       assertAllResourcesAreSyncedToTarget(postTargetClient);
