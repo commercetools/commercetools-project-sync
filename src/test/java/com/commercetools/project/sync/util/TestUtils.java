@@ -46,9 +46,8 @@ public final class TestUtils {
     assertProductSyncerLoggingEvents(syncerTestLogger, numberOfResources);
     assertInventoryEntrySyncerLoggingEvents(syncerTestLogger, numberOfResources);
     assertCartDiscountSyncerLoggingEvents(syncerTestLogger, numberOfResources);
-    assertStateSyncerLoggingEvents(
-        syncerTestLogger,
-        numberOfResources + 1); // +1 state is a built-in state and it cant be deleted
+    // +1 state is a built-in state and it cant be deleted
+    assertStateSyncerLoggingEvents(syncerTestLogger, numberOfResources + 1);
 
     // Every sync module is expected to have 2 logs (start and stats summary)
     assertThat(syncerTestLogger.getAllLoggingEvents()).hasSize(14);
@@ -127,11 +126,8 @@ public final class TestUtils {
         format(
             "Summary: %d state(s) were processed in total (%d created, 0 updated, 0 failed to sync and 0 state(s) with missing transition(s)).",
             numberOfResources,
-            Math.max(
-                0,
-                numberOfResources
-                    - 1)); // 1 state is automatically built-in in all projects and processed, but
-    // it's not created
+            // 1 state is automatically built-in in all projects and processed, but it's not created
+            Math.max(0, numberOfResources - 1));
 
     assertSyncerLoggingEvents(syncerTestLogger, "State", stateSyncerStatsSummary);
   }
