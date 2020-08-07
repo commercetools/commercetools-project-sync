@@ -56,6 +56,7 @@ import io.sphere.sdk.states.StateDraft;
 import io.sphere.sdk.states.StateDraftBuilder;
 import io.sphere.sdk.states.StateType;
 import io.sphere.sdk.states.commands.StateCreateCommand;
+import io.sphere.sdk.states.queries.StateQuery;
 import io.sphere.sdk.types.ResourceTypeIdsSetBuilder;
 import io.sphere.sdk.types.Type;
 import io.sphere.sdk.types.TypeDraft;
@@ -108,7 +109,7 @@ class CliRunnerIT {
             .build();
 
     final StateDraft stateDraft =
-        StateDraftBuilder.of("State 1", StateType.PRODUCT_STATE)
+        StateDraftBuilder.of(RESOURCE_KEY, StateType.PRODUCT_STATE)
             .roles(Collections.emptySet())
             .description(LocalizedString.ofEnglish("State 1"))
             .name(LocalizedString.ofEnglish("State 1"))
@@ -195,8 +196,6 @@ class CliRunnerIT {
         assertAllSyncersLoggingEvents(syncerTestLogger, cliRunnerTestLogger, 1);
 
         assertAllResourcesAreSyncedToTarget(postTargetClient);
-
-        cleanUpProjects(postSourceClient, postTargetClient);
       }
     }
   }
@@ -248,8 +247,6 @@ class CliRunnerIT {
             DEFAULT_RUNNER_NAME,
             ProductSyncStatistics.class,
             lastSyncTimestamp);
-
-        cleanUpProjects(postSourceClient, postTargetClient);
       }
     }
   }
@@ -370,7 +367,8 @@ class CliRunnerIT {
         assertLastSyncCustomObjectExists(
             postTargetClient, sourceProjectKey, "cartDiscountSync", "runnerName");
 
-        cleanUpProjects(postSourceClient, postTargetClient);
+        assertLastSyncCustomObjectExists(
+                postTargetClient, sourceProjectKey, "stateSync", "runnerName");
       }
     }
   }
@@ -401,7 +399,6 @@ class CliRunnerIT {
         assertCurrentCtpTimestampGeneratorDoesntExist(
             postTargetClient, "runnerName", "ProductTypeSync");
         assertNoCustomObjectExists(postTargetClient);
-        cleanUpProjects(postSourceClient, postTargetClient);
       }
     }
   }
@@ -505,5 +502,18 @@ class CliRunnerIT {
         .hasSize(1)
         .hasOnlyOneElementSatisfying(
             cartDiscount -> assertThat(cartDiscount.getKey()).isEqualTo(RESOURCE_KEY));
+
+    final PagedQueryResult<State> statePagedQueryResult =
+            targetClient
+                    .execute(
+                            StateQuery.of()
+                                      .withPredicates(queryModel -> queryModel.key().is(RESOURCE_KEY)))
+                    .toCompletableFuture()
+                    .join();
+
+    assertThat(statePagedQueryResult.getResults())
+            .hasSize(1)
+            .hasOnlyOneElementSatisfying(
+                    state -> assertThat(state.getKey()).isEqualTo(RESOURCE_KEY));
   }
 }
