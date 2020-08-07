@@ -48,7 +48,7 @@ public final class TestUtils {
     assertCartDiscountSyncerLoggingEvents(syncerTestLogger, numberOfResources);
     assertStateSyncerLoggingEvents(
         syncerTestLogger,
-        numberOfResources + 1); // 2 states as 1 state is built-in and it cant be deleted
+        numberOfResources + 1); // +1 state is a built-in state and it cant be deleted
 
     // Every sync module (6 modules) is expected to have 2 logs (start and stats summary) = 12
     assertThat(syncerTestLogger.getAllLoggingEvents()).hasSize(14);
