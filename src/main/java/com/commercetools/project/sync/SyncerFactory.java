@@ -65,7 +65,7 @@ final class SyncerFactory {
     final SphereClient sourceClient = sourceClientSupplier.get();
     final SphereClient targetClient = targetClientSupplier.get();
 
-    final List<CompletableFuture<Void>> typeAndProductTypeSync =
+    final List<CompletableFuture<Void>> typeAndProductTypeAndStateSync =
         asList(
             ProductTypeSyncer.of(sourceClient, targetClient, clock)
                 .sync(runnerNameOptionValue, isFullSync)
@@ -77,7 +77,7 @@ final class SyncerFactory {
                 .sync(runnerNameOptionValue, isFullSync)
                 .toCompletableFuture());
 
-    return CompletableFuture.allOf(typeAndProductTypeSync.toArray(new CompletableFuture[0]))
+    return CompletableFuture.allOf(typeAndProductTypeAndStateSync.toArray(new CompletableFuture[0]))
         .thenCompose(
             ignored ->
                 CategorySyncer.of(sourceClient, targetClient, clock)
