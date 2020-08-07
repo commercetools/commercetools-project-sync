@@ -7,7 +7,13 @@ import static com.commercetools.project.sync.util.IntegrationTestUtils.createRef
 import static com.commercetools.project.sync.util.SphereClientUtils.CTP_SOURCE_CLIENT;
 import static com.commercetools.project.sync.util.SphereClientUtils.CTP_SOURCE_CLIENT_CONFIG;
 import static com.commercetools.project.sync.util.SphereClientUtils.CTP_TARGET_CLIENT_CONFIG;
-import static com.commercetools.project.sync.util.TestUtils.*;
+import static com.commercetools.project.sync.util.TestUtils.assertCartDiscountSyncerLoggingEvents;
+import static com.commercetools.project.sync.util.TestUtils.assertCategorySyncerLoggingEvents;
+import static com.commercetools.project.sync.util.TestUtils.assertInventoryEntrySyncerLoggingEvents;
+import static com.commercetools.project.sync.util.TestUtils.assertProductSyncerLoggingEvents;
+import static com.commercetools.project.sync.util.TestUtils.assertProductTypeSyncerLoggingEvents;
+import static com.commercetools.project.sync.util.TestUtils.assertStateSyncerLoggingEvents;
+import static com.commercetools.project.sync.util.TestUtils.assertTypeSyncerLoggingEvents;
 import static io.sphere.sdk.models.LocalizedString.ofEnglish;
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;

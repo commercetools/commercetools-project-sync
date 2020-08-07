@@ -1,6 +1,15 @@
 package com.commercetools.project.sync;
 
-import static com.commercetools.project.sync.CliRunner.*;
+import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_CART_DISCOUNT_SYNC;
+import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_CATEGORY_SYNC;
+import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_DESCRIPTION;
+import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_INVENTORY_ENTRY_SYNC;
+import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_LONG;
+import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_PRODUCT_SYNC;
+import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_PRODUCT_TYPE_SYNC;
+import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_SHORT;
+import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_STATE_SYNC;
+import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_TYPE_SYNC;
 import static io.sphere.sdk.utils.CompletableFutureUtils.exceptionallyCompletedFuture;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
