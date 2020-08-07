@@ -138,6 +138,7 @@ public final class IntegrationTestUtils {
     queryAndExecute(client, CartDiscountQuery.of(), CartDiscountDeleteCommand::of);
     queryAndExecute(
         client,
+        // builtIn is excluded as it cannot be deleted
         StateQuery.of().plusPredicates(QueryPredicate.of("builtIn=\"false\"")),
         StateDeleteCommand::of);
     deleteProductTypes(client);
