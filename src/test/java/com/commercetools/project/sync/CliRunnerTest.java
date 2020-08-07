@@ -283,10 +283,10 @@ class CliRunnerTest {
     when(targetClient.getConfig()).thenReturn(SphereClientConfig.of("bar", "bar", "bar"));
 
     when(sourceClient.execute(any(StateQuery.class)))
-            .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
+        .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
 
     final SyncerFactory syncerFactory =
-            spy(SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock()));
+        spy(SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock()));
 
     stubClientsCustomObjectService(targetClient, ZonedDateTime.now());
 
