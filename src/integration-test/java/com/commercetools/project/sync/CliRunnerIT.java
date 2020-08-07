@@ -111,8 +111,8 @@ class CliRunnerIT {
     final StateDraft stateDraft =
         StateDraftBuilder.of(RESOURCE_KEY, StateType.PRODUCT_STATE)
             .roles(Collections.emptySet())
-            .description(LocalizedString.ofEnglish("State 1"))
-            .name(LocalizedString.ofEnglish("State 1"))
+            .description(ofEnglish("State 1"))
+            .name(ofEnglish("State 1"))
             .initial(true)
             .transitions(Collections.emptySet())
             .build();
