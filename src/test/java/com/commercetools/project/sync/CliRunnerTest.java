@@ -274,6 +274,32 @@ class CliRunnerTest {
   }
 
   @Test
+  void run_AsStateFullSync_ShouldBuildSyncerAndExecuteSync() {
+    // preparation
+    final SphereClient sourceClient = mock(SphereClient.class);
+    when(sourceClient.getConfig()).thenReturn(SphereClientConfig.of("foo", "foo", "foo"));
+
+    final SphereClient targetClient = mock(SphereClient.class);
+    when(targetClient.getConfig()).thenReturn(SphereClientConfig.of("bar", "bar", "bar"));
+
+    when(sourceClient.execute(any(StateQuery.class)))
+            .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
+
+    final SyncerFactory syncerFactory =
+            spy(SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock()));
+
+    stubClientsCustomObjectService(targetClient, ZonedDateTime.now());
+
+    // test
+    CliRunner.of().run(new String[] {"-s", "states", "-f"}, syncerFactory);
+
+    // assertions
+    verify(syncerFactory, times(1)).sync("states", null, true);
+    verify(sourceClient, times(1)).execute(any(StateQuery.class));
+    verify(syncerFactory, never()).syncAll(null, true);
+  }
+
+  @Test
   void run_WithSyncAsLongArgument_ShouldBuildSyncerAndExecuteSync() {
     // preparation
     final SphereClient sourceClient = mock(SphereClient.class);
