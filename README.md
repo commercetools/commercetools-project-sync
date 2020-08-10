@@ -56,15 +56,17 @@ As of now, these are the supported resources:
    export SOURCE_PROJECT_KEY = "source-project-key"
    export SOURCE_CLIENT_ID = "sourceClientId"
    export SOURCE_CLIENT_SECRET = "sourceClientSecret"
-   export SOURCE_AUTH_URL = "https://auth.sphere.io/" #optional parameter
-   export SOURCE_API_URL = "https://api.sphere.io/" #optional parameter
+   export SOURCE_AUTH_URL = "https://auth.eu-central-1.aws.commercetools.com/" #optional parameter
+   export SOURCE_API_URL = "https://api.eu-central-1.aws.commercetools.com/" #optional parameter
    
    export TARGET_PROJECT_KEY = "target-project-key"
    export TARGET_CLIENT_ID = "targetClientId"
    export TARGET_CLIENT_SECRET = "targetClientSecret"
-   export TARGET_AUTH_URL = "https://auth.sphere.io/" #optional parameter
-   export TARGET_API_URL = "https://api.sphere.io/" #optional parameter
+   export TARGET_AUTH_URL = "https://auth.eu-central-1.aws.commercetools.com/" #optional parameter
+   export TARGET_API_URL = "https://api.eu-central-1.aws.commercetools.com/" #optional parameter
    ```
+   Note: For *_AUTH_URL and *_API_URL parameter values,
+    you can use different [authentication endpoints](https://docs.commercetools.com/http-api-authorization#requesting-an-access-token-using-commercetools-oauth2-server) and [API endpoints](https://docs.commercetools.com/http-api#hosts). 
 
 ### Usage
 
