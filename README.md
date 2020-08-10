@@ -49,6 +49,7 @@ As of now, these are the supported resources:
      | Category Asset (if exists)  | `key`  |
      | CartDiscount | `key`  |
      | InventoryEntry  | `sku`  |
+     | State  | `key`  |
  
  - Set the following environment variables before running the application
    ```bash
@@ -70,7 +71,7 @@ As of now, these are the supported resources:
    ```bash
    usage: commercetools-project-sync
     -h,--help               Print help information.
-    -s,--sync <arg>         Choose one of the following modules to run: "types", "productTypes", "categories", 
+    -s,--sync <arg>         Choose one of the following modules to run: "types", "productTypes", "states", "categories", 
                             "cartDiscounts", "products", "inventoryEntries" or "all" (will run all the modules).
     -r,--runnerName <arg>   name for the running sync instance. Please make sure the name is unique, otherwise running 
                             more than 1 sync instance with the same name would lead to an unexpected behaviour. 
@@ -154,7 +155,7 @@ commercetools/commercetools-project-sync:3.2.1 -s all
    docker run commercetools/commercetools-project-sync:3.2.1 -s all
    ```
    This will run the following sync modules in the given order:
- 1. `Type` Sync and `ProductType` Sync in parallel.
+ 1. `Type` Sync and `ProductType` Sync and `States` in parallel.
  2. `Category` Sync.
  3. `Product` Sync.
  4. `CartDiscount` Sync.
@@ -168,6 +169,11 @@ commercetools/commercetools-project-sync:3.2.1 -s all
  - To run the productType sync
    ```bash
    docker run commercetools/commercetools-project-sync:3.2.1 -s productTypes
+   ```  
+   
+- To run the states sync
+   ```bash
+   docker run commercetools/commercetools-project-sync:3.2.1 -s states
    ```  
     
 - To run the category sync
