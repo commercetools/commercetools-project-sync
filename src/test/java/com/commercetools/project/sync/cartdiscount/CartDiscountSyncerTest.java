@@ -43,6 +43,7 @@ class CartDiscountSyncerTest {
     final List<String> referenceIds =
         cartDiscountPage
             .stream()
+            .filter(cartDiscount -> cartDiscount.getCustom() != null)
             .map(cartDiscount -> cartDiscount.getCustom().getType().getId())
             .collect(Collectors.toList());
 
