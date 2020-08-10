@@ -133,7 +133,6 @@ public final class IntegrationTestUtils {
   private static void deleteProjectData(@Nonnull final SphereClient client) {
     queryAndExecute(client, CategoryQuery.of(), CategoryDeleteCommand::of);
     queryAndExecute(client, ProductQuery.of(), ProductDeleteCommand::of);
-    queryAndExecute(client, TypeQuery.of(), TypeDeleteCommand::of);
     queryAndExecute(client, InventoryEntryQuery.of(), InventoryEntryDeleteCommand::of);
     queryAndExecute(client, CartDiscountQuery.of(), CartDiscountDeleteCommand::of);
     queryAndExecute(
@@ -141,6 +140,7 @@ public final class IntegrationTestUtils {
         // builtIn is excluded as it cannot be deleted
         StateQuery.of().plusPredicates(QueryPredicate.of("builtIn=\"false\"")),
         StateDeleteCommand::of);
+    queryAndExecute(client, TypeQuery.of(), TypeDeleteCommand::of);
     deleteProductTypes(client);
   }
 

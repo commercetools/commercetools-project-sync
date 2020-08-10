@@ -14,13 +14,10 @@ import io.sphere.sdk.inventory.InventoryEntry;
 import io.sphere.sdk.inventory.InventoryEntryDraft;
 import io.sphere.sdk.inventory.expansion.InventoryEntryExpansionModel;
 import io.sphere.sdk.inventory.queries.InventoryEntryQuery;
-
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CompletionStage;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
 import org.junit.jupiter.api.Test;
 
 class InventoryEntrySyncerTest {
@@ -53,14 +50,17 @@ class InventoryEntrySyncerTest {
         asList(
             readObjectFromResource("inventory-sku-1.json", InventoryEntry.class),
             readObjectFromResource("inventory-sku-2.json", InventoryEntry.class));
-    final List<String> referenceIds = inventoryPage.stream()
-                                              .filter(inventoryEntry -> inventoryEntry.getSupplyChannel() != null)
-                                              .filter(inventoryEntry -> inventoryEntry.getCustom() != null)
-                                              .flatMap(inventoryEntry -> Stream.of(
-                                                      inventoryEntry.getCustom().getType().getId(),
-                                                      inventoryEntry.getSupplyChannel().getId()
-                                              ))
-                                              .collect(Collectors.toList());
+    final List<String> referenceIds =
+        inventoryPage
+            .stream()
+            .filter(inventoryEntry -> inventoryEntry.getSupplyChannel() != null)
+            .filter(inventoryEntry -> inventoryEntry.getCustom() != null)
+            .flatMap(
+                inventoryEntry ->
+                    Stream.of(
+                        inventoryEntry.getCustom().getType().getId(),
+                        inventoryEntry.getSupplyChannel().getId()))
+            .collect(Collectors.toList());
 
     // test
     final CompletionStage<List<InventoryEntryDraft>> draftsFromPageStage =
@@ -69,14 +69,17 @@ class InventoryEntrySyncerTest {
     // assertions
     final List<InventoryEntryDraft> expectedResult =
         replaceInventoriesReferenceIdsWithKeys(inventoryPage);
-    final List<String> referenceKeys = expectedResult.stream()
-                                                   .filter(inventoryEntry -> inventoryEntry.getSupplyChannel() != null)
-                                                   .filter(inventoryEntry -> inventoryEntry.getCustom() != null)
-                                                   .flatMap(inventoryEntry -> Stream.of(
-                                                           inventoryEntry.getCustom().getType().getId(),
-                                                           inventoryEntry.getSupplyChannel().getId()
-                                                   ))
-                                                   .collect(Collectors.toList());
+    final List<String> referenceKeys =
+        expectedResult
+            .stream()
+            .filter(inventoryEntry -> inventoryEntry.getSupplyChannel() != null)
+            .filter(inventoryEntry -> inventoryEntry.getCustom() != null)
+            .flatMap(
+                inventoryEntry ->
+                    Stream.of(
+                        inventoryEntry.getCustom().getType().getId(),
+                        inventoryEntry.getSupplyChannel().getId()))
+            .collect(Collectors.toList());
     assertThat(referenceKeys).doesNotContainAnyElementsOf(referenceIds);
     assertThat(draftsFromPageStage).isCompletedWithValue(expectedResult);
   }
