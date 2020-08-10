@@ -12,6 +12,7 @@ import static com.commercetools.project.sync.util.TestUtils.assertCategorySyncer
 import static com.commercetools.project.sync.util.TestUtils.assertInventoryEntrySyncerLoggingEvents;
 import static com.commercetools.project.sync.util.TestUtils.assertProductSyncerLoggingEvents;
 import static com.commercetools.project.sync.util.TestUtils.assertProductTypeSyncerLoggingEvents;
+import static com.commercetools.project.sync.util.TestUtils.assertStateSyncerLoggingEvents;
 import static com.commercetools.project.sync.util.TestUtils.assertTypeSyncerLoggingEvents;
 import static io.sphere.sdk.models.LocalizedString.ofEnglish;
 import static java.lang.String.format;
@@ -198,9 +199,11 @@ class ProductSyncWithReferencesIT {
       assertProductSyncerLoggingEvents(syncerTestLogger, 501);
       assertInventoryEntrySyncerLoggingEvents(syncerTestLogger, 0);
       assertCartDiscountSyncerLoggingEvents(syncerTestLogger, 0);
+      assertStateSyncerLoggingEvents(
+          syncerTestLogger, 1); // 1 state is built-in and it cant be deleted
 
-      // Every sync module (6 modules) is expected to have 2 logs (start and stats summary) = 12
-      assertThat(syncerTestLogger.getAllLoggingEvents()).hasSize(12);
+      // Every sync module is expected to have 2 logs (start and stats summary)
+      assertThat(syncerTestLogger.getAllLoggingEvents()).hasSize(14);
 
       assertAllResourcesAreSyncedToTarget(postTargetClient);
     }

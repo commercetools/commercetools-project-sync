@@ -36,6 +36,8 @@ import io.sphere.sdk.producttypes.commands.updateactions.RemoveAttributeDefiniti
 import io.sphere.sdk.producttypes.queries.ProductTypeQuery;
 import io.sphere.sdk.queries.PagedQueryResult;
 import io.sphere.sdk.queries.QueryPredicate;
+import io.sphere.sdk.states.commands.StateDeleteCommand;
+import io.sphere.sdk.states.queries.StateQuery;
 import io.sphere.sdk.types.commands.TypeDeleteCommand;
 import io.sphere.sdk.types.queries.TypeQuery;
 import java.util.ArrayList;
@@ -134,6 +136,11 @@ public final class IntegrationTestUtils {
     queryAndExecute(client, TypeQuery.of(), TypeDeleteCommand::of);
     queryAndExecute(client, InventoryEntryQuery.of(), InventoryEntryDeleteCommand::of);
     queryAndExecute(client, CartDiscountQuery.of(), CartDiscountDeleteCommand::of);
+    queryAndExecute(
+        client,
+        // builtIn is excluded as it cannot be deleted
+        StateQuery.of().plusPredicates(QueryPredicate.of("builtIn=\"false\"")),
+        StateDeleteCommand::of);
     deleteProductTypes(client);
   }
 

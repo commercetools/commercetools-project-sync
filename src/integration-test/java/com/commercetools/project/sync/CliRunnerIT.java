@@ -50,6 +50,12 @@ import io.sphere.sdk.producttypes.commands.ProductTypeCreateCommand;
 import io.sphere.sdk.producttypes.queries.ProductTypeQuery;
 import io.sphere.sdk.queries.PagedQueryResult;
 import io.sphere.sdk.queries.QueryPredicate;
+import io.sphere.sdk.states.State;
+import io.sphere.sdk.states.StateDraft;
+import io.sphere.sdk.states.StateDraftBuilder;
+import io.sphere.sdk.states.StateType;
+import io.sphere.sdk.states.commands.StateCreateCommand;
+import io.sphere.sdk.states.queries.StateQuery;
 import io.sphere.sdk.types.ResourceTypeIdsSetBuilder;
 import io.sphere.sdk.types.Type;
 import io.sphere.sdk.types.TypeDraft;
@@ -58,6 +64,7 @@ import io.sphere.sdk.types.commands.TypeCreateCommand;
 import io.sphere.sdk.types.queries.TypeQuery;
 import java.time.Clock;
 import java.time.ZonedDateTime;
+import java.util.Collections;
 import javax.annotation.Nonnull;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -100,6 +107,17 @@ class CliRunnerIT {
                 ResourceTypeIdsSetBuilder.of().addCategories())
             .build();
 
+    final StateDraft stateDraft =
+        StateDraftBuilder.of(RESOURCE_KEY, StateType.PRODUCT_STATE)
+            .roles(Collections.emptySet())
+            .description(ofEnglish("State 1"))
+            .name(ofEnglish("State 1"))
+            .initial(true)
+            .transitions(Collections.emptySet())
+            .build();
+    final State state =
+        sourceProjectClient.execute(StateCreateCommand.of(stateDraft)).toCompletableFuture().join();
+
     sourceProjectClient.execute(TypeCreateCommand.of(typeDraft)).toCompletableFuture().join();
 
     final CategoryDraft categoryDraft =
@@ -118,6 +136,7 @@ class CliRunnerIT {
                 ofEnglish("V-neck Tee"),
                 ofEnglish("v-neck-tee"),
                 ProductVariantDraftBuilder.of().key(RESOURCE_KEY).sku(RESOURCE_KEY).build())
+            .state(state)
             .key(RESOURCE_KEY)
             .build();
 
@@ -176,8 +195,6 @@ class CliRunnerIT {
         assertAllSyncersLoggingEvents(syncerTestLogger, cliRunnerTestLogger, 1);
 
         assertAllResourcesAreSyncedToTarget(postTargetClient);
-
-        cleanUpProjects(postSourceClient, postTargetClient);
       }
     }
   }
@@ -229,8 +246,6 @@ class CliRunnerIT {
             DEFAULT_RUNNER_NAME,
             ProductSyncStatistics.class,
             lastSyncTimestamp);
-
-        cleanUpProjects(postSourceClient, postTargetClient);
       }
     }
   }
@@ -351,7 +366,8 @@ class CliRunnerIT {
         assertLastSyncCustomObjectExists(
             postTargetClient, sourceProjectKey, "cartDiscountSync", "runnerName");
 
-        cleanUpProjects(postSourceClient, postTargetClient);
+        assertLastSyncCustomObjectExists(
+            postTargetClient, sourceProjectKey, "stateSync", "runnerName");
       }
     }
   }
@@ -382,7 +398,6 @@ class CliRunnerIT {
         assertCurrentCtpTimestampGeneratorDoesntExist(
             postTargetClient, "runnerName", "ProductTypeSync");
         assertNoCustomObjectExists(postTargetClient);
-        cleanUpProjects(postSourceClient, postTargetClient);
       }
     }
   }
@@ -486,5 +501,16 @@ class CliRunnerIT {
         .hasSize(1)
         .hasOnlyOneElementSatisfying(
             cartDiscount -> assertThat(cartDiscount.getKey()).isEqualTo(RESOURCE_KEY));
+
+    final PagedQueryResult<State> statePagedQueryResult =
+        targetClient
+            .execute(
+                StateQuery.of().withPredicates(queryModel -> queryModel.key().is(RESOURCE_KEY)))
+            .toCompletableFuture()
+            .join();
+
+    assertThat(statePagedQueryResult.getResults())
+        .hasSize(1)
+        .hasOnlyOneElementSatisfying(state -> assertThat(state.getKey()).isEqualTo(RESOURCE_KEY));
   }
 }
