@@ -30,6 +30,7 @@ As of now, these are the supported resources:
 - Products
 - ProductTypes
 - Types
+- States
 
 
 ### Prerequisites
