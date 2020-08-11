@@ -1,7 +1,7 @@
 # commercetools-project-sync
 [![Build Status](https://travis-ci.org/commercetools/commercetools-project-sync.svg?branch=master)](https://travis-ci.org/commercetools/commercetools-project-sync)
 [![codecov](https://codecov.io/gh/commercetools/commercetools-project-sync/branch/master/graph/badge.svg)](https://codecov.io/gh/commercetools/commercetools-project-sync)
-[![Docker Pulls](https://img.shields.io/docker/pulls/commercetools/commercetools-project-sync)](https://cloud.docker.com/u/commercetools/repository/docker/commercetools/commercetools-project-sync)
+[![Docker Pulls](https://img.shields.io/docker/pulls/commercetools/commercetools-project-sync)](https://hub.docker.com/r/commercetools/commercetools-project-sync)
 
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
@@ -157,7 +157,7 @@ commercetools/commercetools-project-sync:3.3.0 -s all
    docker run commercetools/commercetools-project-sync:3.3.0 -s all
    ```
    This will run the following sync modules in the given order:
- 1. `Type` Sync and `ProductType` Sync and `States` in parallel.
+ 1. `Type` Sync and `ProductType` Sync and `States` Sync in parallel.
  2. `Category` Sync.
  3. `Product` Sync.
  4. `CartDiscount` Sync.
