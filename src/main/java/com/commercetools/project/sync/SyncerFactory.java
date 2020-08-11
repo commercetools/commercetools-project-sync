@@ -9,6 +9,7 @@ import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_PRODUC
 import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_PRODUCT_TYPE_SYNC;
 import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_SHORT;
 import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_STATE_SYNC;
+import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_TAX_CATEGORY_SYNC;
 import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_TYPE_SYNC;
 import static io.sphere.sdk.utils.CompletableFutureUtils.exceptionallyCompletedFuture;
 import static java.lang.String.format;
@@ -21,6 +22,7 @@ import com.commercetools.project.sync.inventoryentry.InventoryEntrySyncer;
 import com.commercetools.project.sync.product.ProductSyncer;
 import com.commercetools.project.sync.producttype.ProductTypeSyncer;
 import com.commercetools.project.sync.state.StateSyncer;
+import com.commercetools.project.sync.taxcategory.TaxCategorySyncer;
 import com.commercetools.project.sync.type.TypeSyncer;
 import com.commercetools.sync.commons.BaseSync;
 import com.commercetools.sync.commons.BaseSyncOptions;
@@ -78,6 +80,10 @@ final class SyncerFactory {
                 .toCompletableFuture());
 
     return CompletableFuture.allOf(typeAndProductTypeAndStateSync.toArray(new CompletableFuture[0]))
+        .thenCompose(
+            ignored ->
+                TaxCategorySyncer.of(sourceClient, targetClient, clock)
+                    .sync(runnerNameOptionValue, isFullSync))
         .thenCompose(
             ignored ->
                 CategorySyncer.of(sourceClient, targetClient, clock)
@@ -168,6 +174,8 @@ final class SyncerFactory {
       case SYNC_MODULE_OPTION_INVENTORY_ENTRY_SYNC:
         return InventoryEntrySyncer.of(
             sourceClientSupplier.get(), targetClientSupplier.get(), clock);
+      case SYNC_MODULE_OPTION_TAX_CATEGORY_SYNC:
+        return TaxCategorySyncer.of(sourceClientSupplier.get(), targetClientSupplier.get(), clock);
       case SYNC_MODULE_OPTION_TYPE_SYNC:
         return TypeSyncer.of(sourceClientSupplier.get(), targetClientSupplier.get(), clock);
       case SYNC_MODULE_OPTION_STATE_SYNC:
