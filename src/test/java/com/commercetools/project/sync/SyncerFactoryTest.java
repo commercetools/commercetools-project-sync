@@ -11,6 +11,7 @@ import static com.commercetools.project.sync.util.TestUtils.assertInventoryEntry
 import static com.commercetools.project.sync.util.TestUtils.assertProductSyncerLoggingEvents;
 import static com.commercetools.project.sync.util.TestUtils.assertProductTypeSyncerLoggingEvents;
 import static com.commercetools.project.sync.util.TestUtils.assertStateSyncerLoggingEvents;
+import static com.commercetools.project.sync.util.TestUtils.assertTaxCategorySyncerLoggingEvents;
 import static com.commercetools.project.sync.util.TestUtils.assertTypeSyncerLoggingEvents;
 import static com.commercetools.project.sync.util.TestUtils.getMockedClock;
 import static com.commercetools.project.sync.util.TestUtils.mockLastSyncCustomObject;
@@ -834,6 +835,8 @@ class SyncerFactoryTest {
         .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
     when(sourceClient.execute(any(StateQuery.class)))
         .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
+    when(sourceClient.execute(any(TaxCategoryQuery.class)))
+        .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
     when(sourceClient.execute(any(CategoryQuery.class)))
         .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
     when(sourceClient.execute(any(InventoryEntryQuery.class)))
@@ -864,7 +867,9 @@ class SyncerFactoryTest {
     verifyTimestampGeneratorCustomObjectUpsert(
         targetClient, 1, "CartDiscountSync", DEFAULT_RUNNER_NAME);
     verifyTimestampGeneratorCustomObjectUpsert(targetClient, 1, "StateSync", DEFAULT_RUNNER_NAME);
-    verify(targetClient, times(14)).execute(any(CustomObjectUpsertCommand.class));
+    verifyTimestampGeneratorCustomObjectUpsert(
+        targetClient, 1, "TaxCategorySync", DEFAULT_RUNNER_NAME);
+    verify(targetClient, times(16)).execute(any(CustomObjectUpsertCommand.class));
     verifyLastSyncCustomObjectQuery(targetClient, "inventorySync", DEFAULT_RUNNER_NAME, "foo", 1);
     verifyLastSyncCustomObjectQuery(targetClient, "productTypeSync", DEFAULT_RUNNER_NAME, "foo", 1);
     verifyLastSyncCustomObjectQuery(targetClient, "productSync", DEFAULT_RUNNER_NAME, "foo", 1);
@@ -873,6 +878,7 @@ class SyncerFactoryTest {
     verifyLastSyncCustomObjectQuery(
         targetClient, "cartDiscountSync", DEFAULT_RUNNER_NAME, "foo", 1);
     verifyLastSyncCustomObjectQuery(targetClient, "stateSync", DEFAULT_RUNNER_NAME, "foo", 1);
+    verifyLastSyncCustomObjectQuery(targetClient, "taxCategorySync", DEFAULT_RUNNER_NAME, "foo", 1);
     verify(sourceClient, times(1)).execute(any(ProductTypeQuery.class));
     verify(sourceClient, times(1)).execute(any(TypeQuery.class));
     verify(sourceClient, times(1)).execute(any(CategoryQuery.class));
@@ -880,7 +886,8 @@ class SyncerFactoryTest {
     verify(sourceClient, times(1)).execute(any(InventoryEntryQuery.class));
     verify(sourceClient, times(1)).execute(any(CartDiscountQuery.class));
     verify(sourceClient, times(1)).execute(any(StateQuery.class));
-    verifyInteractionsWithClientAfterSync(sourceClient, 7);
+    verify(sourceClient, times(1)).execute(any(TaxCategoryQuery.class));
+    verifyInteractionsWithClientAfterSync(sourceClient, 8);
     assertAllSyncersLoggingEvents(syncerTestLogger, cliRunnerTestLogger, 0);
   }
 
@@ -903,8 +910,9 @@ class SyncerFactoryTest {
     assertCartDiscountSyncerLoggingEvents(syncerTestLogger, numberOfResources);
     // +1 state is a built-in state and it cant be deleted
     assertStateSyncerLoggingEvents(syncerTestLogger, numberOfResources);
+    assertTaxCategorySyncerLoggingEvents(syncerTestLogger, numberOfResources);
 
     // Every sync module is expected to have 2 logs (start and stats summary)
-    assertThat(syncerTestLogger.getAllLoggingEvents()).hasSize(14);
+    assertThat(syncerTestLogger.getAllLoggingEvents()).hasSize(16);
   }
 }
