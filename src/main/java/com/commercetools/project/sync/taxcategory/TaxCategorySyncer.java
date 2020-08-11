@@ -75,8 +75,7 @@ public final class TaxCategorySyncer
   @Nonnull
   private static TaxCategoryDraft convertTaxCategoryToTaxCategoryDraft(
       @Nonnull final TaxCategory taxCategory) {
-    List<TaxRateDraft> taxRateDrafts = null;
-    taxRateDrafts = convertTaxRateToTaxRateDraft(taxCategory.getTaxRates());
+    List<TaxRateDraft> taxRateDrafts = convertTaxRateToTaxRateDraft(taxCategory.getTaxRates());
     return TaxCategoryDraftBuilder.of(
             taxCategory.getName(), taxRateDrafts, taxCategory.getDescription())
         .key(taxCategory.getKey())
