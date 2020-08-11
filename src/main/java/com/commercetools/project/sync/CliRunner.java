@@ -39,14 +39,16 @@ final class CliRunner {
   static final String SYNC_MODULE_OPTION_PRODUCT_SYNC = "products";
   static final String SYNC_MODULE_OPTION_INVENTORY_ENTRY_SYNC = "inventoryEntries";
   static final String SYNC_MODULE_OPTION_STATE_SYNC = "states";
+  static final String SYNC_MODULE_OPTION_TAX_CATEGORY_SYNC = "taxCategories";
   static final String SYNC_MODULE_OPTION_ALL = "all";
 
   static final String SYNC_MODULE_OPTION_DESCRIPTION =
       format(
-          "Choose one of the following modules to run: \"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\" or \"%s\".",
+          "Choose one of the following modules to run: \"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\" or \"%s\".",
           SYNC_MODULE_OPTION_TYPE_SYNC,
           SYNC_MODULE_OPTION_PRODUCT_TYPE_SYNC,
           SYNC_MODULE_OPTION_STATE_SYNC,
+          SYNC_MODULE_OPTION_TAX_CATEGORY_SYNC,
           SYNC_MODULE_OPTION_CATEGORY_SYNC,
           SYNC_MODULE_OPTION_CART_DISCOUNT_SYNC,
           SYNC_MODULE_OPTION_PRODUCT_SYNC,
