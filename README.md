@@ -1,3 +1,5 @@
+
+
 # commercetools-project-sync
 [![Build Status](https://travis-ci.org/commercetools/commercetools-project-sync.svg?branch=master)](https://travis-ci.org/commercetools/commercetools-project-sync)
 [![codecov](https://codecov.io/gh/commercetools/commercetools-project-sync/branch/master/graph/badge.svg)](https://codecov.io/gh/commercetools/commercetools-project-sync)
@@ -31,6 +33,7 @@ As of now, these are the supported resources:
 - ProductTypes
 - Types
 - States
+- TaxxCategories
 
 
 ### Prerequisites
@@ -51,6 +54,7 @@ As of now, these are the supported resources:
      | CartDiscount | `key`  |
      | InventoryEntry  | `sku`  |
      | State  | `key`  |
+     | TaxCategory  | `key`  |
  
  - Set the following environment variables before running the application
    ```bash
@@ -75,7 +79,8 @@ As of now, these are the supported resources:
    usage: commercetools-project-sync
     -h,--help               Print help information.
     -s,--sync <arg>         Choose one of the following modules to run: "types", "productTypes", "states", "categories", 
-                            "cartDiscounts", "products", "inventoryEntries" or "all" (will run all the modules).
+                            "cartDiscounts", "products", "inventoryEntries", "taxCategories" or "all" (will run all 
+                            the modules).
     -r,--runnerName <arg>   name for the running sync instance. Please make sure the name is unique, otherwise running 
                             more than 1 sync instance with the same name would lead to an unexpected behaviour. 
                             (optional parameter) default: 'runnerName'.
@@ -159,10 +164,11 @@ commercetools/commercetools-project-sync:3.3.0 -s all
    ```
    This will run the following sync modules in the given order:
  1. `Type` Sync and `ProductType` Sync and `States` Sync in parallel.
- 2. `Category` Sync.
- 3. `Product` Sync.
- 4. `CartDiscount` Sync.
- 5. `InventoryEntry` Sync.
+ 2. `TaxCategory` Sync.
+ 3. `Category` Sync.
+ 4. `Product` Sync.
+ 5. `CartDiscount` Sync.
+ 6. `InventoryEntry` Sync.
 
  - To run the type sync
    ```bash
