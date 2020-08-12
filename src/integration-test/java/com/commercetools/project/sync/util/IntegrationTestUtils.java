@@ -38,6 +38,8 @@ import io.sphere.sdk.queries.PagedQueryResult;
 import io.sphere.sdk.queries.QueryPredicate;
 import io.sphere.sdk.states.commands.StateDeleteCommand;
 import io.sphere.sdk.states.queries.StateQuery;
+import io.sphere.sdk.taxcategories.commands.TaxCategoryDeleteCommand;
+import io.sphere.sdk.taxcategories.queries.TaxCategoryQuery;
 import io.sphere.sdk.types.commands.TypeDeleteCommand;
 import io.sphere.sdk.types.queries.TypeQuery;
 import java.util.ArrayList;
@@ -141,6 +143,7 @@ public final class IntegrationTestUtils {
         StateQuery.of().plusPredicates(QueryPredicate.of("builtIn=\"false\"")),
         StateDeleteCommand::of);
     queryAndExecute(client, TypeQuery.of(), TypeDeleteCommand::of);
+    queryAndExecute(client, TaxCategoryQuery.of(), TaxCategoryDeleteCommand::of);
     deleteProductTypes(client);
   }
 

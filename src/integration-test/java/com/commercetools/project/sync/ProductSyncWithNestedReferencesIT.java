@@ -14,6 +14,7 @@ import static com.commercetools.project.sync.util.TestUtils.assertInventoryEntry
 import static com.commercetools.project.sync.util.TestUtils.assertProductSyncerLoggingEvents;
 import static com.commercetools.project.sync.util.TestUtils.assertProductTypeSyncerLoggingEvents;
 import static com.commercetools.project.sync.util.TestUtils.assertStateSyncerLoggingEvents;
+import static com.commercetools.project.sync.util.TestUtils.assertTaxCategorySyncerLoggingEvents;
 import static com.commercetools.project.sync.util.TestUtils.assertTypeSyncerLoggingEvents;
 import static io.sphere.sdk.models.LocalizedString.ofEnglish;
 import static java.util.Arrays.asList;
@@ -230,6 +231,7 @@ class ProductSyncWithNestedReferencesIT {
 
       assertTypeSyncerLoggingEvents(syncerTestLogger, 0);
       assertProductTypeSyncerLoggingEvents(syncerTestLogger, 2);
+      assertTaxCategorySyncerLoggingEvents(syncerTestLogger, 0);
       assertCategorySyncerLoggingEvents(syncerTestLogger, 1);
       assertProductSyncerLoggingEvents(syncerTestLogger, 1);
       assertInventoryEntrySyncerLoggingEvents(syncerTestLogger, 0);
@@ -238,7 +240,7 @@ class ProductSyncWithNestedReferencesIT {
           syncerTestLogger, 1); // 1 state is built-in and it will always be processed
 
       // Every sync module is expected to have 2 logs (start and stats summary)
-      assertThat(syncerTestLogger.getAllLoggingEvents()).hasSize(14);
+      assertThat(syncerTestLogger.getAllLoggingEvents()).hasSize(16);
 
       assertAllResourcesAreSyncedToTarget(postTargetClient);
     }

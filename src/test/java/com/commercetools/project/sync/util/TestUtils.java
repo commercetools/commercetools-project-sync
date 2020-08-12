@@ -48,9 +48,10 @@ public final class TestUtils {
     assertCartDiscountSyncerLoggingEvents(syncerTestLogger, numberOfResources);
     // +1 state is a built-in state and it cant be deleted
     assertStateSyncerLoggingEvents(syncerTestLogger, numberOfResources + 1);
+    assertTaxCategorySyncerLoggingEvents(syncerTestLogger, numberOfResources);
 
     // Every sync module is expected to have 2 logs (start and stats summary)
-    assertThat(syncerTestLogger.getAllLoggingEvents()).hasSize(14);
+    assertThat(syncerTestLogger.getAllLoggingEvents()).hasSize(16);
   }
 
   public static void assertTypeSyncerLoggingEvents(
@@ -130,6 +131,17 @@ public final class TestUtils {
             Math.max(0, numberOfResources - 1));
 
     assertSyncerLoggingEvents(syncerTestLogger, "State", stateSyncerStatsSummary);
+  }
+
+  public static void assertTaxCategorySyncerLoggingEvents(
+      @Nonnull final TestLogger syncerTestLogger, final int numberOfResources) {
+    final String taxCategoryStatsSummary =
+        format(
+            "Summary: %d tax categories were processed in total (%d created, 0 updated and "
+                + "0 failed to sync).",
+            numberOfResources, numberOfResources);
+
+    assertSyncerLoggingEvents(syncerTestLogger, "TaxCategorySync", taxCategoryStatsSummary);
   }
 
   public static void assertSyncerLoggingEvents(
