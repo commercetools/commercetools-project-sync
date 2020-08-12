@@ -134,7 +134,7 @@ class CliRunnerIT {
 
     final TaxCategoryDraft taxCategoryDraft =
         TaxCategoryDraftBuilder.of(
-                "Tax-Category-Name-1", singletonList(taxRateDraft), "Tax-Category-Name-1")
+                "Tax-Category-Name-1", singletonList(taxRateDraft), "Tax-Category-Description-1")
             .key(RESOURCE_KEY)
             .build();
 
