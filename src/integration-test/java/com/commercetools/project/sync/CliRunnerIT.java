@@ -16,6 +16,7 @@ import static com.commercetools.project.sync.util.TestUtils.assertSyncerLoggingE
 import static io.sphere.sdk.models.LocalizedString.ofEnglish;
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.commercetools.project.sync.model.response.LastSyncCustomObject;
@@ -72,9 +73,7 @@ import io.sphere.sdk.types.commands.TypeCreateCommand;
 import io.sphere.sdk.types.queries.TypeQuery;
 import java.time.Clock;
 import java.time.ZonedDateTime;
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
 import javax.annotation.Nonnull;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -130,13 +129,12 @@ class CliRunnerIT {
 
     sourceProjectClient.execute(TypeCreateCommand.of(typeDraft)).toCompletableFuture().join();
 
-    final TaxRateDraft draft =
+    final TaxRateDraft taxRateDraft =
         TaxRateDraftBuilder.of("Tax-Rate-Name-1", 0.3, false, CountryCode.DE).build();
-    List<TaxRateDraft> taxRateDrafts = new ArrayList<TaxRateDraft>();
-    taxRateDrafts.add(draft);
 
     final TaxCategoryDraft taxCategoryDraft =
-        TaxCategoryDraftBuilder.of("Tax-Category-Name-1", taxRateDrafts, "Tax-Category-Name-1")
+        TaxCategoryDraftBuilder.of(
+                "Tax-Category-Name-1", singletonList(taxRateDraft), "Tax-Category-Name-1")
             .key(RESOURCE_KEY)
             .build();
 
