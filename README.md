@@ -33,7 +33,7 @@ As of now, these are the supported resources:
 - ProductTypes
 - Types
 - States
-- TaxxCategories
+- TaxCategories
 
 
 ### Prerequisites
@@ -78,9 +78,9 @@ As of now, these are the supported resources:
    ```bash
    usage: commercetools-project-sync
     -h,--help               Print help information.
-    -s,--sync <arg>         Choose one of the following modules to run: "types", "productTypes", "states", "categories", 
-                            "cartDiscounts", "products", "inventoryEntries", "taxCategories" or "all" (will run all 
-                            the modules).
+    -s,--sync <arg>         Choose one of the following modules to run: "types", "productTypes", "states", 
+                            "taxCategories", "categories", "cartDiscounts", "products", "inventoryEntries" or "all" 
+                            (will run all the modules).
     -r,--runnerName <arg>   name for the running sync instance. Please make sure the name is unique, otherwise running 
                             more than 1 sync instance with the same name would lead to an unexpected behaviour. 
                             (optional parameter) default: 'runnerName'.
