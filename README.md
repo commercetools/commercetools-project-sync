@@ -184,7 +184,11 @@ commercetools/commercetools-project-sync:3.3.0 -s all
    ```bash
    docker run commercetools/commercetools-project-sync:3.3.0 -s states
    ```  
-    
+- To run the taxCategory sync
+   ```bash
+   docker run commercetools/commercetools-project-sync:3.3.0 -s taxCategories
+   ```  
+      
 - To run the category sync
    ```bash
    docker run commercetools/commercetools-project-sync:3.3.0 -s categories
