@@ -51,8 +51,8 @@ final class CliRunner {
           SYNC_MODULE_OPTION_TAX_CATEGORY_SYNC,
           SYNC_MODULE_OPTION_CATEGORY_SYNC,
           SYNC_MODULE_OPTION_CART_DISCOUNT_SYNC,
-          SYNC_MODULE_OPTION_PRODUCT_SYNC,
           SYNC_MODULE_OPTION_INVENTORY_ENTRY_SYNC,
+          SYNC_MODULE_OPTION_PRODUCT_SYNC,
           SYNC_MODULE_OPTION_ALL);
   static final String RUNNER_NAME_OPTION_DESCRIPTION =
       "Choose a name for the running sync instance. Please make sure the name is unique, otherwise running more than 1 sync "

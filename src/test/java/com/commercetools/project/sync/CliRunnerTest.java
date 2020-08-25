@@ -624,10 +624,9 @@ class CliRunnerTest {
     inOrder.verify(sourceClient).execute(any(StateQuery.class));
     inOrder.verify(sourceClient).execute(any(TaxCategoryQuery.class));
     inOrder.verify(sourceClient).execute(any(CategoryQuery.class));
-    inOrder.verify(sourceClient).execute(any(ProductQuery.class));
     inOrder.verify(sourceClient).execute(any(CartDiscountQuery.class));
     inOrder.verify(sourceClient).execute(any(InventoryEntryQuery.class));
-
+    inOrder.verify(sourceClient).execute(any(ProductQuery.class));
     verifyInteractionsWithClientAfterSync(sourceClient, 8);
   }
 }
