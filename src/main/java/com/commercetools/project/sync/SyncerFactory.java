@@ -82,24 +82,24 @@ final class SyncerFactory {
                 .sync(runnerNameOptionValue, isFullSync)
                 .toCompletableFuture());
 
-    final List<CompletableFuture<Void>> CategoryAndInventoryAndCartDiscountSync =
-        asList(
-            CategorySyncer.of(sourceClient, targetClient, clock)
-                .sync(runnerNameOptionValue, isFullSync)
-                .toCompletableFuture(),
-            CartDiscountSyncer.of(sourceClient, targetClient, clock)
-                .sync(runnerNameOptionValue, isFullSync)
-                .toCompletableFuture(),
-            InventoryEntrySyncer.of(sourceClient, targetClient, clock)
-                .sync(runnerNameOptionValue, isFullSync)
-                .toCompletableFuture());
-
     return CompletableFuture.allOf(
             typeAndProductTypeAndStateAndTaxCategorySync.toArray(new CompletableFuture[0]))
-        .thenRun(
-            () ->
-                CompletableFuture.allOf(
-                    CategoryAndInventoryAndCartDiscountSync.toArray(new CompletableFuture[0])))
+        .thenCompose(
+            ignored -> {
+              final List<CompletableFuture<Void>> categoryAndInventoryAndCartDiscountSync =
+                  asList(
+                      CategorySyncer.of(sourceClient, targetClient, clock)
+                          .sync(runnerNameOptionValue, isFullSync)
+                          .toCompletableFuture(),
+                      CartDiscountSyncer.of(sourceClient, targetClient, clock)
+                          .sync(runnerNameOptionValue, isFullSync)
+                          .toCompletableFuture(),
+                      InventoryEntrySyncer.of(sourceClient, targetClient, clock)
+                          .sync(runnerNameOptionValue, isFullSync)
+                          .toCompletableFuture());
+              return CompletableFuture.allOf(
+                  categoryAndInventoryAndCartDiscountSync.toArray(new CompletableFuture[0]));
+            })
         .thenCompose(
             ignored ->
                 ProductSyncer.of(sourceClient, targetClient, clock)
