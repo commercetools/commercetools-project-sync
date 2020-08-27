@@ -13,7 +13,7 @@ buildscript {
 plugins {
     id "com.github.ben-manes.versions" version '0.29.0'
     id 'com.adarshr.test-logger' version '2.1.0'
-    id 'com.diffplug.spotless' version '5.1.1'
+    id 'com.diffplug.spotless' version '5.2.0'
     id 'com.bmuschko.docker-java-application' version '5.2.0'
 }
 
