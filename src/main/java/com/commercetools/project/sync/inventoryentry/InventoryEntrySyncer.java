@@ -2,6 +2,7 @@ package com.commercetools.project.sync.inventoryentry;
 
 import static com.commercetools.project.sync.util.SyncUtils.logErrorCallback;
 import static com.commercetools.project.sync.util.SyncUtils.logWarningCallback;
+import static com.commercetools.sync.inventories.utils.InventoryReferenceResolutionUtils.buildInventoryQuery;
 import static com.commercetools.sync.inventories.utils.InventoryReferenceResolutionUtils.mapToInventoryEntryDrafts;
 
 import com.commercetools.project.sync.Syncer;
@@ -11,6 +12,7 @@ import com.commercetools.sync.inventories.InventorySync;
 import com.commercetools.sync.inventories.InventorySyncOptions;
 import com.commercetools.sync.inventories.InventorySyncOptionsBuilder;
 import com.commercetools.sync.inventories.helpers.InventorySyncStatistics;
+import com.commercetools.sync.inventories.utils.InventoryReferenceResolutionUtils;
 import io.sphere.sdk.client.SphereClient;
 import io.sphere.sdk.expansion.ExpansionPath;
 import io.sphere.sdk.inventory.InventoryEntry;
@@ -90,17 +92,6 @@ public final class InventoryEntrySyncer
   @Nonnull
   @Override
   protected InventoryEntryQuery getQuery() {
-    return buildQuery();
-  }
-
-  /**
-   * TODO: Should be added to the commercetools-sync library.
-   *
-   * @return an {@link InventoryEntryQuery} instance.
-   */
-  private static InventoryEntryQuery buildQuery() {
-    return InventoryEntryQuery.of()
-        .withExpansionPaths(InventoryEntryExpansionModel::supplyChannel)
-        .plusExpansionPaths(ExpansionPath.of("custom.type"));
+    return buildInventoryQuery();
   }
 }

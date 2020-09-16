@@ -2,6 +2,7 @@ package com.commercetools.project.sync.product;
 
 import static com.commercetools.project.sync.util.SyncUtils.logErrorCallback;
 import static com.commercetools.project.sync.util.SyncUtils.logWarningCallback;
+import static com.commercetools.sync.products.utils.ProductReferenceResolutionUtils.buildProductQuery;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toSet;
 
@@ -15,6 +16,7 @@ import com.commercetools.sync.products.ProductSyncOptions;
 import com.commercetools.sync.products.ProductSyncOptionsBuilder;
 import com.commercetools.sync.products.helpers.ProductSyncStatistics;
 import com.commercetools.sync.products.utils.ProductReferenceResolutionUtils;
+import com.commercetools.sync.producttypes.utils.ProductTypeReferenceResolutionUtils;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.sphere.sdk.categories.Category;
@@ -277,22 +279,7 @@ public final class ProductSyncer
   @Nonnull
   @Override
   protected ProductQuery getQuery() {
-    // TODO: Eventually don't expand all references and cache references for replacement.
-    // https://github.com/commercetools/commercetools-project-sync/issues/49
-    return ProductQuery.of()
-        .withExpansionPaths(ProductExpansionModel::productType)
-        .plusExpansionPaths(ProductExpansionModel::taxCategory)
-        .plusExpansionPaths(ExpansionPath.of("state"))
-        .plusExpansionPaths(expansionModel -> expansionModel.masterData().staged().categories())
-        .plusExpansionPaths(
-            expansionModel -> expansionModel.masterData().staged().allVariants().prices().channel())
-        .plusExpansionPaths(
-            ExpansionPath.of("masterData.staged.masterVariant.prices[*].custom.type"))
-        .plusExpansionPaths(ExpansionPath.of("masterData.staged.variants[*].prices[*].custom.type"))
-        .plusExpansionPaths(
-            ExpansionPath.of("masterData.staged.masterVariant.assets[*].custom.type"))
-        .plusExpansionPaths(
-            ExpansionPath.of("masterData.staged.variants[*].assets[*].custom.type"));
+    return buildProductQuery();
   }
 
   /**

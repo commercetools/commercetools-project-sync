@@ -2,6 +2,7 @@ package com.commercetools.project.sync.state;
 
 import static com.commercetools.project.sync.util.SyncUtils.logErrorCallback;
 import static com.commercetools.project.sync.util.SyncUtils.logWarningCallback;
+import static com.commercetools.sync.states.utils.StateReferenceResolutionUtils.buildStateQuery;
 
 import com.commercetools.project.sync.Syncer;
 import com.commercetools.project.sync.service.CustomObjectService;
@@ -75,6 +76,6 @@ public final class StateSyncer
   @Nonnull
   @Override
   protected StateQuery getQuery() {
-    return StateQuery.of().withExpansionPaths(StateExpansionModel::transitions);
+    return buildStateQuery();
   }
 }
