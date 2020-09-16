@@ -7,7 +7,8 @@ import com.commercetools.sync.producttypes.ProductTypeSync;
 import com.commercetools.sync.producttypes.ProductTypeSyncOptions;
 import com.commercetools.sync.producttypes.ProductTypeSyncOptionsBuilder;
 import com.commercetools.sync.producttypes.helpers.ProductTypeSyncStatistics;
-import com.commercetools.sync.producttypes.utils.ProductTypeReferenceReplacementUtils;
+import com.commercetools.sync.producttypes.utils.ProductTypeReferenceResolutionUtils;
+import io.sphere.sdk.categories.Category;
 import io.sphere.sdk.client.SphereClient;
 import io.sphere.sdk.producttypes.ProductType;
 import io.sphere.sdk.producttypes.ProductTypeDraft;
@@ -16,9 +17,12 @@ import java.time.Clock;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
+import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static java.lang.String.format;
 
 public final class ProductTypeSyncer
     extends Syncer<
@@ -49,8 +53,22 @@ public final class ProductTypeSyncer
 
     final ProductTypeSyncOptions syncOptions =
         ProductTypeSyncOptionsBuilder.of(targetClient)
-            .errorCallback(LOGGER::error)
-            .warningCallback(LOGGER::warn)
+             .errorCallback((exception, newResourceDraft, oldResource, updateActions) -> {
+               LOGGER.error(format(
+                       "Error when trying to sync product types. Existing product type key: %s. Update actions: %s",
+                       oldResource.map(ProductType::getKey).orElse(""),
+                       updateActions.stream()
+                                    .map(Object::toString)
+                                    .collect(Collectors.joining(","))
+                       )
+                       , exception);
+             })
+             .warningCallback((exception, newResourceDraft, oldResource) -> {
+               LOGGER.warn(format(
+                       "Warning when trying to sync product types. Existing product type key: %s",
+                       oldResource.map(ProductType::getKey).orElse("")
+               ), exception);
+             })
             .build();
 
     final ProductTypeSync productTypeSync = new ProductTypeSync(syncOptions);
@@ -66,7 +84,7 @@ public final class ProductTypeSyncer
   protected CompletionStage<List<ProductTypeDraft>> transform(
       @Nonnull final List<ProductType> page) {
     return CompletableFuture.completedFuture(
-        ProductTypeReferenceReplacementUtils.replaceProductTypesReferenceIdsWithKeys(page));
+        ProductTypeReferenceResolutionUtils.mapToProductTypeDrafts(page));
   }
 
   @Nonnull
@@ -74,6 +92,6 @@ public final class ProductTypeSyncer
   protected ProductTypeQuery getQuery() {
     // TODO: Set depth need to be configurable.
     // https://github.com/commercetools/commercetools-project-sync/issues/44
-    return ProductTypeReferenceReplacementUtils.buildProductTypeQuery(1);
+    return ProductTypeReferenceResolutionUtils.buildProductTypeQuery(1);
   }
 }

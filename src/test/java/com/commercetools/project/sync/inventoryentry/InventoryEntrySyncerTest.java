@@ -1,7 +1,7 @@
 package com.commercetools.project.sync.inventoryentry;
 
 import static com.commercetools.project.sync.util.TestUtils.getMockedClock;
-import static com.commercetools.sync.inventories.utils.InventoryReferenceReplacementUtils.replaceInventoriesReferenceIdsWithKeys;
+import static com.commercetools.sync.inventories.utils.InventoryReferenceResolutionUtils.mapToInventoryEntryDrafts;
 import static io.sphere.sdk.json.SphereJsonUtils.readObjectFromResource;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -68,7 +68,7 @@ class InventoryEntrySyncerTest {
 
     // assertions
     final List<InventoryEntryDraft> expectedResult =
-        replaceInventoriesReferenceIdsWithKeys(inventoryPage);
+            mapToInventoryEntryDrafts(inventoryPage);
     final List<String> referenceKeys =
         expectedResult
             .stream()

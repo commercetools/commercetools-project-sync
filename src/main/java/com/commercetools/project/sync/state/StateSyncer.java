@@ -7,7 +7,8 @@ import com.commercetools.sync.states.StateSync;
 import com.commercetools.sync.states.StateSyncOptions;
 import com.commercetools.sync.states.StateSyncOptionsBuilder;
 import com.commercetools.sync.states.helpers.StateSyncStatistics;
-import com.commercetools.sync.states.utils.StateTransitionReferenceReplacementUtils;
+import com.commercetools.sync.states.utils.StateReferenceResolutionUtils;
+import io.sphere.sdk.categories.Category;
 import io.sphere.sdk.client.SphereClient;
 import io.sphere.sdk.states.State;
 import io.sphere.sdk.states.StateDraft;
@@ -17,9 +18,12 @@ import java.time.Clock;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
+import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static java.lang.String.format;
 
 public final class StateSyncer
     extends Syncer<
@@ -42,8 +46,22 @@ public final class StateSyncer
       @Nonnull final Clock clock) {
     StateSyncOptions syncOptions =
         StateSyncOptionsBuilder.of(targetClient)
-            .errorCallback(LOGGER::error)
-            .warningCallback(LOGGER::error)
+             .errorCallback((exception, newResourceDraft, oldResource, updateActions) -> {
+               LOGGER.error(format(
+                       "Error when trying to sync states. Existing state key: %s. Update actions: %s",
+                       oldResource.map(State::getKey).orElse(""),
+                       updateActions.stream()
+                                    .map(Object::toString)
+                                    .collect(Collectors.joining(","))
+                       )
+                       , exception);
+             })
+             .warningCallback((exception, newResourceDraft, oldResource) -> {
+               LOGGER.warn(format(
+                       "Warning when trying to sync states. Existing state key: %s",
+                       oldResource.map(State::getKey).orElse("")
+               ), exception);
+             })
             .build();
     StateSync stateSync = new StateSync(syncOptions);
     CustomObjectService customObjectService = new CustomObjectServiceImpl(targetClient);
@@ -54,7 +72,7 @@ public final class StateSyncer
   @Override
   protected CompletionStage<List<StateDraft>> transform(@Nonnull List<State> states) {
     return CompletableFuture.completedFuture(
-        StateTransitionReferenceReplacementUtils.replaceStateTransitionIdsWithKeys(states));
+            StateReferenceResolutionUtils.mapToStateDrafts(states));
   }
 
   @Nonnull

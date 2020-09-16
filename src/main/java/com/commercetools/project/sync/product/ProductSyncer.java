@@ -12,7 +12,7 @@ import com.commercetools.sync.products.ProductSync;
 import com.commercetools.sync.products.ProductSyncOptions;
 import com.commercetools.sync.products.ProductSyncOptionsBuilder;
 import com.commercetools.sync.products.helpers.ProductSyncStatistics;
-import com.commercetools.sync.products.utils.ProductReferenceReplacementUtils;
+import com.commercetools.sync.products.utils.ProductReferenceResolutionUtils;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.sphere.sdk.categories.Category;
@@ -81,8 +81,22 @@ public final class ProductSyncer
 
     final ProductSyncOptions syncOptions =
         ProductSyncOptionsBuilder.of(targetClient)
-            .errorCallback(LOGGER::error)
-            .warningCallback(LOGGER::warn)
+             .errorCallback((exception, newResourceDraft, oldResource, updateActions) -> {
+               LOGGER.error(format(
+                       "Error when trying to sync products. Existing product key: %s. Update actions: %s",
+                       oldResource.map(Product::getKey).orElse(""),
+                       updateActions.stream()
+                                    .map(Object::toString)
+                                    .collect(Collectors.joining(","))
+                       )
+                       , exception);
+             })
+             .warningCallback((exception, newResourceDraft, oldResource) -> {
+               LOGGER.warn(format(
+                       "Warning when trying to sync products. Existing product: %s",
+                       oldResource.map(Product::getKey).orElse("")
+               ), exception);
+             })
             .beforeUpdateCallback(ProductSyncer::appendPublishIfPublished)
             .build();
 
@@ -112,7 +126,7 @@ public final class ProductSyncer
               }
               return products;
             })
-        .thenApply(ProductReferenceReplacementUtils::replaceProductsReferenceIdsWithKeys);
+        .thenApply(ProductReferenceResolutionUtils::mapToProductDrafts);
   }
 
   @Nonnull

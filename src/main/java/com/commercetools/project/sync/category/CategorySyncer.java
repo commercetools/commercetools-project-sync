@@ -1,8 +1,5 @@
 package com.commercetools.project.sync.category;
 
-import static com.commercetools.sync.categories.utils.CategoryReferenceReplacementUtils.buildCategoryQuery;
-import static com.commercetools.sync.categories.utils.CategoryReferenceReplacementUtils.replaceCategoriesReferenceIdsWithKeys;
-
 import com.commercetools.project.sync.Syncer;
 import com.commercetools.project.sync.service.CustomObjectService;
 import com.commercetools.project.sync.service.impl.CustomObjectServiceImpl;
@@ -14,13 +11,19 @@ import io.sphere.sdk.categories.Category;
 import io.sphere.sdk.categories.CategoryDraft;
 import io.sphere.sdk.categories.queries.CategoryQuery;
 import io.sphere.sdk.client.SphereClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.annotation.Nonnull;
 import java.time.Clock;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
-import javax.annotation.Nonnull;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.stream.Collectors;
+
+import static com.commercetools.sync.categories.utils.CategoryReferenceResolutionUtils.buildCategoryQuery;
+import static com.commercetools.sync.categories.utils.CategoryReferenceResolutionUtils.mapToCategoryDrafts;
+import static java.lang.String.format;
 
 public final class CategorySyncer
     extends Syncer<
@@ -52,8 +55,22 @@ public final class CategorySyncer
       @Nonnull final Clock clock) {
     final CategorySyncOptions syncOptions =
         CategorySyncOptionsBuilder.of(targetClient)
-            .errorCallback(LOGGER::error)
-            .warningCallback(LOGGER::warn)
+            .errorCallback((exception, newResourceDraft, oldResource, updateActions) -> {
+              LOGGER.error(format(
+                      "Error when trying to sync categories. Existing category key: %s. Update actions: %s",
+                      oldResource.map(Category::getKey).orElse(""),
+                      updateActions.stream()
+                             .map(Object::toString)
+                             .collect(Collectors.joining(","))
+                      )
+                      , exception);
+            })
+            .warningCallback((exception, newResourceDraft, oldResource) -> {
+              LOGGER.warn(format(
+                "Warning when trying to sync categories. Existing category key: %s",
+                      oldResource.map(Category::getKey).orElse("")
+              ), exception);
+            })
             .build();
 
     final CategorySync categorySync = new CategorySync(syncOptions);
@@ -66,7 +83,7 @@ public final class CategorySyncer
   @Override
   @Nonnull
   protected CompletionStage<List<CategoryDraft>> transform(@Nonnull final List<Category> page) {
-    return CompletableFuture.completedFuture(replaceCategoriesReferenceIdsWithKeys(page));
+    return CompletableFuture.completedFuture(mapToCategoryDrafts(page));
   }
 
   @Nonnull
