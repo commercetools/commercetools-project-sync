@@ -307,30 +307,6 @@ class ProductSyncerTest {
   }
 
   @Test
-  void getQuery_ShouldBuildProductQuery() {
-    // preparation
-    final ProductSyncer productSyncer =
-        ProductSyncer.of(mock(SphereClient.class), mock(SphereClient.class), getMockedClock());
-
-    // test
-    final ProductQuery query = productSyncer.getQuery();
-
-    // assertion
-    assertThat(query.expansionPaths())
-        .containsExactly(
-            ExpansionPath.of("productType"),
-            ExpansionPath.of("taxCategory"),
-            ExpansionPath.of("state"),
-            ExpansionPath.of("masterData.staged.categories[*]"),
-            ExpansionPath.of("masterData.staged.masterVariant.prices[*].channel"),
-            ExpansionPath.of("masterData.staged.variants[*].prices[*].channel"),
-            ExpansionPath.of("masterData.staged.masterVariant.prices[*].custom.type"),
-            ExpansionPath.of("masterData.staged.variants[*].prices[*].custom.type"),
-            ExpansionPath.of("masterData.staged.masterVariant.assets[*].custom.type"),
-            ExpansionPath.of("masterData.staged.variants[*].assets[*].custom.type"));
-  }
-
-  @Test
   void appendPublishIfPublished_WithPublishedProductAndEmptyActions_ShouldNotAppendPublish() {
     final ProductCatalogData masterData = mock(ProductCatalogData.class);
     when(masterData.isPublished()).thenReturn(true);

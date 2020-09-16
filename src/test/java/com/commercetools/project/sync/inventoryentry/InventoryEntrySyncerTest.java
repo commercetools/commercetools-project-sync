@@ -30,13 +30,6 @@ class InventoryEntrySyncerTest {
 
     // assertions
     assertThat(inventorySyncer).isNotNull();
-
-    final InventoryEntryQuery expectedQuery =
-        InventoryEntryQuery.of()
-            .withExpansionPaths(InventoryEntryExpansionModel::supplyChannel)
-            .plusExpansionPaths(ExpansionPath.of("custom.type"));
-
-    assertThat(inventorySyncer.getQuery()).isEqualTo(expectedQuery);
     assertThat(inventorySyncer.getSync()).isInstanceOf(InventorySync.class);
   }
 
@@ -81,23 +74,5 @@ class InventoryEntrySyncerTest {
             .collect(Collectors.toList());
     assertThat(referenceKeys).doesNotContainAnyElementsOf(referenceIds);
     assertThat(draftsFromPageStage).isCompletedWithValue(expectedResult);
-  }
-
-  @Test
-  void getQuery_ShouldBuildInventoryEntryQuery() {
-    // preparation
-    final InventoryEntrySyncer inventoryEntrySyncer =
-        InventoryEntrySyncer.of(
-            mock(SphereClient.class), mock(SphereClient.class), getMockedClock());
-
-    // test
-    final InventoryEntryQuery query = inventoryEntrySyncer.getQuery();
-
-    // assertion
-    assertThat(query)
-        .isEqualTo(
-            InventoryEntryQuery.of()
-                .withExpansionPaths(InventoryEntryExpansionModel::supplyChannel)
-                .plusExpansionPaths(ExpansionPath.of("custom.type")));
   }
 }
