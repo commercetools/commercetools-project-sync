@@ -1,6 +1,7 @@
 package com.commercetools.project.sync.type;
 
-import static java.lang.String.format;
+import static com.commercetools.project.sync.util.SyncUtils.logErrorCallback;
+import static com.commercetools.project.sync.util.SyncUtils.logWarningCallback;
 
 import com.commercetools.project.sync.Syncer;
 import com.commercetools.project.sync.service.CustomObjectService;
@@ -48,23 +49,17 @@ public final class TypeSyncer
         TypeSyncOptionsBuilder.of(targetClient)
             .errorCallback(
                 (exception, newResourceDraft, oldResource, updateActions) -> {
-                  LOGGER.error(
-                      format(
-                          "Error when trying to sync types. Existing type key: %s. Update actions: %s",
-                          oldResource.map(Type::getKey).orElse(""),
-                          updateActions
-                              .stream()
-                              .map(Object::toString)
-                              .collect(Collectors.joining(","))),
-                      exception);
+                  logErrorCallback(
+                      LOGGER,
+                      "type",
+                      exception,
+                      oldResource.map(Type::getKey).orElse(""),
+                      updateActions);
                 })
             .warningCallback(
                 (exception, newResourceDraft, oldResource) -> {
-                  LOGGER.warn(
-                      format(
-                          "Warning when trying to sync types. Existing type key: %s",
-                          oldResource.map(Type::getKey).orElse("")),
-                      exception);
+                  logWarningCallback(
+                      LOGGER, "type", exception, oldResource.map(Type::getKey).orElse(""));
                 })
             .build();
 

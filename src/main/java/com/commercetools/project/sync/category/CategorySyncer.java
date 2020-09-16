@@ -1,8 +1,9 @@
 package com.commercetools.project.sync.category;
 
+import static com.commercetools.project.sync.util.SyncUtils.logErrorCallback;
+import static com.commercetools.project.sync.util.SyncUtils.logWarningCallback;
 import static com.commercetools.sync.categories.utils.CategoryReferenceResolutionUtils.buildCategoryQuery;
 import static com.commercetools.sync.categories.utils.CategoryReferenceResolutionUtils.mapToCategoryDrafts;
-import static java.lang.String.format;
 
 import com.commercetools.project.sync.Syncer;
 import com.commercetools.project.sync.service.CustomObjectService;
@@ -19,7 +20,6 @@ import java.time.Clock;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
-import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,23 +56,17 @@ public final class CategorySyncer
         CategorySyncOptionsBuilder.of(targetClient)
             .errorCallback(
                 (exception, newResourceDraft, oldResource, updateActions) -> {
-                  LOGGER.error(
-                      format(
-                          "Error when trying to sync categories. Existing category key: %s. Update actions: %s",
-                          oldResource.map(Category::getKey).orElse(""),
-                          updateActions
-                              .stream()
-                              .map(Object::toString)
-                              .collect(Collectors.joining(","))),
-                      exception);
+                  logErrorCallback(
+                      LOGGER,
+                      "category",
+                      exception,
+                      oldResource.map(Category::getKey).orElse(""),
+                      updateActions);
                 })
             .warningCallback(
                 (exception, newResourceDraft, oldResource) -> {
-                  LOGGER.warn(
-                      format(
-                          "Warning when trying to sync categories. Existing category key: %s",
-                          oldResource.map(Category::getKey).orElse("")),
-                      exception);
+                  logWarningCallback(
+                      LOGGER, "category", exception, oldResource.map(Category::getKey).orElse(""));
                 })
             .build();
 

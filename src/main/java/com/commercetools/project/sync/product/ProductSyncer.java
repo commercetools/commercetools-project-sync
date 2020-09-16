@@ -1,5 +1,7 @@
 package com.commercetools.project.sync.product;
 
+import static com.commercetools.project.sync.util.SyncUtils.logErrorCallback;
+import static com.commercetools.project.sync.util.SyncUtils.logWarningCallback;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toSet;
 
@@ -83,23 +85,17 @@ public final class ProductSyncer
         ProductSyncOptionsBuilder.of(targetClient)
             .errorCallback(
                 (exception, newResourceDraft, oldResource, updateActions) -> {
-                  LOGGER.error(
-                      format(
-                          "Error when trying to sync products. Existing product key: %s. Update actions: %s",
-                          oldResource.map(Product::getKey).orElse(""),
-                          updateActions
-                              .stream()
-                              .map(Object::toString)
-                              .collect(Collectors.joining(","))),
-                      exception);
+                  logErrorCallback(
+                      LOGGER,
+                      "product",
+                      exception,
+                      oldResource.map(Product::getKey).orElse(""),
+                      updateActions);
                 })
             .warningCallback(
                 (exception, newResourceDraft, oldResource) -> {
-                  LOGGER.warn(
-                      format(
-                          "Warning when trying to sync products. Existing product: %s",
-                          oldResource.map(Product::getKey).orElse("")),
-                      exception);
+                  logWarningCallback(
+                      LOGGER, "product", exception, oldResource.map(Product::getKey).orElse(""));
                 })
             .beforeUpdateCallback(ProductSyncer::appendPublishIfPublished)
             .build();
