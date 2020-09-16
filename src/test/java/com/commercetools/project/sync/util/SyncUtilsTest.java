@@ -17,12 +17,19 @@ import com.commercetools.sync.types.TypeSync;
 import io.sphere.sdk.commands.UpdateAction;
 import io.sphere.sdk.models.ResourceView;
 import java.util.Arrays;
+
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import uk.org.lidalia.slf4jtest.LoggingEvent;
 import uk.org.lidalia.slf4jtest.TestLogger;
 import uk.org.lidalia.slf4jtest.TestLoggerFactory;
 
 class SyncUtilsTest {
+
+  @BeforeEach
+  void tearDownTest() {
+    TestLoggerFactory.clearAll();
+  }
 
   @Test
   void getSyncModuleName_WithProductSync_ShouldGetCorrectName() {
