@@ -15,7 +15,6 @@ import com.commercetools.sync.states.utils.StateReferenceResolutionUtils;
 import io.sphere.sdk.client.SphereClient;
 import io.sphere.sdk.states.State;
 import io.sphere.sdk.states.StateDraft;
-import io.sphere.sdk.states.expansion.StateExpansionModel;
 import io.sphere.sdk.states.queries.StateQuery;
 import java.time.Clock;
 import java.util.List;

@@ -9,11 +9,8 @@ import static org.mockito.Mockito.mock;
 
 import com.commercetools.sync.inventories.InventorySync;
 import io.sphere.sdk.client.SphereClient;
-import io.sphere.sdk.expansion.ExpansionPath;
 import io.sphere.sdk.inventory.InventoryEntry;
 import io.sphere.sdk.inventory.InventoryEntryDraft;
-import io.sphere.sdk.inventory.expansion.InventoryEntryExpansionModel;
-import io.sphere.sdk.inventory.queries.InventoryEntryQuery;
 import java.util.List;
 import java.util.concurrent.CompletionStage;
 import java.util.stream.Collectors;

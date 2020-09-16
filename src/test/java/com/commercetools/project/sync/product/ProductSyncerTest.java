@@ -20,7 +20,6 @@ import io.sphere.sdk.client.BadGatewayException;
 import io.sphere.sdk.client.SphereApiConfig;
 import io.sphere.sdk.client.SphereClient;
 import io.sphere.sdk.commands.UpdateAction;
-import io.sphere.sdk.expansion.ExpansionPath;
 import io.sphere.sdk.products.Product;
 import io.sphere.sdk.products.ProductCatalogData;
 import io.sphere.sdk.products.ProductDraft;
