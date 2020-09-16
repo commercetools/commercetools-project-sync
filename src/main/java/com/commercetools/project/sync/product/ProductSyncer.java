@@ -2,7 +2,6 @@ package com.commercetools.project.sync.product;
 
 import static com.commercetools.project.sync.util.SyncUtils.logErrorCallback;
 import static com.commercetools.project.sync.util.SyncUtils.logWarningCallback;
-import static com.commercetools.sync.products.utils.ProductReferenceResolutionUtils.buildProductQuery;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toSet;
 
@@ -21,6 +20,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.sphere.sdk.categories.Category;
 import io.sphere.sdk.client.SphereClient;
 import io.sphere.sdk.commands.UpdateAction;
+import io.sphere.sdk.expansion.ExpansionPath;
 import io.sphere.sdk.products.AttributeContainer;
 import io.sphere.sdk.products.Product;
 import io.sphere.sdk.products.ProductDraft;
@@ -28,6 +28,7 @@ import io.sphere.sdk.products.ProductVariant;
 import io.sphere.sdk.products.attributes.Attribute;
 import io.sphere.sdk.products.commands.updateactions.Publish;
 import io.sphere.sdk.products.commands.updateactions.Unpublish;
+import io.sphere.sdk.products.expansion.ProductExpansionModel;
 import io.sphere.sdk.products.queries.ProductQuery;
 import io.sphere.sdk.producttypes.ProductType;
 import java.time.Clock;
@@ -276,7 +277,22 @@ public final class ProductSyncer
   @Nonnull
   @Override
   protected ProductQuery getQuery() {
-    return buildProductQuery();
+    // TODO: Eventually don't expand all references and cache references for replacement.
+    // https://github.com/commercetools/commercetools-project-sync/issues/49
+    return ProductQuery.of()
+        .withExpansionPaths(ProductExpansionModel::productType)
+        .plusExpansionPaths(ProductExpansionModel::taxCategory)
+        .plusExpansionPaths(ExpansionPath.of("state"))
+        .plusExpansionPaths(expansionModel -> expansionModel.masterData().staged().categories())
+        .plusExpansionPaths(
+            expansionModel -> expansionModel.masterData().staged().allVariants().prices().channel())
+        .plusExpansionPaths(
+            ExpansionPath.of("masterData.staged.masterVariant.prices[*].custom.type"))
+        .plusExpansionPaths(ExpansionPath.of("masterData.staged.variants[*].prices[*].custom.type"))
+        .plusExpansionPaths(
+            ExpansionPath.of("masterData.staged.masterVariant.assets[*].custom.type"))
+        .plusExpansionPaths(
+            ExpansionPath.of("masterData.staged.variants[*].assets[*].custom.type"));
   }
 
   /**
