@@ -53,22 +53,26 @@ public final class CartDiscountSyncer
 
     final CartDiscountSyncOptions syncOptions =
         CartDiscountSyncOptionsBuilder.of(targetClient)
-            .errorCallback((exception, newResourceDraft, oldResource, updateActions) -> {
-              LOGGER.error(format(
-                      "Error when trying to sync cart discounts. Existing cart discount key: %s. Update actions: %s",
-                      oldResource.map(CartDiscount::getKey).orElse(""),
-                      updateActions.stream()
-                                   .map(Object::toString)
-                                   .collect(Collectors.joining(","))
-                      )
-                      , exception);
-            })
-            .warningCallback((exception, newResourceDraft, oldResource) -> {
-              LOGGER.warn(format(
-                      "Warning when trying to sync cart discounts. Existing cart discount key: %s",
-                      oldResource.map(CartDiscount::getKey).orElse("")
-              ), exception);
-            })
+            .errorCallback(
+                (exception, newResourceDraft, oldResource, updateActions) -> {
+                  LOGGER.error(
+                      format(
+                          "Error when trying to sync cart discounts. Existing cart discount key: %s. Update actions: %s",
+                          oldResource.map(CartDiscount::getKey).orElse(""),
+                          updateActions
+                              .stream()
+                              .map(Object::toString)
+                              .collect(Collectors.joining(","))),
+                      exception);
+                })
+            .warningCallback(
+                (exception, newResourceDraft, oldResource) -> {
+                  LOGGER.warn(
+                      format(
+                          "Warning when trying to sync cart discounts. Existing cart discount key: %s",
+                          oldResource.map(CartDiscount::getKey).orElse("")),
+                      exception);
+                })
             .build();
 
     final CartDiscountSync cartDiscountSync = new CartDiscountSync(syncOptions);

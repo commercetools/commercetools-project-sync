@@ -81,22 +81,26 @@ public final class ProductSyncer
 
     final ProductSyncOptions syncOptions =
         ProductSyncOptionsBuilder.of(targetClient)
-             .errorCallback((exception, newResourceDraft, oldResource, updateActions) -> {
-               LOGGER.error(format(
-                       "Error when trying to sync products. Existing product key: %s. Update actions: %s",
-                       oldResource.map(Product::getKey).orElse(""),
-                       updateActions.stream()
-                                    .map(Object::toString)
-                                    .collect(Collectors.joining(","))
-                       )
-                       , exception);
-             })
-             .warningCallback((exception, newResourceDraft, oldResource) -> {
-               LOGGER.warn(format(
-                       "Warning when trying to sync products. Existing product: %s",
-                       oldResource.map(Product::getKey).orElse("")
-               ), exception);
-             })
+            .errorCallback(
+                (exception, newResourceDraft, oldResource, updateActions) -> {
+                  LOGGER.error(
+                      format(
+                          "Error when trying to sync products. Existing product key: %s. Update actions: %s",
+                          oldResource.map(Product::getKey).orElse(""),
+                          updateActions
+                              .stream()
+                              .map(Object::toString)
+                              .collect(Collectors.joining(","))),
+                      exception);
+                })
+            .warningCallback(
+                (exception, newResourceDraft, oldResource) -> {
+                  LOGGER.warn(
+                      format(
+                          "Warning when trying to sync products. Existing product: %s",
+                          oldResource.map(Product::getKey).orElse("")),
+                      exception);
+                })
             .beforeUpdateCallback(ProductSyncer::appendPublishIfPublished)
             .build();
 

@@ -1,5 +1,7 @@
 package com.commercetools.project.sync.producttype;
 
+import static java.lang.String.format;
+
 import com.commercetools.project.sync.Syncer;
 import com.commercetools.project.sync.service.CustomObjectService;
 import com.commercetools.project.sync.service.impl.CustomObjectServiceImpl;
@@ -8,7 +10,6 @@ import com.commercetools.sync.producttypes.ProductTypeSyncOptions;
 import com.commercetools.sync.producttypes.ProductTypeSyncOptionsBuilder;
 import com.commercetools.sync.producttypes.helpers.ProductTypeSyncStatistics;
 import com.commercetools.sync.producttypes.utils.ProductTypeReferenceResolutionUtils;
-import io.sphere.sdk.categories.Category;
 import io.sphere.sdk.client.SphereClient;
 import io.sphere.sdk.producttypes.ProductType;
 import io.sphere.sdk.producttypes.ProductTypeDraft;
@@ -21,8 +22,6 @@ import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import static java.lang.String.format;
 
 public final class ProductTypeSyncer
     extends Syncer<
@@ -53,22 +52,26 @@ public final class ProductTypeSyncer
 
     final ProductTypeSyncOptions syncOptions =
         ProductTypeSyncOptionsBuilder.of(targetClient)
-             .errorCallback((exception, newResourceDraft, oldResource, updateActions) -> {
-               LOGGER.error(format(
-                       "Error when trying to sync product types. Existing product type key: %s. Update actions: %s",
-                       oldResource.map(ProductType::getKey).orElse(""),
-                       updateActions.stream()
-                                    .map(Object::toString)
-                                    .collect(Collectors.joining(","))
-                       )
-                       , exception);
-             })
-             .warningCallback((exception, newResourceDraft, oldResource) -> {
-               LOGGER.warn(format(
-                       "Warning when trying to sync product types. Existing product type key: %s",
-                       oldResource.map(ProductType::getKey).orElse("")
-               ), exception);
-             })
+            .errorCallback(
+                (exception, newResourceDraft, oldResource, updateActions) -> {
+                  LOGGER.error(
+                      format(
+                          "Error when trying to sync product types. Existing product type key: %s. Update actions: %s",
+                          oldResource.map(ProductType::getKey).orElse(""),
+                          updateActions
+                              .stream()
+                              .map(Object::toString)
+                              .collect(Collectors.joining(","))),
+                      exception);
+                })
+            .warningCallback(
+                (exception, newResourceDraft, oldResource) -> {
+                  LOGGER.warn(
+                      format(
+                          "Warning when trying to sync product types. Existing product type key: %s",
+                          oldResource.map(ProductType::getKey).orElse("")),
+                      exception);
+                })
             .build();
 
     final ProductTypeSync productTypeSync = new ProductTypeSync(syncOptions);

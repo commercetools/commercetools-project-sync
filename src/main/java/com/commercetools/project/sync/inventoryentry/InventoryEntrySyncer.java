@@ -53,22 +53,26 @@ public final class InventoryEntrySyncer
 
     final InventorySyncOptions syncOptions =
         InventorySyncOptionsBuilder.of(targetClient)
-                                   .errorCallback((exception, newResourceDraft, oldResource, updateActions) -> {
-                                     LOGGER.error(format(
-                                             "Error when trying to sync inventory entries. Existing inventory entry sku: %s. Update actions: %s",
-                                             oldResource.map(InventoryEntry::getSku).orElse(""),
-                                             updateActions.stream()
-                                                          .map(Object::toString)
-                                                          .collect(Collectors.joining(","))
-                                             )
-                                             , exception);
-                                   })
-                                   .warningCallback((exception, newResourceDraft, oldResource) -> {
-                                     LOGGER.warn(format(
-                                             "Warning when trying to sync inventory entries. Existing inventory entry sku: %s",
-                                             oldResource.map(InventoryEntry::getSku).orElse("")
-                                     ), exception);
-                                   })
+            .errorCallback(
+                (exception, newResourceDraft, oldResource, updateActions) -> {
+                  LOGGER.error(
+                      format(
+                          "Error when trying to sync inventory entries. Existing inventory entry sku: %s. Update actions: %s",
+                          oldResource.map(InventoryEntry::getSku).orElse(""),
+                          updateActions
+                              .stream()
+                              .map(Object::toString)
+                              .collect(Collectors.joining(","))),
+                      exception);
+                })
+            .warningCallback(
+                (exception, newResourceDraft, oldResource) -> {
+                  LOGGER.warn(
+                      format(
+                          "Warning when trying to sync inventory entries. Existing inventory entry sku: %s",
+                          oldResource.map(InventoryEntry::getSku).orElse("")),
+                      exception);
+                })
             .build();
 
     final InventorySync inventorySync = new InventorySync(syncOptions);

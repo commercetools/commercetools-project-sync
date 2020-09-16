@@ -1,5 +1,7 @@
 package com.commercetools.project.sync.taxcategory;
 
+import static java.lang.String.format;
+
 import com.commercetools.project.sync.Syncer;
 import com.commercetools.project.sync.service.CustomObjectService;
 import com.commercetools.project.sync.service.impl.CustomObjectServiceImpl;
@@ -15,17 +17,14 @@ import io.sphere.sdk.taxcategories.TaxRate;
 import io.sphere.sdk.taxcategories.TaxRateDraft;
 import io.sphere.sdk.taxcategories.TaxRateDraftBuilder;
 import io.sphere.sdk.taxcategories.queries.TaxCategoryQuery;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.annotation.Nonnull;
 import java.time.Clock;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.stream.Collectors;
-
-import static java.lang.String.format;
+import javax.annotation.Nonnull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public final class TaxCategorySyncer
     extends Syncer<
@@ -55,22 +54,26 @@ public final class TaxCategorySyncer
       @Nonnull final Clock clock) {
     final TaxCategorySyncOptions syncOptions =
         TaxCategorySyncOptionsBuilder.of(targetClient)
-             .errorCallback((exception, newResourceDraft, oldResource, updateActions) -> {
-               LOGGER.error(format(
-                       "Error when trying to sync tax categories. Existing tax category key: %s. Update actions: %s",
-                       oldResource.map(TaxCategory::getKey).orElse(""),
-                       updateActions.stream()
-                                    .map(Object::toString)
-                                    .collect(Collectors.joining(","))
-                       )
-                       , exception);
-             })
-             .warningCallback((exception, newResourceDraft, oldResource) -> {
-               LOGGER.warn(format(
-                       "Warning when trying to sync tax categories. Existing tax category key: %s",
-                       oldResource.map(TaxCategory::getKey).orElse("")
-               ), exception);
-             })
+            .errorCallback(
+                (exception, newResourceDraft, oldResource, updateActions) -> {
+                  LOGGER.error(
+                      format(
+                          "Error when trying to sync tax categories. Existing tax category key: %s. Update actions: %s",
+                          oldResource.map(TaxCategory::getKey).orElse(""),
+                          updateActions
+                              .stream()
+                              .map(Object::toString)
+                              .collect(Collectors.joining(","))),
+                      exception);
+                })
+            .warningCallback(
+                (exception, newResourceDraft, oldResource) -> {
+                  LOGGER.warn(
+                      format(
+                          "Warning when trying to sync tax categories. Existing tax category key: %s",
+                          oldResource.map(TaxCategory::getKey).orElse("")),
+                      exception);
+                })
             .build();
 
     final TaxCategorySync taxCategorySync = new TaxCategorySync(syncOptions);

@@ -52,8 +52,7 @@ class CartDiscountSyncerTest {
         cartDiscountSyncer.transform(cartDiscountPage);
 
     // assertions
-    final List<CartDiscountDraft> expectedResult =
-            mapToCartDiscountDrafts(cartDiscountPage);
+    final List<CartDiscountDraft> expectedResult = mapToCartDiscountDrafts(cartDiscountPage);
     final List<String> referenceKeys =
         expectedResult
             .stream()

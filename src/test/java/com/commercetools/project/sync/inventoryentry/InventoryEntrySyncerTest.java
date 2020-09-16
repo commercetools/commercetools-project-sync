@@ -67,8 +67,7 @@ class InventoryEntrySyncerTest {
         inventoryEntrySyncer.transform(inventoryPage);
 
     // assertions
-    final List<InventoryEntryDraft> expectedResult =
-            mapToInventoryEntryDrafts(inventoryPage);
+    final List<InventoryEntryDraft> expectedResult = mapToInventoryEntryDrafts(inventoryPage);
     final List<String> referenceKeys =
         expectedResult
             .stream()
