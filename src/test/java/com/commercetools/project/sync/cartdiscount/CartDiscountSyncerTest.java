@@ -1,8 +1,8 @@
 package com.commercetools.project.sync.cartdiscount;
 
 import static com.commercetools.project.sync.util.TestUtils.getMockedClock;
-import static com.commercetools.sync.cartdiscounts.utils.CartDiscountReferenceReplacementUtils.buildCartDiscountQuery;
-import static com.commercetools.sync.cartdiscounts.utils.CartDiscountReferenceReplacementUtils.replaceCartDiscountsReferenceIdsWithKeys;
+import static com.commercetools.sync.cartdiscounts.utils.CartDiscountReferenceResolutionUtils.buildCartDiscountQuery;
+import static com.commercetools.sync.cartdiscounts.utils.CartDiscountReferenceResolutionUtils.mapToCartDiscountDrafts;
 import static io.sphere.sdk.json.SphereJsonUtils.readObjectFromResource;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -52,8 +52,7 @@ class CartDiscountSyncerTest {
         cartDiscountSyncer.transform(cartDiscountPage);
 
     // assertions
-    final List<CartDiscountDraft> expectedResult =
-        replaceCartDiscountsReferenceIdsWithKeys(cartDiscountPage);
+    final List<CartDiscountDraft> expectedResult = mapToCartDiscountDrafts(cartDiscountPage);
     final List<String> referenceKeys =
         expectedResult
             .stream()

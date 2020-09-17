@@ -1,8 +1,8 @@
 package com.commercetools.project.sync.category;
 
 import static com.commercetools.project.sync.util.TestUtils.getMockedClock;
-import static com.commercetools.sync.categories.utils.CategoryReferenceReplacementUtils.buildCategoryQuery;
-import static com.commercetools.sync.categories.utils.CategoryReferenceReplacementUtils.replaceCategoriesReferenceIdsWithKeys;
+import static com.commercetools.sync.categories.utils.CategoryReferenceResolutionUtils.buildCategoryQuery;
+import static com.commercetools.sync.categories.utils.CategoryReferenceResolutionUtils.mapToCategoryDrafts;
 import static io.sphere.sdk.json.SphereJsonUtils.readObjectFromResource;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -52,7 +52,7 @@ class CategorySyncerTest {
         categorySyncer.transform(categoryPage);
 
     // assertions
-    final List<CategoryDraft> expectedResult = replaceCategoriesReferenceIdsWithKeys(categoryPage);
+    final List<CategoryDraft> expectedResult = mapToCategoryDrafts(categoryPage);
     final List<String> referenceKeys =
         expectedResult
             .stream()

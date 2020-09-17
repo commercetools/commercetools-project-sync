@@ -1,7 +1,7 @@
 package com.commercetools.project.sync.inventoryentry;
 
 import static com.commercetools.project.sync.util.TestUtils.getMockedClock;
-import static com.commercetools.sync.inventories.utils.InventoryReferenceReplacementUtils.replaceInventoriesReferenceIdsWithKeys;
+import static com.commercetools.sync.inventories.utils.InventoryReferenceResolutionUtils.mapToInventoryEntryDrafts;
 import static io.sphere.sdk.json.SphereJsonUtils.readObjectFromResource;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -9,11 +9,8 @@ import static org.mockito.Mockito.mock;
 
 import com.commercetools.sync.inventories.InventorySync;
 import io.sphere.sdk.client.SphereClient;
-import io.sphere.sdk.expansion.ExpansionPath;
 import io.sphere.sdk.inventory.InventoryEntry;
 import io.sphere.sdk.inventory.InventoryEntryDraft;
-import io.sphere.sdk.inventory.expansion.InventoryEntryExpansionModel;
-import io.sphere.sdk.inventory.queries.InventoryEntryQuery;
 import java.util.List;
 import java.util.concurrent.CompletionStage;
 import java.util.stream.Collectors;
@@ -30,13 +27,6 @@ class InventoryEntrySyncerTest {
 
     // assertions
     assertThat(inventorySyncer).isNotNull();
-
-    final InventoryEntryQuery expectedQuery =
-        InventoryEntryQuery.of()
-            .withExpansionPaths(InventoryEntryExpansionModel::supplyChannel)
-            .plusExpansionPaths(ExpansionPath.of("custom.type"));
-
-    assertThat(inventorySyncer.getQuery()).isEqualTo(expectedQuery);
     assertThat(inventorySyncer.getSync()).isInstanceOf(InventorySync.class);
   }
 
@@ -67,8 +57,7 @@ class InventoryEntrySyncerTest {
         inventoryEntrySyncer.transform(inventoryPage);
 
     // assertions
-    final List<InventoryEntryDraft> expectedResult =
-        replaceInventoriesReferenceIdsWithKeys(inventoryPage);
+    final List<InventoryEntryDraft> expectedResult = mapToInventoryEntryDrafts(inventoryPage);
     final List<String> referenceKeys =
         expectedResult
             .stream()
@@ -82,23 +71,5 @@ class InventoryEntrySyncerTest {
             .collect(Collectors.toList());
     assertThat(referenceKeys).doesNotContainAnyElementsOf(referenceIds);
     assertThat(draftsFromPageStage).isCompletedWithValue(expectedResult);
-  }
-
-  @Test
-  void getQuery_ShouldBuildInventoryEntryQuery() {
-    // preparation
-    final InventoryEntrySyncer inventoryEntrySyncer =
-        InventoryEntrySyncer.of(
-            mock(SphereClient.class), mock(SphereClient.class), getMockedClock());
-
-    // test
-    final InventoryEntryQuery query = inventoryEntrySyncer.getQuery();
-
-    // assertion
-    assertThat(query)
-        .isEqualTo(
-            InventoryEntryQuery.of()
-                .withExpansionPaths(InventoryEntryExpansionModel::supplyChannel)
-                .plusExpansionPaths(ExpansionPath.of("custom.type")));
   }
 }
