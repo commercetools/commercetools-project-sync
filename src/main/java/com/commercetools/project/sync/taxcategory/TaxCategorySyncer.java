@@ -6,11 +6,15 @@ import static com.commercetools.project.sync.util.SyncUtils.logWarningCallback;
 import com.commercetools.project.sync.Syncer;
 import com.commercetools.project.sync.service.CustomObjectService;
 import com.commercetools.project.sync.service.impl.CustomObjectServiceImpl;
+import com.commercetools.sync.commons.exceptions.SyncException;
+import com.commercetools.sync.commons.utils.QuadConsumer;
+import com.commercetools.sync.commons.utils.TriConsumer;
 import com.commercetools.sync.taxcategories.TaxCategorySync;
 import com.commercetools.sync.taxcategories.TaxCategorySyncOptions;
 import com.commercetools.sync.taxcategories.TaxCategorySyncOptionsBuilder;
 import com.commercetools.sync.taxcategories.helpers.TaxCategorySyncStatistics;
 import io.sphere.sdk.client.SphereClient;
+import io.sphere.sdk.commands.UpdateAction;
 import io.sphere.sdk.taxcategories.TaxCategory;
 import io.sphere.sdk.taxcategories.TaxCategoryDraft;
 import io.sphere.sdk.taxcategories.TaxCategoryDraftBuilder;
@@ -20,6 +24,7 @@ import io.sphere.sdk.taxcategories.TaxRateDraftBuilder;
 import io.sphere.sdk.taxcategories.queries.TaxCategoryQuery;
 import java.time.Clock;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.stream.Collectors;
@@ -53,14 +58,22 @@ public final class TaxCategorySyncer
       @Nonnull final SphereClient sourceClient,
       @Nonnull final SphereClient targetClient,
       @Nonnull final Clock clock) {
+    final QuadConsumer<
+            SyncException,
+            Optional<TaxCategoryDraft>,
+            Optional<TaxCategory>,
+            List<UpdateAction<TaxCategory>>>
+        logErrorCallback =
+            (exception, newResourceDraft, oldResource, updateActions) ->
+                logErrorCallback(LOGGER, "tax category", exception, oldResource, updateActions);
+    final TriConsumer<SyncException, Optional<TaxCategoryDraft>, Optional<TaxCategory>>
+        logWarningCallback =
+            (exception, newResourceDraft, oldResource) ->
+                logWarningCallback(LOGGER, "tax category", exception, oldResource);
     final TaxCategorySyncOptions syncOptions =
         TaxCategorySyncOptionsBuilder.of(targetClient)
-            .errorCallback(
-                (exception, newResourceDraft, oldResource, updateActions) ->
-                    logErrorCallback(LOGGER, "tax category", exception, oldResource, updateActions))
-            .warningCallback(
-                (exception, newResourceDraft, oldResource) ->
-                    logWarningCallback(LOGGER, "tax category", exception, oldResource))
+            .errorCallback(logErrorCallback)
+            .warningCallback(logWarningCallback)
             .build();
 
     final TaxCategorySync taxCategorySync = new TaxCategorySync(syncOptions);

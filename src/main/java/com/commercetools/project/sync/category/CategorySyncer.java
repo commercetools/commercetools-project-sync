@@ -12,12 +12,17 @@ import com.commercetools.sync.categories.CategorySync;
 import com.commercetools.sync.categories.CategorySyncOptions;
 import com.commercetools.sync.categories.CategorySyncOptionsBuilder;
 import com.commercetools.sync.categories.helpers.CategorySyncStatistics;
+import com.commercetools.sync.commons.exceptions.SyncException;
+import com.commercetools.sync.commons.utils.QuadConsumer;
+import com.commercetools.sync.commons.utils.TriConsumer;
 import io.sphere.sdk.categories.Category;
 import io.sphere.sdk.categories.CategoryDraft;
 import io.sphere.sdk.categories.queries.CategoryQuery;
 import io.sphere.sdk.client.SphereClient;
+import io.sphere.sdk.commands.UpdateAction;
 import java.time.Clock;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import javax.annotation.Nonnull;
@@ -52,14 +57,22 @@ public final class CategorySyncer
       @Nonnull final SphereClient sourceClient,
       @Nonnull final SphereClient targetClient,
       @Nonnull final Clock clock) {
+    final QuadConsumer<
+            SyncException,
+            Optional<CategoryDraft>,
+            Optional<Category>,
+            List<UpdateAction<Category>>>
+        logErrorCallback =
+            (exception, newResourceDraft, oldResource, updateActions) ->
+                logErrorCallback(LOGGER, "category", exception, oldResource, updateActions);
+    final TriConsumer<SyncException, Optional<CategoryDraft>, Optional<Category>>
+        logWarningCallback =
+            (exception, newResourceDraft, oldResource) ->
+                logWarningCallback(LOGGER, "category", exception, oldResource);
     final CategorySyncOptions syncOptions =
         CategorySyncOptionsBuilder.of(targetClient)
-            .errorCallback(
-                (exception, newResourceDraft, oldResource, updateActions) ->
-                    logErrorCallback(LOGGER, "category", exception, oldResource, updateActions))
-            .warningCallback(
-                (exception, newResourceDraft, oldResource) ->
-                    logWarningCallback(LOGGER, "category", exception, oldResource))
+            .errorCallback(logErrorCallback)
+            .warningCallback(logWarningCallback)
             .build();
 
     final CategorySync categorySync = new CategorySync(syncOptions);

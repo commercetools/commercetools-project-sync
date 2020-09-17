@@ -10,6 +10,9 @@ import com.commercetools.project.sync.service.CustomObjectService;
 import com.commercetools.project.sync.service.ReferencesService;
 import com.commercetools.project.sync.service.impl.CustomObjectServiceImpl;
 import com.commercetools.project.sync.service.impl.ReferencesServiceImpl;
+import com.commercetools.sync.commons.exceptions.SyncException;
+import com.commercetools.sync.commons.utils.QuadConsumer;
+import com.commercetools.sync.commons.utils.TriConsumer;
 import com.commercetools.sync.products.ProductSync;
 import com.commercetools.sync.products.ProductSyncOptions;
 import com.commercetools.sync.products.ProductSyncOptionsBuilder;
@@ -36,6 +39,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.CompletionStage;
@@ -81,14 +85,18 @@ public final class ProductSyncer
       @Nonnull final SphereClient targetClient,
       @Nonnull final Clock clock) {
 
+    final QuadConsumer<
+            SyncException, Optional<ProductDraft>, Optional<Product>, List<UpdateAction<Product>>>
+        logErrorCallback =
+            (exception, newResourceDraft, oldResource, updateActions) ->
+                logErrorCallback(LOGGER, "product", exception, oldResource, updateActions);
+    final TriConsumer<SyncException, Optional<ProductDraft>, Optional<Product>> logWarningCallback =
+        (exception, newResourceDraft, oldResource) ->
+            logWarningCallback(LOGGER, "product", exception, oldResource);
     final ProductSyncOptions syncOptions =
         ProductSyncOptionsBuilder.of(targetClient)
-            .errorCallback(
-                (exception, newResourceDraft, oldResource, updateActions) ->
-                    logErrorCallback(LOGGER, "product", exception, oldResource, updateActions))
-            .warningCallback(
-                (exception, newResourceDraft, oldResource) ->
-                    logWarningCallback(LOGGER, "product", exception, oldResource))
+            .errorCallback(logErrorCallback)
+            .warningCallback(logWarningCallback)
             .beforeUpdateCallback(ProductSyncer::appendPublishIfPublished)
             .build();
 

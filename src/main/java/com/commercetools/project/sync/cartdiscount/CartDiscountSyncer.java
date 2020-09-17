@@ -12,12 +12,17 @@ import com.commercetools.sync.cartdiscounts.CartDiscountSync;
 import com.commercetools.sync.cartdiscounts.CartDiscountSyncOptions;
 import com.commercetools.sync.cartdiscounts.CartDiscountSyncOptionsBuilder;
 import com.commercetools.sync.cartdiscounts.helpers.CartDiscountSyncStatistics;
+import com.commercetools.sync.commons.exceptions.SyncException;
+import com.commercetools.sync.commons.utils.QuadConsumer;
+import com.commercetools.sync.commons.utils.TriConsumer;
 import io.sphere.sdk.cartdiscounts.CartDiscount;
 import io.sphere.sdk.cartdiscounts.CartDiscountDraft;
 import io.sphere.sdk.cartdiscounts.queries.CartDiscountQuery;
 import io.sphere.sdk.client.SphereClient;
+import io.sphere.sdk.commands.UpdateAction;
 import java.time.Clock;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import javax.annotation.Nonnull;
@@ -51,15 +56,22 @@ public final class CartDiscountSyncer
       @Nonnull final SphereClient targetClient,
       @Nonnull final Clock clock) {
 
+    final QuadConsumer<
+            SyncException,
+            Optional<CartDiscountDraft>,
+            Optional<CartDiscount>,
+            List<UpdateAction<CartDiscount>>>
+        logErrorCallback =
+            (exception, newResourceDraft, oldResource, updateActions) ->
+                logErrorCallback(LOGGER, "cart discount", exception, oldResource, updateActions);
+    final TriConsumer<SyncException, Optional<CartDiscountDraft>, Optional<CartDiscount>>
+        logWarningCallback =
+            (exception, newResourceDraft, oldResource) ->
+                logWarningCallback(LOGGER, "cart discount", exception, oldResource);
     final CartDiscountSyncOptions syncOptions =
         CartDiscountSyncOptionsBuilder.of(targetClient)
-            .errorCallback(
-                (exception, newResourceDraft, oldResource, updateActions) ->
-                    logErrorCallback(
-                        LOGGER, "cart discount", exception, oldResource, updateActions))
-            .warningCallback(
-                (exception, newResourceDraft, oldResource) ->
-                    logWarningCallback(LOGGER, "cart discount", exception, oldResource))
+            .errorCallback(logErrorCallback)
+            .warningCallback(logWarningCallback)
             .build();
 
     final CartDiscountSync cartDiscountSync = new CartDiscountSync(syncOptions);
