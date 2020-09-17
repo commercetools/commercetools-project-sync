@@ -56,13 +56,11 @@ public final class TaxCategorySyncer
     final TaxCategorySyncOptions syncOptions =
         TaxCategorySyncOptionsBuilder.of(targetClient)
             .errorCallback(
-                (exception, newResourceDraft, oldResource, updateActions) -> {
-                  logErrorCallback(LOGGER, "tax category", exception, oldResource, updateActions);
-                })
+                (exception, newResourceDraft, oldResource, updateActions) ->
+                    logErrorCallback(LOGGER, "tax category", exception, oldResource, updateActions))
             .warningCallback(
-                (exception, newResourceDraft, oldResource) -> {
-                  logWarningCallback(LOGGER, "tax category", exception, oldResource);
-                })
+                (exception, newResourceDraft, oldResource) ->
+                    logWarningCallback(LOGGER, "tax category", exception, oldResource))
             .build();
 
     final TaxCategorySync taxCategorySync = new TaxCategorySync(syncOptions);

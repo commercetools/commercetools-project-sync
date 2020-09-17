@@ -46,13 +46,11 @@ public final class StateSyncer
     StateSyncOptions syncOptions =
         StateSyncOptionsBuilder.of(targetClient)
             .errorCallback(
-                (exception, newResourceDraft, oldResource, updateActions) -> {
-                  logErrorCallback(LOGGER, "state", exception, oldResource, updateActions);
-                })
+                (exception, newResourceDraft, oldResource, updateActions) ->
+                    logErrorCallback(LOGGER, "state", exception, oldResource, updateActions))
             .warningCallback(
-                (exception, newResourceDraft, oldResource) -> {
-                  logWarningCallback(LOGGER, "state", exception, oldResource);
-                })
+                (exception, newResourceDraft, oldResource) ->
+                    logWarningCallback(LOGGER, "state", exception, oldResource))
             .build();
     StateSync stateSync = new StateSync(syncOptions);
     CustomObjectService customObjectService = new CustomObjectServiceImpl(targetClient);

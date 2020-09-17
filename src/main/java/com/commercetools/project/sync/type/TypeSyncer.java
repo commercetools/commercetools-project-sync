@@ -48,13 +48,11 @@ public final class TypeSyncer
     final TypeSyncOptions syncOptions =
         TypeSyncOptionsBuilder.of(targetClient)
             .errorCallback(
-                (exception, newResourceDraft, oldResource, updateActions) -> {
-                  logErrorCallback(LOGGER, "type", exception, oldResource, updateActions);
-                })
+                (exception, newResourceDraft, oldResource, updateActions) ->
+                    logErrorCallback(LOGGER, "type", exception, oldResource, updateActions))
             .warningCallback(
-                (exception, newResourceDraft, oldResource) -> {
-                  logWarningCallback(LOGGER, "type", exception, oldResource);
-                })
+                (exception, newResourceDraft, oldResource) ->
+                    logWarningCallback(LOGGER, "type", exception, oldResource))
             .build();
 
     final TypeSync typeSync = new TypeSync(syncOptions);

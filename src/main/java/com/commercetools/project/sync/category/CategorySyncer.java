@@ -55,13 +55,11 @@ public final class CategorySyncer
     final CategorySyncOptions syncOptions =
         CategorySyncOptionsBuilder.of(targetClient)
             .errorCallback(
-                (exception, newResourceDraft, oldResource, updateActions) -> {
-                  logErrorCallback(LOGGER, "category", exception, oldResource, updateActions);
-                })
+                (exception, newResourceDraft, oldResource, updateActions) ->
+                    logErrorCallback(LOGGER, "category", exception, oldResource, updateActions))
             .warningCallback(
-                (exception, newResourceDraft, oldResource) -> {
-                  logWarningCallback(LOGGER, "category", exception, oldResource);
-                })
+                (exception, newResourceDraft, oldResource) ->
+                    logWarningCallback(LOGGER, "category", exception, oldResource))
             .build();
 
     final CategorySync categorySync = new CategorySync(syncOptions);

@@ -53,22 +53,20 @@ public final class InventoryEntrySyncer
     final InventorySyncOptions syncOptions =
         InventorySyncOptionsBuilder.of(targetClient)
             .errorCallback(
-                (exception, newResourceDraft, oldResource, updateActions) -> {
-                  logErrorCallback(
-                      LOGGER,
-                      "inventory entry",
-                      exception,
-                      oldResource.map(InventoryEntry::getSku).orElse(""),
-                      updateActions);
-                })
+                (exception, newResourceDraft, oldResource, updateActions) ->
+                    logErrorCallback(
+                        LOGGER,
+                        "inventory entry",
+                        exception,
+                        oldResource.map(InventoryEntry::getSku).orElse(""),
+                        updateActions))
             .warningCallback(
-                (exception, newResourceDraft, oldResource) -> {
-                  logWarningCallback(
-                      LOGGER,
-                      "inventory entry",
-                      exception,
-                      oldResource.map(InventoryEntry::getSku).orElse(""));
-                })
+                (exception, newResourceDraft, oldResource) ->
+                    logWarningCallback(
+                        LOGGER,
+                        "inventory entry",
+                        exception,
+                        oldResource.map(InventoryEntry::getSku).orElse("")))
             .build();
 
     final InventorySync inventorySync = new InventorySync(syncOptions);

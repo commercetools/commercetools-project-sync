@@ -54,13 +54,12 @@ public final class CartDiscountSyncer
     final CartDiscountSyncOptions syncOptions =
         CartDiscountSyncOptionsBuilder.of(targetClient)
             .errorCallback(
-                (exception, newResourceDraft, oldResource, updateActions) -> {
-                  logErrorCallback(LOGGER, "cart discount", exception, oldResource, updateActions);
-                })
+                (exception, newResourceDraft, oldResource, updateActions) ->
+                    logErrorCallback(
+                        LOGGER, "cart discount", exception, oldResource, updateActions))
             .warningCallback(
-                (exception, newResourceDraft, oldResource) -> {
-                  logWarningCallback(LOGGER, "cart discount", exception, oldResource);
-                })
+                (exception, newResourceDraft, oldResource) ->
+                    logWarningCallback(LOGGER, "cart discount", exception, oldResource))
             .build();
 
     final CartDiscountSync cartDiscountSync = new CartDiscountSync(syncOptions);

@@ -53,13 +53,11 @@ public final class ProductTypeSyncer
     final ProductTypeSyncOptions syncOptions =
         ProductTypeSyncOptionsBuilder.of(targetClient)
             .errorCallback(
-                (exception, newResourceDraft, oldResource, updateActions) -> {
-                  logErrorCallback(LOGGER, "product type", exception, oldResource, updateActions);
-                })
+                (exception, newResourceDraft, oldResource, updateActions) ->
+                    logErrorCallback(LOGGER, "product type", exception, oldResource, updateActions))
             .warningCallback(
-                (exception, newResourceDraft, oldResource) -> {
-                  logWarningCallback(LOGGER, "product type", exception, oldResource);
-                })
+                (exception, newResourceDraft, oldResource) ->
+                    logWarningCallback(LOGGER, "product type", exception, oldResource))
             .build();
 
     final ProductTypeSync productTypeSync = new ProductTypeSync(syncOptions);
