@@ -49,17 +49,11 @@ public final class TypeSyncer
         TypeSyncOptionsBuilder.of(targetClient)
             .errorCallback(
                 (exception, newResourceDraft, oldResource, updateActions) -> {
-                  logErrorCallback(
-                      LOGGER,
-                      "type",
-                      exception,
-                      oldResource.map(Type::getKey).orElse(""),
-                      updateActions);
+                  logErrorCallback(LOGGER, "type", exception, oldResource, updateActions);
                 })
             .warningCallback(
                 (exception, newResourceDraft, oldResource) -> {
-                  logWarningCallback(
-                      LOGGER, "type", exception, oldResource.map(Type::getKey).orElse(""));
+                  logWarningCallback(LOGGER, "type", exception, oldResource);
                 })
             .build();
 

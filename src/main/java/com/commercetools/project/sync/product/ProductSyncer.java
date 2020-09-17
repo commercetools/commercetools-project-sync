@@ -85,17 +85,11 @@ public final class ProductSyncer
         ProductSyncOptionsBuilder.of(targetClient)
             .errorCallback(
                 (exception, newResourceDraft, oldResource, updateActions) -> {
-                  logErrorCallback(
-                      LOGGER,
-                      "product",
-                      exception,
-                      oldResource.map(Product::getKey).orElse(""),
-                      updateActions);
+                  logErrorCallback(LOGGER, "product", exception, oldResource, updateActions);
                 })
             .warningCallback(
                 (exception, newResourceDraft, oldResource) -> {
-                  logWarningCallback(
-                      LOGGER, "product", exception, oldResource.map(Product::getKey).orElse(""));
+                  logWarningCallback(LOGGER, "product", exception, oldResource);
                 })
             .beforeUpdateCallback(ProductSyncer::appendPublishIfPublished)
             .build();

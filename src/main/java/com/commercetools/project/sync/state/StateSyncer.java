@@ -47,17 +47,11 @@ public final class StateSyncer
         StateSyncOptionsBuilder.of(targetClient)
             .errorCallback(
                 (exception, newResourceDraft, oldResource, updateActions) -> {
-                  logErrorCallback(
-                      LOGGER,
-                      "state",
-                      exception,
-                      oldResource.map(State::getKey).orElse(""),
-                      updateActions);
+                  logErrorCallback(LOGGER, "state", exception, oldResource, updateActions);
                 })
             .warningCallback(
                 (exception, newResourceDraft, oldResource) -> {
-                  logWarningCallback(
-                      LOGGER, "state", exception, oldResource.map(State::getKey).orElse(""));
+                  logWarningCallback(LOGGER, "state", exception, oldResource);
                 })
             .build();
     StateSync stateSync = new StateSync(syncOptions);

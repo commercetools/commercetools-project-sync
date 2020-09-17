@@ -55,20 +55,11 @@ public final class CartDiscountSyncer
         CartDiscountSyncOptionsBuilder.of(targetClient)
             .errorCallback(
                 (exception, newResourceDraft, oldResource, updateActions) -> {
-                  logErrorCallback(
-                      LOGGER,
-                      "cart discount",
-                      exception,
-                      oldResource.map(CartDiscount::getKey).orElse(""),
-                      updateActions);
+                  logErrorCallback(LOGGER, "cart discount", exception, oldResource, updateActions);
                 })
             .warningCallback(
                 (exception, newResourceDraft, oldResource) -> {
-                  logWarningCallback(
-                      LOGGER,
-                      "cart discount",
-                      exception,
-                      oldResource.map(CartDiscount::getKey).orElse(""));
+                  logWarningCallback(LOGGER, "cart discount", exception, oldResource);
                 })
             .build();
 

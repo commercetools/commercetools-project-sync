@@ -57,20 +57,11 @@ public final class TaxCategorySyncer
         TaxCategorySyncOptionsBuilder.of(targetClient)
             .errorCallback(
                 (exception, newResourceDraft, oldResource, updateActions) -> {
-                  logErrorCallback(
-                      LOGGER,
-                      "tax category",
-                      exception,
-                      oldResource.map(TaxCategory::getKey).orElse(""),
-                      updateActions);
+                  logErrorCallback(LOGGER, "tax category", exception, oldResource, updateActions);
                 })
             .warningCallback(
                 (exception, newResourceDraft, oldResource) -> {
-                  logWarningCallback(
-                      LOGGER,
-                      "tax category",
-                      exception,
-                      oldResource.map(TaxCategory::getKey).orElse(""));
+                  logWarningCallback(LOGGER, "tax category", exception, oldResource);
                 })
             .build();
 

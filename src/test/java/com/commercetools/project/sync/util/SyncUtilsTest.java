@@ -1,12 +1,6 @@
 package com.commercetools.project.sync.util;
 
-import static com.commercetools.project.sync.util.SyncUtils.APPLICATION_DEFAULT_NAME;
-import static com.commercetools.project.sync.util.SyncUtils.APPLICATION_DEFAULT_VERSION;
-import static com.commercetools.project.sync.util.SyncUtils.getApplicationName;
-import static com.commercetools.project.sync.util.SyncUtils.getApplicationVersion;
-import static com.commercetools.project.sync.util.SyncUtils.getSyncModuleName;
-import static com.commercetools.project.sync.util.SyncUtils.logErrorCallback;
-import static com.commercetools.project.sync.util.SyncUtils.logWarningCallback;
+import static com.commercetools.project.sync.util.SyncUtils.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -16,7 +10,9 @@ import com.commercetools.sync.products.ProductSync;
 import com.commercetools.sync.types.TypeSync;
 import io.sphere.sdk.commands.UpdateAction;
 import io.sphere.sdk.models.ResourceView;
+import io.sphere.sdk.models.WithKey;
 import java.util.Arrays;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import uk.org.lidalia.slf4jtest.LoggingEvent;
@@ -63,7 +59,7 @@ class SyncUtilsTest {
   }
 
   @Test
-  void logErrorCallback_ShouldLogErrorWithCorrectMessage() {
+  void logErrorCallbackWithStringResourceIdentifier_ShouldLogErrorWithCorrectMessage() {
     final TestLogger testLogger = TestLoggerFactory.getTestLogger(SyncUtilsTest.class);
     SyncException exception = new SyncException("test sync exception");
     UpdateAction<ResourceView> updateAction1 = mock(UpdateAction.class);
@@ -88,11 +84,55 @@ class SyncUtilsTest {
   }
 
   @Test
-  void logWarningCallback_ShouldLogWarningWithCorrectMessage() {
+  void logErrorCallbackWithResource_ShouldLogErrorWithCorrectMessage() {
+    final TestLogger testLogger = TestLoggerFactory.getTestLogger(SyncUtilsTest.class);
+    final SyncException exception = new SyncException("test sync exception");
+    final UpdateAction<WithKey> updateAction1 = mock(UpdateAction.class);
+    when(updateAction1.toString()).thenReturn("updateAction1");
+    final UpdateAction<WithKey> updateAction2 = mock(UpdateAction.class);
+    when(updateAction2.toString()).thenReturn("updateAction2");
+    final WithKey resource = mock(WithKey.class);
+    when(resource.getKey()).thenReturn("test identifier");
+
+    logErrorCallback(
+        testLogger,
+        "test resource",
+        exception,
+        Optional.of(resource),
+        Arrays.asList(updateAction1, updateAction2));
+
+    assertThat(testLogger.getAllLoggingEvents()).hasSize(1);
+    final LoggingEvent loggingEvent = testLogger.getAllLoggingEvents().get(0);
+    assertThat(loggingEvent.getMessage())
+        .isEqualTo(
+            "Error when trying to sync test resource. Existing key: test identifier. Update actions: updateAction1,updateAction2");
+    assertThat(loggingEvent.getThrowable().isPresent()).isTrue();
+    assertThat(loggingEvent.getThrowable().get()).isInstanceOf(SyncException.class);
+  }
+
+  @Test
+  void logWarningCallbackStringResourceIdentifier_ShouldLogWarningWithCorrectMessage() {
     final TestLogger testLogger = TestLoggerFactory.getTestLogger(SyncUtilsTest.class);
     SyncException exception = new SyncException("test sync exception");
 
     logWarningCallback(testLogger, "test resource", exception, "test identifier");
+
+    assertThat(testLogger.getAllLoggingEvents()).hasSize(1);
+    final LoggingEvent loggingEvent = testLogger.getAllLoggingEvents().get(0);
+    assertThat(loggingEvent.getMessage())
+        .isEqualTo("Warning when trying to sync test resource. Existing key: test identifier");
+    assertThat(loggingEvent.getThrowable().isPresent()).isTrue();
+    assertThat(loggingEvent.getThrowable().get()).isInstanceOf(SyncException.class);
+  }
+
+  @Test
+  void logWarningCallbackWithResource_ShouldLogWarningWithCorrectMessage() {
+    final TestLogger testLogger = TestLoggerFactory.getTestLogger(SyncUtilsTest.class);
+    SyncException exception = new SyncException("test sync exception");
+    WithKey resource = mock(WithKey.class);
+    when(resource.getKey()).thenReturn("test identifier");
+
+    logWarningCallback(testLogger, "test resource", exception, Optional.of(resource));
 
     assertThat(testLogger.getAllLoggingEvents()).hasSize(1);
     final LoggingEvent loggingEvent = testLogger.getAllLoggingEvents().get(0);

@@ -7,7 +7,9 @@ import com.commercetools.sync.commons.BaseSync;
 import com.commercetools.sync.commons.exceptions.SyncException;
 import io.sphere.sdk.commands.UpdateAction;
 import io.sphere.sdk.models.ResourceView;
+import io.sphere.sdk.models.WithKey;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import org.slf4j.Logger;
@@ -34,6 +36,21 @@ public final class SyncUtils {
     return isBlank(implementationVersion) ? APPLICATION_DEFAULT_VERSION : implementationVersion;
   }
 
+  public static <T extends WithKey> void logErrorCallback(
+      @Nonnull final Logger logger,
+      @Nonnull final String resourceName,
+      @Nonnull final SyncException exception,
+      @Nonnull final Optional<T> resource,
+      @Nonnull final List<UpdateAction<T>> updateActions) {
+    logger.error(
+        format(
+            "Error when trying to sync %s. Existing key: %s. Update actions: %s",
+            resourceName,
+            resource.map(WithKey::getKey).orElse(""),
+            updateActions.stream().map(Object::toString).collect(Collectors.joining(","))),
+        exception);
+  }
+
   public static <T extends ResourceView> void logErrorCallback(
       @Nonnull final Logger logger,
       @Nonnull final String resourceName,
@@ -46,6 +63,18 @@ public final class SyncUtils {
             resourceName,
             resourceIdentifier,
             updateActions.stream().map(Object::toString).collect(Collectors.joining(","))),
+        exception);
+  }
+
+  public static <T extends WithKey> void logWarningCallback(
+      @Nonnull final Logger logger,
+      @Nonnull final String resourceName,
+      @Nonnull final SyncException exception,
+      @Nonnull final Optional<T> resource) {
+    logger.warn(
+        format(
+            "Warning when trying to sync %s. Existing key: %s",
+            resourceName, resource.map(WithKey::getKey).orElse("")),
         exception);
   }
 
