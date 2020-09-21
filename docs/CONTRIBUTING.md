@@ -41,6 +41,13 @@ For example, `#2055: Remove redundant space.`
 ./gradlew test
 ````
 
+##### Run integration tests
+- Create a file `ctp.credentials.properties` and add credentials for CTP source project and CTP target project. 
+````bash
+./gradlew integrationTest
+````
+Note: to run integration tests using IntelliJ, go to `Preferences - Build, Execution, Deployment - Build Tools - Gradle` and select `Run tests using IntelliJ IDEA`.
+
 ##### Run Spotless Style Check
 ````bash
 ./gradlew spotlessCheck

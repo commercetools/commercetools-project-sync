@@ -5,7 +5,14 @@ import static com.commercetools.project.sync.service.impl.CustomObjectServiceImp
 import static com.commercetools.project.sync.service.impl.CustomObjectServiceImpl.TIMESTAMP_GENERATOR_KEY;
 import static com.commercetools.project.sync.service.impl.CustomObjectServiceImpl.TIMESTAMP_GENERATOR_VALUE;
 import static com.commercetools.project.sync.util.SyncUtils.getApplicationName;
-import static com.commercetools.project.sync.util.TestUtils.assertAllSyncersLoggingEvents;
+import static com.commercetools.project.sync.util.TestUtils.assertCartDiscountSyncerLoggingEvents;
+import static com.commercetools.project.sync.util.TestUtils.assertCategorySyncerLoggingEvents;
+import static com.commercetools.project.sync.util.TestUtils.assertInventoryEntrySyncerLoggingEvents;
+import static com.commercetools.project.sync.util.TestUtils.assertProductSyncerLoggingEvents;
+import static com.commercetools.project.sync.util.TestUtils.assertProductTypeSyncerLoggingEvents;
+import static com.commercetools.project.sync.util.TestUtils.assertStateSyncerLoggingEvents;
+import static com.commercetools.project.sync.util.TestUtils.assertTaxCategorySyncerLoggingEvents;
+import static com.commercetools.project.sync.util.TestUtils.assertTypeSyncerLoggingEvents;
 import static com.commercetools.project.sync.util.TestUtils.getMockedClock;
 import static com.commercetools.project.sync.util.TestUtils.mockLastSyncCustomObject;
 import static com.commercetools.project.sync.util.TestUtils.stubClientsCustomObjectService;
@@ -60,7 +67,6 @@ import java.util.stream.IntStream;
 import javax.annotation.Nonnull;
 import org.assertj.core.api.Condition;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import uk.org.lidalia.slf4jext.Level;
 import uk.org.lidalia.slf4jtest.LoggingEvent;
@@ -415,22 +421,21 @@ class SyncerFactoryTest {
 
     assertThat(productSyncerTestLogger.getAllLoggingEvents())
         .hasSize(2)
-        .containsOnlyElementsOf(
-            asList(
-                LoggingEvent.warn(
-                    "The product with id "
-                        + "'ba81a6da-cf83-435b-a89e-2afab579846f' on the source project ('foo') will not be synced because it "
-                        + "has the following reference attribute(s): \n"
-                        + "[{\"id\":\"53c4a8b4-754f-4b95-b6f2-3e1e70e3d0c5\",\"typeId\":\"product\"}, "
-                        + "{\"id\":\"53c4a8b4-754f-4b95-b6f2-3e1e70e3d0c4\",\"typeId\":\"category\"}].\n"
-                        + "These references are either pointing to a non-existent resource or to an existing one but with a "
-                        + "blank key. Please make sure these referenced resources are existing and have non-blank (i.e. "
-                        + "non-null and non-empty) keys."),
-                LoggingEvent.warn(
-                    badGatewayException,
-                    "Failed to replace referenced resource ids with keys on the attributes of the products"
-                        + " in the current fetched page from the source project. This page will not be synced to the target"
-                        + " project.")));
+        .containsOnly(
+            LoggingEvent.warn(
+                "The product with id "
+                    + "'ba81a6da-cf83-435b-a89e-2afab579846f' on the source project ('foo') will not be synced because it "
+                    + "has the following reference attribute(s): \n"
+                    + "[{\"id\":\"53c4a8b4-754f-4b95-b6f2-3e1e70e3d0c5\",\"typeId\":\"product\"}, "
+                    + "{\"id\":\"53c4a8b4-754f-4b95-b6f2-3e1e70e3d0c4\",\"typeId\":\"category\"}].\n"
+                    + "These references are either pointing to a non-existent resource or to an existing one but with a "
+                    + "blank key. Please make sure these referenced resources are existing and have non-blank (i.e. "
+                    + "non-null and non-empty) keys."),
+            LoggingEvent.warn(
+                badGatewayException,
+                "Failed to replace referenced resource ids with keys on the attributes of the products"
+                    + " in the current fetched page from the source project. This page will not be synced to the target"
+                    + " project."));
   }
 
   private static void verifyTimestampGeneratorCustomObjectUpsert(
@@ -816,7 +821,6 @@ class SyncerFactoryTest {
 
   @Test
   @SuppressWarnings("unchecked")
-  @Disabled
   void syncAll_AsDelta_ShouldBuildSyncerAndExecuteSync() {
     // preparation
     final SphereClient sourceClient = mock(SphereClient.class);
@@ -828,6 +832,10 @@ class SyncerFactoryTest {
     when(sourceClient.execute(any(ProductTypeQuery.class)))
         .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
     when(sourceClient.execute(any(TypeQuery.class)))
+        .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
+    when(sourceClient.execute(any(StateQuery.class)))
+        .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
+    when(sourceClient.execute(any(TaxCategoryQuery.class)))
         .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
     when(sourceClient.execute(any(CategoryQuery.class)))
         .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
@@ -845,7 +853,7 @@ class SyncerFactoryTest {
         SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock());
 
     // test
-    syncerFactory.syncAll(null, false);
+    syncerFactory.syncAll(null, false).join();
 
     // assertions
     verifyTimestampGeneratorCustomObjectUpsert(
@@ -858,7 +866,10 @@ class SyncerFactoryTest {
         targetClient, 1, "InventorySync", DEFAULT_RUNNER_NAME);
     verifyTimestampGeneratorCustomObjectUpsert(
         targetClient, 1, "CartDiscountSync", DEFAULT_RUNNER_NAME);
-    verify(targetClient, times(12)).execute(any(CustomObjectUpsertCommand.class));
+    verifyTimestampGeneratorCustomObjectUpsert(targetClient, 1, "StateSync", DEFAULT_RUNNER_NAME);
+    verifyTimestampGeneratorCustomObjectUpsert(
+        targetClient, 1, "TaxCategorySync", DEFAULT_RUNNER_NAME);
+    verify(targetClient, times(16)).execute(any(CustomObjectUpsertCommand.class));
     verifyLastSyncCustomObjectQuery(targetClient, "inventorySync", DEFAULT_RUNNER_NAME, "foo", 1);
     verifyLastSyncCustomObjectQuery(targetClient, "productTypeSync", DEFAULT_RUNNER_NAME, "foo", 1);
     verifyLastSyncCustomObjectQuery(targetClient, "productSync", DEFAULT_RUNNER_NAME, "foo", 1);
@@ -866,13 +877,42 @@ class SyncerFactoryTest {
     verifyLastSyncCustomObjectQuery(targetClient, "typeSync", DEFAULT_RUNNER_NAME, "foo", 1);
     verifyLastSyncCustomObjectQuery(
         targetClient, "cartDiscountSync", DEFAULT_RUNNER_NAME, "foo", 1);
+    verifyLastSyncCustomObjectQuery(targetClient, "stateSync", DEFAULT_RUNNER_NAME, "foo", 1);
+    verifyLastSyncCustomObjectQuery(targetClient, "taxCategorySync", DEFAULT_RUNNER_NAME, "foo", 1);
     verify(sourceClient, times(1)).execute(any(ProductTypeQuery.class));
     verify(sourceClient, times(1)).execute(any(TypeQuery.class));
     verify(sourceClient, times(1)).execute(any(CategoryQuery.class));
     verify(sourceClient, times(1)).execute(any(ProductQuery.class));
     verify(sourceClient, times(1)).execute(any(InventoryEntryQuery.class));
     verify(sourceClient, times(1)).execute(any(CartDiscountQuery.class));
-    verifyInteractionsWithClientAfterSync(sourceClient, 6);
+    verify(sourceClient, times(1)).execute(any(StateQuery.class));
+    verify(sourceClient, times(1)).execute(any(TaxCategoryQuery.class));
+    verifyInteractionsWithClientAfterSync(sourceClient, 8);
     assertAllSyncersLoggingEvents(syncerTestLogger, cliRunnerTestLogger, 0);
+  }
+
+  public static void assertAllSyncersLoggingEvents(
+      @Nonnull final TestLogger syncerTestLogger,
+      @Nonnull final TestLogger cliRunnerTestLogger,
+      final int numberOfResources) {
+
+    assertThat(cliRunnerTestLogger.getAllLoggingEvents())
+        .allMatch(loggingEvent -> !Level.ERROR.equals(loggingEvent.getLevel()));
+
+    assertThat(syncerTestLogger.getAllLoggingEvents())
+        .allMatch(loggingEvent -> !Level.ERROR.equals(loggingEvent.getLevel()));
+
+    assertTypeSyncerLoggingEvents(syncerTestLogger, numberOfResources);
+    assertProductTypeSyncerLoggingEvents(syncerTestLogger, numberOfResources);
+    assertCategorySyncerLoggingEvents(syncerTestLogger, numberOfResources);
+    assertProductSyncerLoggingEvents(syncerTestLogger, numberOfResources);
+    assertInventoryEntrySyncerLoggingEvents(syncerTestLogger, numberOfResources);
+    assertCartDiscountSyncerLoggingEvents(syncerTestLogger, numberOfResources);
+    // +1 state is a built-in state and it cant be deleted
+    assertStateSyncerLoggingEvents(syncerTestLogger, numberOfResources);
+    assertTaxCategorySyncerLoggingEvents(syncerTestLogger, numberOfResources);
+
+    // Every sync module is expected to have 2 logs (start and stats summary)
+    assertThat(syncerTestLogger.getAllLoggingEvents()).hasSize(16);
   }
 }

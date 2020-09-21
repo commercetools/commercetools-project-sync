@@ -8,6 +8,8 @@ import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_LONG;
 import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_PRODUCT_SYNC;
 import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_PRODUCT_TYPE_SYNC;
 import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_SHORT;
+import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_STATE_SYNC;
+import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_TAX_CATEGORY_SYNC;
 import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_TYPE_SYNC;
 import static io.sphere.sdk.utils.CompletableFutureUtils.exceptionallyCompletedFuture;
 import static java.lang.String.format;
@@ -19,6 +21,8 @@ import com.commercetools.project.sync.category.CategorySyncer;
 import com.commercetools.project.sync.inventoryentry.InventoryEntrySyncer;
 import com.commercetools.project.sync.product.ProductSyncer;
 import com.commercetools.project.sync.producttype.ProductTypeSyncer;
+import com.commercetools.project.sync.state.StateSyncer;
+import com.commercetools.project.sync.taxcategory.TaxCategorySyncer;
 import com.commercetools.project.sync.type.TypeSyncer;
 import com.commercetools.sync.commons.BaseSync;
 import com.commercetools.sync.commons.BaseSyncOptions;
@@ -63,31 +67,42 @@ final class SyncerFactory {
     final SphereClient sourceClient = sourceClientSupplier.get();
     final SphereClient targetClient = targetClientSupplier.get();
 
-    final List<CompletableFuture<Void>> typeAndProductTypeSync =
+    final List<CompletableFuture<Void>> typeAndProductTypeAndStateAndTaxCategorySync =
         asList(
             ProductTypeSyncer.of(sourceClient, targetClient, clock)
                 .sync(runnerNameOptionValue, isFullSync)
                 .toCompletableFuture(),
             TypeSyncer.of(sourceClient, targetClient, clock)
                 .sync(runnerNameOptionValue, isFullSync)
+                .toCompletableFuture(),
+            StateSyncer.of(sourceClient, targetClient, clock)
+                .sync(runnerNameOptionValue, isFullSync)
+                .toCompletableFuture(),
+            TaxCategorySyncer.of(sourceClient, targetClient, clock)
+                .sync(runnerNameOptionValue, isFullSync)
                 .toCompletableFuture());
 
-    return CompletableFuture.allOf(typeAndProductTypeSync.toArray(new CompletableFuture[0]))
+    return CompletableFuture.allOf(
+            typeAndProductTypeAndStateAndTaxCategorySync.toArray(new CompletableFuture[0]))
         .thenCompose(
-            ignored ->
-                CategorySyncer.of(sourceClient, targetClient, clock)
-                    .sync(runnerNameOptionValue, isFullSync))
+            ignored -> {
+              final List<CompletableFuture<Void>> categoryAndInventoryAndCartDiscountSync =
+                  asList(
+                      CategorySyncer.of(sourceClient, targetClient, clock)
+                          .sync(runnerNameOptionValue, isFullSync)
+                          .toCompletableFuture(),
+                      CartDiscountSyncer.of(sourceClient, targetClient, clock)
+                          .sync(runnerNameOptionValue, isFullSync)
+                          .toCompletableFuture(),
+                      InventoryEntrySyncer.of(sourceClient, targetClient, clock)
+                          .sync(runnerNameOptionValue, isFullSync)
+                          .toCompletableFuture());
+              return CompletableFuture.allOf(
+                  categoryAndInventoryAndCartDiscountSync.toArray(new CompletableFuture[0]));
+            })
         .thenCompose(
             ignored ->
                 ProductSyncer.of(sourceClient, targetClient, clock)
-                    .sync(runnerNameOptionValue, isFullSync))
-        .thenCompose(
-            ignored ->
-                CartDiscountSyncer.of(sourceClient, targetClient, clock)
-                    .sync(runnerNameOptionValue, isFullSync))
-        .thenCompose(
-            ignored ->
-                InventoryEntrySyncer.of(sourceClient, targetClient, clock)
                     .sync(runnerNameOptionValue, isFullSync))
         .whenComplete((syncResult, throwable) -> closeClients());
   }
@@ -163,8 +178,12 @@ final class SyncerFactory {
       case SYNC_MODULE_OPTION_INVENTORY_ENTRY_SYNC:
         return InventoryEntrySyncer.of(
             sourceClientSupplier.get(), targetClientSupplier.get(), clock);
+      case SYNC_MODULE_OPTION_TAX_CATEGORY_SYNC:
+        return TaxCategorySyncer.of(sourceClientSupplier.get(), targetClientSupplier.get(), clock);
       case SYNC_MODULE_OPTION_TYPE_SYNC:
         return TypeSyncer.of(sourceClientSupplier.get(), targetClientSupplier.get(), clock);
+      case SYNC_MODULE_OPTION_STATE_SYNC:
+        return StateSyncer.of(sourceClientSupplier.get(), targetClientSupplier.get(), clock);
       default:
         final String errorMessage =
             format(

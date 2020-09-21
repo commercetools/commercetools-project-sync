@@ -1,7 +1,9 @@
 package com.commercetools.project.sync.cartdiscount;
 
-import static com.commercetools.sync.cartdiscounts.utils.CartDiscountReferenceReplacementUtils.buildCartDiscountQuery;
-import static com.commercetools.sync.cartdiscounts.utils.CartDiscountReferenceReplacementUtils.replaceCartDiscountsReferenceIdsWithKeys;
+import static com.commercetools.project.sync.util.SyncUtils.logErrorCallback;
+import static com.commercetools.project.sync.util.SyncUtils.logWarningCallback;
+import static com.commercetools.sync.cartdiscounts.utils.CartDiscountReferenceResolutionUtils.buildCartDiscountQuery;
+import static com.commercetools.sync.cartdiscounts.utils.CartDiscountReferenceResolutionUtils.mapToCartDiscountDrafts;
 
 import com.commercetools.project.sync.Syncer;
 import com.commercetools.project.sync.service.CustomObjectService;
@@ -10,12 +12,17 @@ import com.commercetools.sync.cartdiscounts.CartDiscountSync;
 import com.commercetools.sync.cartdiscounts.CartDiscountSyncOptions;
 import com.commercetools.sync.cartdiscounts.CartDiscountSyncOptionsBuilder;
 import com.commercetools.sync.cartdiscounts.helpers.CartDiscountSyncStatistics;
+import com.commercetools.sync.commons.exceptions.SyncException;
+import com.commercetools.sync.commons.utils.QuadConsumer;
+import com.commercetools.sync.commons.utils.TriConsumer;
 import io.sphere.sdk.cartdiscounts.CartDiscount;
 import io.sphere.sdk.cartdiscounts.CartDiscountDraft;
 import io.sphere.sdk.cartdiscounts.queries.CartDiscountQuery;
 import io.sphere.sdk.client.SphereClient;
+import io.sphere.sdk.commands.UpdateAction;
 import java.time.Clock;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import javax.annotation.Nonnull;
@@ -49,10 +56,22 @@ public final class CartDiscountSyncer
       @Nonnull final SphereClient targetClient,
       @Nonnull final Clock clock) {
 
+    final QuadConsumer<
+            SyncException,
+            Optional<CartDiscountDraft>,
+            Optional<CartDiscount>,
+            List<UpdateAction<CartDiscount>>>
+        logErrorCallback =
+            (exception, newResourceDraft, oldResource, updateActions) ->
+                logErrorCallback(LOGGER, "cart discount", exception, oldResource, updateActions);
+    final TriConsumer<SyncException, Optional<CartDiscountDraft>, Optional<CartDiscount>>
+        logWarningCallback =
+            (exception, newResourceDraft, oldResource) ->
+                logWarningCallback(LOGGER, "cart discount", exception, oldResource);
     final CartDiscountSyncOptions syncOptions =
         CartDiscountSyncOptionsBuilder.of(targetClient)
-            .errorCallback(LOGGER::error)
-            .warningCallback(LOGGER::warn)
+            .errorCallback(logErrorCallback)
+            .warningCallback(logWarningCallback)
             .build();
 
     final CartDiscountSync cartDiscountSync = new CartDiscountSync(syncOptions);
@@ -67,7 +86,7 @@ public final class CartDiscountSyncer
   @Nonnull
   protected CompletionStage<List<CartDiscountDraft>> transform(
       @Nonnull final List<CartDiscount> page) {
-    return CompletableFuture.completedFuture(replaceCartDiscountsReferenceIdsWithKeys(page));
+    return CompletableFuture.completedFuture(mapToCartDiscountDrafts(page));
   }
 
   @Nonnull

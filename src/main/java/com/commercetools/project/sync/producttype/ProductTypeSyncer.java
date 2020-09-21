@@ -1,19 +1,27 @@
 package com.commercetools.project.sync.producttype;
 
+import static com.commercetools.project.sync.util.SyncUtils.logErrorCallback;
+import static com.commercetools.project.sync.util.SyncUtils.logWarningCallback;
+
 import com.commercetools.project.sync.Syncer;
 import com.commercetools.project.sync.service.CustomObjectService;
 import com.commercetools.project.sync.service.impl.CustomObjectServiceImpl;
+import com.commercetools.sync.commons.exceptions.SyncException;
+import com.commercetools.sync.commons.utils.QuadConsumer;
+import com.commercetools.sync.commons.utils.TriConsumer;
 import com.commercetools.sync.producttypes.ProductTypeSync;
 import com.commercetools.sync.producttypes.ProductTypeSyncOptions;
 import com.commercetools.sync.producttypes.ProductTypeSyncOptionsBuilder;
 import com.commercetools.sync.producttypes.helpers.ProductTypeSyncStatistics;
-import com.commercetools.sync.producttypes.utils.ProductTypeReferenceReplacementUtils;
+import com.commercetools.sync.producttypes.utils.ProductTypeReferenceResolutionUtils;
 import io.sphere.sdk.client.SphereClient;
+import io.sphere.sdk.commands.UpdateAction;
 import io.sphere.sdk.producttypes.ProductType;
 import io.sphere.sdk.producttypes.ProductTypeDraft;
 import io.sphere.sdk.producttypes.queries.ProductTypeQuery;
 import java.time.Clock;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import javax.annotation.Nonnull;
@@ -47,10 +55,22 @@ public final class ProductTypeSyncer
       @Nonnull final SphereClient targetClient,
       @Nonnull final Clock clock) {
 
+    final QuadConsumer<
+            SyncException,
+            Optional<ProductTypeDraft>,
+            Optional<ProductType>,
+            List<UpdateAction<ProductType>>>
+        logErrorCallback =
+            (exception, newResourceDraft, oldResource, updateActions) ->
+                logErrorCallback(LOGGER, "product type", exception, oldResource, updateActions);
+    final TriConsumer<SyncException, Optional<ProductTypeDraft>, Optional<ProductType>>
+        logWarningCallback =
+            (exception, newResourceDraft, oldResource) ->
+                logWarningCallback(LOGGER, "product type", exception, oldResource);
     final ProductTypeSyncOptions syncOptions =
         ProductTypeSyncOptionsBuilder.of(targetClient)
-            .errorCallback(LOGGER::error)
-            .warningCallback(LOGGER::warn)
+            .errorCallback(logErrorCallback)
+            .warningCallback(logWarningCallback)
             .build();
 
     final ProductTypeSync productTypeSync = new ProductTypeSync(syncOptions);
@@ -66,7 +86,7 @@ public final class ProductTypeSyncer
   protected CompletionStage<List<ProductTypeDraft>> transform(
       @Nonnull final List<ProductType> page) {
     return CompletableFuture.completedFuture(
-        ProductTypeReferenceReplacementUtils.replaceProductTypesReferenceIdsWithKeys(page));
+        ProductTypeReferenceResolutionUtils.mapToProductTypeDrafts(page));
   }
 
   @Nonnull
@@ -74,6 +94,6 @@ public final class ProductTypeSyncer
   protected ProductTypeQuery getQuery() {
     // TODO: Set depth need to be configurable.
     // https://github.com/commercetools/commercetools-project-sync/issues/44
-    return ProductTypeReferenceReplacementUtils.buildProductTypeQuery(1);
+    return ProductTypeReferenceResolutionUtils.buildProductTypeQuery(1);
   }
 }

@@ -8,7 +8,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
 import com.commercetools.sync.producttypes.ProductTypeSync;
-import com.commercetools.sync.producttypes.utils.ProductTypeReferenceReplacementUtils;
+import com.commercetools.sync.producttypes.utils.ProductTypeReferenceResolutionUtils;
 import io.sphere.sdk.client.SphereClient;
 import io.sphere.sdk.producttypes.ProductType;
 import io.sphere.sdk.producttypes.ProductTypeDraft;
@@ -65,6 +65,6 @@ class ProductTypeSyncerTest {
     final ProductTypeQuery query = productTypeSyncer.getQuery();
 
     // assertion
-    assertThat(query).isEqualTo(ProductTypeReferenceReplacementUtils.buildProductTypeQuery(1));
+    assertThat(query).isEqualTo(ProductTypeReferenceResolutionUtils.buildProductTypeQuery(1));
   }
 }

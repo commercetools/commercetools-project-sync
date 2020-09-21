@@ -11,9 +11,9 @@ buildscript {
 }
 
 plugins {
-    id "com.github.ben-manes.versions" version '0.29.0'
+    id "com.github.ben-manes.versions" version '0.33.0'
     id 'com.adarshr.test-logger' version '2.1.0'
-    id "com.diffplug.gradle.spotless" version '4.5.1'
+    id 'com.diffplug.spotless' version '5.5.1'
     id 'com.bmuschko.docker-java-application' version '6.6.1'
 }
 
@@ -28,17 +28,17 @@ apply from: "$rootDir/gradle-scripts/test-logger.gradle"
 
 
 ext {
-    commercetoolsJvmSdkVersion =  '1.51.0'
-    mockitoVersion = '3.4.6'
+    commercetoolsJvmSdkVersion =  '1.53.0'
+    mockitoVersion = '3.5.11'
     slf4jVersion = '1.7.30'
     slf4jTestVersion = '1.2.0'
-    assertjVersion = '3.16.1'
+    assertjVersion = '3.17.2'
     pmdVersion = '5.6.1'
     jacocoVersion = '0.7.9'
     findbugsVersion = '3.0.1'
-    commercetoolsSyncJava='1.9.0'
+    commercetoolsSyncJava='2.0.0'
     apacheCliVersion = '1.4'
-    jupiterApiVersion = '5.6.2'
+    jupiterApiVersion = '5.7.0'
 }
 
 

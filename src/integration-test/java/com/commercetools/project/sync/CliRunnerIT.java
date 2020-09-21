@@ -16,11 +16,13 @@ import static com.commercetools.project.sync.util.TestUtils.assertSyncerLoggingE
 import static io.sphere.sdk.models.LocalizedString.ofEnglish;
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.commercetools.project.sync.model.response.LastSyncCustomObject;
 import com.commercetools.sync.commons.helpers.BaseSyncStatistics;
 import com.commercetools.sync.products.helpers.ProductSyncStatistics;
+import com.neovisionaries.i18n.CountryCode;
 import io.sphere.sdk.cartdiscounts.CartDiscount;
 import io.sphere.sdk.cartdiscounts.CartDiscountDraft;
 import io.sphere.sdk.cartdiscounts.CartDiscountDraftBuilder;
@@ -50,6 +52,19 @@ import io.sphere.sdk.producttypes.commands.ProductTypeCreateCommand;
 import io.sphere.sdk.producttypes.queries.ProductTypeQuery;
 import io.sphere.sdk.queries.PagedQueryResult;
 import io.sphere.sdk.queries.QueryPredicate;
+import io.sphere.sdk.states.State;
+import io.sphere.sdk.states.StateDraft;
+import io.sphere.sdk.states.StateDraftBuilder;
+import io.sphere.sdk.states.StateType;
+import io.sphere.sdk.states.commands.StateCreateCommand;
+import io.sphere.sdk.states.queries.StateQuery;
+import io.sphere.sdk.taxcategories.TaxCategory;
+import io.sphere.sdk.taxcategories.TaxCategoryDraft;
+import io.sphere.sdk.taxcategories.TaxCategoryDraftBuilder;
+import io.sphere.sdk.taxcategories.TaxRateDraft;
+import io.sphere.sdk.taxcategories.TaxRateDraftBuilder;
+import io.sphere.sdk.taxcategories.commands.TaxCategoryCreateCommand;
+import io.sphere.sdk.taxcategories.queries.TaxCategoryQuery;
 import io.sphere.sdk.types.ResourceTypeIdsSetBuilder;
 import io.sphere.sdk.types.Type;
 import io.sphere.sdk.types.TypeDraft;
@@ -58,6 +73,7 @@ import io.sphere.sdk.types.commands.TypeCreateCommand;
 import io.sphere.sdk.types.queries.TypeQuery;
 import java.time.Clock;
 import java.time.ZonedDateTime;
+import java.util.Collections;
 import javax.annotation.Nonnull;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -100,7 +116,33 @@ class CliRunnerIT {
                 ResourceTypeIdsSetBuilder.of().addCategories())
             .build();
 
+    final StateDraft stateDraft =
+        StateDraftBuilder.of(RESOURCE_KEY, StateType.PRODUCT_STATE)
+            .roles(Collections.emptySet())
+            .description(ofEnglish("State 1"))
+            .name(ofEnglish("State 1"))
+            .initial(true)
+            .transitions(Collections.emptySet())
+            .build();
+    final State state =
+        sourceProjectClient.execute(StateCreateCommand.of(stateDraft)).toCompletableFuture().join();
+
     sourceProjectClient.execute(TypeCreateCommand.of(typeDraft)).toCompletableFuture().join();
+
+    final TaxRateDraft taxRateDraft =
+        TaxRateDraftBuilder.of("Tax-Rate-Name-1", 0.3, false, CountryCode.DE).build();
+
+    final TaxCategoryDraft taxCategoryDraft =
+        TaxCategoryDraftBuilder.of(
+                "Tax-Category-Name-1", singletonList(taxRateDraft), "Tax-Category-Description-1")
+            .key(RESOURCE_KEY)
+            .build();
+
+    final TaxCategory taxCategory =
+        sourceProjectClient
+            .execute(TaxCategoryCreateCommand.of(taxCategoryDraft))
+            .toCompletableFuture()
+            .join();
 
     final CategoryDraft categoryDraft =
         CategoryDraftBuilder.of(ofEnglish("t-shirts"), ofEnglish("t-shirts"))
@@ -118,6 +160,8 @@ class CliRunnerIT {
                 ofEnglish("V-neck Tee"),
                 ofEnglish("v-neck-tee"),
                 ProductVariantDraftBuilder.of().key(RESOURCE_KEY).sku(RESOURCE_KEY).build())
+            .state(state)
+            .taxCategory(taxCategory)
             .key(RESOURCE_KEY)
             .build();
 
@@ -176,8 +220,6 @@ class CliRunnerIT {
         assertAllSyncersLoggingEvents(syncerTestLogger, cliRunnerTestLogger, 1);
 
         assertAllResourcesAreSyncedToTarget(postTargetClient);
-
-        cleanUpProjects(postSourceClient, postTargetClient);
       }
     }
   }
@@ -229,8 +271,6 @@ class CliRunnerIT {
             DEFAULT_RUNNER_NAME,
             ProductSyncStatistics.class,
             lastSyncTimestamp);
-
-        cleanUpProjects(postSourceClient, postTargetClient);
       }
     }
   }
@@ -351,7 +391,11 @@ class CliRunnerIT {
         assertLastSyncCustomObjectExists(
             postTargetClient, sourceProjectKey, "cartDiscountSync", "runnerName");
 
-        cleanUpProjects(postSourceClient, postTargetClient);
+        assertLastSyncCustomObjectExists(
+            postTargetClient, sourceProjectKey, "stateSync", "runnerName");
+
+        assertLastSyncCustomObjectExists(
+            postTargetClient, sourceProjectKey, "taxCategorySync", "runnerName");
       }
     }
   }
@@ -382,7 +426,6 @@ class CliRunnerIT {
         assertCurrentCtpTimestampGeneratorDoesntExist(
             postTargetClient, "runnerName", "ProductTypeSync");
         assertNoCustomObjectExists(postTargetClient);
-        cleanUpProjects(postSourceClient, postTargetClient);
       }
     }
   }
@@ -461,6 +504,17 @@ class CliRunnerIT {
         .hasSize(1)
         .hasOnlyOneElementSatisfying(type -> assertThat(type.getKey()).isEqualTo(RESOURCE_KEY));
 
+    final PagedQueryResult<TaxCategory> taxCategoryQueryResult =
+        targetClient
+            .execute(TaxCategoryQuery.of().withPredicates(QueryPredicate.of(queryPredicate)))
+            .toCompletableFuture()
+            .join();
+
+    assertThat(taxCategoryQueryResult.getResults())
+        .hasSize(1)
+        .hasOnlyOneElementSatisfying(
+            taxCategory -> assertThat(taxCategory.getKey()).isEqualTo(RESOURCE_KEY));
+
     final PagedQueryResult<InventoryEntry> inventoryEntryQueryResult =
         targetClient
             .execute(
@@ -486,5 +540,16 @@ class CliRunnerIT {
         .hasSize(1)
         .hasOnlyOneElementSatisfying(
             cartDiscount -> assertThat(cartDiscount.getKey()).isEqualTo(RESOURCE_KEY));
+
+    final PagedQueryResult<State> statePagedQueryResult =
+        targetClient
+            .execute(
+                StateQuery.of().withPredicates(queryModel -> queryModel.key().is(RESOURCE_KEY)))
+            .toCompletableFuture()
+            .join();
+
+    assertThat(statePagedQueryResult.getResults())
+        .hasSize(1)
+        .hasOnlyOneElementSatisfying(state -> assertThat(state.getKey()).isEqualTo(RESOURCE_KEY));
   }
 }

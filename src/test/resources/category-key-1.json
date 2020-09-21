@@ -10,5 +10,49 @@
   "description": {
     "en": "description-1"
   },
-  "assets": []
+  "assets": [],
+  "custom": {
+    "type": {
+      "typeId": "type",
+      "id": "f0e20a59-e44a-4d81-9548-e6a7312cd769",
+      "obj": {
+        "id": "f0e20a59-e44a-4d81-9548-e6a7312cd769",
+        "version": 1,
+        "createdAt": "2020-08-10T10:35:35.410Z",
+        "lastModifiedAt": "2020-08-10T10:35:35.410Z",
+        "lastModifiedBy": {
+          "isPlatformClient": true
+        },
+        "createdBy": {
+          "isPlatformClient": true
+        },
+        "key": "my-category",
+        "name": {
+          "en": "customized fields"
+        },
+        "description": {
+          "en": "customized fields definition"
+        },
+        "resourceTypeIds": [
+          "category"
+        ],
+        "fieldDefinitions": [
+          {
+            "name": "color",
+            "label": {
+              "en": "color"
+            },
+            "required": false,
+            "type": {
+              "name": "String"
+            },
+            "inputHint": "SingleLine"
+          }
+        ]
+      }
+    },
+    "fields": {
+      "color": "Test"
+    }
+  }
 }

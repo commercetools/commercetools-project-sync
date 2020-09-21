@@ -1,22 +1,28 @@
 package com.commercetools.project.sync.inventoryentry;
 
-import static com.commercetools.sync.inventories.utils.InventoryReferenceReplacementUtils.replaceInventoriesReferenceIdsWithKeys;
+import static com.commercetools.project.sync.util.SyncUtils.logErrorCallback;
+import static com.commercetools.project.sync.util.SyncUtils.logWarningCallback;
+import static com.commercetools.sync.inventories.utils.InventoryReferenceResolutionUtils.buildInventoryQuery;
+import static com.commercetools.sync.inventories.utils.InventoryReferenceResolutionUtils.mapToInventoryEntryDrafts;
 
 import com.commercetools.project.sync.Syncer;
 import com.commercetools.project.sync.service.CustomObjectService;
 import com.commercetools.project.sync.service.impl.CustomObjectServiceImpl;
+import com.commercetools.sync.commons.exceptions.SyncException;
+import com.commercetools.sync.commons.utils.QuadConsumer;
+import com.commercetools.sync.commons.utils.TriConsumer;
 import com.commercetools.sync.inventories.InventorySync;
 import com.commercetools.sync.inventories.InventorySyncOptions;
 import com.commercetools.sync.inventories.InventorySyncOptionsBuilder;
 import com.commercetools.sync.inventories.helpers.InventorySyncStatistics;
 import io.sphere.sdk.client.SphereClient;
-import io.sphere.sdk.expansion.ExpansionPath;
+import io.sphere.sdk.commands.UpdateAction;
 import io.sphere.sdk.inventory.InventoryEntry;
 import io.sphere.sdk.inventory.InventoryEntryDraft;
-import io.sphere.sdk.inventory.expansion.InventoryEntryExpansionModel;
 import io.sphere.sdk.inventory.queries.InventoryEntryQuery;
 import java.time.Clock;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import javax.annotation.Nonnull;
@@ -49,10 +55,31 @@ public final class InventoryEntrySyncer
       @Nonnull final SphereClient targetClient,
       @Nonnull final Clock clock) {
 
+    final QuadConsumer<
+            SyncException,
+            Optional<InventoryEntryDraft>,
+            Optional<InventoryEntry>,
+            List<UpdateAction<InventoryEntry>>>
+        logErrorCallback =
+            (exception, newResourceDraft, oldResource, updateActions) ->
+                logErrorCallback(
+                    LOGGER,
+                    "inventory entry",
+                    exception,
+                    oldResource.map(InventoryEntry::getSku).orElse(""),
+                    updateActions);
+    final TriConsumer<SyncException, Optional<InventoryEntryDraft>, Optional<InventoryEntry>>
+        logWarningCallback =
+            (exception, newResourceDraft, oldResource) ->
+                logWarningCallback(
+                    LOGGER,
+                    "inventory entry",
+                    exception,
+                    oldResource.map(InventoryEntry::getSku).orElse(""));
     final InventorySyncOptions syncOptions =
         InventorySyncOptionsBuilder.of(targetClient)
-            .errorCallback(LOGGER::error)
-            .warningCallback(LOGGER::warn)
+            .errorCallback(logErrorCallback)
+            .warningCallback(logWarningCallback)
             .build();
 
     final InventorySync inventorySync = new InventorySync(syncOptions);
@@ -67,23 +94,12 @@ public final class InventoryEntrySyncer
   @Override
   protected CompletionStage<List<InventoryEntryDraft>> transform(
       @Nonnull final List<InventoryEntry> page) {
-    return CompletableFuture.completedFuture(replaceInventoriesReferenceIdsWithKeys(page));
+    return CompletableFuture.completedFuture(mapToInventoryEntryDrafts(page));
   }
 
   @Nonnull
   @Override
   protected InventoryEntryQuery getQuery() {
-    return buildQuery();
-  }
-
-  /**
-   * TODO: Should be added to the commercetools-sync library.
-   *
-   * @return an {@link InventoryEntryQuery} instance.
-   */
-  private static InventoryEntryQuery buildQuery() {
-    return InventoryEntryQuery.of()
-        .withExpansionPaths(InventoryEntryExpansionModel::supplyChannel)
-        .plusExpansionPaths(ExpansionPath.of("custom.type"));
+    return buildInventoryQuery();
   }
 }
