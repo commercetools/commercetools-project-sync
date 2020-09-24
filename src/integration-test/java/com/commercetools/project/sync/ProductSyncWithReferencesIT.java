@@ -9,6 +9,7 @@ import static com.commercetools.project.sync.util.SphereClientUtils.CTP_SOURCE_C
 import static com.commercetools.project.sync.util.SphereClientUtils.CTP_TARGET_CLIENT_CONFIG;
 import static com.commercetools.project.sync.util.TestUtils.assertCartDiscountSyncerLoggingEvents;
 import static com.commercetools.project.sync.util.TestUtils.assertCategorySyncerLoggingEvents;
+import static com.commercetools.project.sync.util.TestUtils.assertCustomObjectSyncerLoggingEvents;
 import static com.commercetools.project.sync.util.TestUtils.assertInventoryEntrySyncerLoggingEvents;
 import static com.commercetools.project.sync.util.TestUtils.assertProductSyncerLoggingEvents;
 import static com.commercetools.project.sync.util.TestUtils.assertProductTypeSyncerLoggingEvents;
@@ -203,9 +204,10 @@ class ProductSyncWithReferencesIT {
       assertCartDiscountSyncerLoggingEvents(syncerTestLogger, 0);
       assertStateSyncerLoggingEvents(
           syncerTestLogger, 1); // 1 state is built-in and it cant be deleted
+      assertCustomObjectSyncerLoggingEvents(syncerTestLogger, 0);
 
       // Every sync module is expected to have 2 logs (start and stats summary)
-      assertThat(syncerTestLogger.getAllLoggingEvents()).hasSize(16);
+      assertThat(syncerTestLogger.getAllLoggingEvents()).hasSize(18);
 
       assertAllResourcesAreSyncedToTarget(postTargetClient);
     }

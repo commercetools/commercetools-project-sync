@@ -22,6 +22,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.commercetools.project.sync.model.response.LastSyncCustomObject;
 import com.commercetools.sync.commons.helpers.BaseSyncStatistics;
 import com.commercetools.sync.products.helpers.ProductSyncStatistics;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.neovisionaries.i18n.CountryCode;
 import io.sphere.sdk.cartdiscounts.CartDiscount;
 import io.sphere.sdk.cartdiscounts.CartDiscountDraft;
@@ -35,6 +37,8 @@ import io.sphere.sdk.categories.CategoryDraftBuilder;
 import io.sphere.sdk.categories.commands.CategoryCreateCommand;
 import io.sphere.sdk.client.SphereClient;
 import io.sphere.sdk.customobjects.CustomObject;
+import io.sphere.sdk.customobjects.CustomObjectDraft;
+import io.sphere.sdk.customobjects.commands.CustomObjectUpsertCommand;
 import io.sphere.sdk.customobjects.queries.CustomObjectQuery;
 import io.sphere.sdk.inventory.InventoryEntry;
 import io.sphere.sdk.inventory.InventoryEntryDraft;
@@ -143,6 +147,15 @@ class CliRunnerIT {
             .execute(TaxCategoryCreateCommand.of(taxCategoryDraft))
             .toCompletableFuture()
             .join();
+
+    final CustomObjectDraft<JsonNode> customObjectDraft =
+        CustomObjectDraft.ofUnversionedUpsert(
+            RESOURCE_KEY, RESOURCE_KEY, JsonNodeFactory.instance.objectNode().put("name", "value"));
+
+    sourceProjectClient
+        .execute(CustomObjectUpsertCommand.of(customObjectDraft))
+        .toCompletableFuture()
+        .join();
 
     final CategoryDraft categoryDraft =
         CategoryDraftBuilder.of(ofEnglish("t-shirts"), ofEnglish("t-shirts"))
@@ -396,6 +409,9 @@ class CliRunnerIT {
 
         assertLastSyncCustomObjectExists(
             postTargetClient, sourceProjectKey, "taxCategorySync", "runnerName");
+
+        assertLastSyncCustomObjectExists(
+            postTargetClient, sourceProjectKey, "customObjectSync", "runnerName");
       }
     }
   }
@@ -417,16 +433,14 @@ class CliRunnerIT {
     // create clients again (for assertions and cleanup), since the run method closes the clients
     // after execution
     // is done.
-    try (final SphereClient postSourceClient = createClient(CTP_SOURCE_CLIENT_CONFIG)) {
-      try (final SphereClient postTargetClient = createClient(CTP_TARGET_CLIENT_CONFIG)) {
-        // assertions
-        assertAllSyncersLoggingEvents(syncerTestLogger, cliRunnerTestLogger, 1);
+    try (final SphereClient postTargetClient = createClient(CTP_TARGET_CLIENT_CONFIG)) {
+      // assertions
+      assertAllSyncersLoggingEvents(syncerTestLogger, cliRunnerTestLogger, 1);
 
-        assertAllResourcesAreSyncedToTarget(postTargetClient);
-        assertCurrentCtpTimestampGeneratorDoesntExist(
-            postTargetClient, "runnerName", "ProductTypeSync");
-        assertNoCustomObjectExists(postTargetClient);
-      }
+      assertAllResourcesAreSyncedToTarget(postTargetClient);
+      assertCurrentCtpTimestampGeneratorDoesntExist(
+          postTargetClient, "runnerName", "ProductTypeSync");
+      assertNoCustomObjectExists(postTargetClient);
     }
   }
 
@@ -551,5 +565,23 @@ class CliRunnerIT {
     assertThat(statePagedQueryResult.getResults())
         .hasSize(1)
         .hasOnlyOneElementSatisfying(state -> assertThat(state.getKey()).isEqualTo(RESOURCE_KEY));
+
+    PagedQueryResult<CustomObject<JsonNode>> customObjectPagedQueryResult =
+        targetClient
+            .execute(
+                CustomObjectQuery.ofJsonNode()
+                    .withPredicates(
+                        queryModel ->
+                            queryModel
+                                .key()
+                                .is(RESOURCE_KEY)
+                                .and(queryModel.container().is(RESOURCE_KEY))))
+            .toCompletableFuture()
+            .join();
+
+    assertThat(customObjectPagedQueryResult.getResults())
+        .hasSize(1)
+        .hasOnlyOneElementSatisfying(
+            customObject -> assertThat(customObject.getKey()).isEqualTo(RESOURCE_KEY));
   }
 }

@@ -2,6 +2,7 @@ package com.commercetools.project.sync;
 
 import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_CART_DISCOUNT_SYNC;
 import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_CATEGORY_SYNC;
+import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_CUSTOM_OBJECT_SYNC;
 import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_DESCRIPTION;
 import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_INVENTORY_ENTRY_SYNC;
 import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_LONG;
@@ -18,6 +19,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import com.commercetools.project.sync.cartdiscount.CartDiscountSyncer;
 import com.commercetools.project.sync.category.CategorySyncer;
+import com.commercetools.project.sync.customobject.CustomObjectSyncer;
 import com.commercetools.project.sync.inventoryentry.InventoryEntrySyncer;
 import com.commercetools.project.sync.product.ProductSyncer;
 import com.commercetools.project.sync.producttype.ProductTypeSyncer;
@@ -28,7 +30,7 @@ import com.commercetools.sync.commons.BaseSync;
 import com.commercetools.sync.commons.BaseSyncOptions;
 import com.commercetools.sync.commons.helpers.BaseSyncStatistics;
 import io.sphere.sdk.client.SphereClient;
-import io.sphere.sdk.models.Resource;
+import io.sphere.sdk.models.ResourceView;
 import io.sphere.sdk.queries.QueryDsl;
 import java.time.Clock;
 import java.util.List;
@@ -67,23 +69,28 @@ final class SyncerFactory {
     final SphereClient sourceClient = sourceClientSupplier.get();
     final SphereClient targetClient = targetClientSupplier.get();
 
-    final List<CompletableFuture<Void>> typeAndProductTypeAndStateAndTaxCategorySync =
-        asList(
-            ProductTypeSyncer.of(sourceClient, targetClient, clock)
-                .sync(runnerNameOptionValue, isFullSync)
-                .toCompletableFuture(),
-            TypeSyncer.of(sourceClient, targetClient, clock)
-                .sync(runnerNameOptionValue, isFullSync)
-                .toCompletableFuture(),
-            StateSyncer.of(sourceClient, targetClient, clock)
-                .sync(runnerNameOptionValue, isFullSync)
-                .toCompletableFuture(),
-            TaxCategorySyncer.of(sourceClient, targetClient, clock)
-                .sync(runnerNameOptionValue, isFullSync)
-                .toCompletableFuture());
+    final List<CompletableFuture<Void>>
+        typeAndProductTypeAndStateAndTaxCategoryAndCustomObjectSync =
+            asList(
+                ProductTypeSyncer.of(sourceClient, targetClient, clock)
+                    .sync(runnerNameOptionValue, isFullSync)
+                    .toCompletableFuture(),
+                TypeSyncer.of(sourceClient, targetClient, clock)
+                    .sync(runnerNameOptionValue, isFullSync)
+                    .toCompletableFuture(),
+                StateSyncer.of(sourceClient, targetClient, clock)
+                    .sync(runnerNameOptionValue, isFullSync)
+                    .toCompletableFuture(),
+                TaxCategorySyncer.of(sourceClient, targetClient, clock)
+                    .sync(runnerNameOptionValue, isFullSync)
+                    .toCompletableFuture(),
+                CustomObjectSyncer.of(sourceClient, targetClient, clock)
+                    .sync(runnerNameOptionValue, isFullSync)
+                    .toCompletableFuture());
 
     return CompletableFuture.allOf(
-            typeAndProductTypeAndStateAndTaxCategorySync.toArray(new CompletableFuture[0]))
+            typeAndProductTypeAndStateAndTaxCategoryAndCustomObjectSync.toArray(
+                new CompletableFuture[0]))
         .thenCompose(
             ignored -> {
               final List<CompletableFuture<Void>> categoryAndInventoryAndCartDiscountSync =
@@ -128,7 +135,7 @@ final class SyncerFactory {
     }
 
     Syncer<
-            ? extends Resource,
+            ? extends ResourceView,
             ?,
             ? extends BaseSyncStatistics,
             ? extends BaseSyncOptions<?, ?>,
@@ -157,7 +164,7 @@ final class SyncerFactory {
    */
   @Nonnull
   private Syncer<
-          ? extends Resource,
+          ? extends ResourceView,
           ?,
           ? extends BaseSyncStatistics,
           ? extends BaseSyncOptions<?, ?>,
@@ -184,6 +191,8 @@ final class SyncerFactory {
         return TypeSyncer.of(sourceClientSupplier.get(), targetClientSupplier.get(), clock);
       case SYNC_MODULE_OPTION_STATE_SYNC:
         return StateSyncer.of(sourceClientSupplier.get(), targetClientSupplier.get(), clock);
+      case SYNC_MODULE_OPTION_CUSTOM_OBJECT_SYNC:
+        return CustomObjectSyncer.of(sourceClientSupplier.get(), targetClientSupplier.get(), clock);
       default:
         final String errorMessage =
             format(

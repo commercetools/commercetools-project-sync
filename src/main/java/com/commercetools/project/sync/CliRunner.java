@@ -35,6 +35,7 @@ final class CliRunner {
   static final String SYNC_MODULE_OPTION_TYPE_SYNC = "types";
   static final String SYNC_MODULE_OPTION_PRODUCT_TYPE_SYNC = "productTypes";
   static final String SYNC_MODULE_OPTION_CART_DISCOUNT_SYNC = "cartDiscounts";
+  static final String SYNC_MODULE_OPTION_CUSTOM_OBJECT_SYNC = "customObjects";
   static final String SYNC_MODULE_OPTION_CATEGORY_SYNC = "categories";
   static final String SYNC_MODULE_OPTION_PRODUCT_SYNC = "products";
   static final String SYNC_MODULE_OPTION_INVENTORY_ENTRY_SYNC = "inventoryEntries";
@@ -44,11 +45,12 @@ final class CliRunner {
 
   static final String SYNC_MODULE_OPTION_DESCRIPTION =
       format(
-          "Choose one of the following modules to run: \"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\" or \"%s\".",
+          "Choose one of the following modules to run: \"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\" or \"%s\".",
           SYNC_MODULE_OPTION_TYPE_SYNC,
           SYNC_MODULE_OPTION_PRODUCT_TYPE_SYNC,
           SYNC_MODULE_OPTION_STATE_SYNC,
           SYNC_MODULE_OPTION_TAX_CATEGORY_SYNC,
+          SYNC_MODULE_OPTION_CUSTOM_OBJECT_SYNC,
           SYNC_MODULE_OPTION_CATEGORY_SYNC,
           SYNC_MODULE_OPTION_CART_DISCOUNT_SYNC,
           SYNC_MODULE_OPTION_INVENTORY_ENTRY_SYNC,
