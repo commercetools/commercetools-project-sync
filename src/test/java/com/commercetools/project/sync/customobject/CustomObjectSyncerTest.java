@@ -47,16 +47,16 @@ public class CustomObjectSyncerTest {
     when(customObject2.getContainer()).thenReturn("testContainer2");
     when(customObject2.getKey()).thenReturn("testKey2");
     when(customObject2.getValue()).thenReturn(JsonNodeFactory.instance.booleanNode(true));
-    final List<CustomObject<JsonNode>> drafts = asList(customObject1, customObject2);
+    final List<CustomObject<JsonNode>> customObjects = asList(customObject1, customObject2);
 
     // test
     final CompletionStage<List<CustomObjectDraft<JsonNode>>> draftsFromPageStage =
-        customObjectSyncer.transform(drafts);
+        customObjectSyncer.transform(customObjects);
 
     // assertions
     assertThat(draftsFromPageStage)
         .isCompletedWithValue(
-            drafts
+            customObjects
                 .stream()
                 .map(
                     customObject ->
