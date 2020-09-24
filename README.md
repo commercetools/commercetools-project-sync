@@ -34,14 +34,15 @@ As of now, these are the supported resources:
 - Types
 - States
 - TaxCategories
+- CustomObjects
 
 
 ### Prerequisites
- 
+
  - Make sure you have `JDK 8` installed.
  - The following fields are **required** to be set on the following resources (and sub-resources), if they will be
   synced:
- 
+
      |  Resource/ Sub-resource |  Required Fields |
      |---|---|
      | Product | `key`, `sku` |
@@ -55,7 +56,8 @@ As of now, these are the supported resources:
      | InventoryEntry  | `sku`  |
      | State  | `key`  |
      | TaxCategory  | `key`  |
- 
+     | CustomObject  | `container` AND `key`  |
+
  - Set the following environment variables before running the application
    ```bash
    export SOURCE_PROJECT_KEY = "source-project-key"
@@ -63,7 +65,7 @@ As of now, these are the supported resources:
    export SOURCE_CLIENT_SECRET = "sourceClientSecret"
    export SOURCE_AUTH_URL = "https://auth.eu-central-1.aws.commercetools.com/" #optional parameter
    export SOURCE_API_URL = "https://api.eu-central-1.aws.commercetools.com/" #optional parameter
-   
+
    export TARGET_PROJECT_KEY = "target-project-key"
    export TARGET_CLIENT_ID = "targetClientId"
    export TARGET_CLIENT_SECRET = "targetClientSecret"
@@ -71,29 +73,29 @@ As of now, these are the supported resources:
    export TARGET_API_URL = "https://api.eu-central-1.aws.commercetools.com/" #optional parameter
    ```
    Note: For *_AUTH_URL and *_API_URL parameter values,
-    you can use different [authentication endpoints](https://docs.commercetools.com/http-api-authorization#requesting-an-access-token-using-commercetools-oauth2-server) and [API endpoints](https://docs.commercetools.com/http-api#hosts). 
+    you can use different [authentication endpoints](https://docs.commercetools.com/http-api-authorization#requesting-an-access-token-using-commercetools-oauth2-server) and [API endpoints](https://docs.commercetools.com/http-api#hosts).
 
 ### Usage
 
    ```bash
    usage: commercetools-project-sync
     -h,--help               Print help information.
-    -s,--sync <arg>         Choose one of the following modules to run: "types", "productTypes", "states", 
-                            "taxCategories", "categories", "cartDiscounts", "products", "inventoryEntries" or "all" 
+    -s,--sync <arg>         Choose one of the following modules to run: "types", "productTypes", "states",
+                            "taxCategories", "categories", "cartDiscounts", "products", "inventoryEntries" or "all"
                             (will run all the modules).
-    -r,--runnerName <arg>   name for the running sync instance. Please make sure the name is unique, otherwise running 
-                            more than 1 sync instance with the same name would lead to an unexpected behaviour. 
+    -r,--runnerName <arg>   name for the running sync instance. Please make sure the name is unique, otherwise running
+                            more than 1 sync instance with the same name would lead to an unexpected behaviour.
                             (optional parameter) default: 'runnerName'.
     -f,--full               By default, a delta sync runs using a last-sync-timestamp logic. Use this flag to run a full
-                            sync. i.e. sync the entire data set.               
+                            sync. i.e. sync the entire data set.
     -v,--version            Print the version of the application.
    ```
 
 #### Delta Sync
 
 By default, running the sync without using `-f` or `--full` option would run a delta sync; which means that only resources
-which have been modified since the last time the sync has run would be synced. The application achieves that by 
-persisting the last sync timestamp on commercetools using `CustomObjects` on every sync run. 
+which have been modified since the last time the sync has run would be synced. The application achieves that by
+persisting the last sync timestamp on commercetools using `CustomObjects` on every sync run.
 
 The last sync timestamp `customObject` for a runner name `testRun` running a **Type Sync** from a source commercetools project with the key `java-sync-source-dev1` looks as follows:
 
@@ -155,60 +157,65 @@ docker run \
 -e TARGET_CLIENT_SECRET=xxxx \
 commercetools/commercetools-project-sync:3.4.1 -s all
 ```
-  
 
-### Examples   
+
+### Examples
  - To run the all sync modules from a source project to a target project
    ```bash
    docker run commercetools/commercetools-project-sync:3.4.1 -s all
    ```
    This will run the following sync modules in the given order:
- 1. `Type` Sync and `ProductType` Sync and `States` Sync and `TaxCategory` Sync in parallel.
- 2. `Category` Sync and `InventoryEntry` Sync and `CartDiscount` Sync in parallel. 
- 3. `Product` Sync.  
- 
+ 1. `Type` Sync and `ProductType` Sync and `States` Sync and `TaxCategory` Sync and `CustomObject` Sync in parallel.
+ 2. `Category` Sync and `InventoryEntry` Sync and `CartDiscount` Sync in parallel.
+ 3. `Product` Sync.
+
  - To run the type sync
    ```bash
    docker run commercetools/commercetools-project-sync:3.4.1 -s types
-   ```  
+   ```
 
  - To run the productType sync
    ```bash
    docker run commercetools/commercetools-project-sync:3.4.1 -s productTypes
-   ```  
-   
+   ```
+
 - To run the states sync
    ```bash
    docker run commercetools/commercetools-project-sync:3.4.1 -s states
-   ```  
+   ```
 - To run the taxCategory sync
    ```bash
    docker run commercetools/commercetools-project-sync:3.4.1 -s taxCategories
-   ```  
-      
+   ```
+
 - To run the category sync
    ```bash
    docker run commercetools/commercetools-project-sync:3.4.1 -s categories
-   ```  
-   
+   ```
+
 - To run the product sync
    ```bash
    docker run commercetools/commercetools-project-sync:3.4.1 -s products
    ```
-   
+
 - To run the cartDiscount sync
    ```bash
    docker run commercetools/commercetools-project-sync:3.4.1 -s cartDiscounts
-   ```  
-    
+   ```
+
 - To run the inventoryEntry sync
    ```bash
    docker run commercetools/commercetools-project-sync:3.4.1 -s inventoryEntries
-   ```   
-       
+   ```
+
+- To run the customObject sync
+   ```bash
+   docker run commercetools/commercetools-project-sync:3.4.1 -s customObjects
+   ```
+
 - To run all sync modules using a runner name
    ```bash
    docker run commercetools/commercetools-project-sync:3.4.1 -s all -r myRunnerName
-   ```     
-   
+   ```
+
 
