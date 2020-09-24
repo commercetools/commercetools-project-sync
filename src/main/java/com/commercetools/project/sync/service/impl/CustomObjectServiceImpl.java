@@ -17,6 +17,7 @@ import io.sphere.sdk.queries.QueryPredicate;
 import java.time.ZonedDateTime;
 import java.util.Collection;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.CompletionStage;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
@@ -60,7 +61,7 @@ public class CustomObjectServiceImpl extends BaseServiceImpl implements CustomOb
 
     final CustomObjectDraft<String> currentTimestampDraft =
         CustomObjectDraft.ofUnversionedUpsert(
-            container, TIMESTAMP_GENERATOR_KEY, TIMESTAMP_GENERATOR_VALUE, String.class);
+            container, TIMESTAMP_GENERATOR_KEY, UUID.randomUUID().toString(), String.class);
 
     return createCustomObject(currentTimestampDraft).thenApply(ResourceView::getLastModifiedAt);
   }
