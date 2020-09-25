@@ -25,31 +25,31 @@ public enum SyncModuleOption {
   STATE_SYNC("states", StateSync.class),
   TAX_CATEGORY_SYNC("taxCategories", TaxCategorySync.class);
 
-  public final String parameterName;
+  public final String syncOptionValue;
   private final Class<? extends BaseSync> syncClass;
 
-  SyncModuleOption(String parameterName, Class<? extends BaseSync> syncClass) {
-    this.parameterName = parameterName;
+  SyncModuleOption(String syncOptionValue, Class<? extends BaseSync> syncClass) {
+    this.syncOptionValue = syncOptionValue;
     this.syncClass = syncClass;
   }
 
-  public String getParameterName() {
-    return parameterName;
+  public String getSyncOptionValue() {
+    return syncOptionValue;
   }
 
   public String getSyncModuleName() {
     return SyncUtils.getSyncModuleName(this.syncClass);
   }
 
-  public static String[] getParameterNames() {
+  public static String[] getSyncOptionValues() {
     return Stream.of(SyncModuleOption.values())
-        .map(SyncModuleOption::getParameterName)
+        .map(SyncModuleOption::getSyncOptionValue)
         .toArray(String[]::new);
   }
 
-  public static SyncModuleOption getSyncModuleOptionByParameterName(String name) {
+  public static SyncModuleOption getSyncModuleOptionBySyncOptionValue(String syncOptionValue) {
     return Arrays.stream(SyncModuleOption.values())
-        .filter(syncModuleOption -> syncModuleOption.getParameterName().equals(name))
+        .filter(syncModuleOption -> syncModuleOption.getSyncOptionValue().equals(syncOptionValue))
         .findFirst()
         .orElseThrow(IllegalArgumentException::new);
   }

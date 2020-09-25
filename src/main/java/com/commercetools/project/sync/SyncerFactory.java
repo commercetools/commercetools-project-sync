@@ -167,7 +167,7 @@ final class SyncerFactory {
     final String trimmedValue = syncOptionValue.trim();
     try {
       final SyncModuleOption syncModuleOption =
-          SyncModuleOption.getSyncModuleOptionByParameterName(trimmedValue);
+          SyncModuleOption.getSyncModuleOptionBySyncOptionValue(trimmedValue);
       switch (syncModuleOption) {
         case CART_DISCOUNT_SYNC:
           return CartDiscountSyncer.of(
