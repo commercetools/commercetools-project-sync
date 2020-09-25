@@ -1,6 +1,7 @@
 package com.commercetools.project.sync.service.impl;
 
-import static com.commercetools.project.sync.util.SyncUtils.*;
+import static com.commercetools.project.sync.util.SyncUtils.buildCurrentCtpTimestampContainerName;
+import static com.commercetools.project.sync.util.SyncUtils.buildLastSyncTimestampContainerName;
 import static java.lang.String.format;
 
 import com.commercetools.project.sync.model.response.LastSyncCustomObject;
