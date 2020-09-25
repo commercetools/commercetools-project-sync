@@ -94,6 +94,8 @@ class CliRunnerIT {
   private static final TestLogger cliRunnerTestLogger =
       TestLoggerFactory.getTestLogger(CliRunner.class);
   private static final String RESOURCE_KEY = "foo";
+  private static final String PROJECT_SYNC_CONTAINER_NAME =
+      "commercetools-project-sync.runnerName.ProductSync.timestampGenerator";
 
   @BeforeEach
   void setup() {
@@ -156,8 +158,7 @@ class CliRunnerIT {
     // following custom object should not be synced as it's created by the project-sync itself
     final CustomObjectDraft<JsonNode> customObjectToIgnore =
         CustomObjectDraft.ofUnversionedUpsert(
-            "commercetools-project-sync.runnerName.ProductSync.timestampGenerator",
-            "timestampGenerator", customObjectValue);
+            PROJECT_SYNC_CONTAINER_NAME, "timestampGenerator", customObjectValue);
 
     sourceProjectClient
         .execute(CustomObjectUpsertCommand.of(customObjectDraft))
@@ -490,10 +491,7 @@ class CliRunnerIT {
         CustomObjectQuery.of(LastSyncCustomObject.class)
             .plusPredicates(
                 customObjectQueryModel ->
-                    customObjectQueryModel
-                        .container()
-                        .is(
-                            "commercetools-project-sync.runnerName.ProductSync.timestampGenerator"));
+                    customObjectQueryModel.container().is(PROJECT_SYNC_CONTAINER_NAME));
     final PagedQueryResult<CustomObject<LastSyncCustomObject>> lastSyncResult =
         targetClient.execute(lastSyncQuery).toCompletableFuture().join();
     assertThat(lastSyncResult.getResults()).isEmpty();
