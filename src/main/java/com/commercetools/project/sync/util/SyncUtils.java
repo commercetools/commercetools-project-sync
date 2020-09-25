@@ -98,21 +98,12 @@ public final class SyncUtils {
   public static String buildLastSyncTimestampContainerName(
       @Nonnull final String syncModuleName, @Nullable final String runnerName) {
 
-    final String syncModuleNameWithLowerCasedFirstChar = lowerCaseFirstChar(syncModuleName);
+    final String syncModuleNameWithLowerCasedFirstChar = StringUtils.uncapitalize(syncModuleName);
     return format(
         "%s.%s.%s",
         getApplicationName(),
         getRunnerNameValue(runnerName),
         syncModuleNameWithLowerCasedFirstChar);
-  }
-
-  @Nonnull
-  private static String lowerCaseFirstChar(@Nonnull final String string) {
-
-    final char firstChar = string.charAt(0);
-    final char lowerCasedFirstChar = Character.toLowerCase(firstChar);
-    final String stringWithoutFirstChar = string.substring(1);
-    return format("%s%s", lowerCasedFirstChar, stringWithoutFirstChar);
   }
 
   public static String buildCurrentCtpTimestampContainerName(
