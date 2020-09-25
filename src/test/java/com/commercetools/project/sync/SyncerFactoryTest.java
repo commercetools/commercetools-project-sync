@@ -1,12 +1,13 @@
 package com.commercetools.project.sync;
 
 import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_DESCRIPTION;
-import static com.commercetools.project.sync.service.impl.CustomObjectServiceImpl.DEFAULT_RUNNER_NAME;
 import static com.commercetools.project.sync.service.impl.CustomObjectServiceImpl.TIMESTAMP_GENERATOR_KEY;
 import static com.commercetools.project.sync.service.impl.CustomObjectServiceImpl.TIMESTAMP_GENERATOR_VALUE;
+import static com.commercetools.project.sync.util.SyncUtils.DEFAULT_RUNNER_NAME;
 import static com.commercetools.project.sync.util.SyncUtils.getApplicationName;
 import static com.commercetools.project.sync.util.TestUtils.assertCartDiscountSyncerLoggingEvents;
 import static com.commercetools.project.sync.util.TestUtils.assertCategorySyncerLoggingEvents;
+import static com.commercetools.project.sync.util.TestUtils.assertCustomObjectSyncerLoggingEvents;
 import static com.commercetools.project.sync.util.TestUtils.assertInventoryEntrySyncerLoggingEvents;
 import static com.commercetools.project.sync.util.TestUtils.assertProductSyncerLoggingEvents;
 import static com.commercetools.project.sync.util.TestUtils.assertProductTypeSyncerLoggingEvents;
@@ -363,6 +364,8 @@ class SyncerFactoryTest {
     when(targetClient.execute(any(TaxCategoryQuery.class)))
         .thenReturn(CompletableFuture.completedFuture(MockPagedQueryResult.of(emptyList())));
     when(targetClient.execute(any(StateQuery.class)))
+        .thenReturn(CompletableFuture.completedFuture(MockPagedQueryResult.of(emptyList())));
+    when(targetClient.execute(any(CustomObjectQuery.class)))
         .thenReturn(CompletableFuture.completedFuture(MockPagedQueryResult.of(emptyList())));
 
     when(targetClient.execute(any(ProductCreateCommand.class)))
@@ -845,6 +848,8 @@ class SyncerFactoryTest {
         .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
     when(sourceClient.execute(any(CartDiscountQuery.class)))
         .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
+    when(sourceClient.execute(any(CustomObjectQuery.class)))
+        .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
 
     final ZonedDateTime currentCtpTimestamp = ZonedDateTime.now();
     stubClientsCustomObjectService(targetClient, currentCtpTimestamp);
@@ -869,7 +874,9 @@ class SyncerFactoryTest {
     verifyTimestampGeneratorCustomObjectUpsert(targetClient, 1, "StateSync", DEFAULT_RUNNER_NAME);
     verifyTimestampGeneratorCustomObjectUpsert(
         targetClient, 1, "TaxCategorySync", DEFAULT_RUNNER_NAME);
-    verify(targetClient, times(16)).execute(any(CustomObjectUpsertCommand.class));
+    verifyTimestampGeneratorCustomObjectUpsert(
+        targetClient, 1, "CustomObjectSync", DEFAULT_RUNNER_NAME);
+    verify(targetClient, times(18)).execute(any(CustomObjectUpsertCommand.class));
     verifyLastSyncCustomObjectQuery(targetClient, "inventorySync", DEFAULT_RUNNER_NAME, "foo", 1);
     verifyLastSyncCustomObjectQuery(targetClient, "productTypeSync", DEFAULT_RUNNER_NAME, "foo", 1);
     verifyLastSyncCustomObjectQuery(targetClient, "productSync", DEFAULT_RUNNER_NAME, "foo", 1);
@@ -879,6 +886,8 @@ class SyncerFactoryTest {
         targetClient, "cartDiscountSync", DEFAULT_RUNNER_NAME, "foo", 1);
     verifyLastSyncCustomObjectQuery(targetClient, "stateSync", DEFAULT_RUNNER_NAME, "foo", 1);
     verifyLastSyncCustomObjectQuery(targetClient, "taxCategorySync", DEFAULT_RUNNER_NAME, "foo", 1);
+    verifyLastSyncCustomObjectQuery(
+        targetClient, "customObjectSync", DEFAULT_RUNNER_NAME, "foo", 1);
     verify(sourceClient, times(1)).execute(any(ProductTypeQuery.class));
     verify(sourceClient, times(1)).execute(any(TypeQuery.class));
     verify(sourceClient, times(1)).execute(any(CategoryQuery.class));
@@ -887,7 +896,8 @@ class SyncerFactoryTest {
     verify(sourceClient, times(1)).execute(any(CartDiscountQuery.class));
     verify(sourceClient, times(1)).execute(any(StateQuery.class));
     verify(sourceClient, times(1)).execute(any(TaxCategoryQuery.class));
-    verifyInteractionsWithClientAfterSync(sourceClient, 8);
+    verify(sourceClient, times(1)).execute(any(CustomObjectQuery.class));
+    verifyInteractionsWithClientAfterSync(sourceClient, 9);
     assertAllSyncersLoggingEvents(syncerTestLogger, cliRunnerTestLogger, 0);
   }
 
@@ -911,8 +921,9 @@ class SyncerFactoryTest {
     // +1 state is a built-in state and it cant be deleted
     assertStateSyncerLoggingEvents(syncerTestLogger, numberOfResources);
     assertTaxCategorySyncerLoggingEvents(syncerTestLogger, numberOfResources);
+    assertCustomObjectSyncerLoggingEvents(syncerTestLogger, numberOfResources);
 
     // Every sync module is expected to have 2 logs (start and stats summary)
-    assertThat(syncerTestLogger.getAllLoggingEvents()).hasSize(16);
+    assertThat(syncerTestLogger.getAllLoggingEvents()).hasSize(18);
   }
 }

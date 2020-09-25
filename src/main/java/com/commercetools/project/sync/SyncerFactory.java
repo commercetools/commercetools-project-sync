@@ -1,16 +1,8 @@
 package com.commercetools.project.sync;
 
-import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_CART_DISCOUNT_SYNC;
-import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_CATEGORY_SYNC;
 import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_DESCRIPTION;
-import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_INVENTORY_ENTRY_SYNC;
 import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_LONG;
-import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_PRODUCT_SYNC;
-import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_PRODUCT_TYPE_SYNC;
 import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_SHORT;
-import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_STATE_SYNC;
-import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_TAX_CATEGORY_SYNC;
-import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_TYPE_SYNC;
 import static io.sphere.sdk.utils.CompletableFutureUtils.exceptionallyCompletedFuture;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
@@ -18,6 +10,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import com.commercetools.project.sync.cartdiscount.CartDiscountSyncer;
 import com.commercetools.project.sync.category.CategorySyncer;
+import com.commercetools.project.sync.customobject.CustomObjectSyncer;
 import com.commercetools.project.sync.inventoryentry.InventoryEntrySyncer;
 import com.commercetools.project.sync.product.ProductSyncer;
 import com.commercetools.project.sync.producttype.ProductTypeSyncer;
@@ -28,7 +21,7 @@ import com.commercetools.sync.commons.BaseSync;
 import com.commercetools.sync.commons.BaseSyncOptions;
 import com.commercetools.sync.commons.helpers.BaseSyncStatistics;
 import io.sphere.sdk.client.SphereClient;
-import io.sphere.sdk.models.Resource;
+import io.sphere.sdk.models.ResourceView;
 import io.sphere.sdk.queries.QueryDsl;
 import java.time.Clock;
 import java.util.List;
@@ -67,23 +60,28 @@ final class SyncerFactory {
     final SphereClient sourceClient = sourceClientSupplier.get();
     final SphereClient targetClient = targetClientSupplier.get();
 
-    final List<CompletableFuture<Void>> typeAndProductTypeAndStateAndTaxCategorySync =
-        asList(
-            ProductTypeSyncer.of(sourceClient, targetClient, clock)
-                .sync(runnerNameOptionValue, isFullSync)
-                .toCompletableFuture(),
-            TypeSyncer.of(sourceClient, targetClient, clock)
-                .sync(runnerNameOptionValue, isFullSync)
-                .toCompletableFuture(),
-            StateSyncer.of(sourceClient, targetClient, clock)
-                .sync(runnerNameOptionValue, isFullSync)
-                .toCompletableFuture(),
-            TaxCategorySyncer.of(sourceClient, targetClient, clock)
-                .sync(runnerNameOptionValue, isFullSync)
-                .toCompletableFuture());
+    final List<CompletableFuture<Void>>
+        typeAndProductTypeAndStateAndTaxCategoryAndCustomObjectSync =
+            asList(
+                ProductTypeSyncer.of(sourceClient, targetClient, clock)
+                    .sync(runnerNameOptionValue, isFullSync)
+                    .toCompletableFuture(),
+                TypeSyncer.of(sourceClient, targetClient, clock)
+                    .sync(runnerNameOptionValue, isFullSync)
+                    .toCompletableFuture(),
+                StateSyncer.of(sourceClient, targetClient, clock)
+                    .sync(runnerNameOptionValue, isFullSync)
+                    .toCompletableFuture(),
+                TaxCategorySyncer.of(sourceClient, targetClient, clock)
+                    .sync(runnerNameOptionValue, isFullSync)
+                    .toCompletableFuture(),
+                CustomObjectSyncer.of(sourceClient, targetClient, clock, runnerNameOptionValue)
+                    .sync(runnerNameOptionValue, isFullSync)
+                    .toCompletableFuture());
 
     return CompletableFuture.allOf(
-            typeAndProductTypeAndStateAndTaxCategorySync.toArray(new CompletableFuture[0]))
+            typeAndProductTypeAndStateAndTaxCategoryAndCustomObjectSync.toArray(
+                new CompletableFuture[0]))
         .thenCompose(
             ignored -> {
               final List<CompletableFuture<Void>> categoryAndInventoryAndCartDiscountSync =
@@ -128,7 +126,7 @@ final class SyncerFactory {
     }
 
     Syncer<
-            ? extends Resource,
+            ? extends ResourceView,
             ?,
             ? extends BaseSyncStatistics,
             ? extends BaseSyncOptions<?, ?>,
@@ -137,7 +135,7 @@ final class SyncerFactory {
         syncer;
 
     try {
-      syncer = buildSyncer(syncOptionValue);
+      syncer = buildSyncer(syncOptionValue, runnerNameOptionValue);
     } catch (IllegalArgumentException exception) {
 
       return exceptionallyCompletedFuture(exception);
@@ -157,42 +155,55 @@ final class SyncerFactory {
    */
   @Nonnull
   private Syncer<
-          ? extends Resource,
+          ? extends ResourceView,
           ?,
           ? extends BaseSyncStatistics,
           ? extends BaseSyncOptions<?, ?>,
           ? extends QueryDsl<?, ?>,
           ? extends BaseSync<?, ?, ?>>
-      buildSyncer(@Nonnull final String syncOptionValue) {
+      buildSyncer(
+          @Nonnull final String syncOptionValue, @Nonnull final String runnerNameOptionValue) {
 
     final String trimmedValue = syncOptionValue.trim();
-    switch (trimmedValue) {
-      case SYNC_MODULE_OPTION_CART_DISCOUNT_SYNC:
-        return CartDiscountSyncer.of(sourceClientSupplier.get(), targetClientSupplier.get(), clock);
-      case SYNC_MODULE_OPTION_PRODUCT_TYPE_SYNC:
-        return ProductTypeSyncer.of(sourceClientSupplier.get(), targetClientSupplier.get(), clock);
-      case SYNC_MODULE_OPTION_CATEGORY_SYNC:
-        return CategorySyncer.of(sourceClientSupplier.get(), targetClientSupplier.get(), clock);
-      case SYNC_MODULE_OPTION_PRODUCT_SYNC:
-        return ProductSyncer.of(sourceClientSupplier.get(), targetClientSupplier.get(), clock);
-      case SYNC_MODULE_OPTION_INVENTORY_ENTRY_SYNC:
-        return InventoryEntrySyncer.of(
-            sourceClientSupplier.get(), targetClientSupplier.get(), clock);
-      case SYNC_MODULE_OPTION_TAX_CATEGORY_SYNC:
-        return TaxCategorySyncer.of(sourceClientSupplier.get(), targetClientSupplier.get(), clock);
-      case SYNC_MODULE_OPTION_TYPE_SYNC:
-        return TypeSyncer.of(sourceClientSupplier.get(), targetClientSupplier.get(), clock);
-      case SYNC_MODULE_OPTION_STATE_SYNC:
-        return StateSyncer.of(sourceClientSupplier.get(), targetClientSupplier.get(), clock);
-      default:
-        final String errorMessage =
-            format(
-                "Unknown argument \"%s\" supplied to \"-%s\" or \"--%s\" option! %s",
-                syncOptionValue,
-                SYNC_MODULE_OPTION_SHORT,
-                SYNC_MODULE_OPTION_LONG,
-                SYNC_MODULE_OPTION_DESCRIPTION);
-        throw new IllegalArgumentException(errorMessage);
+    try {
+      final SyncModuleOption syncModuleOption =
+          SyncModuleOption.getSyncModuleOptionBySyncOptionValue(trimmedValue);
+      switch (syncModuleOption) {
+        case CART_DISCOUNT_SYNC:
+          return CartDiscountSyncer.of(
+              sourceClientSupplier.get(), targetClientSupplier.get(), clock);
+        case PRODUCT_TYPE_SYNC:
+          return ProductTypeSyncer.of(
+              sourceClientSupplier.get(), targetClientSupplier.get(), clock);
+        case CATEGORY_SYNC:
+          return CategorySyncer.of(sourceClientSupplier.get(), targetClientSupplier.get(), clock);
+        case PRODUCT_SYNC:
+          return ProductSyncer.of(sourceClientSupplier.get(), targetClientSupplier.get(), clock);
+        case INVENTORY_ENTRY_SYNC:
+          return InventoryEntrySyncer.of(
+              sourceClientSupplier.get(), targetClientSupplier.get(), clock);
+        case TAX_CATEGORY_SYNC:
+          return TaxCategorySyncer.of(
+              sourceClientSupplier.get(), targetClientSupplier.get(), clock);
+        case TYPE_SYNC:
+          return TypeSyncer.of(sourceClientSupplier.get(), targetClientSupplier.get(), clock);
+        case STATE_SYNC:
+          return StateSyncer.of(sourceClientSupplier.get(), targetClientSupplier.get(), clock);
+        case CUSTOM_OBJECT_SYNC:
+          return CustomObjectSyncer.of(
+              sourceClientSupplier.get(), targetClientSupplier.get(), clock, runnerNameOptionValue);
+        default:
+          throw new IllegalArgumentException();
+      }
+    } catch (IllegalArgumentException e) {
+      final String errorMessage =
+          format(
+              "Unknown argument \"%s\" supplied to \"-%s\" or \"--%s\" option! %s",
+              trimmedValue,
+              SYNC_MODULE_OPTION_SHORT,
+              SYNC_MODULE_OPTION_LONG,
+              SYNC_MODULE_OPTION_DESCRIPTION);
+      throw new IllegalArgumentException(errorMessage);
     }
   }
 }

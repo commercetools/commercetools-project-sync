@@ -12,7 +12,7 @@ import com.commercetools.sync.commons.BaseSyncOptions;
 import com.commercetools.sync.commons.helpers.BaseSyncStatistics;
 import io.sphere.sdk.client.SphereClient;
 import io.sphere.sdk.customobjects.CustomObject;
-import io.sphere.sdk.models.Resource;
+import io.sphere.sdk.models.ResourceView;
 import io.sphere.sdk.queries.QueryDsl;
 import io.sphere.sdk.queries.QueryPredicate;
 import java.time.Clock;
@@ -47,7 +47,7 @@ import org.slf4j.LoggerFactory;
  *     com.commercetools.sync.categories.CategorySync}, etc..)
  */
 public abstract class Syncer<
-    T extends Resource,
+    T extends ResourceView,
     S,
     U extends BaseSyncStatistics,
     V extends BaseSyncOptions<T, S>,
