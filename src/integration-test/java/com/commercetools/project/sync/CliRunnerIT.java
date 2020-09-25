@@ -25,6 +25,7 @@ import com.commercetools.sync.commons.helpers.BaseSyncStatistics;
 import com.commercetools.sync.products.helpers.ProductSyncStatistics;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.neovisionaries.i18n.CountryCode;
 import io.sphere.sdk.cartdiscounts.CartDiscount;
 import io.sphere.sdk.cartdiscounts.CartDiscountDraft;
@@ -149,15 +150,14 @@ class CliRunnerIT {
             .toCompletableFuture()
             .join();
 
+    final ObjectNode customObjectValue = JsonNodeFactory.instance.objectNode().put("name", "value");
     final CustomObjectDraft<JsonNode> customObjectDraft =
-        CustomObjectDraft.ofUnversionedUpsert(
-            RESOURCE_KEY, RESOURCE_KEY, JsonNodeFactory.instance.objectNode().put("name", "value"));
+        CustomObjectDraft.ofUnversionedUpsert(RESOURCE_KEY, RESOURCE_KEY, customObjectValue);
     // following custom object should not be synced as it's created by the project-sync itself
     final CustomObjectDraft<JsonNode> customObjectToIgnore =
         CustomObjectDraft.ofUnversionedUpsert(
             "commercetools-project-sync.runnerName.ProductSync.timestampGenerator",
-            "timestampGenerator",
-            JsonNodeFactory.instance.objectNode().put("name", "value"));
+            "timestampGenerator", customObjectValue);
 
     sourceProjectClient
         .execute(CustomObjectUpsertCommand.of(customObjectDraft))
