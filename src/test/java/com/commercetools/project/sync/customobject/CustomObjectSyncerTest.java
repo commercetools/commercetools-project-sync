@@ -7,6 +7,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import com.commercetools.project.sync.SyncModuleOption;
+import com.commercetools.project.sync.util.SyncUtils;
 import com.commercetools.sync.customobjects.CustomObjectSync;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
@@ -16,6 +18,8 @@ import io.sphere.sdk.customobjects.CustomObjectDraft;
 import io.sphere.sdk.customobjects.queries.CustomObjectQuery;
 import java.util.List;
 import java.util.concurrent.CompletionStage;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 
 public class CustomObjectSyncerTest {
@@ -23,12 +27,20 @@ public class CustomObjectSyncerTest {
   @Test
   void of_ShouldCreateCustomObjectSyncerInstance() {
     // test
+    final String runnerName = "";
     final CustomObjectSyncer customObjectSyncer =
-        CustomObjectSyncer.of(mock(SphereClient.class), mock(SphereClient.class), getMockedClock());
+        CustomObjectSyncer.of(
+            mock(SphereClient.class), mock(SphereClient.class), getMockedClock(), runnerName);
 
     // assertions
+    final List<String> excludedContainerNames = getExcludedContainerNames(runnerName);
     assertThat(customObjectSyncer).isNotNull();
-    assertThat(customObjectSyncer.getQuery()).isEqualTo(CustomObjectQuery.of(JsonNode.class));
+    assertThat(customObjectSyncer.getQuery())
+        .isEqualTo(
+            CustomObjectQuery.of(JsonNode.class)
+                .plusPredicates(
+                    customObjectQueryModel ->
+                        customObjectQueryModel.container().isNotIn(excludedContainerNames)));
     assertThat(customObjectSyncer.getSync()).isExactlyInstanceOf(CustomObjectSync.class);
   }
 
@@ -36,7 +48,8 @@ public class CustomObjectSyncerTest {
   void transform_ShouldConvertResourcesToDrafts() {
     // preparation
     final CustomObjectSyncer customObjectSyncer =
-        CustomObjectSyncer.of(mock(SphereClient.class), mock(SphereClient.class), getMockedClock());
+        CustomObjectSyncer.of(
+            mock(SphereClient.class), mock(SphereClient.class), getMockedClock(), "");
 
     final CustomObject<JsonNode> customObject1 = mock(CustomObject.class);
     when(customObject1.getContainer()).thenReturn("testContainer1");
@@ -70,13 +83,46 @@ public class CustomObjectSyncerTest {
   @Test
   void getQuery_ShouldBuildCustomObjectQuery() {
     // preparation
+    final String runnerName = "testRunnerName";
     final CustomObjectSyncer customObjectSyncer =
-        CustomObjectSyncer.of(mock(SphereClient.class), mock(SphereClient.class), getMockedClock());
+        CustomObjectSyncer.of(
+            mock(SphereClient.class), mock(SphereClient.class), getMockedClock(), runnerName);
 
     // test
     final CustomObjectQuery query = customObjectSyncer.getQuery();
 
     // assertion
-    assertThat(query).isEqualTo(CustomObjectQuery.ofJsonNode());
+    final List<String> excludedContainerNames = getExcludedContainerNames(runnerName);
+    assertThat(query)
+        .isEqualTo(
+            CustomObjectQuery.ofJsonNode()
+                .plusPredicates(
+                    customObjectQueryModel ->
+                        customObjectQueryModel.container().isNotIn(excludedContainerNames)));
+  }
+
+  private List<String> getExcludedContainerNames(String runnerName) {
+    final List<String> lastSyncTimestampContainerNames =
+        Stream.of(SyncModuleOption.values())
+            .map(
+                syncModuleOption -> {
+                  final String moduleName = syncModuleOption.getSyncModuleName();
+                  return SyncUtils.buildLastSyncTimestampContainerName(moduleName, runnerName);
+                })
+            .collect(Collectors.toList());
+    final List<String> currentCtpTimestampContainerNames =
+        Stream.of(SyncModuleOption.values())
+            .map(
+                syncModuleOption -> {
+                  final String moduleName = syncModuleOption.getSyncModuleName();
+                  return SyncUtils.buildCurrentCtpTimestampContainerName(moduleName, runnerName);
+                })
+            .collect(Collectors.toList());
+    final List<String> excludedContainerNames =
+        Stream.concat(
+                lastSyncTimestampContainerNames.stream(),
+                currentCtpTimestampContainerNames.stream())
+            .collect(Collectors.toList());
+    return excludedContainerNames;
   }
 }

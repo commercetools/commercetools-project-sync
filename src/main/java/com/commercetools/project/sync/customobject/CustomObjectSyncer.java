@@ -3,9 +3,11 @@ package com.commercetools.project.sync.customobject;
 import static com.commercetools.project.sync.util.SyncUtils.logErrorCallback;
 import static com.commercetools.project.sync.util.SyncUtils.logWarningCallback;
 
+import com.commercetools.project.sync.SyncModuleOption;
 import com.commercetools.project.sync.Syncer;
 import com.commercetools.project.sync.service.CustomObjectService;
 import com.commercetools.project.sync.service.impl.CustomObjectServiceImpl;
+import com.commercetools.project.sync.util.SyncUtils;
 import com.commercetools.sync.commons.exceptions.SyncException;
 import com.commercetools.sync.commons.utils.QuadConsumer;
 import com.commercetools.sync.commons.utils.TriConsumer;
@@ -27,7 +29,9 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,6 +45,7 @@ public final class CustomObjectSyncer
         CustomObjectSync> {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(CustomObjectSyncer.class);
+  private final String runnerName;
 
   /**
    * Instantiates a {@link Syncer} which is used to sync resources from a source to a target
@@ -60,8 +65,10 @@ public final class CustomObjectSyncer
       @Nonnull SphereClient sourceClient,
       @Nonnull SphereClient targetClient,
       @Nonnull CustomObjectService customObjectService,
-      @Nonnull Clock clock) {
+      @Nonnull Clock clock,
+      @Nullable String runnerName) {
     super(sync, sourceClient, targetClient, customObjectService, clock);
+    this.runnerName = runnerName;
   }
 
   @Nonnull
@@ -83,15 +90,19 @@ public final class CustomObjectSyncer
   @Nonnull
   @Override
   protected CustomObjectQuery<JsonNode> getQuery() {
-    // todo: exclude custom objects created by the project-sync from syncing
-    return CustomObjectQuery.ofJsonNode();
+    final List<String> excludedContainerNames = getExcludedContainerNames();
+    return CustomObjectQuery.ofJsonNode()
+        .plusPredicates(
+            customObjectQueryModel ->
+                customObjectQueryModel.container().isNotIn(excludedContainerNames));
   }
 
   @Nonnull
   public static CustomObjectSyncer of(
       @Nonnull final SphereClient sourceClient,
       @Nonnull final SphereClient targetClient,
-      @Nonnull final Clock clock) {
+      @Nonnull final Clock clock,
+      @Nullable final String runnerName) {
     final QuadConsumer<
             SyncException,
             Optional<CustomObjectDraft<JsonNode>>,
@@ -122,7 +133,7 @@ public final class CustomObjectSyncer
     final CustomObjectService customObjectService = new CustomObjectServiceImpl(targetClient);
 
     return new CustomObjectSyncer(
-        customObjectSyncer, sourceClient, targetClient, customObjectService, clock);
+        customObjectSyncer, sourceClient, targetClient, customObjectService, clock, runnerName);
   }
 
   private static String getCustomObjectResourceIdentifier(
@@ -131,5 +142,31 @@ public final class CustomObjectSyncer
         .map(CustomObjectCompositeIdentifier::of)
         .map(CustomObjectCompositeIdentifier::toString)
         .orElse("");
+  }
+
+  private List<String> getExcludedContainerNames() {
+    final List<String> lastSyncTimestampContainerNames =
+        Stream.of(SyncModuleOption.values())
+            .map(
+                syncModuleOption -> {
+                  final String moduleName = syncModuleOption.getSyncModuleName();
+                  return SyncUtils.buildLastSyncTimestampContainerName(moduleName, this.runnerName);
+                })
+            .collect(Collectors.toList());
+    final List<String> currentCtpTimestampContainerNames =
+        Stream.of(SyncModuleOption.values())
+            .map(
+                syncModuleOption -> {
+                  final String moduleName = syncModuleOption.getSyncModuleName();
+                  return SyncUtils.buildCurrentCtpTimestampContainerName(
+                      moduleName, this.runnerName);
+                })
+            .collect(Collectors.toList());
+    final List<String> excludedContainerNames =
+        Stream.concat(
+                lastSyncTimestampContainerNames.stream(),
+                currentCtpTimestampContainerNames.stream())
+            .collect(Collectors.toList());
+    return excludedContainerNames;
   }
 }

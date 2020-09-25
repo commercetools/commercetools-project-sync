@@ -1,6 +1,6 @@
 package com.commercetools.project.sync.service.impl;
 
-import static com.commercetools.project.sync.service.impl.CustomObjectServiceImpl.DEFAULT_RUNNER_NAME;
+import static com.commercetools.project.sync.util.SyncUtils.DEFAULT_RUNNER_NAME;
 import static java.util.Collections.singletonList;
 import static java.util.Optional.empty;
 import static org.assertj.core.api.Assertions.assertThat;

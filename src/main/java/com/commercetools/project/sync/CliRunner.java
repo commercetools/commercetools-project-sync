@@ -16,6 +16,7 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.apache.commons.lang3.ArrayUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,28 +33,12 @@ final class CliRunner {
   static final String HELP_OPTION_LONG = "help";
   static final String VERSION_OPTION_LONG = "version";
 
-  static final String SYNC_MODULE_OPTION_TYPE_SYNC = "types";
-  static final String SYNC_MODULE_OPTION_PRODUCT_TYPE_SYNC = "productTypes";
-  static final String SYNC_MODULE_OPTION_CART_DISCOUNT_SYNC = "cartDiscounts";
-  static final String SYNC_MODULE_OPTION_CATEGORY_SYNC = "categories";
-  static final String SYNC_MODULE_OPTION_PRODUCT_SYNC = "products";
-  static final String SYNC_MODULE_OPTION_INVENTORY_ENTRY_SYNC = "inventoryEntries";
-  static final String SYNC_MODULE_OPTION_STATE_SYNC = "states";
-  static final String SYNC_MODULE_OPTION_TAX_CATEGORY_SYNC = "taxCategories";
   static final String SYNC_MODULE_OPTION_ALL = "all";
 
   static final String SYNC_MODULE_OPTION_DESCRIPTION =
       format(
-          "Choose one of the following modules to run: \"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\" or \"%s\".",
-          SYNC_MODULE_OPTION_TYPE_SYNC,
-          SYNC_MODULE_OPTION_PRODUCT_TYPE_SYNC,
-          SYNC_MODULE_OPTION_STATE_SYNC,
-          SYNC_MODULE_OPTION_TAX_CATEGORY_SYNC,
-          SYNC_MODULE_OPTION_CATEGORY_SYNC,
-          SYNC_MODULE_OPTION_CART_DISCOUNT_SYNC,
-          SYNC_MODULE_OPTION_INVENTORY_ENTRY_SYNC,
-          SYNC_MODULE_OPTION_PRODUCT_SYNC,
-          SYNC_MODULE_OPTION_ALL);
+          "Choose one of the following modules to run: \"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\" or \"%s\".",
+          ArrayUtils.add(SyncModuleOption.getSyncOptionValues(), SYNC_MODULE_OPTION_ALL));
   static final String RUNNER_NAME_OPTION_DESCRIPTION =
       "Choose a name for the running sync instance. Please make sure the name is unique, otherwise running more than 1 sync "
           + "instance with the same name would lead to an unexpected behaviour. "
