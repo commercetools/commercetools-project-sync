@@ -133,6 +133,7 @@ The last sync timestamp `customObject` for a runner name `testRun` running a **T
 - The `container` has the convention: `commercetools-project-sync.{runnerName}.{syncModuleName}`.
 - The `key` contains the source project key.
 - The `value` contains the information  `lastSyncDurationInMillis`, `applicationVersion`, `lastSyncTimestamp` and `lastSyncStatistics`.
+- These custom objects will not be synced with the custom object syncer.
 
 _Note:_ Another `customObject` with the `container` convention `commercetools-project-sync.{runnerName}.{syncModuleName}.timestampGenerator` is also created on the target project for capturing a unified timestamp from commercetools.
 
