@@ -51,7 +51,7 @@ public final class TestUtils {
     assertTaxCategorySyncerLoggingEvents(syncerTestLogger, numberOfResources);
 
     // Every sync module is expected to have 2 logs (start and stats summary)
-    assertThat(syncerTestLogger.getAllLoggingEvents()).hasSize(16);
+    assertThat(syncerTestLogger.getAllLoggingEvents()).hasSize(18);
   }
 
   public static void assertTypeSyncerLoggingEvents(
@@ -142,6 +142,17 @@ public final class TestUtils {
             numberOfResources, numberOfResources);
 
     assertSyncerLoggingEvents(syncerTestLogger, "TaxCategorySync", taxCategoryStatsSummary);
+  }
+
+  public static void assertCustomObjectSyncerLoggingEvents(
+      @Nonnull final TestLogger syncerTestLogger, final int numberOfResources) {
+    final String customObjectsStatsSummary =
+        format(
+            "Summary: %d custom objects were processed in total (%d created, 0 updated and "
+                + "0 failed to sync).",
+            numberOfResources, numberOfResources);
+
+    assertSyncerLoggingEvents(syncerTestLogger, "CustomObjectSync", customObjectsStatsSummary);
   }
 
   public static void assertSyncerLoggingEvents(

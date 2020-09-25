@@ -3,7 +3,7 @@ package com.commercetools.project.sync.util;
 import com.commercetools.sync.commons.utils.CtpQueryUtils;
 import io.sphere.sdk.client.SphereClient;
 import io.sphere.sdk.client.SphereRequest;
-import io.sphere.sdk.models.Resource;
+import io.sphere.sdk.models.ResourceView;
 import io.sphere.sdk.queries.QueryDsl;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -24,7 +24,7 @@ public final class QueryUtils {
    *     resource, in the fetched page from the query on the specified CTP project, to map it to a
    *     {@link SphereRequest}.
    */
-  public static <T extends Resource, C extends QueryDsl<T, C>> void queryAndExecute(
+  public static <T extends ResourceView, C extends QueryDsl<T, C>> void queryAndExecute(
       @Nonnull final SphereClient ctpClient,
       @Nonnull final QueryDsl<T, C> query,
       @Nonnull final Function<T, SphereRequest<T>> resourceToRequestMapper) {
@@ -44,7 +44,7 @@ public final class QueryUtils {
    *     in the fetched page from the query on the specified CTP project, to map it to a {@link
    *     CompletionStage} which will be executed (in a blocking fashion) after every page fetch.
    */
-  private static <T extends Resource, C extends QueryDsl<T, C>, S> void queryAndCompose(
+  private static <T extends ResourceView, C extends QueryDsl<T, C>, S> void queryAndCompose(
       @Nonnull final SphereClient ctpClient,
       @Nonnull final QueryDsl<T, C> query,
       @Nonnull final Function<T, CompletionStage<S>> resourceToStageMapper) {

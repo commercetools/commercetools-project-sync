@@ -1,6 +1,8 @@
 package com.commercetools.project.sync.util;
 
+import static com.commercetools.project.sync.service.impl.CustomObjectServiceImpl.TIMESTAMP_GENERATOR_KEY;
 import static java.lang.String.format;
+import static java.util.Optional.ofNullable;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import com.commercetools.sync.commons.BaseSync;
@@ -12,12 +14,15 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 
 public final class SyncUtils {
 
   public static final String APPLICATION_DEFAULT_NAME = "commercetools-project-sync";
   public static final String APPLICATION_DEFAULT_VERSION = "development-SNAPSHOT";
+  public static final String DEFAULT_RUNNER_NAME = "runnerName";
 
   @Nonnull
   public static String getSyncModuleName(@Nonnull final Class<? extends BaseSync> syncClass) {
@@ -87,6 +92,33 @@ public final class SyncUtils {
         format(
             "Warning when trying to sync %s. Existing key: %s", resourceName, resourceIdentifier),
         exception);
+  }
+
+  @Nonnull
+  public static String buildLastSyncTimestampContainerName(
+      @Nonnull final String syncModuleName, @Nullable final String runnerName) {
+
+    final String syncModuleNameWithLowerCasedFirstChar = StringUtils.uncapitalize(syncModuleName);
+    return format(
+        "%s.%s.%s",
+        getApplicationName(),
+        getRunnerNameValue(runnerName),
+        syncModuleNameWithLowerCasedFirstChar);
+  }
+
+  public static String buildCurrentCtpTimestampContainerName(
+      @Nonnull final String syncModuleName, @Nullable final String runnerName) {
+    return format(
+        "%s.%s.%s.%s",
+        getApplicationName(),
+        getRunnerNameValue(runnerName),
+        syncModuleName,
+        TIMESTAMP_GENERATOR_KEY);
+  }
+
+  @Nonnull
+  private static String getRunnerNameValue(@Nullable final String runnerName) {
+    return ofNullable(runnerName).filter(StringUtils::isNotBlank).orElse(DEFAULT_RUNNER_NAME);
   }
 
   private SyncUtils() {}

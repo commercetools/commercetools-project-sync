@@ -1,8 +1,8 @@
 package com.commercetools.project.sync.service.impl;
 
-import static com.commercetools.project.sync.util.SyncUtils.getApplicationName;
+import static com.commercetools.project.sync.util.SyncUtils.buildCurrentCtpTimestampContainerName;
+import static com.commercetools.project.sync.util.SyncUtils.buildLastSyncTimestampContainerName;
 import static java.lang.String.format;
-import static java.util.Optional.ofNullable;
 
 import com.commercetools.project.sync.model.response.LastSyncCustomObject;
 import com.commercetools.project.sync.service.CustomObjectService;
@@ -22,13 +22,11 @@ import java.util.concurrent.CompletionStage;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import org.apache.commons.lang3.StringUtils;
 
 public class CustomObjectServiceImpl extends BaseServiceImpl implements CustomObjectService {
 
   public static final String TIMESTAMP_GENERATOR_KEY = "timestampGenerator";
   public static final String TIMESTAMP_GENERATOR_VALUE = "";
-  public static final String DEFAULT_RUNNER_NAME = "runnerName";
 
   public CustomObjectServiceImpl(@Nonnull final SphereClient sphereClient) {
     super(sphereClient);
@@ -51,24 +49,13 @@ public class CustomObjectServiceImpl extends BaseServiceImpl implements CustomOb
   public CompletionStage<ZonedDateTime> getCurrentCtpTimestamp(
       @Nullable final String runnerName, @Nonnull final String syncModuleName) {
 
-    final String container =
-        format(
-            "%s.%s.%s.%s",
-            getApplicationName(),
-            getRunnerNameValue(runnerName),
-            syncModuleName,
-            TIMESTAMP_GENERATOR_KEY);
+    final String container = buildCurrentCtpTimestampContainerName(syncModuleName, runnerName);
 
     final CustomObjectDraft<String> currentTimestampDraft =
         CustomObjectDraft.ofUnversionedUpsert(
             container, TIMESTAMP_GENERATOR_KEY, UUID.randomUUID().toString(), String.class);
 
     return createCustomObject(currentTimestampDraft).thenApply(ResourceView::getLastModifiedAt);
-  }
-
-  @Nonnull
-  private static String getRunnerNameValue(@Nullable final String runnerName) {
-    return ofNullable(runnerName).filter(StringUtils::isNotBlank).orElse(DEFAULT_RUNNER_NAME);
   }
 
   @Nonnull
@@ -104,8 +91,7 @@ public class CustomObjectServiceImpl extends BaseServiceImpl implements CustomOb
         QueryPredicate.of(
             format(
                 "container=\"%s\" AND key=\"%s\"",
-                buildLastSyncTimestampContainerName(syncModuleName, getRunnerNameValue(runnerName)),
-                sourceProjectKey));
+                buildLastSyncTimestampContainerName(syncModuleName, runnerName), sourceProjectKey));
 
     return getCtpClient()
         .execute(CustomObjectQuery.of(LastSyncCustomObject.class).plusPredicates(queryPredicate))
@@ -139,29 +125,11 @@ public class CustomObjectServiceImpl extends BaseServiceImpl implements CustomOb
 
     final CustomObjectDraft<LastSyncCustomObject> lastSyncCustomObjectDraft =
         CustomObjectDraft.ofUnversionedUpsert(
-            buildLastSyncTimestampContainerName(syncModuleName, getRunnerNameValue(runnerName)),
+            buildLastSyncTimestampContainerName(syncModuleName, runnerName),
             sourceProjectKey,
             lastSyncCustomObject,
             LastSyncCustomObject.class);
 
     return createCustomObject(lastSyncCustomObjectDraft);
-  }
-
-  @Nonnull
-  private String buildLastSyncTimestampContainerName(
-      @Nonnull final String syncModuleName, @Nonnull final String runnerName) {
-
-    final String syncModuleNameWithLowerCasedFirstChar = lowerCaseFirstChar(syncModuleName);
-    return format(
-        "%s.%s.%s", getApplicationName(), runnerName, syncModuleNameWithLowerCasedFirstChar);
-  }
-
-  @Nonnull
-  private String lowerCaseFirstChar(@Nonnull final String string) {
-
-    final char firstChar = string.charAt(0);
-    final char lowerCasedFirstChar = Character.toLowerCase(firstChar);
-    final String stringWithoutFirstChar = string.substring(1);
-    return format("%s%s", lowerCasedFirstChar, stringWithoutFirstChar);
   }
 }
