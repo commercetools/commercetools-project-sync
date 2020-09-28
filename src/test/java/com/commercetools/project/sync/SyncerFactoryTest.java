@@ -2,7 +2,6 @@ package com.commercetools.project.sync;
 
 import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_DESCRIPTION;
 import static com.commercetools.project.sync.service.impl.CustomObjectServiceImpl.TIMESTAMP_GENERATOR_KEY;
-import static com.commercetools.project.sync.service.impl.CustomObjectServiceImpl.TIMESTAMP_GENERATOR_VALUE;
 import static com.commercetools.project.sync.util.SyncUtils.DEFAULT_RUNNER_NAME;
 import static com.commercetools.project.sync.util.SyncUtils.getApplicationName;
 import static com.commercetools.project.sync.util.TestUtils.assertCartDiscountSyncerLoggingEvents;
@@ -24,6 +23,7 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -43,6 +43,7 @@ import io.sphere.sdk.categories.queries.CategoryQuery;
 import io.sphere.sdk.client.BadGatewayException;
 import io.sphere.sdk.client.SphereClient;
 import io.sphere.sdk.client.SphereClientConfig;
+import io.sphere.sdk.client.SphereRequest;
 import io.sphere.sdk.customobjects.CustomObject;
 import io.sphere.sdk.customobjects.CustomObjectDraft;
 import io.sphere.sdk.customobjects.commands.CustomObjectUpsertCommand;
@@ -69,6 +70,7 @@ import javax.annotation.Nonnull;
 import org.assertj.core.api.Condition;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import uk.org.lidalia.slf4jext.Level;
 import uk.org.lidalia.slf4jtest.LoggingEvent;
 import uk.org.lidalia.slf4jtest.TestLogger;
@@ -163,7 +165,7 @@ class SyncerFactoryTest {
     // assertions
     verify(sourceClient, times(1)).execute(any(ProductQuery.class));
 
-    verifyTimestampGeneratorCustomObjectUpsert(targetClient, 1, "ProductSync", "myRunnerName");
+    verifyTimestampGeneratorCustomObjectUpsertIsCalled(targetClient, "ProductSync", "myRunnerName");
     verifyLastSyncCustomObjectQuery(targetClient, "productSync", "myRunnerName", "foo", 1);
     // verify two custom object upserts : 1. current ctp timestamp and 2. last sync timestamp
     // creation)
@@ -226,7 +228,8 @@ class SyncerFactoryTest {
     // assertions
     verify(sourceClient, times(1)).execute(any(ProductQuery.class));
 
-    verifyTimestampGeneratorCustomObjectUpsert(targetClient, 0, "ProductSync", "myRunnerName");
+    verifyTimestampGeneratorCustomObjectUpsertIsNotCalled(
+        targetClient, "ProductSync", "myRunnerName");
     verifyLastSyncCustomObjectQuery(targetClient, "productSync", "myRunnerName", "foo", 0);
     verify(targetClient, times(0)).execute(any(CustomObjectUpsertCommand.class));
     verifyInteractionsWithClientAfterSync(sourceClient, 1);
@@ -441,23 +444,65 @@ class SyncerFactoryTest {
                     + " project."));
   }
 
-  private static void verifyTimestampGeneratorCustomObjectUpsert(
+  private static void verifyTimestampGeneratorCustomObjectUpsertIsCalled(
       @Nonnull final SphereClient client,
-      final int expectedInvocations,
       @Nonnull final String syncMethodName,
       @Nonnull final String syncRunnerName) {
+    final CustomObjectDraft customObjectDraft =
+        findTimestampGeneratorCustomObjectUpsert(client, syncMethodName, syncRunnerName);
+    assertThat(customObjectDraft).isNotNull();
+    assertThat((String) customObjectDraft.getValue())
+        .matches(
+            "[0-9a-fA-F]{8}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{12}");
+  }
 
-    final CustomObjectDraft<String> currentTimestampDraft =
-        CustomObjectDraft.ofUnversionedUpsert(
-            format(
-                "%s.%s.%s.%s",
-                getApplicationName(), syncRunnerName, syncMethodName, TIMESTAMP_GENERATOR_KEY),
-            TIMESTAMP_GENERATOR_KEY,
-            TIMESTAMP_GENERATOR_VALUE,
-            String.class);
+  private static void verifyTimestampGeneratorCustomObjectUpsertIsNotCalled(
+      @Nonnull final SphereClient client,
+      @Nonnull final String syncMethodName,
+      @Nonnull final String syncRunnerName) {
+    final CustomObjectDraft customObjectDraft =
+        findTimestampGeneratorCustomObjectUpsert(client, syncMethodName, syncRunnerName);
+    assertThat(customObjectDraft).isNull();
+  }
 
-    verify(client, times(expectedInvocations))
-        .execute(CustomObjectUpsertCommand.of(currentTimestampDraft));
+  private static CustomObjectDraft findTimestampGeneratorCustomObjectUpsert(
+      @Nonnull SphereClient client,
+      @Nonnull String syncMethodName,
+      @Nonnull String syncRunnerName) {
+    // fact: SphereRequest is a very broad interface and we actually wanted to capture only
+    // CustomObjectUpsertCommand.
+    // I tried it but argumentcaptor captures also CustomObjectQueryImpl classes, because we call
+    // both query and upsert in the mocked SphereClient.
+    // This situation throws runtime NPE error later in the method as query doesnt contain a draft.
+    // I guess generics doesnt work here as type is not know on compile time.
+    // That's why we need to filter instanceof CustomObjectUpsertCommand in the streams.
+    final ArgumentCaptor<SphereRequest> sphereClientArgumentCaptor =
+        ArgumentCaptor.forClass(CustomObjectUpsertCommand.class);
+
+    verify(client, atLeast(0)).execute(sphereClientArgumentCaptor.capture());
+    final List<SphereRequest> allValues = sphereClientArgumentCaptor.getAllValues();
+    final CustomObjectDraft customObjectDraft =
+        allValues
+            .stream()
+            .filter(sphereRequest -> sphereRequest instanceof CustomObjectUpsertCommand)
+            .map(sphereRequest -> (CustomObjectUpsertCommand) sphereRequest)
+            .map(command -> (CustomObjectDraft) command.getDraft())
+            .filter(
+                draft -> {
+                  return draft
+                          .getContainer()
+                          .equals(
+                              format(
+                                  "%s.%s.%s.%s",
+                                  getApplicationName(),
+                                  syncRunnerName,
+                                  syncMethodName,
+                                  TIMESTAMP_GENERATOR_KEY))
+                      && draft.getKey().equals(TIMESTAMP_GENERATOR_KEY);
+                })
+            .findAny()
+            .orElse(null);
+    return customObjectDraft;
   }
 
   private static void verifyLastSyncCustomObjectQuery(
@@ -501,8 +546,8 @@ class SyncerFactoryTest {
 
     // assertions
     verify(sourceClient, times(1)).execute(any(CategoryQuery.class));
-    verifyTimestampGeneratorCustomObjectUpsert(
-        targetClient, 1, "CategorySync", DEFAULT_RUNNER_NAME);
+    verifyTimestampGeneratorCustomObjectUpsertIsCalled(
+        targetClient, "CategorySync", DEFAULT_RUNNER_NAME);
     verifyLastSyncCustomObjectQuery(targetClient, "categorySync", DEFAULT_RUNNER_NAME, "foo", 1);
     // verify two custom object upserts : 1. current ctp timestamp and 2. last sync timestamp
     // creation)
@@ -564,8 +609,8 @@ class SyncerFactoryTest {
 
     // assertions
     verify(sourceClient, times(1)).execute(any(ProductTypeQuery.class));
-    verifyTimestampGeneratorCustomObjectUpsert(
-        targetClient, 1, "ProductTypeSync", DEFAULT_RUNNER_NAME);
+    verifyTimestampGeneratorCustomObjectUpsertIsCalled(
+        targetClient, "ProductTypeSync", DEFAULT_RUNNER_NAME);
     verifyLastSyncCustomObjectQuery(targetClient, "productTypeSync", DEFAULT_RUNNER_NAME, "foo", 1);
     // verify two custom object upserts : 1. current ctp timestamp and 2. last sync timestamp
     // creation)
@@ -628,7 +673,7 @@ class SyncerFactoryTest {
 
     // assertions
     verify(sourceClient, times(1)).execute(any(TypeQuery.class));
-    verifyTimestampGeneratorCustomObjectUpsert(targetClient, 1, "TypeSync", "foo");
+    verifyTimestampGeneratorCustomObjectUpsertIsCalled(targetClient, "TypeSync", "foo");
     verifyLastSyncCustomObjectQuery(targetClient, "typeSync", "foo", "foo", 1);
     // verify two custom object upserts : 1. current ctp timestamp and 2. last sync timestamp
     // creation)
@@ -690,8 +735,8 @@ class SyncerFactoryTest {
 
     // assertions
     verify(sourceClient, times(1)).execute(any(InventoryEntryQuery.class));
-    verifyTimestampGeneratorCustomObjectUpsert(
-        targetClient, 1, "InventorySync", DEFAULT_RUNNER_NAME);
+    verifyTimestampGeneratorCustomObjectUpsertIsCalled(
+        targetClient, "InventorySync", DEFAULT_RUNNER_NAME);
     verifyLastSyncCustomObjectQuery(targetClient, "inventorySync", DEFAULT_RUNNER_NAME, "foo", 1);
     // verify two custom object upserts : 1. current ctp timestamp and 2. last sync timestamp
     // creation)
@@ -752,8 +797,8 @@ class SyncerFactoryTest {
     final CompletionStage<Void> result = syncerFactory.sync("inventoryEntries", null, false);
 
     // assertions
-    verifyTimestampGeneratorCustomObjectUpsert(
-        targetClient, 1, "InventorySync", DEFAULT_RUNNER_NAME);
+    verifyTimestampGeneratorCustomObjectUpsertIsCalled(
+        targetClient, "InventorySync", DEFAULT_RUNNER_NAME);
     verify(sourceClient, times(1)).execute(any(InventoryEntryQuery.class));
     verifyInteractionsWithClientAfterSync(sourceClient, 1);
     assertThat(result).hasFailedWithThrowableThat().isExactlyInstanceOf(BadGatewayException.class);
@@ -781,8 +826,8 @@ class SyncerFactoryTest {
     final CompletionStage<Void> result = syncerFactory.sync("inventoryEntries", "", false);
 
     // assertions
-    verifyTimestampGeneratorCustomObjectUpsert(
-        targetClient, 1, "InventorySync", DEFAULT_RUNNER_NAME);
+    verifyTimestampGeneratorCustomObjectUpsertIsCalled(
+        targetClient, "InventorySync", DEFAULT_RUNNER_NAME);
     verify(sourceClient, times(0)).execute(any(InventoryEntryQuery.class));
     verifyInteractionsWithClientAfterSync(sourceClient, 1);
     assertThat(result).hasFailedWithThrowableThat().isExactlyInstanceOf(BadGatewayException.class);
@@ -815,7 +860,7 @@ class SyncerFactoryTest {
     final CompletionStage<Void> result = syncerFactory.sync("inventoryEntries", "bar", false);
 
     // assertions
-    verifyTimestampGeneratorCustomObjectUpsert(targetClient, 1, "InventorySync", "bar");
+    verifyTimestampGeneratorCustomObjectUpsertIsCalled(targetClient, "InventorySync", "bar");
     verifyLastSyncCustomObjectQuery(targetClient, "inventorySync", "bar", "foo", 1);
     verify(sourceClient, times(0)).execute(any(InventoryEntryQuery.class));
     verifyInteractionsWithClientAfterSync(sourceClient, 1);
@@ -861,21 +906,24 @@ class SyncerFactoryTest {
     syncerFactory.syncAll(null, false).join();
 
     // assertions
-    verifyTimestampGeneratorCustomObjectUpsert(
-        targetClient, 1, "ProductTypeSync", DEFAULT_RUNNER_NAME);
-    verifyTimestampGeneratorCustomObjectUpsert(targetClient, 1, "ProductSync", DEFAULT_RUNNER_NAME);
-    verifyTimestampGeneratorCustomObjectUpsert(
-        targetClient, 1, "CategorySync", DEFAULT_RUNNER_NAME);
-    verifyTimestampGeneratorCustomObjectUpsert(targetClient, 1, "TypeSync", DEFAULT_RUNNER_NAME);
-    verifyTimestampGeneratorCustomObjectUpsert(
-        targetClient, 1, "InventorySync", DEFAULT_RUNNER_NAME);
-    verifyTimestampGeneratorCustomObjectUpsert(
-        targetClient, 1, "CartDiscountSync", DEFAULT_RUNNER_NAME);
-    verifyTimestampGeneratorCustomObjectUpsert(targetClient, 1, "StateSync", DEFAULT_RUNNER_NAME);
-    verifyTimestampGeneratorCustomObjectUpsert(
-        targetClient, 1, "TaxCategorySync", DEFAULT_RUNNER_NAME);
-    verifyTimestampGeneratorCustomObjectUpsert(
-        targetClient, 1, "CustomObjectSync", DEFAULT_RUNNER_NAME);
+    verifyTimestampGeneratorCustomObjectUpsertIsCalled(
+        targetClient, "ProductTypeSync", DEFAULT_RUNNER_NAME);
+    verifyTimestampGeneratorCustomObjectUpsertIsCalled(
+        targetClient, "ProductSync", DEFAULT_RUNNER_NAME);
+    verifyTimestampGeneratorCustomObjectUpsertIsCalled(
+        targetClient, "CategorySync", DEFAULT_RUNNER_NAME);
+    verifyTimestampGeneratorCustomObjectUpsertIsCalled(
+        targetClient, "TypeSync", DEFAULT_RUNNER_NAME);
+    verifyTimestampGeneratorCustomObjectUpsertIsCalled(
+        targetClient, "InventorySync", DEFAULT_RUNNER_NAME);
+    verifyTimestampGeneratorCustomObjectUpsertIsCalled(
+        targetClient, "CartDiscountSync", DEFAULT_RUNNER_NAME);
+    verifyTimestampGeneratorCustomObjectUpsertIsCalled(
+        targetClient, "StateSync", DEFAULT_RUNNER_NAME);
+    verifyTimestampGeneratorCustomObjectUpsertIsCalled(
+        targetClient, "TaxCategorySync", DEFAULT_RUNNER_NAME);
+    verifyTimestampGeneratorCustomObjectUpsertIsCalled(
+        targetClient, "CustomObjectSync", DEFAULT_RUNNER_NAME);
     verify(targetClient, times(18)).execute(any(CustomObjectUpsertCommand.class));
     verifyLastSyncCustomObjectQuery(targetClient, "inventorySync", DEFAULT_RUNNER_NAME, "foo", 1);
     verifyLastSyncCustomObjectQuery(targetClient, "productTypeSync", DEFAULT_RUNNER_NAME, "foo", 1);

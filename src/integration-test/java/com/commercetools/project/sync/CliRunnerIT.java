@@ -1,7 +1,6 @@
 package com.commercetools.project.sync;
 
 import static com.commercetools.project.sync.service.impl.CustomObjectServiceImpl.TIMESTAMP_GENERATOR_KEY;
-import static com.commercetools.project.sync.service.impl.CustomObjectServiceImpl.TIMESTAMP_GENERATOR_VALUE;
 import static com.commercetools.project.sync.util.ClientConfigurationUtils.createClient;
 import static com.commercetools.project.sync.util.IntegrationTestUtils.assertCategoryExists;
 import static com.commercetools.project.sync.util.IntegrationTestUtils.assertProductExists;
@@ -393,7 +392,9 @@ class CliRunnerIT {
         .hasOnlyOneElementSatisfying(
             currentCtpTimestamp -> {
               assertThat(currentCtpTimestamp.getKey()).isEqualTo(TIMESTAMP_GENERATOR_KEY);
-              assertThat(currentCtpTimestamp.getValue()).isEqualTo(TIMESTAMP_GENERATOR_VALUE);
+              assertThat(currentCtpTimestamp.getValue())
+                  .matches(
+                      "[0-9a-fA-F]{8}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{12}");
             });
 
     return currentCtpTimestampGeneratorResults.getResults().get(0).getLastModifiedAt();
