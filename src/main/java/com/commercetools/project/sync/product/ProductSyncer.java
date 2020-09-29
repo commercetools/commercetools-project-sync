@@ -23,6 +23,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.sphere.sdk.categories.Category;
 import io.sphere.sdk.client.SphereClient;
 import io.sphere.sdk.commands.UpdateAction;
+import io.sphere.sdk.customobjects.CustomObject;
 import io.sphere.sdk.expansion.ExpansionPath;
 import io.sphere.sdk.products.AttributeContainer;
 import io.sphere.sdk.products.Product;
@@ -162,11 +163,15 @@ public final class ProductSyncer
     final List<JsonNode> allProductTypeReferences =
         getReferencesByTypeId(allAttributeReferences, ProductType.referenceTypeId());
 
+    final List<JsonNode> allCustomObjectReferences =
+        getReferencesByTypeId(allAttributeReferences, CustomObject.referenceTypeId());
+
     return this.referencesService
         .getIdToKeys(
             getIds(allProductReferences),
             getIds(allCategoryReferences),
-            getIds(allProductTypeReferences))
+            getIds(allProductTypeReferences),
+            getIds(allCustomObjectReferences))
         .thenApply(
             idToKey -> {
               final List<Product> validProducts =

@@ -1,8 +1,10 @@
 package com.commercetools.project.sync.service.impl;
 
 import static io.sphere.sdk.utils.SphereInternalUtils.asSet;
+import static java.util.Arrays.asList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.emptySet;
+import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
@@ -16,9 +18,13 @@ import com.commercetools.project.sync.model.response.CombinedResult;
 import com.commercetools.project.sync.model.response.ReferenceIdKey;
 import com.commercetools.project.sync.model.response.ResultingResourcesContainer;
 import com.commercetools.project.sync.service.ReferencesService;
+import com.fasterxml.jackson.databind.JsonNode;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.sphere.sdk.client.SphereApiConfig;
 import io.sphere.sdk.client.SphereClient;
+import io.sphere.sdk.customobjects.CustomObject;
+import io.sphere.sdk.customobjects.queries.CustomObjectQuery;
+import io.sphere.sdk.queries.PagedQueryResult;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -35,7 +41,7 @@ class ReferencesServiceImplTest {
 
     // test
     final CompletionStage<Map<String, String>> idToKeysStage =
-        referencesService.getIdToKeys(emptySet(), emptySet(), emptySet());
+        referencesService.getIdToKeys(emptySet(), emptySet(), emptySet(), emptySet());
 
     // assertion
     assertThat(idToKeysStage).isCompletedWithValue(emptyMap());
@@ -58,7 +64,7 @@ class ReferencesServiceImplTest {
 
     // test
     final CompletionStage<Map<String, String>> idToKeysStage =
-        referencesService.getIdToKeys(emptySet(), emptySet(), asSet("productTypeId"));
+        referencesService.getIdToKeys(emptySet(), emptySet(), asSet("productTypeId"), emptySet());
 
     // assertion
     final HashMap<String, String> expectedCache = new HashMap<>();
@@ -81,7 +87,7 @@ class ReferencesServiceImplTest {
     // test
     final CompletionStage<Map<String, String>> idToKeysStage =
         referencesService.getIdToKeys(
-            asSet("productId"), asSet("categoryId"), asSet("productTypeId"));
+            asSet("productId"), asSet("categoryId"), asSet("productTypeId"), emptySet());
 
     // assertion
     assertThat(idToKeysStage).isCompletedWithValue(new HashMap<>());
@@ -89,6 +95,7 @@ class ReferencesServiceImplTest {
   }
 
   @Test
+  @SuppressWarnings("unchecked")
   void getIdToKeys_WithNonCachedIds_ShouldFetchOnceAndCacheIds() {
     // preparation
     final SphereClient ctpClient = mock(SphereClient.class);
@@ -100,25 +107,42 @@ class ReferencesServiceImplTest {
                 asSet(new ReferenceIdKey("productTypeId", "productTypeKey"))));
     when(ctpClient.execute(any(CombinedResourceKeysRequest.class)))
         .thenReturn(CompletableFuture.completedFuture(mockResult));
+
+    final CustomObject<JsonNode> mockCustomObject = mock(CustomObject.class);
+    when(mockCustomObject.getId()).thenReturn("customObjectId");
+    when(mockCustomObject.getKey()).thenReturn("customObjectKey");
+    when(mockCustomObject.getContainer()).thenReturn("customObjectContainer");
+    final PagedQueryResult<CustomObject<JsonNode>> result = mock(PagedQueryResult.class);
+    when(result.getResults()).thenReturn(singletonList(mockCustomObject));
+
+    when(result.getResults()).thenReturn(asList(mockCustomObject));
+    when(ctpClient.execute(any(CustomObjectQuery.class)))
+        .thenReturn(CompletableFuture.completedFuture(result));
+
     final ReferencesService referencesService = new ReferencesServiceImpl(ctpClient);
 
     // test
     final CompletionStage<Map<String, String>> idToKeysStage =
         referencesService.getIdToKeys(
-            asSet("productId"), asSet("categoryId"), asSet("productTypeId"));
+            asSet("productId"), asSet("categoryId"), asSet("productTypeId"), emptySet());
     // get again to test second fetch doesnt make request to ctp
-    referencesService.getIdToKeys(asSet("productId"), asSet("categoryId"), asSet("productTypeId"));
+    referencesService.getIdToKeys(
+        asSet("productId"), asSet("categoryId"), asSet("productTypeId"), asSet("customObjectId"));
 
     // assertion
     final HashMap<String, String> expectedCache = new HashMap<>();
     expectedCache.put("productId", "productKey");
     expectedCache.put("categoryId", "categoryKey");
     expectedCache.put("productTypeId", "productTypeKey");
+    expectedCache.put("customObjectId", "customObjectContainer|customObjectKey");
+
     assertThat(idToKeysStage).isCompletedWithValue(expectedCache);
     verify(ctpClient, times(1)).execute(any(CombinedResourceKeysRequest.class));
+    verify(ctpClient, times(1)).execute(any(CustomObjectQuery.class));
   }
 
   @Test
+  @SuppressWarnings("unchecked")
   void getIdToKeys_WithSomeNonCachedIds_ShouldFetchTwiceAndCacheIds() {
     // preparation
     final SphereClient ctpClient = mock(SphereClient.class);
@@ -130,23 +154,52 @@ class ReferencesServiceImplTest {
                 asSet(new ReferenceIdKey("productTypeId", "productTypeKey"))));
     when(ctpClient.execute(any(CombinedResourceKeysRequest.class)))
         .thenReturn(CompletableFuture.completedFuture(mockResult));
+
+    final CustomObject<JsonNode> mockCustomObject = mock(CustomObject.class);
+    when(mockCustomObject.getId()).thenReturn("customObjectId");
+    when(mockCustomObject.getKey()).thenReturn("customObjectKey");
+    when(mockCustomObject.getContainer()).thenReturn("customObjectContainer");
+    final PagedQueryResult<CustomObject<JsonNode>> result = mock(PagedQueryResult.class);
+    when(result.getResults()).thenReturn(singletonList(mockCustomObject));
+
+    final CustomObject<JsonNode> mockCustomObject2 = mock(CustomObject.class);
+    when(mockCustomObject2.getId()).thenReturn("customObjectId2");
+    when(mockCustomObject2.getKey()).thenReturn("customObjectKey2");
+    when(mockCustomObject2.getContainer()).thenReturn("customObjectContainer2");
+
+    when(result.getResults()).thenReturn(asList(mockCustomObject, mockCustomObject2));
+    when(ctpClient.execute(any(CustomObjectQuery.class)))
+        .thenReturn(CompletableFuture.completedFuture(result));
+
     final ReferencesService referencesService = new ReferencesServiceImpl(ctpClient);
 
     // test
     final CompletionStage<Map<String, String>> idToKeysStage =
         referencesService.getIdToKeys(
-            asSet("productId"), asSet("categoryId"), asSet("productTypeId"));
+            asSet("productId"),
+            asSet("categoryId"),
+            asSet("productTypeId"),
+            asSet("customObjectId", "customObjectId2"));
+
     // get again to test second fetch doesnt make request to ctp
     referencesService.getIdToKeys(
-        asSet("newProductId"), asSet("categoryId"), asSet("productTypeId"));
+        asSet("newProductId"),
+        asSet("categoryId"),
+        asSet("productTypeId"),
+        asSet("customObjectId", "customObjectId2"));
 
     // assertion
     final HashMap<String, String> expectedCache = new HashMap<>();
     expectedCache.put("productId", "productKey");
     expectedCache.put("categoryId", "categoryKey");
     expectedCache.put("productTypeId", "productTypeKey");
+    expectedCache.put("customObjectId", "customObjectContainer|customObjectKey");
+    expectedCache.put("customObjectId2", "customObjectContainer2|customObjectKey2");
     assertThat(idToKeysStage).isCompletedWithValue(expectedCache);
+
+    //  second fetch doesnt make request to ctp
     verify(ctpClient, times(2)).execute(any(CombinedResourceKeysRequest.class));
+    verify(ctpClient, times(1)).execute(any(CustomObjectQuery.class));
   }
 
   @Test
@@ -171,7 +224,8 @@ class ReferencesServiceImplTest {
         referencesService.getIdToKeys(
             asSet("productId", "productId2", "productId3"),
             asSet("categoryId"),
-            asSet("productTypeId"));
+            asSet("productTypeId"),
+            emptySet());
 
     // assertion
     final HashMap<String, String> expectedCache = new HashMap<>();

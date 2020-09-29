@@ -11,5 +11,6 @@ public interface ReferencesService {
   CompletionStage<Map<String, String>> getIdToKeys(
       @Nonnull final Set<String> productIds,
       @Nonnull final Set<String> categoryIds,
-      @Nonnull final Set<String> productTypeIds);
+      @Nonnull final Set<String> productTypeIds,
+      @Nonnull final Set<String> customObjectIds);
 }
