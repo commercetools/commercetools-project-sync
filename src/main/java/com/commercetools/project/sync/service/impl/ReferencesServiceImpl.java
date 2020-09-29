@@ -27,7 +27,7 @@ import javax.annotation.Nullable;
 import org.apache.commons.lang3.StringUtils;
 
 public class ReferencesServiceImpl extends BaseServiceImpl implements ReferencesService {
-  private final Map<String, String> idToKey = new HashMap<>();
+  private final Map<String, String> allResourcesIdToKey = new HashMap<>();
 
   public ReferencesServiceImpl(@Nonnull final SphereClient ctpClient) {
     super(ctpClient);
@@ -80,14 +80,16 @@ public class ReferencesServiceImpl extends BaseServiceImpl implements References
         .thenApply(
             combinedResult -> {
               cacheKeys(combinedResult);
-              return idToKey;
+              return allResourcesIdToKey;
             })
         .thenCompose(ignored -> fetchCustomObjectKeys(nonCachedCustomObjectIds));
   }
 
   @Nonnull
   private Set<String> getNonCachedIds(@Nonnull final Set<String> ids) {
-    return ids.stream().filter(id -> !idToKey.containsKey(id)).collect(Collectors.toSet());
+    return ids.stream()
+        .filter(id -> !allResourcesIdToKey.containsKey(id))
+        .collect(Collectors.toSet());
   }
 
   private void cacheKeys(@Nullable final CombinedResult combinedResult) {
@@ -107,7 +109,7 @@ public class ReferencesServiceImpl extends BaseServiceImpl implements References
                 final String key = referenceIdKey.getKey();
                 final String id = referenceIdKey.getId();
                 if (!isBlank(key)) {
-                  idToKey.put(id, key);
+                  allResourcesIdToKey.put(id, key);
                 }
               });
     }
@@ -118,14 +120,14 @@ public class ReferencesServiceImpl extends BaseServiceImpl implements References
       @Nonnull final Set<String> nonCachedCustomObjectIds) {
 
     if (nonCachedCustomObjectIds.isEmpty()) {
-      return CompletableFuture.completedFuture(idToKey);
+      return CompletableFuture.completedFuture(allResourcesIdToKey);
     }
 
     final Consumer<List<CustomObject<JsonNode>>> pageConsumer =
         page ->
             page.forEach(
                 resource ->
-                    idToKey.put(
+                    allResourcesIdToKey.put(
                         resource.getId(), CustomObjectCompositeIdentifier.of(resource).toString()));
 
     final CustomObjectQuery<JsonNode> jsonNodeCustomObjectQuery =
@@ -133,7 +135,7 @@ public class ReferencesServiceImpl extends BaseServiceImpl implements References
             .withPredicates(buildCustomObjectIdsQueryPredicate(nonCachedCustomObjectIds));
 
     return CtpQueryUtils.queryAll(getCtpClient(), jsonNodeCustomObjectQuery, pageConsumer)
-        .thenApply(result -> idToKey);
+        .thenApply(result -> allResourcesIdToKey);
   }
 
   private QueryPredicate<CustomObject<JsonNode>> buildCustomObjectIdsQueryPredicate(
