@@ -63,7 +63,6 @@ public class ReferencesServiceImpl extends BaseServiceImpl implements References
     final Set<String> nonCachedProductTypeIds = getNonCachedIds(productTypeIds);
     final Set<String> nonCachedCustomObjectIds = getNonCachedIds(customObjectIds);
 
-    // if everything is cached, no need to make a request to CTP.
     if (nonCachedProductIds.isEmpty()
         && nonCachedCategoryIds.isEmpty()
         && nonCachedProductTypeIds.isEmpty()) {
