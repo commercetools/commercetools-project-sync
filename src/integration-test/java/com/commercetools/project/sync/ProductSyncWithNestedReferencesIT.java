@@ -26,11 +26,15 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.sphere.sdk.categories.Category;
 import io.sphere.sdk.categories.CategoryDraft;
 import io.sphere.sdk.categories.CategoryDraftBuilder;
 import io.sphere.sdk.categories.commands.CategoryCreateCommand;
 import io.sphere.sdk.client.SphereClient;
+import io.sphere.sdk.customobjects.CustomObject;
+import io.sphere.sdk.customobjects.CustomObjectDraft;
+import io.sphere.sdk.customobjects.commands.CustomObjectUpsertCommand;
 import io.sphere.sdk.products.Product;
 import io.sphere.sdk.products.ProductDraft;
 import io.sphere.sdk.products.ProductDraftBuilder;
@@ -102,13 +106,27 @@ class ProductSyncWithNestedReferencesIT {
             .attributeConstraint(AttributeConstraint.NONE)
             .build();
 
+    final AttributeDefinitionDraft setOfCustomObjectAttributeDef =
+        AttributeDefinitionDraftBuilder.of(
+                SetAttributeType.of(ReferenceAttributeType.of(CustomObject.referenceTypeId())),
+                "customObjects",
+                ofEnglish("customObjects"),
+                false)
+            .searchable(false)
+            .attributeConstraint(AttributeConstraint.NONE)
+            .build();
+
     final ProductTypeDraft nestedProductTypeDraft =
         ProductTypeDraftBuilder.of(
                 INNER_PRODUCT_TYPE_KEY,
                 INNER_PRODUCT_TYPE_KEY,
                 "an inner productType for t-shirts",
                 emptyList())
-            .attributes(asList(setOfCategoriesAttributeDef, setOfProductTypeAttributeDef))
+            .attributes(
+                asList(
+                    setOfCategoriesAttributeDef,
+                    setOfProductTypeAttributeDef,
+                    setOfCustomObjectAttributeDef))
             .build();
 
     final ProductType innerProductType =
@@ -153,6 +171,30 @@ class ProductSyncWithNestedReferencesIT {
             .toCompletableFuture()
             .join();
 
+    final ObjectNode customObjectValue =
+        JsonNodeFactory.instance.objectNode().put("field", "value1");
+
+    final CustomObjectDraft<JsonNode> customObjectDraft =
+        CustomObjectDraft.ofUnversionedUpsert("container", "key1", customObjectValue);
+
+    final ObjectNode customObjectValue2 =
+        JsonNodeFactory.instance.objectNode().put("field", "value2");
+
+    final CustomObjectDraft<JsonNode> customObjectDraft2 =
+        CustomObjectDraft.ofUnversionedUpsert("container", "key2", customObjectValue2);
+
+    final CustomObject<JsonNode> customObject1 =
+        sourceProjectClient
+            .execute(CustomObjectUpsertCommand.of(customObjectDraft))
+            .toCompletableFuture()
+            .join();
+
+    final CustomObject<JsonNode> customObject2 =
+        sourceProjectClient
+            .execute(CustomObjectUpsertCommand.of(customObjectDraft2))
+            .toCompletableFuture()
+            .join();
+
     final ArrayNode setAttributeValue = JsonNodeFactory.instance.arrayNode();
 
     final ArrayNode nestedAttributeValue = JsonNodeFactory.instance.arrayNode();
@@ -165,12 +207,21 @@ class ProductSyncWithNestedReferencesIT {
     productTypesReferencesAttributeValue.add(
         createReferenceObject(ProductType.referenceTypeId(), mainProductType.getId()));
 
+    final ArrayNode customObjectReferencesAttributeValue = JsonNodeFactory.instance.arrayNode();
+    customObjectReferencesAttributeValue.add(
+        createReferenceObject(CustomObject.referenceTypeId(), customObject1.getId()));
+    customObjectReferencesAttributeValue.add(
+        createReferenceObject(CustomObject.referenceTypeId(), customObject2.getId()));
+
     nestedAttributeValue.add(
         createAttributeObject(
             setOfCategoriesAttributeDef.getName(), categoriesReferencesAttributeValue));
     nestedAttributeValue.add(
         createAttributeObject(
             setOfProductTypeAttributeDef.getName(), productTypesReferencesAttributeValue));
+    nestedAttributeValue.add(
+        createAttributeObject(
+            setOfCustomObjectAttributeDef.getName(), customObjectReferencesAttributeValue));
 
     setAttributeValue.add(nestedAttributeValue);
 
@@ -239,7 +290,7 @@ class ProductSyncWithNestedReferencesIT {
       assertCartDiscountSyncerLoggingEvents(syncerTestLogger, 0);
       assertStateSyncerLoggingEvents(
           syncerTestLogger, 1); // 1 state is built-in and it will always be processed
-      assertCustomObjectSyncerLoggingEvents(syncerTestLogger, 0);
+      assertCustomObjectSyncerLoggingEvents(syncerTestLogger, 2);
       // Every sync module is expected to have 2 logs (start and stats summary)
       assertThat(syncerTestLogger.getAllLoggingEvents()).hasSize(18);
 
@@ -277,7 +328,7 @@ class ProductSyncWithNestedReferencesIT {
                         final JsonNode nestedAttributeElement = attributeValueAsArray.get(0);
                         assertThat(nestedAttributeElement).isExactlyInstanceOf(ArrayNode.class);
                         final ArrayNode nestedTypeAttributes = (ArrayNode) nestedAttributeElement;
-                        assertThat(nestedTypeAttributes).hasSize(2);
+                        assertThat(nestedTypeAttributes).hasSize(3);
 
                         assertThat(nestedTypeAttributes.get(0).get("name").asText())
                             .isEqualTo("categories");
@@ -302,6 +353,14 @@ class ProductSyncWithNestedReferencesIT {
                                 productTypeReference ->
                                     assertThat(productTypeReference.get("id").asText())
                                         .isEqualTo(productType.getId()));
+
+                        assertThat(nestedTypeAttributes.get(2).get("name").asText())
+                            .isEqualTo("customObjects");
+                        assertThat(nestedTypeAttributes.get(2).get("value"))
+                            .isExactlyInstanceOf(ArrayNode.class);
+                        final ArrayNode customObjectReferences =
+                            (ArrayNode) (nestedTypeAttributes.get(2).get("value"));
+                        assertThat(customObjectReferences).hasSize(2);
                       });
             });
   }
