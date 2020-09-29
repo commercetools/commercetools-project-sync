@@ -75,6 +75,7 @@ public class ReferencesServiceImpl extends BaseServiceImpl implements References
         new CombinedResourceKeysRequest(
             nonCachedProductIds, nonCachedCategoryIds, nonCachedProductTypeIds);
 
+    // TODO: Adapt to run grapqhl and rest call in parallel.
     return getCtpClient()
         .execute(combinedResourceKeysRequest)
         .thenApply(
