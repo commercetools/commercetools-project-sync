@@ -138,12 +138,13 @@ public class ReferencesServiceImpl extends BaseServiceImpl implements References
 
   private QueryPredicate<CustomObject<JsonNode>> buildCustomObjectIdsQueryPredicate(
       @Nonnull final Set<String> customObjectIds) {
-    String idsQueryString =
+    final List<String> idsSurroundedWithDoubleQuotes =
         customObjectIds
             .stream()
             .filter(StringUtils::isNotBlank)
-            .collect(Collectors.joining("\"\""));
-
+            .map(customObjectId -> format("\"%s\"", customObjectId))
+            .collect(Collectors.toList());
+    String idsQueryString = idsSurroundedWithDoubleQuotes.toString();
     // Strip square brackets from list string. For example: ["id1", "id2"] -> "id1", "id2"
     idsQueryString = idsQueryString.substring(1, idsQueryString.length() - 1);
     return QueryPredicate.of(format("id in (%s)", idsQueryString));
