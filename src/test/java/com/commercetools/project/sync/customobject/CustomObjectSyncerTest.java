@@ -114,12 +114,8 @@ public class CustomObjectSyncerTest {
     // preparation
     final String runnerName = "testRunnerName";
     final CustomObjectSyncer customObjectSyncer =
-            CustomObjectSyncer.of(
-                    mock(SphereClient.class),
-                    mock(SphereClient.class),
-                    getMockedClock(),
-                    runnerName,
-                    true);
+        CustomObjectSyncer.of(
+            mock(SphereClient.class), mock(SphereClient.class), getMockedClock(), runnerName, true);
 
     // test
     final CustomObjectQuery query = customObjectSyncer.getQuery();
