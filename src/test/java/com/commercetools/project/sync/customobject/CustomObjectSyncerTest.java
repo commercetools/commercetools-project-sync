@@ -30,7 +30,11 @@ public class CustomObjectSyncerTest {
     final String runnerName = "";
     final CustomObjectSyncer customObjectSyncer =
         CustomObjectSyncer.of(
-            mock(SphereClient.class), mock(SphereClient.class), getMockedClock(), runnerName);
+            mock(SphereClient.class),
+            mock(SphereClient.class),
+            getMockedClock(),
+            runnerName,
+            false);
 
     // assertions
     final List<String> excludedContainerNames = getExcludedContainerNames(runnerName);
@@ -49,7 +53,7 @@ public class CustomObjectSyncerTest {
     // preparation
     final CustomObjectSyncer customObjectSyncer =
         CustomObjectSyncer.of(
-            mock(SphereClient.class), mock(SphereClient.class), getMockedClock(), "");
+            mock(SphereClient.class), mock(SphereClient.class), getMockedClock(), "", false);
 
     final CustomObject<JsonNode> customObject1 = mock(CustomObject.class);
     when(customObject1.getContainer()).thenReturn("testContainer1");
@@ -81,12 +85,16 @@ public class CustomObjectSyncerTest {
   }
 
   @Test
-  void getQuery_ShouldBuildCustomObjectQuery() {
+  void getQuery_doNotSyncProjectSyncCustomObjects_ShouldBuildCustomObjectQuery() {
     // preparation
     final String runnerName = "testRunnerName";
     final CustomObjectSyncer customObjectSyncer =
         CustomObjectSyncer.of(
-            mock(SphereClient.class), mock(SphereClient.class), getMockedClock(), runnerName);
+            mock(SphereClient.class),
+            mock(SphereClient.class),
+            getMockedClock(),
+            runnerName,
+            false);
 
     // test
     final CustomObjectQuery query = customObjectSyncer.getQuery();
@@ -99,6 +107,25 @@ public class CustomObjectSyncerTest {
                 .plusPredicates(
                     customObjectQueryModel ->
                         customObjectQueryModel.container().isNotIn(excludedContainerNames)));
+  }
+
+  @Test
+  void getQuery_syncProjectSyncCustomObjects_ShouldBuildCustomObjectQuery() {
+    // preparation
+    final String runnerName = "testRunnerName";
+    final CustomObjectSyncer customObjectSyncer =
+            CustomObjectSyncer.of(
+                    mock(SphereClient.class),
+                    mock(SphereClient.class),
+                    getMockedClock(),
+                    runnerName,
+                    true);
+
+    // test
+    final CustomObjectQuery query = customObjectSyncer.getQuery();
+
+    // assertion
+    assertThat(query).isEqualTo(CustomObjectQuery.ofJsonNode());
   }
 
   private List<String> getExcludedContainerNames(String runnerName) {

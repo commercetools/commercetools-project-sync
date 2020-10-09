@@ -79,16 +79,27 @@ As of now, these are the supported resources:
 
    ```bash
    usage: commercetools-project-sync
-    -h,--help               Print help information.
-    -s,--sync <arg>         Choose one of the following modules to run: "types", "productTypes", "states",
-                            "taxCategories", "categories", "cartDiscounts", "customObjects", "products", "inventoryEntries"
-                            or "all" (will run all the modules).
-    -r,--runnerName <arg>   name for the running sync instance. Please make sure the name is unique, otherwise running
-                            more than 1 sync instance with the same name would lead to an unexpected behaviour.
-                            (optional parameter) default: 'runnerName'.
-    -f,--full               By default, a delta sync runs using a last-sync-timestamp logic. Use this flag to run a full
-                            sync. i.e. sync the entire data set.
-    -v,--version            Print the version of the application.
+    -f,--full                           By default, a delta sync runs using
+                                        last-sync-timestamp logic. Use this
+                                        flag to run a full sync. i.e. sync
+                                        the entire data set.
+    -h,--help                           Print help information.
+    -r,--runnerName <arg>               Choose a name for the running sync
+                                        instance. Please make sure the name
+                                        is unique, otherwise running more
+                                        than 1 sync instance with the same
+                                        name would lead to an unexpected
+                                        behaviour. (optional parameter)
+                                        default: 'runnerName'.
+    -s,--sync <arg>                     Choose one of the following modules
+                                        to run: "types", "productTypes",
+                                        "cartDiscounts", "customObjects",
+                                        "categories", "products",
+                                        "inventoryEntries", "states",
+                                        "taxCategories" or "all".
+       --syncProjectSyncCustomObjects   Sync custom objects that were created
+                                        with project sync (this application).
+    -v,--version                        Print the version of the application.
    ```
 
 #### Delta Sync
@@ -133,7 +144,7 @@ The last sync timestamp `customObject` for a runner name `testRun` running a **T
 - The `container` has the convention: `commercetools-project-sync.{runnerName}.{syncModuleName}`.
 - The `key` contains the source project key.
 - The `value` contains the information  `lastSyncDurationInMillis`, `applicationVersion`, `lastSyncTimestamp` and `lastSyncStatistics`.
-- These custom objects will not be synced with the custom object syncer.
+- These custom objects will not be synced with the custom object syncer unless the option --syncProjectSyncCustomObjects is added.
 
 _Note:_ Another `customObject` with the `container` convention `commercetools-project-sync.{runnerName}.{syncModuleName}.timestampGenerator` is also created on the target project for capturing a unified timestamp from commercetools.
 

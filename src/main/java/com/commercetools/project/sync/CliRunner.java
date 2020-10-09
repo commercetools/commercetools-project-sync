@@ -32,6 +32,7 @@ final class CliRunner {
   static final String FULL_SYNC_OPTION_LONG = "full";
   static final String HELP_OPTION_LONG = "help";
   static final String VERSION_OPTION_LONG = "version";
+  static final String SYNC_PROJECT_SYNC_CUSTOM_OBJECTS_OPTION_LONG = "syncProjectSyncCustomObjects";
 
   static final String SYNC_MODULE_OPTION_ALL = "all";
 
@@ -48,6 +49,8 @@ final class CliRunner {
           + "entire data set.";
   static final String HELP_OPTION_DESCRIPTION = "Print help information.";
   static final String VERSION_OPTION_DESCRIPTION = "Print the version of the application.";
+  static final String SYNC_PROJECT_SYNC_CUSTOM_OBJECTS_OPTION_DESCRIPTION =
+      "Sync custom objects that were created with project sync (this application).";
 
   private static final Logger LOGGER = LoggerFactory.getLogger(CliRunner.class);
 
@@ -123,11 +126,18 @@ final class CliRunner {
             .desc(VERSION_OPTION_DESCRIPTION)
             .build();
 
+    final Option syncProjectSyncCustomObjectsOption =
+        Option.builder()
+            .longOpt(SYNC_PROJECT_SYNC_CUSTOM_OBJECTS_OPTION_LONG)
+            .desc(SYNC_PROJECT_SYNC_CUSTOM_OBJECTS_OPTION_DESCRIPTION)
+            .build();
+
     options.addOption(syncOption);
     options.addOption(fullSyncOption);
     options.addOption(runnerOption);
     options.addOption(helpOption);
     options.addOption(versionOption);
+    options.addOption(syncProjectSyncCustomObjectsOption);
 
     return options;
   }
@@ -176,10 +186,13 @@ final class CliRunner {
     final String syncOptionValue = commandLine.getOptionValue(SYNC_MODULE_OPTION_SHORT);
     final String runnerNameValue = commandLine.getOptionValue(RUNNER_NAME_OPTION_SHORT);
     final boolean isFullSync = commandLine.hasOption(FULL_SYNC_OPTION_SHORT);
+    final boolean syncProjectSyncCustomObjects =
+        commandLine.hasOption(SYNC_PROJECT_SYNC_CUSTOM_OBJECTS_OPTION_LONG);
 
     return SYNC_MODULE_OPTION_ALL.equals(syncOptionValue)
-        ? syncerFactory.syncAll(runnerNameValue, isFullSync)
-        : syncerFactory.sync(syncOptionValue, runnerNameValue, isFullSync);
+        ? syncerFactory.syncAll(runnerNameValue, isFullSync, syncProjectSyncCustomObjects)
+        : syncerFactory.sync(
+            syncOptionValue, runnerNameValue, isFullSync, syncProjectSyncCustomObjects);
   }
 
   private static void printHelpToStdOut(@Nonnull final Options cliOptions) {
