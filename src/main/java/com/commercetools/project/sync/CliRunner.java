@@ -6,6 +6,7 @@ import static io.sphere.sdk.utils.CompletableFutureUtils.exceptionallyCompletedF
 import static java.lang.String.format;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import java.util.Arrays;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import javax.annotation.Nonnull;
@@ -157,8 +158,18 @@ final class CliRunner {
           new IllegalArgumentException("Please pass at least 1 option to the CLI."));
 
     } else {
-
-      final Option option = options[0];
+      final Option option =
+          Arrays.stream(options)
+              .filter(o -> !SYNC_PROJECT_SYNC_CUSTOM_OBJECTS_OPTION_LONG.equals(o.getLongOpt()))
+              .findAny()
+              .orElse(null);
+      if (option == null) {
+        return exceptionallyCompletedFuture(
+            new IllegalArgumentException(
+                format(
+                    "Please pass at least 1 more option other than %s to the CLI.",
+                    SYNC_PROJECT_SYNC_CUSTOM_OBJECTS_OPTION_LONG)));
+      }
       final String optionName = option.getOpt();
       switch (optionName) {
         case SYNC_MODULE_OPTION_SHORT:
