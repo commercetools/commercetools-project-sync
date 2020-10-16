@@ -19,32 +19,39 @@ import org.junit.jupiter.api.Test;
 class CustomerSyncerTest {
   @Test
   void of_ShouldCreateCustomerSyncerInstance() {
+    // test
     final CustomerSyncer customerSyncer =
         CustomerSyncer.of(mock(SphereClient.class), mock(SphereClient.class), mock(Clock.class));
 
+    // assertion
     assertThat(customerSyncer).isNotNull();
     assertThat(customerSyncer.getSync()).isInstanceOf(CustomerSync.class);
   }
 
   @Test
   void transform_ShouldReplaceCustomerReferenceIdsWithKeys() {
+    // preparation
     final CustomerSyncer customerSyncer =
         CustomerSyncer.of(mock(SphereClient.class), mock(SphereClient.class), mock(Clock.class));
     final List<Customer> customers =
         Collections.singletonList(readObjectFromResource("customer-key-1.json", Customer.class));
 
+    // test
     final CompletionStage<List<CustomerDraft>> draftsFromPageStage =
         customerSyncer.transform(customers);
 
+    // assertion
     assertThat(draftsFromPageStage)
         .isCompletedWithValue(CustomerReferenceResolutionUtils.mapToCustomerDrafts(customers));
   }
 
   @Test
   void getQuery_ShouldBuildCustomerQuery() {
+    // test
     final CustomerSyncer customerSyncer =
         CustomerSyncer.of(mock(SphereClient.class), mock(SphereClient.class), mock(Clock.class));
 
+    // assertion
     final CustomerQuery query = customerSyncer.getQuery();
     assertThat(query).isEqualTo(CustomerReferenceResolutionUtils.buildCustomerQuery());
   }
