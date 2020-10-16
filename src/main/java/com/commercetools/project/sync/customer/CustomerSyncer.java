@@ -82,7 +82,7 @@ public final class CustomerSyncer
 
   @Nonnull
   @Override
-  protected CompletionStage<List<CustomerDraft>> transform(@Nonnull List<Customer> page) {
+  protected CompletionStage<List<CustomerDraft>> transform(@Nonnull final List<Customer> page) {
     return CompletableFuture.completedFuture(
         CustomerReferenceResolutionUtils.mapToCustomerDrafts(page));
   }
