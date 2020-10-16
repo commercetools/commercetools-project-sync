@@ -76,7 +76,7 @@ public final class CustomerSyncer
             .warningCallback(logWarningCallback)
             .build();
 
-    CustomerSync customerSync = new CustomerSync(customerSyncOptions);
+    final CustomerSync customerSync = new CustomerSync(customerSyncOptions);
 
     final CustomObjectService customObjectService = new CustomObjectServiceImpl(targetClient);
 
@@ -85,7 +85,7 @@ public final class CustomerSyncer
 
   @Nonnull
   @Override
-  protected CompletionStage<List<CustomerDraft>> transform(@Nonnull List<Customer> page) {
+  protected CompletionStage<List<CustomerDraft>> transform(@Nonnull final List<Customer> page) {
     return CompletableFuture.completedFuture(
         CustomerReferenceResolutionUtils.mapToCustomerDrafts(page));
   }
