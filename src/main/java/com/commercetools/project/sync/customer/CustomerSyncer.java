@@ -75,7 +75,7 @@ public final class CustomerSyncer
             .errorCallback(logErrorCallback)
             .warningCallback(logWarningCallback)
             .build();
-    CustomerSync customerSync = new CustomerSync(customerSyncOptions);
+    final CustomerSync customerSync = new CustomerSync(customerSyncOptions);
     final CustomObjectService customObjectService = new CustomObjectServiceImpl(targetClient);
     return new CustomerSyncer(customerSync, sourceClient, targetClient, customObjectService, clock);
   }
