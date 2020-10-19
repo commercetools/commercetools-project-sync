@@ -57,7 +57,7 @@ final class SyncerFactory {
   CompletableFuture<Void> syncAll(
       @Nullable final String runnerNameOptionValue,
       final boolean isFullSync,
-      final boolean syncProjectSyncCustomObjects) {
+      final boolean isSyncProjectSyncCustomObjects) {
 
     final SphereClient sourceClient = sourceClientSupplier.get();
     final SphereClient targetClient = targetClientSupplier.get();
@@ -82,7 +82,7 @@ final class SyncerFactory {
                         targetClient,
                         clock,
                         runnerNameOptionValue,
-                        syncProjectSyncCustomObjects)
+                        isSyncProjectSyncCustomObjects)
                     .sync(runnerNameOptionValue, isFullSync)
                     .toCompletableFuture());
 
