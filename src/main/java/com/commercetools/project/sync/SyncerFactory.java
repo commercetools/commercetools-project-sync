@@ -122,7 +122,7 @@ final class SyncerFactory {
       @Nullable final String syncOptionValue,
       @Nullable final String runnerNameOptionValue,
       final boolean isFullSync,
-      final boolean syncProjectSyncCustomObjects) {
+      final boolean isSyncProjectSyncCustomObjects) {
 
     if (isBlank(syncOptionValue)) {
       final String errorMessage =
@@ -143,7 +143,7 @@ final class SyncerFactory {
         syncer;
 
     try {
-      syncer = buildSyncer(syncOptionValue, runnerNameOptionValue, syncProjectSyncCustomObjects);
+      syncer = buildSyncer(syncOptionValue, runnerNameOptionValue, isSyncProjectSyncCustomObjects);
     } catch (IllegalArgumentException exception) {
 
       return exceptionallyCompletedFuture(exception);
