@@ -691,4 +691,39 @@ class CliRunnerTest {
     inOrder.verify(sourceClient).execute(any(ProductQuery.class));
     verifyInteractionsWithClientAfterSync(sourceClient, 9);
   }
+
+  @Test
+  void run_WithOnlySyncCustomObjectArgument_ShouldThrowException() {
+    // preparation
+    final SphereClient sourceClient = mock(SphereClient.class);
+    when(sourceClient.getConfig()).thenReturn(SphereClientConfig.of("foo", "foo", "foo"));
+
+    final SphereClient targetClient = mock(SphereClient.class);
+    when(targetClient.getConfig()).thenReturn(SphereClientConfig.of("bar", "bar", "bar"));
+
+    final SyncerFactory syncerFactory =
+            spy(SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock()));
+
+    // test
+    CliRunner.of().run(new String[] {"--syncProjectSyncCustomObjects"}, syncerFactory);
+
+    // assertions
+    assertThat(testLogger.getAllLoggingEvents())
+        .hasSize(1)
+        .singleElement().satisfies(
+            loggingEvent -> {
+              assertThat(loggingEvent.getLevel()).isEqualTo(Level.ERROR);
+              assertThat(loggingEvent.getMessage()).contains("Failed to run sync process.");
+              final Optional<Throwable> actualThrowableOpt = loggingEvent.getThrowable();
+              assertThat(actualThrowableOpt).isNotNull();
+              assertThat(actualThrowableOpt.isPresent()).isTrue();
+              final Throwable actualThrowable = actualThrowableOpt.get();
+              assertThat(actualThrowable).isExactlyInstanceOf(IllegalArgumentException.class);
+              assertThat(actualThrowable.getMessage()).isEqualTo(
+                  format(
+                      "Please pass at least 1 more option other than %s to the CLI.",
+                      CliRunner.SYNC_PROJECT_SYNC_CUSTOM_OBJECTS_OPTION_LONG));
+
+            });
+  }
 }
