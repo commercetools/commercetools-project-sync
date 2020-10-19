@@ -197,13 +197,13 @@ final class CliRunner {
     final String syncOptionValue = commandLine.getOptionValue(SYNC_MODULE_OPTION_SHORT);
     final String runnerNameValue = commandLine.getOptionValue(RUNNER_NAME_OPTION_SHORT);
     final boolean isFullSync = commandLine.hasOption(FULL_SYNC_OPTION_SHORT);
-    final boolean syncProjectSyncCustomObjects =
+    final boolean isSyncProjectSyncCustomObjects =
         commandLine.hasOption(SYNC_PROJECT_SYNC_CUSTOM_OBJECTS_OPTION_LONG);
 
     return SYNC_MODULE_OPTION_ALL.equals(syncOptionValue)
-        ? syncerFactory.syncAll(runnerNameValue, isFullSync, syncProjectSyncCustomObjects)
+        ? syncerFactory.syncAll(runnerNameValue, isFullSync, isSyncProjectSyncCustomObjects)
         : syncerFactory.sync(
-            syncOptionValue, runnerNameValue, isFullSync, syncProjectSyncCustomObjects);
+            syncOptionValue, runnerNameValue, isFullSync, isSyncProjectSyncCustomObjects);
   }
 
   private static void printHelpToStdOut(@Nonnull final Options cliOptions) {
