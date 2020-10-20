@@ -147,15 +147,15 @@ public final class IntegrationTestUtils {
     final CompletableFuture<Void> deleteCustomObject =
         queryAndExecute(
             client, CustomObjectQuery.ofJsonNode(), CustomObjectDeleteCommand::ofJsonNode);
-    final CompletableFuture<Void> deleteState =
-        queryAndExecute(
+
+    CompletableFuture.allOf(deleteProduct, deleteInventory, deleteCartDiscount, deleteCustomObject)
+        .join();
+
+    queryAndExecute(
             client,
             // builtIn is excluded as it cannot be deleted
             StateQuery.of().plusPredicates(QueryPredicate.of("builtIn=\"false\"")),
-            StateDeleteCommand::of);
-
-    CompletableFuture.allOf(
-            deleteProduct, deleteInventory, deleteCartDiscount, deleteCustomObject, deleteState)
+            StateDeleteCommand::of)
         .join();
 
     final CompletableFuture<Void> deleteType =
