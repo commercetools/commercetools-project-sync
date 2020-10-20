@@ -975,30 +975,4 @@ class SyncerFactoryTest {
     // Every sync module is expected to have 2 logs (start and stats summary)
     assertThat(syncerTestLogger.getAllLoggingEvents()).hasSize(18);
   }
-
-  @Test
-  void sync_AsDelta_WithUnmatchedSyncOptionValue_ShouldBuildSyncerAndExecuteSync() {
-    final String syncOptionValue = "unknown";
-    final SphereClient sourceClient = mock(SphereClient.class);
-    when(sourceClient.getConfig()).thenReturn(SphereClientConfig.of("foo", "foo", "foo"));
-
-    final SphereClient targetClient = mock(SphereClient.class);
-    when(targetClient.getConfig()).thenReturn(SphereClientConfig.of("bar", "bar", "bar"));
-
-    final SyncerFactory syncerFactory =
-        SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock());
-
-    // test
-    CompletionStage<Void> result = syncerFactory.sync(syncOptionValue, null, false, false);
-
-    String errorMessage =
-        format(
-            "Unknown argument \"%s\" supplied to \"-s\" or \"--sync\" option! %s",
-            syncOptionValue, SYNC_MODULE_OPTION_DESCRIPTION);
-
-    assertThat(result)
-        .hasFailedWithThrowableThat()
-        .isExactlyInstanceOf(IllegalArgumentException.class)
-        .hasMessageContaining(errorMessage);
-  }
 }
