@@ -37,7 +37,6 @@ import com.commercetools.project.sync.model.response.ResultingResourcesContainer
 import com.commercetools.project.sync.product.ProductSyncer;
 import com.commercetools.project.sync.util.MockPagedQueryResult;
 import com.commercetools.sync.products.helpers.ProductSyncStatistics;
-import com.google.common.base.Optional;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.sphere.sdk.cartdiscounts.queries.CartDiscountQuery;
 import io.sphere.sdk.categories.queries.CategoryQuery;
@@ -987,18 +986,19 @@ class SyncerFactoryTest {
     when(targetClient.getConfig()).thenReturn(SphereClientConfig.of("bar", "bar", "bar"));
 
     final SyncerFactory syncerFactory =
-            SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock());
+        SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock());
 
     // test
     CompletionStage<Void> result = syncerFactory.sync(syncOptionValue, null, false, false);
 
-    String errorMessage = format("Unknown argument \"%s\" supplied to \"-s\" or \"--sync\" option! %s",
+    String errorMessage =
+        format(
+            "Unknown argument \"%s\" supplied to \"-s\" or \"--sync\" option! %s",
             syncOptionValue, SYNC_MODULE_OPTION_DESCRIPTION);
 
     assertThat(result)
-            .hasFailedWithThrowableThat()
-            .isExactlyInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining(errorMessage);
-
+        .hasFailedWithThrowableThat()
+        .isExactlyInstanceOf(IllegalArgumentException.class)
+        .hasMessageContaining(errorMessage);
   }
 }

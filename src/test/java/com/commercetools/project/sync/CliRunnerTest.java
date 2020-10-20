@@ -702,7 +702,7 @@ class CliRunnerTest {
     when(targetClient.getConfig()).thenReturn(SphereClientConfig.of("bar", "bar", "bar"));
 
     final SyncerFactory syncerFactory =
-            spy(SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock()));
+        spy(SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock()));
 
     // test
     CliRunner.of().run(new String[] {"--syncProjectSyncCustomObjects"}, syncerFactory);
@@ -710,7 +710,8 @@ class CliRunnerTest {
     // assertions
     assertThat(testLogger.getAllLoggingEvents())
         .hasSize(1)
-        .singleElement().satisfies(
+        .singleElement()
+        .satisfies(
             loggingEvent -> {
               assertThat(loggingEvent.getLevel()).isEqualTo(Level.ERROR);
               assertThat(loggingEvent.getMessage()).contains("Failed to run sync process.");
@@ -719,11 +720,11 @@ class CliRunnerTest {
               assertThat(actualThrowableOpt.isPresent()).isTrue();
               final Throwable actualThrowable = actualThrowableOpt.get();
               assertThat(actualThrowable).isExactlyInstanceOf(IllegalArgumentException.class);
-              assertThat(actualThrowable.getMessage()).isEqualTo(
-                  format(
-                      "Please pass at least 1 more option other than %s to the CLI.",
-                      CliRunner.SYNC_PROJECT_SYNC_CUSTOM_OBJECTS_OPTION_LONG));
-
+              assertThat(actualThrowable.getMessage())
+                  .isEqualTo(
+                      format(
+                          "Please pass at least 1 more option other than %s to the CLI.",
+                          CliRunner.SYNC_PROJECT_SYNC_CUSTOM_OBJECTS_OPTION_LONG));
             });
   }
 }
