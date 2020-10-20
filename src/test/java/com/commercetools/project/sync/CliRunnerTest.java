@@ -33,6 +33,7 @@ import io.sphere.sdk.cartdiscounts.queries.CartDiscountQuery;
 import io.sphere.sdk.categories.queries.CategoryQuery;
 import io.sphere.sdk.client.SphereClient;
 import io.sphere.sdk.client.SphereClientConfig;
+import io.sphere.sdk.customers.queries.CustomerQuery;
 import io.sphere.sdk.customobjects.queries.CustomObjectQuery;
 import io.sphere.sdk.inventory.queries.InventoryEntryQuery;
 import io.sphere.sdk.products.queries.ProductQuery;
@@ -568,6 +569,8 @@ class CliRunnerTest {
         .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
     when(sourceClient.execute(any(CustomObjectQuery.class)))
         .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
+    when(sourceClient.execute(any(CustomerQuery.class)))
+        .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
 
     stubClientsCustomObjectService(targetClient, ZonedDateTime.now());
 
@@ -588,6 +591,7 @@ class CliRunnerTest {
     verify(sourceClient, times(1)).execute(any(CartDiscountQuery.class));
     verify(sourceClient, times(1)).execute(any(StateQuery.class));
     verify(sourceClient, times(1)).execute(any(CustomObjectQuery.class));
+    verify(sourceClient, times(1)).execute(any(CustomerQuery.class));
   }
 
   @Test
@@ -617,6 +621,8 @@ class CliRunnerTest {
         .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
     when(sourceClient.execute(any(CustomObjectQuery.class)))
         .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
+    when(sourceClient.execute(any(CustomerQuery.class)))
+        .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
 
     stubClientsCustomObjectService(targetClient, ZonedDateTime.now());
 
@@ -637,6 +643,7 @@ class CliRunnerTest {
     verify(sourceClient, times(1)).execute(any(CartDiscountQuery.class));
     verify(sourceClient, times(1)).execute(any(StateQuery.class));
     verify(sourceClient, times(1)).execute(any(CustomObjectQuery.class));
+    verify(sourceClient, times(1)).execute(any(CustomerQuery.class));
   }
 
   @Test
@@ -666,6 +673,8 @@ class CliRunnerTest {
         .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
     when(sourceClient.execute(any(CustomObjectQuery.class)))
         .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
+    when(sourceClient.execute(any(CustomerQuery.class)))
+        .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
 
     stubClientsCustomObjectService(targetClient, ZonedDateTime.now());
 
@@ -688,7 +697,8 @@ class CliRunnerTest {
     inOrder.verify(sourceClient).execute(any(CategoryQuery.class));
     inOrder.verify(sourceClient).execute(any(CartDiscountQuery.class));
     inOrder.verify(sourceClient).execute(any(InventoryEntryQuery.class));
+    inOrder.verify(sourceClient).execute(any(CustomerQuery.class));
     inOrder.verify(sourceClient).execute(any(ProductQuery.class));
-    verifyInteractionsWithClientAfterSync(sourceClient, 9);
+    verifyInteractionsWithClientAfterSync(sourceClient, 10);
   }
 }

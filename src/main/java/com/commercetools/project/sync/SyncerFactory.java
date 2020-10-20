@@ -10,6 +10,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import com.commercetools.project.sync.cartdiscount.CartDiscountSyncer;
 import com.commercetools.project.sync.category.CategorySyncer;
+import com.commercetools.project.sync.customer.CustomerSyncer;
 import com.commercetools.project.sync.customobject.CustomObjectSyncer;
 import com.commercetools.project.sync.inventoryentry.InventoryEntrySyncer;
 import com.commercetools.project.sync.product.ProductSyncer;
@@ -84,19 +85,24 @@ final class SyncerFactory {
                 new CompletableFuture[0]))
         .thenCompose(
             ignored -> {
-              final List<CompletableFuture<Void>> categoryAndInventoryAndCartDiscountSync =
-                  asList(
-                      CategorySyncer.of(sourceClient, targetClient, clock)
-                          .sync(runnerNameOptionValue, isFullSync)
-                          .toCompletableFuture(),
-                      CartDiscountSyncer.of(sourceClient, targetClient, clock)
-                          .sync(runnerNameOptionValue, isFullSync)
-                          .toCompletableFuture(),
-                      InventoryEntrySyncer.of(sourceClient, targetClient, clock)
-                          .sync(runnerNameOptionValue, isFullSync)
-                          .toCompletableFuture());
+              final List<CompletableFuture<Void>>
+                  categoryAndInventoryAndCartDiscountAndCustomerSync =
+                      asList(
+                          CategorySyncer.of(sourceClient, targetClient, clock)
+                              .sync(runnerNameOptionValue, isFullSync)
+                              .toCompletableFuture(),
+                          CartDiscountSyncer.of(sourceClient, targetClient, clock)
+                              .sync(runnerNameOptionValue, isFullSync)
+                              .toCompletableFuture(),
+                          InventoryEntrySyncer.of(sourceClient, targetClient, clock)
+                              .sync(runnerNameOptionValue, isFullSync)
+                              .toCompletableFuture(),
+                          CustomerSyncer.of(sourceClient, targetClient, clock)
+                              .sync(runnerNameOptionValue, isFullSync)
+                              .toCompletableFuture());
               return CompletableFuture.allOf(
-                  categoryAndInventoryAndCartDiscountSync.toArray(new CompletableFuture[0]));
+                  categoryAndInventoryAndCartDiscountAndCustomerSync.toArray(
+                      new CompletableFuture[0]));
             })
         .thenCompose(
             ignored ->
@@ -192,6 +198,8 @@ final class SyncerFactory {
         case CUSTOM_OBJECT_SYNC:
           return CustomObjectSyncer.of(
               sourceClientSupplier.get(), targetClientSupplier.get(), clock, runnerNameOptionValue);
+        case CUSTOMER_SYNC:
+          return CustomerSyncer.of(sourceClientSupplier.get(), targetClientSupplier.get(), clock);
         default:
           throw new IllegalArgumentException();
       }

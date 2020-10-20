@@ -7,6 +7,7 @@ import static com.commercetools.project.sync.util.SyncUtils.getApplicationName;
 import static com.commercetools.project.sync.util.TestUtils.assertCartDiscountSyncerLoggingEvents;
 import static com.commercetools.project.sync.util.TestUtils.assertCategorySyncerLoggingEvents;
 import static com.commercetools.project.sync.util.TestUtils.assertCustomObjectSyncerLoggingEvents;
+import static com.commercetools.project.sync.util.TestUtils.assertCustomerSyncerLoggingEvents;
 import static com.commercetools.project.sync.util.TestUtils.assertInventoryEntrySyncerLoggingEvents;
 import static com.commercetools.project.sync.util.TestUtils.assertProductSyncerLoggingEvents;
 import static com.commercetools.project.sync.util.TestUtils.assertProductTypeSyncerLoggingEvents;
@@ -44,6 +45,7 @@ import io.sphere.sdk.client.BadGatewayException;
 import io.sphere.sdk.client.SphereClient;
 import io.sphere.sdk.client.SphereClientConfig;
 import io.sphere.sdk.client.SphereRequest;
+import io.sphere.sdk.customers.queries.CustomerQuery;
 import io.sphere.sdk.customobjects.CustomObject;
 import io.sphere.sdk.customobjects.CustomObjectDraft;
 import io.sphere.sdk.customobjects.commands.CustomObjectUpsertCommand;
@@ -895,6 +897,8 @@ class SyncerFactoryTest {
         .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
     when(sourceClient.execute(any(CustomObjectQuery.class)))
         .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
+    when(sourceClient.execute(any(CustomerQuery.class)))
+        .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
 
     final ZonedDateTime currentCtpTimestamp = ZonedDateTime.now();
     stubClientsCustomObjectService(targetClient, currentCtpTimestamp);
@@ -924,7 +928,9 @@ class SyncerFactoryTest {
         targetClient, "TaxCategorySync", DEFAULT_RUNNER_NAME);
     verifyTimestampGeneratorCustomObjectUpsertIsCalled(
         targetClient, "CustomObjectSync", DEFAULT_RUNNER_NAME);
-    verify(targetClient, times(18)).execute(any(CustomObjectUpsertCommand.class));
+    verifyTimestampGeneratorCustomObjectUpsertIsCalled(
+        targetClient, "CustomerSync", DEFAULT_RUNNER_NAME);
+    verify(targetClient, times(20)).execute(any(CustomObjectUpsertCommand.class));
     verifyLastSyncCustomObjectQuery(targetClient, "inventorySync", DEFAULT_RUNNER_NAME, "foo", 1);
     verifyLastSyncCustomObjectQuery(targetClient, "productTypeSync", DEFAULT_RUNNER_NAME, "foo", 1);
     verifyLastSyncCustomObjectQuery(targetClient, "productSync", DEFAULT_RUNNER_NAME, "foo", 1);
@@ -936,6 +942,7 @@ class SyncerFactoryTest {
     verifyLastSyncCustomObjectQuery(targetClient, "taxCategorySync", DEFAULT_RUNNER_NAME, "foo", 1);
     verifyLastSyncCustomObjectQuery(
         targetClient, "customObjectSync", DEFAULT_RUNNER_NAME, "foo", 1);
+    verifyLastSyncCustomObjectQuery(targetClient, "customerSync", DEFAULT_RUNNER_NAME, "foo", 1);
     verify(sourceClient, times(1)).execute(any(ProductTypeQuery.class));
     verify(sourceClient, times(1)).execute(any(TypeQuery.class));
     verify(sourceClient, times(1)).execute(any(CategoryQuery.class));
@@ -945,7 +952,8 @@ class SyncerFactoryTest {
     verify(sourceClient, times(1)).execute(any(StateQuery.class));
     verify(sourceClient, times(1)).execute(any(TaxCategoryQuery.class));
     verify(sourceClient, times(1)).execute(any(CustomObjectQuery.class));
-    verifyInteractionsWithClientAfterSync(sourceClient, 9);
+    verify(sourceClient, times(1)).execute(any(CustomerQuery.class));
+    verifyInteractionsWithClientAfterSync(sourceClient, 10);
     assertAllSyncersLoggingEvents(syncerTestLogger, cliRunnerTestLogger, 0);
   }
 
@@ -970,8 +978,9 @@ class SyncerFactoryTest {
     assertStateSyncerLoggingEvents(syncerTestLogger, numberOfResources);
     assertTaxCategorySyncerLoggingEvents(syncerTestLogger, numberOfResources);
     assertCustomObjectSyncerLoggingEvents(syncerTestLogger, numberOfResources);
+    assertCustomerSyncerLoggingEvents(syncerTestLogger, numberOfResources);
 
     // Every sync module is expected to have 2 logs (start and stats summary)
-    assertThat(syncerTestLogger.getAllLoggingEvents()).hasSize(18);
+    assertThat(syncerTestLogger.getAllLoggingEvents()).hasSize(20);
   }
 }
