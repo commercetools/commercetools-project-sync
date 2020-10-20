@@ -271,8 +271,7 @@ class ProductSyncWithNestedReferencesIT {
     }
 
     // create clients again (for assertions and cleanup), since the run method closes the clients
-    // after execution
-    // is done.
+    // after execution is done.
     try (final SphereClient postTargetClient = createClient(CTP_TARGET_CLIENT_CONFIG)) {
       // assertions
 

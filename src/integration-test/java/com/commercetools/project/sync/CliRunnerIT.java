@@ -251,8 +251,7 @@ class CliRunnerIT {
     }
 
     // create clients again (for assertions and cleanup), since the run method closes the clients
-    // after execution
-    // is done.
+    // after execution is done.
     try (final SphereClient postSourceClient = createClient(CTP_SOURCE_CLIENT_CONFIG)) {
       try (final SphereClient postTargetClient = createClient(CTP_TARGET_CLIENT_CONFIG)) {
         // assertions
@@ -279,8 +278,7 @@ class CliRunnerIT {
     }
 
     // create clients again (for assertions and cleanup), since the run method closes the clients
-    // after execution
-    // is done.
+    // after execution is done.
     try (final SphereClient postSourceClient = createClient(CTP_SOURCE_CLIENT_CONFIG)) {
       try (final SphereClient postTargetClient = createClient(CTP_TARGET_CLIENT_CONFIG)) {
         // assertions
@@ -314,8 +312,7 @@ class CliRunnerIT {
     }
 
     // create clients again (for assertions and cleanup), since the run method closes the clients
-    // after execution
-    // is done.
+    // after execution is done.
     try (final SphereClient postSourceClient = createClient(CTP_SOURCE_CLIENT_CONFIG)) {
       try (final SphereClient postTargetClient = createClient(CTP_TARGET_CLIENT_CONFIG)) {
         // assertions
@@ -345,8 +342,7 @@ class CliRunnerIT {
     }
 
     // create clients again (for assertions and cleanup), since the run method closes the clients
-    // after execution
-    // is done.
+    // after execution is done.
     try (final SphereClient postSourceClient = createClient(CTP_SOURCE_CLIENT_CONFIG)) {
       try (final SphereClient postTargetClient = createClient(CTP_TARGET_CLIENT_CONFIG)) {
 
@@ -476,8 +472,7 @@ class CliRunnerIT {
     }
 
     // create clients again (for assertions and cleanup), since the run method closes the clients
-    // after execution
-    // is done.
+    // after execution is done.
     try (final SphereClient postSourceClient = createClient(CTP_SOURCE_CLIENT_CONFIG)) {
       try (final SphereClient postTargetClient = createClient(CTP_TARGET_CLIENT_CONFIG)) {
         // assertions
@@ -537,8 +532,7 @@ class CliRunnerIT {
     }
 
     // create clients again (for assertions and cleanup), since the run method closes the clients
-    // after execution
-    // is done.
+    // after execution is done.
     try (final SphereClient postTargetClient = createClient(CTP_TARGET_CLIENT_CONFIG)) {
       // assertions
       assertAllSyncersLoggingEvents(syncerTestLogger, cliRunnerTestLogger, 1);
