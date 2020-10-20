@@ -303,6 +303,55 @@ class CliRunnerTest {
   }
 
   @Test
+  void run_AsCustomerDeltaSync_ShouldBuildSyncerAndExecuteSync() {
+    // preparation
+    final SphereClient sourceClient = mock(SphereClient.class);
+    when(sourceClient.getConfig()).thenReturn(SphereClientConfig.of("foo", "foo", "foo"));
+
+    final SphereClient targetClient = mock(SphereClient.class);
+    when(targetClient.getConfig()).thenReturn(SphereClientConfig.of("bar", "bar", "bar"));
+
+    final SyncerFactory syncerFactory =
+            spy(SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock()));
+
+    stubClientsCustomObjectService(targetClient, ZonedDateTime.now());
+
+    // test
+    CliRunner.of().run(new String[] {"-s", "customers"}, syncerFactory);
+
+    // assertions
+    verify(syncerFactory, times(1)).sync("customers", null, false);
+    verify(sourceClient, times(1)).execute(any(CustomerQuery.class));
+    verify(syncerFactory, never()).syncAll(null, false);
+  }
+
+  @Test
+  void run_AsCustomerFullSync_ShouldBuildSyncerAndExecuteSync() {
+    // preparation
+    final SphereClient sourceClient = mock(SphereClient.class);
+    when(sourceClient.getConfig()).thenReturn(SphereClientConfig.of("foo", "foo", "foo"));
+
+    final SphereClient targetClient = mock(SphereClient.class);
+    when(targetClient.getConfig()).thenReturn(SphereClientConfig.of("bar", "bar", "bar"));
+
+    when(sourceClient.execute(any(CustomerQuery.class)))
+            .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
+
+    final SyncerFactory syncerFactory =
+            spy(SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock()));
+
+    stubClientsCustomObjectService(targetClient, ZonedDateTime.now());
+
+    // test
+    CliRunner.of().run(new String[] {"-s", "customers", "-f"}, syncerFactory);
+
+    // assertions
+    verify(syncerFactory, times(1)).sync("customers", null, true);
+    verify(sourceClient, times(1)).execute(any(CustomerQuery.class));
+    verify(syncerFactory, never()).syncAll(null, true);
+  }
+
+  @Test
   void run_AsCustomObjectDeltaSync_ShouldBuildSyncerAndExecuteSync() {
     // preparation
     final SphereClient sourceClient = mock(SphereClient.class);
