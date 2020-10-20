@@ -206,6 +206,8 @@ final class SyncerFactory {
               clock,
               runnerNameOptionValue,
               syncProjectSyncCustomObjects);
+        default:
+          throw new IllegalArgumentException();
       }
     } catch (IllegalArgumentException e) {
       final String errorMessage =
