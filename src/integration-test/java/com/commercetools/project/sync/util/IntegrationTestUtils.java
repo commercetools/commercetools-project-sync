@@ -137,20 +137,38 @@ public final class IntegrationTestUtils {
   }
 
   private static void deleteProjectData(@Nonnull final SphereClient client) {
-    queryAndExecute(client, CategoryQuery.of(), CategoryDeleteCommand::of);
-    queryAndExecute(client, ProductQuery.of(), ProductDeleteCommand::of);
-    queryAndExecute(client, InventoryEntryQuery.of(), InventoryEntryDeleteCommand::of);
-    queryAndExecute(client, CartDiscountQuery.of(), CartDiscountDeleteCommand::of);
-    queryAndExecute(client, CustomObjectQuery.ofJsonNode(), CustomObjectDeleteCommand::ofJsonNode);
-    queryAndExecute(
-        client,
-        // builtIn is excluded as it cannot be deleted
-        StateQuery.of().plusPredicates(QueryPredicate.of("builtIn=\"false\"")),
-        StateDeleteCommand::of);
-    queryAndExecute(client, TypeQuery.of(), TypeDeleteCommand::of);
-    queryAndExecute(client, ShippingMethodQuery.of(), ShippingMethodDeleteCommand::of);
-    queryAndExecute(client, TaxCategoryQuery.of(), TaxCategoryDeleteCommand::of);
-    queryAndExecute(client, CustomerQuery.of(), CustomerDeleteCommand::of);
+    queryAndExecute(client, CategoryQuery.of(), CategoryDeleteCommand::of).join();
+    final CompletableFuture<Void> deleteProduct =
+        queryAndExecute(client, ProductQuery.of(), ProductDeleteCommand::of);
+    final CompletableFuture<Void> deleteInventory =
+        queryAndExecute(client, InventoryEntryQuery.of(), InventoryEntryDeleteCommand::of);
+    final CompletableFuture<Void> deleteCartDiscount =
+        queryAndExecute(client, CartDiscountQuery.of(), CartDiscountDeleteCommand::of);
+    final CompletableFuture<Void> deleteCustomObject =
+        queryAndExecute(
+            client, CustomObjectQuery.ofJsonNode(), CustomObjectDeleteCommand::ofJsonNode);
+    final CompletableFuture<Void> deleteState =
+        queryAndExecute(
+            client,
+            // builtIn is excluded as it cannot be deleted
+            StateQuery.of().plusPredicates(QueryPredicate.of("builtIn=\"false\"")),
+            StateDeleteCommand::of);
+
+    CompletableFuture.allOf(
+            deleteProduct, deleteInventory, deleteCartDiscount, deleteCustomObject, deleteState)
+        .join();
+
+    final CompletableFuture<Void> deleteType =
+        queryAndExecute(client, TypeQuery.of(), TypeDeleteCommand::of);
+    final CompletableFuture<Void> deleteShippingMethod =
+        queryAndExecute(client, ShippingMethodQuery.of(), ShippingMethodDeleteCommand::of);
+    final CompletableFuture<Void> deleteTaxCategory =
+        queryAndExecute(client, TaxCategoryQuery.of(), TaxCategoryDeleteCommand::of);
+    final CompletableFuture<Void> deleteCustomer =
+        queryAndExecute(client, CustomerQuery.of(), CustomerDeleteCommand::of);
+
+    CompletableFuture.allOf(deleteType, deleteShippingMethod, deleteTaxCategory, deleteCustomer)
+        .join();
     deleteProductTypes(client);
   }
 
