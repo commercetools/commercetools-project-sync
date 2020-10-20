@@ -34,6 +34,7 @@ import io.sphere.sdk.cartdiscounts.CartDiscountValue;
 import io.sphere.sdk.cartdiscounts.ShippingCostTarget;
 import io.sphere.sdk.cartdiscounts.commands.CartDiscountCreateCommand;
 import io.sphere.sdk.cartdiscounts.queries.CartDiscountQuery;
+import io.sphere.sdk.categories.Category;
 import io.sphere.sdk.categories.CategoryDraft;
 import io.sphere.sdk.categories.CategoryDraftBuilder;
 import io.sphere.sdk.categories.commands.CategoryCreateCommand;
@@ -41,6 +42,7 @@ import io.sphere.sdk.client.SphereClient;
 import io.sphere.sdk.customers.Customer;
 import io.sphere.sdk.customers.CustomerDraft;
 import io.sphere.sdk.customers.CustomerDraftBuilder;
+import io.sphere.sdk.customers.CustomerSignInResult;
 import io.sphere.sdk.customers.commands.CustomerCreateCommand;
 import io.sphere.sdk.customers.queries.CustomerQuery;
 import io.sphere.sdk.customobjects.CustomObject;
@@ -52,6 +54,7 @@ import io.sphere.sdk.inventory.InventoryEntryDraft;
 import io.sphere.sdk.inventory.InventoryEntryDraftBuilder;
 import io.sphere.sdk.inventory.commands.InventoryEntryCreateCommand;
 import io.sphere.sdk.inventory.queries.InventoryEntryQuery;
+import io.sphere.sdk.products.Product;
 import io.sphere.sdk.products.ProductDraft;
 import io.sphere.sdk.products.ProductDraftBuilder;
 import io.sphere.sdk.products.ProductVariantDraftBuilder;
@@ -85,6 +88,7 @@ import io.sphere.sdk.types.queries.TypeQuery;
 import java.time.Clock;
 import java.time.ZonedDateTime;
 import java.util.Collections;
+import java.util.concurrent.CompletableFuture;
 import javax.annotation.Nonnull;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -140,7 +144,8 @@ class CliRunnerIT {
     final State state =
         sourceProjectClient.execute(StateCreateCommand.of(stateDraft)).toCompletableFuture().join();
 
-    sourceProjectClient.execute(TypeCreateCommand.of(typeDraft)).toCompletableFuture().join();
+    final CompletableFuture<Type> typeFuture =
+        sourceProjectClient.execute(TypeCreateCommand.of(typeDraft)).toCompletableFuture();
 
     final TaxRateDraft taxRateDraft =
         TaxRateDraftBuilder.of("Tax-Rate-Name-1", 0.3, false, CountryCode.DE).build();
@@ -165,32 +170,32 @@ class CliRunnerIT {
         CustomObjectDraft.ofUnversionedUpsert(
             PROJECT_SYNC_CONTAINER_NAME, "timestampGenerator", customObjectValue);
 
-    sourceProjectClient
-        .execute(CustomObjectUpsertCommand.of(customObjectDraft))
-        .toCompletableFuture()
-        .join();
+    final CompletableFuture<CustomObject<JsonNode>> customObjectFuture1 =
+        sourceProjectClient
+            .execute(CustomObjectUpsertCommand.of(customObjectDraft))
+            .toCompletableFuture();
 
-    sourceProjectClient
-        .execute(CustomObjectUpsertCommand.of(customObjectToIgnore))
-        .toCompletableFuture()
-        .join();
+    final CompletableFuture<CustomObject<JsonNode>> customObjectFuture2 =
+        sourceProjectClient
+            .execute(CustomObjectUpsertCommand.of(customObjectToIgnore))
+            .toCompletableFuture();
 
     final CategoryDraft categoryDraft =
         CategoryDraftBuilder.of(ofEnglish("t-shirts"), ofEnglish("t-shirts"))
             .key(RESOURCE_KEY)
             .build();
 
-    sourceProjectClient
-        .execute(CategoryCreateCommand.of(categoryDraft))
-        .toCompletableFuture()
-        .join();
+    final CompletableFuture<Category> categoryFuture =
+        sourceProjectClient.execute(CategoryCreateCommand.of(categoryDraft)).toCompletableFuture();
 
     final CustomerDraft customerDraft =
         CustomerDraftBuilder.of("test@email.com", "testPassword").key(RESOURCE_KEY).build();
 
-    sourceProjectClient
-        .execute(CustomerCreateCommand.of(customerDraft))
-        .toCompletableFuture()
+    final CompletableFuture<CustomerSignInResult> customerFuture =
+        sourceProjectClient.execute(CustomerCreateCommand.of(customerDraft)).toCompletableFuture();
+
+    CompletableFuture.allOf(
+            typeFuture, customObjectFuture1, customObjectFuture2, categoryFuture, customerFuture)
         .join();
 
     final ProductDraft productDraft =
@@ -204,15 +209,16 @@ class CliRunnerIT {
             .key(RESOURCE_KEY)
             .build();
 
-    sourceProjectClient.execute(ProductCreateCommand.of(productDraft)).toCompletableFuture().join();
+    final CompletableFuture<Product> productFuture =
+        sourceProjectClient.execute(ProductCreateCommand.of(productDraft)).toCompletableFuture();
 
     final InventoryEntryDraft inventoryEntryDraft =
         InventoryEntryDraftBuilder.of(RESOURCE_KEY, 1L).build();
 
-    sourceProjectClient
-        .execute(InventoryEntryCreateCommand.of(inventoryEntryDraft))
-        .toCompletableFuture()
-        .join();
+    final CompletableFuture<InventoryEntry> inventoryFuture =
+        sourceProjectClient
+            .execute(InventoryEntryCreateCommand.of(inventoryEntryDraft))
+            .toCompletableFuture();
 
     final CartDiscountDraft cartDiscountDraft =
         CartDiscountDraftBuilder.of(
@@ -225,10 +231,11 @@ class CliRunnerIT {
             .key(RESOURCE_KEY)
             .build();
 
-    sourceProjectClient
-        .execute(CartDiscountCreateCommand.of(cartDiscountDraft))
-        .toCompletableFuture()
-        .join();
+    final CompletableFuture<CartDiscount> cartDiscountFuture =
+        sourceProjectClient
+            .execute(CartDiscountCreateCommand.of(cartDiscountDraft))
+            .toCompletableFuture();
+    CompletableFuture.allOf(productFuture, inventoryFuture, cartDiscountFuture);
   }
 
   @AfterAll
