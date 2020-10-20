@@ -59,9 +59,9 @@ public final class CustomObjectSyncer
    * @param customObjectService service that is used for fetching and persisting the last sync
    *     timestamp for delta syncing.
    * @param clock the clock to record the time for calculating the sync duration.
-   * @param runnerName name for the running sync instance. It is passed as a CLI param from user.
-   *                   It is used here to generate names of custom objects created by this application
-   *                   so we can exclude/include those custom objects as requested.
+   * @param runnerName name for the running sync instance. It is passed as a CLI param from user. It
+   *     is used here to generate names of custom objects created by this application so we can
+   *     exclude/include those custom objects as requested.
    */
   private CustomObjectSyncer(
       @Nonnull CustomObjectSync sync,
