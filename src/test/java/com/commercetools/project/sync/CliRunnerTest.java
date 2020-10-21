@@ -320,9 +320,9 @@ class CliRunnerTest {
     CliRunner.of().run(new String[] {"-s", "customers"}, syncerFactory);
 
     // assertions
-    verify(syncerFactory, times(1)).sync("customers", null, false);
+    verify(syncerFactory, times(1)).sync("customers", null, false, false);
     verify(sourceClient, times(1)).execute(any(CustomerQuery.class));
-    verify(syncerFactory, never()).syncAll(null, false);
+    verify(syncerFactory, never()).syncAll(null, false, false);
   }
 
   @Test
@@ -346,9 +346,9 @@ class CliRunnerTest {
     CliRunner.of().run(new String[] {"-s", "customers", "-f"}, syncerFactory);
 
     // assertions
-    verify(syncerFactory, times(1)).sync("customers", null, true);
+    verify(syncerFactory, times(1)).sync("customers", null, true, false);
     verify(sourceClient, times(1)).execute(any(CustomerQuery.class));
-    verify(syncerFactory, never()).syncAll(null, true);
+    verify(syncerFactory, never()).syncAll(null, true, false);
   }
 
   @Test
