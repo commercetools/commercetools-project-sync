@@ -61,13 +61,16 @@ public final class SyncUtils {
       @Nonnull final String resourceName,
       @Nonnull final SyncException exception,
       @Nonnull final String resourceIdentifier,
-      @Nonnull final List<UpdateAction<T>> updateActions) {
+      @Nullable final List<UpdateAction<T>> updateActions) {
+    String updateActionsString = "[]";
+    if (updateActions != null) {
+      updateActionsString =
+          updateActions.stream().map(Object::toString).collect(Collectors.joining(","));
+    }
     logger.error(
         format(
             "Error when trying to sync %s. Existing key: %s. Update actions: %s",
-            resourceName,
-            resourceIdentifier,
-            updateActions.stream().map(Object::toString).collect(Collectors.joining(","))),
+            resourceName, resourceIdentifier, updateActionsString),
         exception);
   }
 
