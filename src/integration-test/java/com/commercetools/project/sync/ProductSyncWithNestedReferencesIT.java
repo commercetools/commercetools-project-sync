@@ -311,7 +311,8 @@ class ProductSyncWithNestedReferencesIT {
 
     assertThat(productQueryResult.getResults())
         .hasSize(1)
-        .hasOnlyOneElementSatisfying(
+        .singleElement()
+        .satisfies(
             product -> {
               assertThat(product.getKey()).isEqualTo(MAIN_PRODUCT_KEY);
               final ProductVariant stagedMasterVariant =
@@ -338,7 +339,8 @@ class ProductSyncWithNestedReferencesIT {
                         final ArrayNode categoryReferences =
                             (ArrayNode) (nestedTypeAttributes.get(0).get("value"));
                         assertThat(categoryReferences)
-                            .hasOnlyOneElementSatisfying(
+                            .singleElement()
+                            .satisfies(
                                 categoryReference ->
                                     assertThat(categoryReference.get("id").asText())
                                         .isEqualTo(category.getId()));
@@ -350,7 +352,8 @@ class ProductSyncWithNestedReferencesIT {
                         final ArrayNode productTypeReferences =
                             (ArrayNode) (nestedTypeAttributes.get(1).get("value"));
                         assertThat(productTypeReferences)
-                            .hasOnlyOneElementSatisfying(
+                            .singleElement()
+                            .satisfies(
                                 productTypeReference ->
                                     assertThat(productTypeReference.get("id").asText())
                                         .isEqualTo(productType.getId()));

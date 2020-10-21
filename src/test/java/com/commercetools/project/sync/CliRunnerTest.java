@@ -93,7 +93,8 @@ class CliRunnerTest {
     // assertion
     assertThat(testLogger.getAllLoggingEvents())
         .hasSize(1)
-        .hasOnlyOneElementSatisfying(
+        .singleElement()
+        .satisfies(
             loggingEvent -> {
               assertThat(loggingEvent.getLevel()).isEqualTo(Level.ERROR);
               assertThat(loggingEvent.getMessage()).contains("Failed to run sync process.");
@@ -185,7 +186,8 @@ class CliRunnerTest {
     // assertion
     assertThat(testLogger.getAllLoggingEvents())
         .hasSize(1)
-        .hasOnlyOneElementSatisfying(
+        .singleElement()
+        .satisfies(
             loggingEvent -> {
               assertThat(loggingEvent.getLevel()).isEqualTo(Level.ERROR);
               assertThat(loggingEvent.getMessage()).contains("Failed to run sync process.");
