@@ -33,6 +33,7 @@ import io.sphere.sdk.cartdiscounts.queries.CartDiscountQuery;
 import io.sphere.sdk.categories.queries.CategoryQuery;
 import io.sphere.sdk.client.SphereClient;
 import io.sphere.sdk.client.SphereClientConfig;
+import io.sphere.sdk.customers.queries.CustomerQuery;
 import io.sphere.sdk.customobjects.queries.CustomObjectQuery;
 import io.sphere.sdk.inventory.queries.InventoryEntryQuery;
 import io.sphere.sdk.products.queries.ProductQuery;
@@ -304,6 +305,55 @@ class CliRunnerTest {
   }
 
   @Test
+  void run_AsCustomerDeltaSync_ShouldBuildSyncerAndExecuteSync() {
+    // preparation
+    final SphereClient sourceClient = mock(SphereClient.class);
+    when(sourceClient.getConfig()).thenReturn(SphereClientConfig.of("foo", "foo", "foo"));
+
+    final SphereClient targetClient = mock(SphereClient.class);
+    when(targetClient.getConfig()).thenReturn(SphereClientConfig.of("bar", "bar", "bar"));
+
+    final SyncerFactory syncerFactory =
+        spy(SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock()));
+
+    stubClientsCustomObjectService(targetClient, ZonedDateTime.now());
+
+    // test
+    CliRunner.of().run(new String[] {"-s", "customers"}, syncerFactory);
+
+    // assertions
+    verify(syncerFactory, times(1)).sync("customers", null, false, false);
+    verify(sourceClient, times(1)).execute(any(CustomerQuery.class));
+    verify(syncerFactory, never()).syncAll(null, false, false);
+  }
+
+  @Test
+  void run_AsCustomerFullSync_ShouldBuildSyncerAndExecuteSync() {
+    // preparation
+    final SphereClient sourceClient = mock(SphereClient.class);
+    when(sourceClient.getConfig()).thenReturn(SphereClientConfig.of("foo", "foo", "foo"));
+
+    final SphereClient targetClient = mock(SphereClient.class);
+    when(targetClient.getConfig()).thenReturn(SphereClientConfig.of("bar", "bar", "bar"));
+
+    when(sourceClient.execute(any(CustomerQuery.class)))
+        .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
+
+    final SyncerFactory syncerFactory =
+        spy(SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock()));
+
+    stubClientsCustomObjectService(targetClient, ZonedDateTime.now());
+
+    // test
+    CliRunner.of().run(new String[] {"-s", "customers", "-f"}, syncerFactory);
+
+    // assertions
+    verify(syncerFactory, times(1)).sync("customers", null, true, false);
+    verify(sourceClient, times(1)).execute(any(CustomerQuery.class));
+    verify(syncerFactory, never()).syncAll(null, true, false);
+  }
+
+  @Test
   void run_AsCustomObjectDeltaSync_ShouldBuildSyncerAndExecuteSync() {
     // preparation
     final SphereClient sourceClient = mock(SphereClient.class);
@@ -570,6 +620,8 @@ class CliRunnerTest {
         .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
     when(sourceClient.execute(any(CustomObjectQuery.class)))
         .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
+    when(sourceClient.execute(any(CustomerQuery.class)))
+        .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
 
     stubClientsCustomObjectService(targetClient, ZonedDateTime.now());
 
@@ -590,6 +642,7 @@ class CliRunnerTest {
     verify(sourceClient, times(1)).execute(any(CartDiscountQuery.class));
     verify(sourceClient, times(1)).execute(any(StateQuery.class));
     verify(sourceClient, times(1)).execute(any(CustomObjectQuery.class));
+    verify(sourceClient, times(1)).execute(any(CustomerQuery.class));
   }
 
   @Test
@@ -619,6 +672,8 @@ class CliRunnerTest {
         .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
     when(sourceClient.execute(any(CustomObjectQuery.class)))
         .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
+    when(sourceClient.execute(any(CustomerQuery.class)))
+        .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
 
     stubClientsCustomObjectService(targetClient, ZonedDateTime.now());
 
@@ -639,6 +694,7 @@ class CliRunnerTest {
     verify(sourceClient, times(1)).execute(any(CartDiscountQuery.class));
     verify(sourceClient, times(1)).execute(any(StateQuery.class));
     verify(sourceClient, times(1)).execute(any(CustomObjectQuery.class));
+    verify(sourceClient, times(1)).execute(any(CustomerQuery.class));
   }
 
   @Test
@@ -668,6 +724,8 @@ class CliRunnerTest {
         .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
     when(sourceClient.execute(any(CustomObjectQuery.class)))
         .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
+    when(sourceClient.execute(any(CustomerQuery.class)))
+        .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
 
     stubClientsCustomObjectService(targetClient, ZonedDateTime.now());
 
@@ -690,8 +748,9 @@ class CliRunnerTest {
     inOrder.verify(sourceClient).execute(any(CategoryQuery.class));
     inOrder.verify(sourceClient).execute(any(CartDiscountQuery.class));
     inOrder.verify(sourceClient).execute(any(InventoryEntryQuery.class));
+    inOrder.verify(sourceClient).execute(any(CustomerQuery.class));
     inOrder.verify(sourceClient).execute(any(ProductQuery.class));
-    verifyInteractionsWithClientAfterSync(sourceClient, 9);
+    verifyInteractionsWithClientAfterSync(sourceClient, 10);
   }
 
   @Test

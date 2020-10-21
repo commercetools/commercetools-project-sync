@@ -19,6 +19,8 @@ import io.sphere.sdk.client.ConcurrentModificationException;
 import io.sphere.sdk.client.SphereClient;
 import io.sphere.sdk.client.SphereRequest;
 import io.sphere.sdk.commands.UpdateAction;
+import io.sphere.sdk.customers.commands.CustomerDeleteCommand;
+import io.sphere.sdk.customers.queries.CustomerQuery;
 import io.sphere.sdk.customobjects.CustomObject;
 import io.sphere.sdk.customobjects.commands.CustomObjectDeleteCommand;
 import io.sphere.sdk.customobjects.queries.CustomObjectQuery;
@@ -148,6 +150,7 @@ public final class IntegrationTestUtils {
     queryAndExecute(client, TypeQuery.of(), TypeDeleteCommand::of);
     queryAndExecute(client, ShippingMethodQuery.of(), ShippingMethodDeleteCommand::of);
     queryAndExecute(client, TaxCategoryQuery.of(), TaxCategoryDeleteCommand::of);
+    queryAndExecute(client, CustomerQuery.of(), CustomerDeleteCommand::of);
     deleteProductTypes(client);
   }
 
