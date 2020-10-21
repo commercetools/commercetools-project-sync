@@ -12,6 +12,7 @@ import static com.commercetools.project.sync.util.SyncUtils.APPLICATION_DEFAULT_
 import static com.commercetools.project.sync.util.SyncUtils.DEFAULT_RUNNER_NAME;
 import static com.commercetools.project.sync.util.TestUtils.assertAllSyncersLoggingEvents;
 import static com.commercetools.project.sync.util.TestUtils.assertCustomObjectSyncerLoggingEvents;
+import static com.commercetools.project.sync.util.TestUtils.assertCustomerSyncerLoggingEvents;
 import static com.commercetools.project.sync.util.TestUtils.assertSyncerLoggingEvents;
 import static io.sphere.sdk.models.LocalizedString.ofEnglish;
 import static java.lang.String.format;
@@ -37,6 +38,11 @@ import io.sphere.sdk.categories.CategoryDraft;
 import io.sphere.sdk.categories.CategoryDraftBuilder;
 import io.sphere.sdk.categories.commands.CategoryCreateCommand;
 import io.sphere.sdk.client.SphereClient;
+import io.sphere.sdk.customers.Customer;
+import io.sphere.sdk.customers.CustomerDraft;
+import io.sphere.sdk.customers.CustomerDraftBuilder;
+import io.sphere.sdk.customers.commands.CustomerCreateCommand;
+import io.sphere.sdk.customers.queries.CustomerQuery;
 import io.sphere.sdk.customobjects.CustomObject;
 import io.sphere.sdk.customobjects.CustomObjectDraft;
 import io.sphere.sdk.customobjects.commands.CustomObjectUpsertCommand;
@@ -179,6 +185,14 @@ class CliRunnerIT {
         .toCompletableFuture()
         .join();
 
+    final CustomerDraft customerDraft =
+        CustomerDraftBuilder.of("test@email.com", "testPassword").key(RESOURCE_KEY).build();
+
+    sourceProjectClient
+        .execute(CustomerCreateCommand.of(customerDraft))
+        .toCompletableFuture()
+        .join();
+
     final ProductDraft productDraft =
         ProductDraftBuilder.of(
                 productType,
@@ -237,14 +251,47 @@ class CliRunnerIT {
     }
 
     // create clients again (for assertions and cleanup), since the run method closes the clients
-    // after execution
-    // is done.
+    // after execution is done.
     try (final SphereClient postSourceClient = createClient(CTP_SOURCE_CLIENT_CONFIG)) {
       try (final SphereClient postTargetClient = createClient(CTP_TARGET_CLIENT_CONFIG)) {
         // assertions
         assertAllSyncersLoggingEvents(syncerTestLogger, cliRunnerTestLogger, 1);
 
         assertAllResourcesAreSyncedToTarget(postTargetClient);
+      }
+    }
+  }
+
+  @Test
+  void
+      run_WithCustomerSyncAsArgument_ShouldSyncCustomersAndStoreLastSyncTimestampsAsCustomObject() {
+    // preparation
+    try (final SphereClient targetClient = createClient(CTP_TARGET_CLIENT_CONFIG)) {
+      try (final SphereClient sourceClient = createClient(CTP_SOURCE_CLIENT_CONFIG)) {
+
+        final SyncerFactory syncerFactory =
+            SyncerFactory.of(() -> sourceClient, () -> targetClient, Clock.systemDefaultZone());
+
+        // test
+        CliRunner.of().run(new String[] {"-s", "customers"}, syncerFactory);
+      }
+    }
+
+    // create clients again (for assertions and cleanup), since the run method closes the clients
+    // after execution is done.
+    try (final SphereClient postSourceClient = createClient(CTP_SOURCE_CLIENT_CONFIG)) {
+      try (final SphereClient postTargetClient = createClient(CTP_TARGET_CLIENT_CONFIG)) {
+        // assertions
+        assertThat(syncerTestLogger.getAllLoggingEvents()).hasSize(2);
+
+        assertCustomerSyncerLoggingEvents(syncerTestLogger, 1);
+
+        assertCustomersAreSyncedCorrectly(postTargetClient);
+
+        final String sourceProjectKey = postSourceClient.getConfig().getProjectKey();
+
+        assertLastSyncCustomObjectExists(
+            postTargetClient, sourceProjectKey, "customerSync", "runnerName");
       }
     }
   }
@@ -265,8 +312,7 @@ class CliRunnerIT {
     }
 
     // create clients again (for assertions and cleanup), since the run method closes the clients
-    // after execution
-    // is done.
+    // after execution is done.
     try (final SphereClient postSourceClient = createClient(CTP_SOURCE_CLIENT_CONFIG)) {
       try (final SphereClient postTargetClient = createClient(CTP_TARGET_CLIENT_CONFIG)) {
         // assertions
@@ -296,8 +342,7 @@ class CliRunnerIT {
     }
 
     // create clients again (for assertions and cleanup), since the run method closes the clients
-    // after execution
-    // is done.
+    // after execution is done.
     try (final SphereClient postSourceClient = createClient(CTP_SOURCE_CLIENT_CONFIG)) {
       try (final SphereClient postTargetClient = createClient(CTP_TARGET_CLIENT_CONFIG)) {
 
@@ -338,6 +383,17 @@ class CliRunnerIT {
         .hasSize(1)
         .hasOnlyOneElementSatisfying(
             productType -> assertThat(productType.getKey()).isEqualTo(RESOURCE_KEY));
+  }
+
+  private static void assertCustomersAreSyncedCorrectly(@Nonnull final SphereClient ctpClient) {
+    final PagedQueryResult<Customer> customerPagedQueryResult =
+        ctpClient
+            .execute(
+                CustomerQuery.of()
+                    .withPredicates(QueryPredicate.of(format("key=\"%s\"", RESOURCE_KEY))))
+            .toCompletableFuture()
+            .join();
+    assertThat(customerPagedQueryResult.getResults()).hasSize(1);
   }
 
   private void assertLastSyncCustomObjectIsCorrect(
@@ -416,8 +472,7 @@ class CliRunnerIT {
     }
 
     // create clients again (for assertions and cleanup), since the run method closes the clients
-    // after execution
-    // is done.
+    // after execution is done.
     try (final SphereClient postSourceClient = createClient(CTP_SOURCE_CLIENT_CONFIG)) {
       try (final SphereClient postTargetClient = createClient(CTP_TARGET_CLIENT_CONFIG)) {
         // assertions
@@ -455,6 +510,9 @@ class CliRunnerIT {
 
         assertLastSyncCustomObjectExists(
             postTargetClient, sourceProjectKey, "customObjectSync", "runnerName");
+
+        assertLastSyncCustomObjectExists(
+            postTargetClient, sourceProjectKey, "customerSync", "runnerName");
       }
     }
   }
@@ -474,8 +532,7 @@ class CliRunnerIT {
     }
 
     // create clients again (for assertions and cleanup), since the run method closes the clients
-    // after execution
-    // is done.
+    // after execution is done.
     try (final SphereClient postTargetClient = createClient(CTP_TARGET_CLIENT_CONFIG)) {
       // assertions
       assertAllSyncersLoggingEvents(syncerTestLogger, cliRunnerTestLogger, 1);
@@ -611,7 +668,7 @@ class CliRunnerIT {
         .hasSize(1)
         .hasOnlyOneElementSatisfying(state -> assertThat(state.getKey()).isEqualTo(RESOURCE_KEY));
 
-    PagedQueryResult<CustomObject<JsonNode>> customObjectPagedQueryResult =
+    final PagedQueryResult<CustomObject<JsonNode>> customObjectPagedQueryResult =
         targetClient
             .execute(
                 CustomObjectQuery.ofJsonNode()
@@ -628,5 +685,13 @@ class CliRunnerIT {
         .hasSize(1)
         .hasOnlyOneElementSatisfying(
             customObject -> assertThat(customObject.getKey()).isEqualTo(RESOURCE_KEY));
+
+    final PagedQueryResult<Customer> customerPagedQueryResult =
+        targetClient
+            .execute(
+                CustomerQuery.of().withPredicates(queryModel -> queryModel.key().is(RESOURCE_KEY)))
+            .toCompletableFuture()
+            .join();
+    assertThat(customerPagedQueryResult.getResults()).hasSize(1);
   }
 }
