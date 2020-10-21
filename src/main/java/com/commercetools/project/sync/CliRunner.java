@@ -40,7 +40,8 @@ final class CliRunner {
   static final String SYNC_MODULE_OPTION_DESCRIPTION =
       format(
           "Choose one of the following modules to run: \"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\" or \"%s\".",
-              (Object[]) ArrayUtils.add(SyncModuleOption.getSyncOptionValues(), SYNC_MODULE_OPTION_ALL));
+          (Object[])
+              ArrayUtils.add(SyncModuleOption.getSyncOptionValues(), SYNC_MODULE_OPTION_ALL));
   static final String RUNNER_NAME_OPTION_DESCRIPTION =
       "Choose a name for the running sync instance. Please make sure the name is unique, otherwise running more than 1 sync "
           + "instance with the same name would lead to an unexpected behaviour. "

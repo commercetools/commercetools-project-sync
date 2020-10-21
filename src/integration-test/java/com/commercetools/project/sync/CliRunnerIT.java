@@ -688,8 +688,8 @@ class CliRunnerIT {
 
     assertThat(customObjectPagedQueryResult.getResults())
         .hasSize(1)
-            .singleElement()
-            .satisfies(customObject -> assertThat(customObject.getKey()).isEqualTo(RESOURCE_KEY));
+        .singleElement()
+        .satisfies(customObject -> assertThat(customObject.getKey()).isEqualTo(RESOURCE_KEY));
 
     final PagedQueryResult<Customer> customerPagedQueryResult =
         targetClient
