@@ -84,6 +84,23 @@ class SyncUtilsTest {
   }
 
   @Test
+  void
+      logErrorCallbackWithStringResourceIdentifierAndNullUpdateActions_ShouldLogErrorWithCorrectMessage() {
+    final TestLogger testLogger = TestLoggerFactory.getTestLogger(SyncUtilsTest.class);
+    SyncException exception = new SyncException("test sync exception");
+
+    logErrorCallback(testLogger, "test resource", exception, "test identifier", null);
+
+    assertThat(testLogger.getAllLoggingEvents()).hasSize(1);
+    final LoggingEvent loggingEvent = testLogger.getAllLoggingEvents().get(0);
+    assertThat(loggingEvent.getMessage())
+        .isEqualTo(
+            "Error when trying to sync test resource. Existing key: test identifier. Update actions: []");
+    assertThat(loggingEvent.getThrowable().isPresent()).isTrue();
+    assertThat(loggingEvent.getThrowable().get()).isInstanceOf(SyncException.class);
+  }
+
+  @Test
   void logErrorCallbackWithResource_ShouldLogErrorWithCorrectMessage() {
     final TestLogger testLogger = TestLoggerFactory.getTestLogger(SyncUtilsTest.class);
     final SyncException exception = new SyncException("test sync exception");
@@ -106,6 +123,24 @@ class SyncUtilsTest {
     assertThat(loggingEvent.getMessage())
         .isEqualTo(
             "Error when trying to sync test resource. Existing key: test identifier. Update actions: updateAction1,updateAction2");
+    assertThat(loggingEvent.getThrowable().isPresent()).isTrue();
+    assertThat(loggingEvent.getThrowable().get()).isInstanceOf(SyncException.class);
+  }
+
+  @Test
+  void logErrorCallbackWithResourceAndNullUpdateActions_ShouldLogErrorWithCorrectMessage() {
+    final TestLogger testLogger = TestLoggerFactory.getTestLogger(SyncUtilsTest.class);
+    final SyncException exception = new SyncException("test sync exception");
+    final WithKey resource = mock(WithKey.class);
+    when(resource.getKey()).thenReturn("test identifier");
+
+    logErrorCallback(testLogger, "test resource", exception, Optional.of(resource), null);
+
+    assertThat(testLogger.getAllLoggingEvents()).hasSize(1);
+    final LoggingEvent loggingEvent = testLogger.getAllLoggingEvents().get(0);
+    assertThat(loggingEvent.getMessage())
+        .isEqualTo(
+            "Error when trying to sync test resource. Existing key: test identifier. Update actions: []");
     assertThat(loggingEvent.getThrowable().isPresent()).isTrue();
     assertThat(loggingEvent.getThrowable().get()).isInstanceOf(SyncException.class);
   }
