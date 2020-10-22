@@ -56,7 +56,9 @@ final class SyncerFactory {
 
   @Nonnull
   CompletableFuture<Void> syncAll(
-      @Nullable final String runnerNameOptionValue, final boolean isFullSync) {
+      @Nullable final String runnerNameOptionValue,
+      final boolean isFullSync,
+      final boolean isSyncProjectSyncCustomObjects) {
 
     final SphereClient sourceClient = sourceClientSupplier.get();
     final SphereClient targetClient = targetClientSupplier.get();
@@ -76,7 +78,12 @@ final class SyncerFactory {
                 TaxCategorySyncer.of(sourceClient, targetClient, clock)
                     .sync(runnerNameOptionValue, isFullSync)
                     .toCompletableFuture(),
-                CustomObjectSyncer.of(sourceClient, targetClient, clock, runnerNameOptionValue)
+                CustomObjectSyncer.of(
+                        sourceClient,
+                        targetClient,
+                        clock,
+                        runnerNameOptionValue,
+                        isSyncProjectSyncCustomObjects)
                     .sync(runnerNameOptionValue, isFullSync)
                     .toCompletableFuture());
 
@@ -120,7 +127,8 @@ final class SyncerFactory {
   CompletionStage<Void> sync(
       @Nullable final String syncOptionValue,
       @Nullable final String runnerNameOptionValue,
-      final boolean isFullSync) {
+      final boolean isFullSync,
+      final boolean isSyncProjectSyncCustomObjects) {
 
     if (isBlank(syncOptionValue)) {
       final String errorMessage =
@@ -141,7 +149,7 @@ final class SyncerFactory {
         syncer;
 
     try {
-      syncer = buildSyncer(syncOptionValue, runnerNameOptionValue);
+      syncer = buildSyncer(syncOptionValue, runnerNameOptionValue, isSyncProjectSyncCustomObjects);
     } catch (IllegalArgumentException exception) {
 
       return exceptionallyCompletedFuture(exception);
@@ -168,7 +176,9 @@ final class SyncerFactory {
           ? extends QueryDsl<?, ?>,
           ? extends BaseSync<?, ?, ?>>
       buildSyncer(
-          @Nonnull final String syncOptionValue, @Nonnull final String runnerNameOptionValue) {
+          @Nonnull final String syncOptionValue,
+          @Nonnull final String runnerNameOptionValue,
+          final boolean syncProjectSyncCustomObjects) {
 
     final String trimmedValue = syncOptionValue.trim();
     try {
@@ -197,7 +207,11 @@ final class SyncerFactory {
           return StateSyncer.of(sourceClientSupplier.get(), targetClientSupplier.get(), clock);
         case CUSTOM_OBJECT_SYNC:
           return CustomObjectSyncer.of(
-              sourceClientSupplier.get(), targetClientSupplier.get(), clock, runnerNameOptionValue);
+              sourceClientSupplier.get(),
+              targetClientSupplier.get(),
+              clock,
+              runnerNameOptionValue,
+              syncProjectSyncCustomObjects);
         case CUSTOMER_SYNC:
           return CustomerSyncer.of(sourceClientSupplier.get(), targetClientSupplier.get(), clock);
         default:

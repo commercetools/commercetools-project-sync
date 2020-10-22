@@ -1,4 +1,5 @@
 {
+  "key": "customerKey",
   "customerNumber": "1",
   "email": "email@email.com",
   "firstName": "firstName",
@@ -8,6 +9,7 @@
   "password": "xxx",
   "addresses": [
     {
+      "key": "addressKey",
       "id": "PrqxXzi4",
       "title": "1",
       "salutation": "1",

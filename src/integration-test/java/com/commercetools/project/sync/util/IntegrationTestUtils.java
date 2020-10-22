@@ -271,8 +271,8 @@ public final class IntegrationTestUtils {
 
     assertThat(productTypeQueryResult.getResults())
         .hasSize(1)
-        .hasOnlyOneElementSatisfying(
-            productType -> assertThat(productType.getKey()).isEqualTo(productTypeKey));
+        .singleElement()
+        .satisfies(productType -> assertThat(productType.getKey()).isEqualTo(productTypeKey));
 
     return productTypeQueryResult.getResults().get(0);
   }
@@ -290,7 +290,8 @@ public final class IntegrationTestUtils {
 
     assertThat(categoryQueryResult.getResults())
         .hasSize(1)
-        .hasOnlyOneElementSatisfying(category -> assertThat(category.getKey()).isEqualTo(key));
+        .singleElement()
+        .satisfies(category -> assertThat(category.getKey()).isEqualTo(key));
 
     return categoryQueryResult.getResults().get(0);
   }
@@ -306,7 +307,8 @@ public final class IntegrationTestUtils {
 
     assertThat(productQueryResult.getResults())
         .hasSize(1)
-        .hasOnlyOneElementSatisfying(
+        .singleElement()
+        .satisfies(
             product -> {
               assertThat(product.getKey()).isEqualTo(productKey);
               final ProductVariant stagedMasterVariant =

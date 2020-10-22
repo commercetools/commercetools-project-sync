@@ -198,6 +198,14 @@ class CliRunnerIT {
             typeFuture, customObjectFuture1, customObjectFuture2, categoryFuture, customerFuture)
         .join();
 
+    final CustomerDraft customerDraft =
+        CustomerDraftBuilder.of("test@email.com", "testPassword").key(RESOURCE_KEY).build();
+
+    sourceProjectClient
+        .execute(CustomerCreateCommand.of(customerDraft))
+        .toCompletableFuture()
+        .join();
+
     final ProductDraft productDraft =
         ProductDraftBuilder.of(
                 productType,
@@ -388,8 +396,19 @@ class CliRunnerIT {
 
     assertThat(productTypeQueryResult.getResults())
         .hasSize(1)
-        .hasOnlyOneElementSatisfying(
-            productType -> assertThat(productType.getKey()).isEqualTo(RESOURCE_KEY));
+        .singleElement()
+        .satisfies(productType -> assertThat(productType.getKey()).isEqualTo(RESOURCE_KEY));
+  }
+
+  private static void assertCustomersAreSyncedCorrectly(@Nonnull final SphereClient ctpClient) {
+    final PagedQueryResult<Customer> customerPagedQueryResult =
+        ctpClient
+            .execute(
+                CustomerQuery.of()
+                    .withPredicates(QueryPredicate.of(format("key=\"%s\"", RESOURCE_KEY))))
+            .toCompletableFuture()
+            .join();
+    assertThat(customerPagedQueryResult.getResults()).hasSize(1);
   }
 
   private static void assertCustomersAreSyncedCorrectly(@Nonnull final SphereClient ctpClient) {
@@ -421,7 +440,8 @@ class CliRunnerIT {
 
     assertThat(lastSyncResult.getResults())
         .hasSize(1)
-        .hasOnlyOneElementSatisfying(
+        .singleElement()
+        .satisfies(
             lastSyncCustomObject -> {
               assertThat(lastSyncCustomObject.getKey()).isEqualTo(sourceProjectKey);
               assertThat(lastSyncCustomObject.getValue())
@@ -452,7 +472,8 @@ class CliRunnerIT {
 
     assertThat(currentCtpTimestampGeneratorResults.getResults())
         .hasSize(1)
-        .hasOnlyOneElementSatisfying(
+        .singleElement()
+        .satisfies(
             currentCtpTimestamp -> {
               assertThat(currentCtpTimestamp.getKey()).isEqualTo(TIMESTAMP_GENERATOR_KEY);
               assertThat(currentCtpTimestamp.getValue())
@@ -595,7 +616,8 @@ class CliRunnerIT {
 
     assertThat(lastSyncResult.getResults())
         .hasSize(1)
-        .hasOnlyOneElementSatisfying(
+        .singleElement()
+        .satisfies(
             lastSyncCustomObject -> {
               assertThat(lastSyncCustomObject.getKey()).isEqualTo(sourceProjectKey);
               assertThat(lastSyncCustomObject.getValue())
@@ -625,7 +647,8 @@ class CliRunnerIT {
 
     assertThat(typeQueryResult.getResults())
         .hasSize(1)
-        .hasOnlyOneElementSatisfying(type -> assertThat(type.getKey()).isEqualTo(RESOURCE_KEY));
+        .singleElement()
+        .satisfies(type -> assertThat(type.getKey()).isEqualTo(RESOURCE_KEY));
 
     final PagedQueryResult<TaxCategory> taxCategoryQueryResult =
         targetClient
@@ -635,8 +658,8 @@ class CliRunnerIT {
 
     assertThat(taxCategoryQueryResult.getResults())
         .hasSize(1)
-        .hasOnlyOneElementSatisfying(
-            taxCategory -> assertThat(taxCategory.getKey()).isEqualTo(RESOURCE_KEY));
+        .singleElement()
+        .satisfies(taxCategory -> assertThat(taxCategory.getKey()).isEqualTo(RESOURCE_KEY));
 
     final PagedQueryResult<InventoryEntry> inventoryEntryQueryResult =
         targetClient
@@ -648,8 +671,8 @@ class CliRunnerIT {
 
     assertThat(inventoryEntryQueryResult.getResults())
         .hasSize(1)
-        .hasOnlyOneElementSatisfying(
-            inventoryEntry -> assertThat(inventoryEntry.getSku()).isEqualTo(RESOURCE_KEY));
+        .singleElement()
+        .satisfies(inventoryEntry -> assertThat(inventoryEntry.getSku()).isEqualTo(RESOURCE_KEY));
 
     final PagedQueryResult<CartDiscount> cartDiscountPagedQueryResult =
         targetClient
@@ -661,8 +684,8 @@ class CliRunnerIT {
 
     assertThat(cartDiscountPagedQueryResult.getResults())
         .hasSize(1)
-        .hasOnlyOneElementSatisfying(
-            cartDiscount -> assertThat(cartDiscount.getKey()).isEqualTo(RESOURCE_KEY));
+        .singleElement()
+        .satisfies(cartDiscount -> assertThat(cartDiscount.getKey()).isEqualTo(RESOURCE_KEY));
 
     final PagedQueryResult<State> statePagedQueryResult =
         targetClient
@@ -673,7 +696,8 @@ class CliRunnerIT {
 
     assertThat(statePagedQueryResult.getResults())
         .hasSize(1)
-        .hasOnlyOneElementSatisfying(state -> assertThat(state.getKey()).isEqualTo(RESOURCE_KEY));
+        .singleElement()
+        .satisfies(state -> assertThat(state.getKey()).isEqualTo(RESOURCE_KEY));
 
     final PagedQueryResult<CustomObject<JsonNode>> customObjectPagedQueryResult =
         targetClient
@@ -690,8 +714,8 @@ class CliRunnerIT {
 
     assertThat(customObjectPagedQueryResult.getResults())
         .hasSize(1)
-        .hasOnlyOneElementSatisfying(
-            customObject -> assertThat(customObject.getKey()).isEqualTo(RESOURCE_KEY));
+        .singleElement()
+        .satisfies(customObject -> assertThat(customObject.getKey()).isEqualTo(RESOURCE_KEY));
 
     final PagedQueryResult<Customer> customerPagedQueryResult =
         targetClient
