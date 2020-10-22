@@ -1,0 +1,41 @@
+{
+  "customerNumber": "1",
+  "email": "email@email.com",
+  "firstName": "firstName",
+  "lastName": "lastName",
+  "middleName": "",
+  "title": "",
+  "password": "xxx",
+  "addresses": [
+    {
+      "id": "PrqxXzi4",
+      "title": "1",
+      "salutation": "1",
+      "firstName": "1",
+      "lastName": "1",
+      "streetName": "1",
+      "streetNumber": "1",
+      "additionalStreetInfo": "1",
+      "postalCode": "1",
+      "city": "1",
+      "region": "1",
+      "state": "1",
+      "country": "AD",
+      "company": "1",
+      "department": "1",
+      "building": "1",
+      "apartment": "1",
+      "pOBox": "1",
+      "phone": "1",
+      "mobile": "1",
+      "email": "email@email.com",
+      "fax": "1",
+      "additionalAddressInfo": "1"
+    }
+  ],
+  "shippingAddressIds": [],
+  "billingAddressIds": [],
+  "isEmailVerified": false,
+  "stores": [],
+  "customerGroup": {}
+}

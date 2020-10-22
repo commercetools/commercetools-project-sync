@@ -23,6 +23,7 @@ public final class SyncUtils {
   public static final String APPLICATION_DEFAULT_NAME = "commercetools-project-sync";
   public static final String APPLICATION_DEFAULT_VERSION = "development-SNAPSHOT";
   public static final String DEFAULT_RUNNER_NAME = "runnerName";
+  public static final String IDENTIFIER_NOT_PRESENT = "<<not present>>";
 
   @Nonnull
   public static String getSyncModuleName(@Nonnull final Class<? extends BaseSync> syncClass) {
@@ -55,7 +56,7 @@ public final class SyncUtils {
     logger.error(
         format(
             "Error when trying to sync %s. Existing key: %s. Update actions: %s",
-            resourceName, resource.map(WithKey::getKey).orElse(""), updateActionsString),
+            resourceName, resource.map(WithKey::getKey).orElse(IDENTIFIER_NOT_PRESENT), updateActionsString),
         exception);
   }
 
@@ -85,7 +86,7 @@ public final class SyncUtils {
     logger.warn(
         format(
             "Warning when trying to sync %s. Existing key: %s",
-            resourceName, resource.map(WithKey::getKey).orElse("")),
+            resourceName, resource.map(WithKey::getKey).orElse(IDENTIFIER_NOT_PRESENT)),
         exception);
   }
 
