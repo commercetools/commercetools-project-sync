@@ -67,6 +67,7 @@ class CustomerSyncerTest {
 
   @Test
   void syncWithError_ShouldCallErrorCallback() {
+    // preparation: customer with no key is synced
     final TestLogger syncerTestLogger = TestLoggerFactory.getTestLogger(CustomerSyncer.class);
     final SphereClient sourceClient = mock(SphereClient.class);
     final SphereClient targetClient = mock(SphereClient.class);
@@ -80,8 +81,10 @@ class CustomerSyncerTest {
     when(sourceClient.execute(any(CustomerQuery.class)))
             .thenReturn(CompletableFuture.completedFuture(pagedQueryResult));
 
+    // test
     final CustomerSyncer customerSyncer = CustomerSyncer.of(sourceClient, targetClient, mock(Clock.class));
 
+    // assertion
     customerSyncer.sync(null, true).toCompletableFuture().join();
     final LoggingEvent errorLog = syncerTestLogger.getAllLoggingEvents().get(0);
     assertThat(errorLog.getMessage())
@@ -90,6 +93,7 @@ class CustomerSyncerTest {
 
   @Test
   void syncWithWarning_ShouldCallWarningCallback() {
+    // preparation: source customer has a different customer number than target customer
     final TestLogger syncerTestLogger = TestLoggerFactory.getTestLogger(CustomerSyncer.class);
     final SphereClient sourceClient = mock(SphereClient.class);
     final SphereClient targetClient = mock(SphereClient.class);
@@ -110,8 +114,10 @@ class CustomerSyncerTest {
     when(targetClient.execute(any(CustomerQuery.class)))
             .thenReturn(CompletableFuture.completedFuture(targetPagedQueryResult));
 
+    // test
     final CustomerSyncer customerSyncer = CustomerSyncer.of(sourceClient, targetClient, mock(Clock.class));
 
+    // assertion
     customerSyncer.sync(null, true).toCompletableFuture().join();
     final LoggingEvent errorLog = syncerTestLogger.getAllLoggingEvents().get(0);
     assertThat(errorLog.getMessage())
