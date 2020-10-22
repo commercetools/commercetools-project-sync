@@ -198,14 +198,6 @@ class CliRunnerIT {
             typeFuture, customObjectFuture1, customObjectFuture2, categoryFuture, customerFuture)
         .join();
 
-    final CustomerDraft customerDraft =
-        CustomerDraftBuilder.of("test@email.com", "testPassword").key(RESOURCE_KEY).build();
-
-    sourceProjectClient
-        .execute(CustomerCreateCommand.of(customerDraft))
-        .toCompletableFuture()
-        .join();
-
     final ProductDraft productDraft =
         ProductDraftBuilder.of(
                 productType,
@@ -398,17 +390,6 @@ class CliRunnerIT {
         .hasSize(1)
         .singleElement()
         .satisfies(productType -> assertThat(productType.getKey()).isEqualTo(RESOURCE_KEY));
-  }
-
-  private static void assertCustomersAreSyncedCorrectly(@Nonnull final SphereClient ctpClient) {
-    final PagedQueryResult<Customer> customerPagedQueryResult =
-        ctpClient
-            .execute(
-                CustomerQuery.of()
-                    .withPredicates(QueryPredicate.of(format("key=\"%s\"", RESOURCE_KEY))))
-            .toCompletableFuture()
-            .join();
-    assertThat(customerPagedQueryResult.getResults()).hasSize(1);
   }
 
   private static void assertCustomersAreSyncedCorrectly(@Nonnull final SphereClient ctpClient) {
