@@ -20,12 +20,20 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
 import io.sphere.sdk.queries.PagedQueryResult;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import uk.org.lidalia.slf4jtest.LoggingEvent;
 import uk.org.lidalia.slf4jtest.TestLogger;
 import uk.org.lidalia.slf4jtest.TestLoggerFactory;
 
 class CustomerSyncerTest {
+  private final TestLogger syncerTestLogger = TestLoggerFactory.getTestLogger(CustomerSyncer.class);
+
+  @BeforeEach
+  void setup() {
+    syncerTestLogger.clearAll();
+  }
+
   @Test
   void of_ShouldCreateCustomerSyncerInstance() {
     // test
@@ -68,7 +76,6 @@ class CustomerSyncerTest {
   @Test
   void syncWithError_ShouldCallErrorCallback() {
     // preparation: customer with no key is synced
-    final TestLogger syncerTestLogger = TestLoggerFactory.getTestLogger(CustomerSyncer.class);
     final SphereClient sourceClient = mock(SphereClient.class);
     final SphereClient targetClient = mock(SphereClient.class);
     when(sourceClient.getConfig()).thenReturn(SphereApiConfig.of("source-project"));
@@ -94,7 +101,6 @@ class CustomerSyncerTest {
   @Test
   void syncWithWarning_ShouldCallWarningCallback() {
     // preparation: source customer has a different customer number than target customer
-    final TestLogger syncerTestLogger = TestLoggerFactory.getTestLogger(CustomerSyncer.class);
     final SphereClient sourceClient = mock(SphereClient.class);
     final SphereClient targetClient = mock(SphereClient.class);
     when(sourceClient.getConfig()).thenReturn(SphereApiConfig.of("source-project"));
