@@ -24,12 +24,13 @@ public final class QueryUtils {
    *     resource, in the fetched page from the query on the specified CTP project, to map it to a
    *     {@link SphereRequest}.
    */
-  public static <T extends ResourceView, C extends QueryDsl<T, C>> void queryAndExecute(
-      @Nonnull final SphereClient ctpClient,
-      @Nonnull final QueryDsl<T, C> query,
-      @Nonnull final Function<T, SphereRequest<T>> resourceToRequestMapper) {
+  public static <T extends ResourceView, C extends QueryDsl<T, C>>
+      CompletableFuture<Void> queryAndExecute(
+          @Nonnull final SphereClient ctpClient,
+          @Nonnull final QueryDsl<T, C> query,
+          @Nonnull final Function<T, SphereRequest<T>> resourceToRequestMapper) {
 
-    queryAndCompose(
+    return queryAndCompose(
         ctpClient, query, resource -> ctpClient.execute(resourceToRequestMapper.apply(resource)));
   }
 
@@ -44,10 +45,11 @@ public final class QueryUtils {
    *     in the fetched page from the query on the specified CTP project, to map it to a {@link
    *     CompletionStage} which will be executed (in a blocking fashion) after every page fetch.
    */
-  private static <T extends ResourceView, C extends QueryDsl<T, C>, S> void queryAndCompose(
-      @Nonnull final SphereClient ctpClient,
-      @Nonnull final QueryDsl<T, C> query,
-      @Nonnull final Function<T, CompletionStage<S>> resourceToStageMapper) {
+  private static <T extends ResourceView, C extends QueryDsl<T, C>, S>
+      CompletableFuture<Void> queryAndCompose(
+          @Nonnull final SphereClient ctpClient,
+          @Nonnull final QueryDsl<T, C> query,
+          @Nonnull final Function<T, CompletionStage<S>> resourceToStageMapper) {
 
     final Consumer<List<T>> pageConsumer =
         pageElements ->
@@ -59,7 +61,7 @@ public final class QueryUtils {
                         .toArray(CompletableFuture[]::new))
                 .join();
 
-    CtpQueryUtils.queryAll(ctpClient, query, pageConsumer).toCompletableFuture().join();
+    return CtpQueryUtils.queryAll(ctpClient, query, pageConsumer).toCompletableFuture();
   }
 
   private QueryUtils() {}
