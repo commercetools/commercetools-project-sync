@@ -1,5 +1,9 @@
 package com.commercetools.project.sync.customobject;
 
+import static com.commercetools.project.sync.util.SyncUtils.IDENTIFIER_NOT_PRESENT;
+import static com.commercetools.project.sync.util.SyncUtils.logErrorCallback;
+import static com.commercetools.project.sync.util.SyncUtils.logWarningCallback;
+
 import com.commercetools.project.sync.SyncModuleOption;
 import com.commercetools.project.sync.Syncer;
 import com.commercetools.project.sync.service.CustomObjectService;
@@ -31,10 +35,6 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import static com.commercetools.project.sync.util.SyncUtils.IDENTIFIER_NOT_PRESENT;
-import static com.commercetools.project.sync.util.SyncUtils.logErrorCallback;
-import static com.commercetools.project.sync.util.SyncUtils.logWarningCallback;
 
 public final class CustomObjectSyncer
     extends Syncer<

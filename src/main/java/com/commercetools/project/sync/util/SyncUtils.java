@@ -56,7 +56,9 @@ public final class SyncUtils {
     logger.error(
         format(
             "Error when trying to sync %s. Existing key: %s. Update actions: %s",
-            resourceName, resource.map(WithKey::getKey).orElse(IDENTIFIER_NOT_PRESENT), updateActionsString),
+            resourceName,
+            resource.map(WithKey::getKey).orElse(IDENTIFIER_NOT_PRESENT),
+            updateActionsString),
         exception);
   }
 
