@@ -4,19 +4,30 @@ import static com.commercetools.project.sync.util.TestUtils.getMockedClock;
 import static com.commercetools.sync.categories.utils.CategoryReferenceResolutionUtils.buildCategoryQuery;
 import static com.commercetools.sync.categories.utils.CategoryReferenceResolutionUtils.mapToCategoryDrafts;
 import static io.sphere.sdk.json.SphereJsonUtils.readObjectFromResource;
+import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import com.commercetools.sync.categories.CategorySync;
 import io.sphere.sdk.categories.Category;
 import io.sphere.sdk.categories.CategoryDraft;
 import io.sphere.sdk.categories.queries.CategoryQuery;
+import io.sphere.sdk.client.SphereApiConfig;
 import io.sphere.sdk.client.SphereClient;
+import io.sphere.sdk.queries.PagedQueryResult;
+import java.time.Clock;
+import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
+import uk.org.lidalia.slf4jtest.LoggingEvent;
+import uk.org.lidalia.slf4jtest.TestLogger;
+import uk.org.lidalia.slf4jtest.TestLoggerFactory;
 
 class CategorySyncerTest {
   @Test
@@ -74,5 +85,76 @@ class CategorySyncerTest {
 
     // assertion
     assertThat(query).isEqualTo(buildCategoryQuery());
+  }
+
+  @Test
+  void syncWithError_ShouldCallErrorCallback() {
+    final TestLogger syncerTestLogger = TestLoggerFactory.getTestLogger(CategorySyncer.class);
+    // preparation: category with no key is synced
+    final SphereClient sourceClient = mock(SphereClient.class);
+    final SphereClient targetClient = mock(SphereClient.class);
+    when(sourceClient.getConfig()).thenReturn(SphereApiConfig.of("source-project"));
+    when(targetClient.getConfig()).thenReturn(SphereApiConfig.of("target-project"));
+    final List<Category> categories =
+        Collections.singletonList(readObjectFromResource("category-no-key.json", Category.class));
+
+    final PagedQueryResult<Category> pagedQueryResult = mock(PagedQueryResult.class);
+    when(pagedQueryResult.getResults()).thenReturn(categories);
+    when(sourceClient.execute(any(CategoryQuery.class)))
+        .thenReturn(CompletableFuture.completedFuture(pagedQueryResult));
+
+    // test
+    final CategorySyncer categorySyncer =
+        CategorySyncer.of(sourceClient, targetClient, mock(Clock.class));
+    categorySyncer.sync(null, true).toCompletableFuture().join();
+
+    // assertion
+    final LoggingEvent errorLog = syncerTestLogger.getAllLoggingEvents().get(0);
+    assertThat(errorLog.getMessage())
+        .isEqualTo(
+            "Error when trying to sync category. Existing key: <<not present>>. Update actions: []");
+    assertThat(errorLog.getThrowable().get().getMessage())
+        .isEqualTo(
+            "CategoryDraft with name: LocalizedString(en -> category-name-1) doesn't have a key. Please make sure all category drafts have keys.");
+  }
+
+  @Test
+  void syncWithWarning_ShouldCallWarningCallback() {
+    final TestLogger syncerTestLogger = TestLoggerFactory.getTestLogger(CategorySyncer.class);
+    final SphereClient sourceClient = mock(SphereClient.class);
+    final SphereClient targetClient = mock(SphereClient.class);
+    when(sourceClient.getConfig()).thenReturn(SphereApiConfig.of("source-project"));
+    when(targetClient.getConfig()).thenReturn(SphereApiConfig.of("target-project"));
+
+    final List<Category> sourceCategories =
+        Collections.singletonList(readObjectFromResource("category-key-2.json", Category.class));
+    final List<Category> targetCategories =
+        Collections.singletonList(
+            readObjectFromResource("category-order-hint.json", Category.class));
+
+    final PagedQueryResult<Category> sourcePagedQueryResult = mock(PagedQueryResult.class);
+    when(sourcePagedQueryResult.getResults()).thenReturn(sourceCategories);
+    when(sourceClient.execute(any(CategoryQuery.class)))
+        .thenReturn(CompletableFuture.completedFuture(sourcePagedQueryResult));
+
+    final PagedQueryResult<Category> targetPagedQueryResult = mock(PagedQueryResult.class);
+    when(targetPagedQueryResult.getResults()).thenReturn(targetCategories);
+    when(targetClient.execute(any(CategoryQuery.class)))
+        .thenReturn(CompletableFuture.completedFuture(targetPagedQueryResult));
+
+    // test
+    final CategorySyncer categorySyncer =
+        CategorySyncer.of(sourceClient, targetClient, mock(Clock.class));
+    categorySyncer.sync(null, true).toCompletableFuture().join();
+
+    // assertion
+    final LoggingEvent errorLog = syncerTestLogger.getAllLoggingEvents().get(0);
+    assertThat(errorLog.getMessage())
+        .isEqualTo("Warning when trying to sync category. Existing key: categoryKey2");
+    assertThat(errorLog.getThrowable().get().getMessage())
+        .isEqualTo(
+            format(
+                "Cannot unset 'orderHint' field of category with id '%s'.",
+                sourceCategories.get(0).getId()));
   }
 }

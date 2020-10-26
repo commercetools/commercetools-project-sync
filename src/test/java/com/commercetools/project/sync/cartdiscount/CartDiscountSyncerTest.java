@@ -87,7 +87,7 @@ class CartDiscountSyncerTest {
 
   @Test
   void syncWithError_ShouldCallErrorCallback() {
-    TestLogger syncerTestLogger = TestLoggerFactory.getTestLogger(CartDiscountSyncer.class);
+    final TestLogger syncerTestLogger = TestLoggerFactory.getTestLogger(CartDiscountSyncer.class);
     // preparation: cart discount with no key is synced
     final SphereClient sourceClient = mock(SphereClient.class);
     final SphereClient targetClient = mock(SphereClient.class);

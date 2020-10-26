@@ -86,7 +86,7 @@ class InventoryEntrySyncerTest {
 
   @Test
   void syncWithError_ShouldCallErrorCallback() {
-    TestLogger syncerTestLogger = TestLoggerFactory.getTestLogger(InventoryEntrySyncer.class);
+    final TestLogger syncerTestLogger = TestLoggerFactory.getTestLogger(InventoryEntrySyncer.class);
     // preparation: inventory entry with no key is synced
     final SphereClient sourceClient = mock(SphereClient.class);
     final SphereClient targetClient = mock(SphereClient.class);
