@@ -111,5 +111,8 @@ class InventoryEntrySyncerTest {
     assertThat(errorLog.getMessage())
         .isEqualTo(
             "Error when trying to sync inventory entry. Existing key: <<not present>>. Update actions: []");
+    assertThat(errorLog.getThrowable().get().getMessage())
+        .isEqualTo(
+            "InventoryEntryDraft doesn't have a SKU. Please make sure all inventory entry drafts have SKUs.");
   }
 }

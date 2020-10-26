@@ -97,6 +97,9 @@ class CustomerSyncerTest {
     assertThat(errorLog.getMessage())
         .isEqualTo(
             "Error when trying to sync customer. Existing key: <<not present>>. Update actions: []");
+    assertThat(errorLog.getThrowable().get().getMessage())
+        .isEqualTo(
+            "CustomerDraft with email: email@email.com doesn't have a key. Please make sure all customer drafts have keys.");
   }
 
   @Test
