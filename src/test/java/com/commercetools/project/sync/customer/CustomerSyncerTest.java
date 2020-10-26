@@ -90,9 +90,9 @@ class CustomerSyncerTest {
     // test
     final CustomerSyncer customerSyncer =
         CustomerSyncer.of(sourceClient, targetClient, mock(Clock.class));
+    customerSyncer.sync(null, true).toCompletableFuture().join();
 
     // assertion
-    customerSyncer.sync(null, true).toCompletableFuture().join();
     final LoggingEvent errorLog = syncerTestLogger.getAllLoggingEvents().get(0);
     assertThat(errorLog.getMessage())
         .isEqualTo(
@@ -127,9 +127,9 @@ class CustomerSyncerTest {
     // test
     final CustomerSyncer customerSyncer =
         CustomerSyncer.of(sourceClient, targetClient, mock(Clock.class));
+    customerSyncer.sync(null, true).toCompletableFuture().join();
 
     // assertion
-    customerSyncer.sync(null, true).toCompletableFuture().join();
     final LoggingEvent errorLog = syncerTestLogger.getAllLoggingEvents().get(0);
     assertThat(errorLog.getMessage())
         .isEqualTo("Warning when trying to sync customer. Existing key: customerKey");

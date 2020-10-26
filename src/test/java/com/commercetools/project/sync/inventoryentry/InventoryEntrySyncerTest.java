@@ -87,7 +87,7 @@ class InventoryEntrySyncerTest {
   @Test
   void syncWithError_ShouldCallErrorCallback() {
     TestLogger syncerTestLogger = TestLoggerFactory.getTestLogger(InventoryEntrySyncer.class);
-    // preparation: customer with no key is synced
+    // preparation: inventory entry with no key is synced
     final SphereClient sourceClient = mock(SphereClient.class);
     final SphereClient targetClient = mock(SphereClient.class);
     when(sourceClient.getConfig()).thenReturn(SphereApiConfig.of("source-project"));
@@ -104,9 +104,9 @@ class InventoryEntrySyncerTest {
     // test
     final InventoryEntrySyncer inventoryEntrySyncer =
         InventoryEntrySyncer.of(sourceClient, targetClient, mock(Clock.class));
+    inventoryEntrySyncer.sync(null, true).toCompletableFuture().join();
 
     // assertion
-    inventoryEntrySyncer.sync(null, true).toCompletableFuture().join();
     final LoggingEvent errorLog = syncerTestLogger.getAllLoggingEvents().get(0);
     assertThat(errorLog.getMessage())
         .isEqualTo(
