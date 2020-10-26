@@ -24,12 +24,21 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.stream.Collectors;
+
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import uk.org.lidalia.slf4jtest.LoggingEvent;
 import uk.org.lidalia.slf4jtest.TestLogger;
 import uk.org.lidalia.slf4jtest.TestLoggerFactory;
 
 class CategorySyncerTest {
+  private final TestLogger syncerTestLogger = TestLoggerFactory.getTestLogger(CategorySyncer.class);
+
+  @BeforeEach
+  void setup() {
+    syncerTestLogger.clearAll();
+  }
+
   @Test
   void of_ShouldCreateCategorySyncerInstance() {
     // test
@@ -89,7 +98,6 @@ class CategorySyncerTest {
 
   @Test
   void syncWithError_ShouldCallErrorCallback() {
-    final TestLogger syncerTestLogger = TestLoggerFactory.getTestLogger(CategorySyncer.class);
     // preparation: category with no key is synced
     final SphereClient sourceClient = mock(SphereClient.class);
     final SphereClient targetClient = mock(SphereClient.class);
@@ -120,7 +128,7 @@ class CategorySyncerTest {
 
   @Test
   void syncWithWarning_ShouldCallWarningCallback() {
-    final TestLogger syncerTestLogger = TestLoggerFactory.getTestLogger(CategorySyncer.class);
+    // preparation: old category has category order hint, new category does not have category order hint
     final SphereClient sourceClient = mock(SphereClient.class);
     final SphereClient targetClient = mock(SphereClient.class);
     when(sourceClient.getConfig()).thenReturn(SphereApiConfig.of("source-project"));
