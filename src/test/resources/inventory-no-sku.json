@@ -1,0 +1,11 @@
+{
+  "id": "042048e0-8d05-4000-acc5-6ba4c282799a",
+  "version": 1,
+  "createdAt": "2016-02-12T14:34:57.099Z",
+  "lastModifiedAt": "2016-02-12T14:34:57.099Z",
+  "supplyChannel": {
+  },
+  "quantityOnStock": 0,
+  "availableQuantity": 0,
+  "reservations": []
+}
