@@ -1,0 +1,47 @@
+{
+  "id": "38aa85a6-4250-4c1b-9cba-72fe87ad1f52",
+  "version": 1,
+  "createdAt": "2019-07-02T14:59:28.511Z",
+  "lastModifiedAt": "2019-07-02T14:59:28.511Z",
+  "lastModifiedBy": {
+    "clientId": "bYt7WtLyipj8Foll_k9s0UuU",
+    "isPlatformClient": false
+  },
+  "createdBy": {
+    "clientId": "bYt7WtLyipj8Foll_k9s0UuU",
+    "isPlatformClient": false
+  },
+  "value": {
+    "type": "absolute",
+    "money": [
+      {
+        "type": "centPrecision",
+        "currencyCode": "USD",
+        "centAmount": 6000,
+        "fractionDigits": 2
+      }
+    ]
+  },
+  "cartPredicate": "1=1",
+  "target": {
+    "type": "lineItems",
+    "predicate": "true = true"
+  },
+  "name": {
+    "en": "1-month prepay(Go Big)"
+  },
+  "description": {
+    "en": "1-month prepay(Go Big)"
+  },
+  "validFrom": "2017-10-23T04:01:00.000Z",
+  "validUntil": "2018-07-12T04:00:00.000Z",
+  "stackingMode": "Stacking",
+  "isActive": true,
+  "requiresDiscountCode": true,
+  "sortOrder": "0.000388",
+  "references": [],
+  "attributeTypes": {},
+  "cartFieldTypes": {},
+  "lineItemFieldTypes": {},
+  "customLineItemFieldTypes": {}
+}

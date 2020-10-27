@@ -59,17 +59,11 @@ public final class CustomerSyncer
             List<UpdateAction<Customer>>>
         logErrorCallback =
             (exception, newResourceDraft, oldResource, updateActions) ->
-                logErrorCallback(
-                    LOGGER,
-                    "customer",
-                    exception,
-                    oldResource.map(Customer::getEmail).orElse(""),
-                    updateActions);
+                logErrorCallback(LOGGER, "customer", exception, oldResource, updateActions);
     final TriConsumer<SyncException, Optional<CustomerDraft>, Optional<Customer>>
         logWarningCallback =
             (exception, newResourceDraft, oldResource) ->
-                logWarningCallback(
-                    LOGGER, "customer", exception, oldResource.map(Customer::getEmail).orElse(""));
+                logWarningCallback(LOGGER, "customer", exception, oldResource);
     final CustomerSyncOptions customerSyncOptions =
         CustomerSyncOptionsBuilder.of(targetClient)
             .errorCallback(logErrorCallback)

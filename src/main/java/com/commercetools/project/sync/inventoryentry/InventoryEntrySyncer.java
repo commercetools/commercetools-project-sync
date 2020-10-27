@@ -1,5 +1,6 @@
 package com.commercetools.project.sync.inventoryentry;
 
+import static com.commercetools.project.sync.util.SyncUtils.IDENTIFIER_NOT_PRESENT;
 import static com.commercetools.project.sync.util.SyncUtils.logErrorCallback;
 import static com.commercetools.project.sync.util.SyncUtils.logWarningCallback;
 import static com.commercetools.sync.inventories.utils.InventoryReferenceResolutionUtils.buildInventoryQuery;
@@ -66,7 +67,7 @@ public final class InventoryEntrySyncer
                     LOGGER,
                     "inventory entry",
                     exception,
-                    oldResource.map(InventoryEntry::getSku).orElse(""),
+                    oldResource.map(InventoryEntry::getSku).orElse(IDENTIFIER_NOT_PRESENT),
                     updateActions);
     final TriConsumer<SyncException, Optional<InventoryEntryDraft>, Optional<InventoryEntry>>
         logWarningCallback =
@@ -75,7 +76,7 @@ public final class InventoryEntrySyncer
                     LOGGER,
                     "inventory entry",
                     exception,
-                    oldResource.map(InventoryEntry::getSku).orElse(""));
+                    oldResource.map(InventoryEntry::getSku).orElse(IDENTIFIER_NOT_PRESENT));
     final InventorySyncOptions syncOptions =
         InventorySyncOptionsBuilder.of(targetClient)
             .errorCallback(logErrorCallback)

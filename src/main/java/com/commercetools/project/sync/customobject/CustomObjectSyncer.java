@@ -1,5 +1,6 @@
 package com.commercetools.project.sync.customobject;
 
+import static com.commercetools.project.sync.util.SyncUtils.IDENTIFIER_NOT_PRESENT;
 import static com.commercetools.project.sync.util.SyncUtils.logErrorCallback;
 import static com.commercetools.project.sync.util.SyncUtils.logWarningCallback;
 
@@ -160,7 +161,7 @@ public final class CustomObjectSyncer
     return oldResource
         .map(CustomObjectCompositeIdentifier::of)
         .map(CustomObjectCompositeIdentifier::toString)
-        .orElse("");
+        .orElse(IDENTIFIER_NOT_PRESENT);
   }
 
   /**
