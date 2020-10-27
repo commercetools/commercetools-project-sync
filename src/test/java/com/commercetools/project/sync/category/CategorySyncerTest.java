@@ -24,7 +24,6 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.stream.Collectors;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import uk.org.lidalia.slf4jtest.LoggingEvent;
@@ -128,7 +127,8 @@ class CategorySyncerTest {
 
   @Test
   void syncWithWarning_ShouldCallWarningCallback() {
-    // preparation: old category has category order hint, new category does not have category order hint
+    // preparation: old category has category order hint,
+    // new category does not have category order hint
     final SphereClient sourceClient = mock(SphereClient.class);
     final SphereClient targetClient = mock(SphereClient.class);
     when(sourceClient.getConfig()).thenReturn(SphereApiConfig.of("source-project"));
