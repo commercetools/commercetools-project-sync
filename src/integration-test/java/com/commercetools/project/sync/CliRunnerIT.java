@@ -40,9 +40,9 @@ import io.sphere.sdk.categories.CategoryDraftBuilder;
 import io.sphere.sdk.categories.commands.CategoryCreateCommand;
 import io.sphere.sdk.client.SphereClient;
 import io.sphere.sdk.customers.Customer;
-import io.sphere.sdk.customers.CustomerName;
 import io.sphere.sdk.customers.CustomerDraft;
 import io.sphere.sdk.customers.CustomerDraftBuilder;
+import io.sphere.sdk.customers.CustomerName;
 import io.sphere.sdk.customers.CustomerSignInResult;
 import io.sphere.sdk.customers.commands.CustomerCreateCommand;
 import io.sphere.sdk.customers.commands.CustomerUpdateCommand;
@@ -307,14 +307,13 @@ class CliRunnerIT {
   }
 
   @Test
-  void
-  run_WithUpdatedCustomer_ShouldSyncCustomersAndStoreLastSyncTimestampsAsCustomObject() {
+  void run_WithUpdatedCustomer_ShouldSyncCustomersAndStoreLastSyncTimestampsAsCustomObject() {
     // preparation
     try (final SphereClient targetClient = createClient(CTP_TARGET_CLIENT_CONFIG)) {
       try (final SphereClient sourceClient = createClient(CTP_SOURCE_CLIENT_CONFIG)) {
 
         final SyncerFactory syncerFactory =
-                SyncerFactory.of(() -> sourceClient, () -> targetClient, Clock.systemDefaultZone());
+            SyncerFactory.of(() -> sourceClient, () -> targetClient, Clock.systemDefaultZone());
 
         // test
         CliRunner.of().run(new String[] {"-s", "customers"}, syncerFactory);
@@ -335,7 +334,7 @@ class CliRunnerIT {
         final String sourceProjectKey = postSourceClient.getConfig().getProjectKey();
 
         assertLastSyncCustomObjectExists(
-                postTargetClient, sourceProjectKey, "customerSync", "runnerName");
+            postTargetClient, sourceProjectKey, "customerSync", "runnerName");
       }
     }
 
@@ -345,7 +344,7 @@ class CliRunnerIT {
       try (final SphereClient sourceClient = createClient(CTP_SOURCE_CLIENT_CONFIG)) {
 
         final SyncerFactory syncerFactory =
-                SyncerFactory.of(() -> sourceClient, () -> targetClient, Clock.systemDefaultZone());
+            SyncerFactory.of(() -> sourceClient, () -> targetClient, Clock.systemDefaultZone());
 
         // test
         CliRunner.of().run(new String[] {"-s", "customers"}, syncerFactory);
@@ -361,7 +360,7 @@ class CliRunnerIT {
         final String sourceProjectKey = postSourceClient.getConfig().getProjectKey();
 
         assertLastSyncCustomObjectExists(
-                postTargetClient, sourceProjectKey, "customerSync", "runnerName");
+            postTargetClient, sourceProjectKey, "customerSync", "runnerName");
       }
     }
   }
@@ -369,40 +368,41 @@ class CliRunnerIT {
   static void updateCustomerSourceObject(@Nonnull final SphereClient sourceProjectClient) {
 
     final PagedQueryResult<Customer> customerPagedQueryResult =
-            sourceProjectClient
-                    .execute(
-                            CustomerQuery.of()
-                                    .withPredicates(QueryPredicate.of(format("key=\"%s\"", RESOURCE_KEY))))
-                    .toCompletableFuture()
-                    .join();
+        sourceProjectClient
+            .execute(
+                CustomerQuery.of()
+                    .withPredicates(QueryPredicate.of(format("key=\"%s\"", RESOURCE_KEY))))
+            .toCompletableFuture()
+            .join();
     Customer customer = customerPagedQueryResult.getResults().get(0);
 
     sourceProjectClient
-            .execute(
-                    CustomerUpdateCommand.of(customer,
-                            ChangeName.of(CustomerName.ofFirstAndLastName("testFirstName", "testLastName"))))
-            .toCompletableFuture()
-            .join();
+        .execute(
+            CustomerUpdateCommand.of(
+                customer,
+                ChangeName.of(CustomerName.ofFirstAndLastName("testFirstName", "testLastName"))))
+        .toCompletableFuture()
+        .join();
   }
 
   private static void assertUpdatedCustomersAreSyncedCorrectly(
-          @Nonnull final SphereClient cspClient, @Nonnull final SphereClient ctpClient) {
+      @Nonnull final SphereClient cspClient, @Nonnull final SphereClient ctpClient) {
     final PagedQueryResult<Customer> sourceCustomerPagedQueryResult =
-            cspClient
-                    .execute(
-                            CustomerQuery.of()
-                                    .withPredicates(QueryPredicate.of(format("key=\"%s\"", RESOURCE_KEY))))
-                    .toCompletableFuture()
-                    .join();
+        cspClient
+            .execute(
+                CustomerQuery.of()
+                    .withPredicates(QueryPredicate.of(format("key=\"%s\"", RESOURCE_KEY))))
+            .toCompletableFuture()
+            .join();
     Customer sourceCustomer = sourceCustomerPagedQueryResult.getResults().get(0);
 
     final PagedQueryResult<Customer> targetCustomerPagedQueryResult =
-            ctpClient
-                    .execute(
-                            CustomerQuery.of()
-                                    .withPredicates(QueryPredicate.of(format("key=\"%s\"", RESOURCE_KEY))))
-                    .toCompletableFuture()
-                    .join();
+        ctpClient
+            .execute(
+                CustomerQuery.of()
+                    .withPredicates(QueryPredicate.of(format("key=\"%s\"", RESOURCE_KEY))))
+            .toCompletableFuture()
+            .join();
     Customer targetCustomer = targetCustomerPagedQueryResult.getResults().get(0);
 
     assertThat(sourceCustomer.getName()).isEqualTo(targetCustomer.getName());
