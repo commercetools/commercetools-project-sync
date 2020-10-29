@@ -36,7 +36,7 @@ ext {
     pmdVersion = '5.6.1'
     jacocoVersion = '0.7.9'
     findbugsVersion = '3.0.1'
-    commercetoolsSyncJava='2.3.0'
+    commercetoolsSyncJava='development-SNAPSHOT'
     apacheCliVersion = '1.4'
     jupiterApiVersion = '5.7.0'
 }
@@ -66,9 +66,10 @@ tasks.withType(SpotlessTask) {
 }
 
 dependencies {
+    compile files('/Users/aoz/projects/commercetools-sync-java/build/libs/commercetools-sync-java-development-SNAPSHOT.jar')
     implementation "com.commercetools.sdk.jvm.core:commercetools-models:${commercetoolsJvmSdkVersion}"
     implementation "com.commercetools.sdk.jvm.core:commercetools-java-client:${commercetoolsJvmSdkVersion}"
-    implementation "com.commercetools:commercetools-sync-java:${commercetoolsSyncJava}"
+//    implementation "com.commercetools:commercetools-sync-java:${commercetoolsSyncJava}"
     implementation "com.commercetools.sdk.jvm.core:commercetools-convenience:${commercetoolsJvmSdkVersion}"
     implementation "commons-cli:commons-cli:${apacheCliVersion}"
     implementation "org.slf4j:slf4j-api:${slf4jVersion}"
