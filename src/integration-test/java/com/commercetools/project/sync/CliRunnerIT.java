@@ -337,8 +337,8 @@ class CliRunnerIT {
         assertLastSyncCustomObjectExists(
             postTargetClient, sourceProjectKey, "customerSync", "runnerName");
 
-        lastModifiedTime = getCustomObjectLastModifiedTime(
-                postTargetClient,"customerSync", "runnerName");
+        lastModifiedTime =
+            getCustomObjectLastModifiedTime(postTargetClient, "customerSync", "runnerName");
         updateCustomerSourceObject(postSourceClient);
       }
     }
@@ -361,27 +361,29 @@ class CliRunnerIT {
         assertUpdatedCustomersAreSyncedCorrectly(postSourceClient, postTargetClient);
 
         assertUpdatedCustomObjectTimestampAfterSync(
-                postTargetClient,"customerSync", "runnerName", lastModifiedTime);
+            postTargetClient, "customerSync", "runnerName", lastModifiedTime);
       }
     }
   }
 
   private void assertUpdatedCustomObjectTimestampAfterSync(
-          @Nonnull final SphereClient targetClient,
-          @Nonnull final String syncModuleName,
-          @Nonnull final String runnerName,
-          ZonedDateTime lastModifiedTime) {
+      @Nonnull final SphereClient targetClient,
+      @Nonnull final String syncModuleName,
+      @Nonnull final String runnerName,
+      ZonedDateTime lastModifiedTime) {
     final PagedQueryResult<CustomObject<LastSyncCustomObject>> lastSyncResult =
-            getCustomObjectPagedQueryResult(targetClient, syncModuleName, runnerName);
+        getCustomObjectPagedQueryResult(targetClient, syncModuleName, runnerName);
 
-    assertThat(lastModifiedTime).isBefore(lastSyncResult.getResults().get(0).getValue().getLastSyncTimestamp());
+    assertThat(lastModifiedTime)
+        .isBefore(lastSyncResult.getResults().get(0).getValue().getLastSyncTimestamp());
   }
 
-  private ZonedDateTime getCustomObjectLastModifiedTime(@Nonnull final SphereClient targetClient,
-                                                        @Nonnull final String syncModuleName,
-                                                        @Nonnull final String runnerName) {
+  private ZonedDateTime getCustomObjectLastModifiedTime(
+      @Nonnull final SphereClient targetClient,
+      @Nonnull final String syncModuleName,
+      @Nonnull final String runnerName) {
     final PagedQueryResult<CustomObject<LastSyncCustomObject>> lastSyncResult =
-            getCustomObjectPagedQueryResult(targetClient, syncModuleName, runnerName);
+        getCustomObjectPagedQueryResult(targetClient, syncModuleName, runnerName);
 
     return lastSyncResult.getResults().get(0).getValue().getLastSyncTimestamp();
   }
@@ -538,7 +540,7 @@ class CliRunnerIT {
       @Nonnull final ZonedDateTime lastSyncTimestamp) {
 
     final PagedQueryResult<CustomObject<LastSyncCustomObject>> lastSyncResult =
-            getCustomObjectPagedQueryResult(targetClient, syncModuleName, syncRunnerName);
+        getCustomObjectPagedQueryResult(targetClient, syncModuleName, syncRunnerName);
 
     assertThat(lastSyncResult.getResults())
         .hasSize(1)
@@ -710,7 +712,7 @@ class CliRunnerIT {
       @Nonnull final String runnerName) {
 
     final PagedQueryResult<CustomObject<LastSyncCustomObject>> lastSyncResult =
-            getCustomObjectPagedQueryResult(targetClient, syncModuleName, runnerName);
+        getCustomObjectPagedQueryResult(targetClient, syncModuleName, runnerName);
 
     assertThat(lastSyncResult.getResults())
         .hasSize(1)
@@ -729,12 +731,12 @@ class CliRunnerIT {
   }
 
   private PagedQueryResult<CustomObject<LastSyncCustomObject>> getCustomObjectPagedQueryResult(
-          @Nonnull SphereClient targetClient,
-          @Nonnull String syncModuleName,
-          @Nonnull String runnerName) {
+      @Nonnull SphereClient targetClient,
+      @Nonnull String syncModuleName,
+      @Nonnull String runnerName) {
     final CustomObjectQuery<LastSyncCustomObject> lastSyncQuery =
-            CustomObjectQuery.of(LastSyncCustomObject.class)
-                    .byContainer(format("%s.%s.%s", APPLICATION_DEFAULT_NAME, runnerName, syncModuleName));
+        CustomObjectQuery.of(LastSyncCustomObject.class)
+            .byContainer(format("%s.%s.%s", APPLICATION_DEFAULT_NAME, runnerName, syncModuleName));
 
     return targetClient.execute(lastSyncQuery).toCompletableFuture().join();
   }
