@@ -308,6 +308,7 @@ class CliRunnerIT {
 
   @Test
   void run_WithUpdatedCustomer_ShouldSyncCustomersAndStoreLastSyncTimestampsAsCustomObject() {
+    ZonedDateTime lastModifiedTime = null;
     // preparation
     try (final SphereClient targetClient = createClient(CTP_TARGET_CLIENT_CONFIG)) {
       try (final SphereClient sourceClient = createClient(CTP_SOURCE_CLIENT_CONFIG)) {
@@ -335,10 +336,12 @@ class CliRunnerIT {
 
         assertLastSyncCustomObjectExists(
             postTargetClient, sourceProjectKey, "customerSync", "runnerName");
+
+        lastModifiedTime = getCustomObjectLastModifiedTime(
+                postTargetClient,"customerSync", "runnerName");
+        updateCustomerSourceObject(postSourceClient);
       }
     }
-
-    updateCustomerSourceObject(createClient(CTP_SOURCE_CLIENT_CONFIG));
 
     try (final SphereClient targetClient = createClient(CTP_TARGET_CLIENT_CONFIG)) {
       try (final SphereClient sourceClient = createClient(CTP_SOURCE_CLIENT_CONFIG)) {
@@ -357,12 +360,30 @@ class CliRunnerIT {
       try (final SphereClient postTargetClient = createClient(CTP_TARGET_CLIENT_CONFIG)) {
         assertUpdatedCustomersAreSyncedCorrectly(postSourceClient, postTargetClient);
 
-        final String sourceProjectKey = postSourceClient.getConfig().getProjectKey();
-
-        assertLastSyncCustomObjectExists(
-            postTargetClient, sourceProjectKey, "customerSync", "runnerName");
+        assertUpdatedCustomObjectTimestampAfterSync(
+                postTargetClient,"customerSync", "runnerName", lastModifiedTime);
       }
     }
+  }
+
+  private void assertUpdatedCustomObjectTimestampAfterSync(
+          @Nonnull final SphereClient targetClient,
+          @Nonnull final String syncModuleName,
+          @Nonnull final String runnerName,
+          ZonedDateTime lastModifiedTime) {
+    final PagedQueryResult<CustomObject<LastSyncCustomObject>> lastSyncResult =
+            getCustomObjectPagedQueryResult(targetClient, syncModuleName, runnerName);
+
+    assertThat(lastModifiedTime).isBefore(lastSyncResult.getResults().get(0).getValue().getLastSyncTimestamp());
+  }
+
+  private ZonedDateTime getCustomObjectLastModifiedTime(@Nonnull final SphereClient targetClient,
+                                                        @Nonnull final String syncModuleName,
+                                                        @Nonnull final String runnerName) {
+    final PagedQueryResult<CustomObject<LastSyncCustomObject>> lastSyncResult =
+            getCustomObjectPagedQueryResult(targetClient, syncModuleName, runnerName);
+
+    return lastSyncResult.getResults().get(0).getValue().getLastSyncTimestamp();
   }
 
   static void updateCustomerSourceObject(@Nonnull final SphereClient sourceProjectClient) {
@@ -516,13 +537,8 @@ class CliRunnerIT {
       @Nonnull final Class<? extends BaseSyncStatistics> statisticsClass,
       @Nonnull final ZonedDateTime lastSyncTimestamp) {
 
-    final CustomObjectQuery<LastSyncCustomObject> lastSyncQuery =
-        CustomObjectQuery.of(LastSyncCustomObject.class)
-            .byContainer(
-                format("%s.%s.%s", APPLICATION_DEFAULT_NAME, syncRunnerName, syncModuleName));
-
     final PagedQueryResult<CustomObject<LastSyncCustomObject>> lastSyncResult =
-        targetClient.execute(lastSyncQuery).toCompletableFuture().join();
+            getCustomObjectPagedQueryResult(targetClient, syncModuleName, syncRunnerName);
 
     assertThat(lastSyncResult.getResults())
         .hasSize(1)
@@ -693,12 +709,8 @@ class CliRunnerIT {
       @Nonnull final String syncModuleName,
       @Nonnull final String runnerName) {
 
-    final CustomObjectQuery<LastSyncCustomObject> lastSyncQuery =
-        CustomObjectQuery.of(LastSyncCustomObject.class)
-            .byContainer(format("%s.%s.%s", APPLICATION_DEFAULT_NAME, runnerName, syncModuleName));
-
     final PagedQueryResult<CustomObject<LastSyncCustomObject>> lastSyncResult =
-        targetClient.execute(lastSyncQuery).toCompletableFuture().join();
+            getCustomObjectPagedQueryResult(targetClient, syncModuleName, runnerName);
 
     assertThat(lastSyncResult.getResults())
         .hasSize(1)
@@ -714,6 +726,17 @@ class CliRunnerIT {
                         assertThat(value.getApplicationVersion()).isNotNull();
                       });
             });
+  }
+
+  private PagedQueryResult<CustomObject<LastSyncCustomObject>> getCustomObjectPagedQueryResult(
+          @Nonnull SphereClient targetClient,
+          @Nonnull String syncModuleName,
+          @Nonnull String runnerName) {
+    final CustomObjectQuery<LastSyncCustomObject> lastSyncQuery =
+            CustomObjectQuery.of(LastSyncCustomObject.class)
+                    .byContainer(format("%s.%s.%s", APPLICATION_DEFAULT_NAME, runnerName, syncModuleName));
+
+    return targetClient.execute(lastSyncQuery).toCompletableFuture().join();
   }
 
   private static void assertAllResourcesAreSyncedToTarget(
