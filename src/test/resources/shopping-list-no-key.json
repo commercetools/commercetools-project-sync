@@ -1,0 +1,92 @@
+{
+  "slug": {
+    "en": "shoppingList-slug-1"
+  },
+  "name": {
+    "en": "shoppingList-name-1"
+  },
+  "description": {
+    "en": "description-1"
+  },
+  "customer": {
+    "typeId": "customer",
+    "id": "368ddf13-cd6c-4ff4-ad38-73038aeed5ba"
+  },
+  "lineItems": [
+    {
+      "id": "5f456090-a1b6-48b2-9e63-522b7560a0c2",
+      "productId": "130a7d5c-55ea-4888-abbe-f76d474de351",
+      "name": {
+        "en": "Some Product"
+      },
+      "productType": {
+        "typeId": "product-type",
+        "id": "eb6ef3da-40a9-4370-8252-33c7b657a016"
+      },
+      "variantId": 1,
+      "quantity": 7,
+      "addedAt": "2020-10-16T07:52:56.960Z"
+    },
+    {
+      "id": "b37f94a5-d50f-43c8-845e-7c45a4589911",
+      "productId": "130a7d5c-55ea-4888-abbe-f76d474de351",
+      "name": {
+        "en": "Some Product"
+      },
+      "productType": {
+        "typeId": "product-type",
+        "id": "eb6ef3da-40a9-4370-8252-33c7b657a016"
+      },
+      "variantId": 2,
+      "quantity": 1,
+      "addedAt": "2020-10-16T07:53:25.917Z"
+    }
+  ],
+  "textLineItems": [
+    {
+      "id": "0dfcf8fe-9c51-4264-9b99-8f2311d7d67d",
+      "name": {
+        "de": "textDE",
+        "en": "textEN"
+      },
+      "quantity": 1,
+      "custom": {
+        "type": {
+          "typeId": "type",
+          "id": "5ebfa80e-f4aa-4c0b-be64-e348e09a855a"
+        },
+        "fields": {
+          "textField": "text line item 1"
+        }
+      },
+      "addedAt": "2020-10-16T09:57:12.335Z"
+    },
+    {
+      "id": "c5afbb19-ffb2-4690-8986-a1f29fb0b35d",
+      "name": {
+        "de": "textDE",
+        "en": "textEN"
+      },
+      "quantity": 1,
+      "custom": {
+        "type": {
+          "typeId": "type",
+          "id": "5ebfa80e-f4aa-4c0b-be64-e348e09a855a"
+        },
+        "fields": {
+          "textField": "text line item 1"
+        }
+      },
+      "addedAt": "2020-10-16T09:57:38.551Z"
+    }
+  ],
+  "custom": {
+    "type": {
+      "typeId": "type",
+      "id": "5ebfa80e-f4aa-4c0b-be64-e348e09a855a"
+    },
+    "fields": {
+      "textField": "demo shopping list"
+    }
+  }
+}

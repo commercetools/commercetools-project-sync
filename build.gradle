@@ -1,4 +1,4 @@
-buildscript {
+    buildscript {
     ext {
         shadowJarVersion = '5.1.0'
     }
@@ -28,7 +28,7 @@ apply from: "$rootDir/gradle-scripts/test-logger.gradle"
 
 
 ext {
-    commercetoolsJvmSdkVersion =  '1.53.0'
+    commercetoolsJvmSdkVersion =  '1.54.0'
     mockitoVersion = '3.6.0'
     slf4jVersion = '1.7.30'
     slf4jTestVersion = '1.2.0'
@@ -66,7 +66,7 @@ tasks.withType(SpotlessTask) {
 }
 
 dependencies {
-    compile files('/Users/aoz/projects/commercetools-sync-java/build/libs/commercetools-sync-java-development-SNAPSHOT.jar')
+    compile files('/Users/praveenkumar/osWorskpace/commercetools-sync-java/build/libs/commercetools-sync-java-development-SNAPSHOT.jar')
     implementation "com.commercetools.sdk.jvm.core:commercetools-models:${commercetoolsJvmSdkVersion}"
     implementation "com.commercetools.sdk.jvm.core:commercetools-java-client:${commercetoolsJvmSdkVersion}"
 //    implementation "com.commercetools:commercetools-sync-java:${commercetoolsSyncJava}"
