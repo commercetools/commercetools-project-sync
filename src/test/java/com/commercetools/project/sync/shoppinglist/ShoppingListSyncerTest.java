@@ -14,7 +14,6 @@ import io.sphere.sdk.expansion.ExpansionPath;
 import io.sphere.sdk.queries.PagedQueryResult;
 import io.sphere.sdk.shoppinglists.ShoppingList;
 import io.sphere.sdk.shoppinglists.ShoppingListDraft;
-import io.sphere.sdk.shoppinglists.expansion.ShoppingListExpansionModel;
 import io.sphere.sdk.shoppinglists.queries.ShoppingListQuery;
 import java.time.Clock;
 import java.util.Collections;
@@ -69,15 +68,19 @@ class ShoppingListSyncerTest {
 
   @Test
   void getQuery_ShouldBuildShoppingListQuery() {
-    // test
-    ShoppingListQuery expectedQuery = buildShoppingListQuery();
     final ShoppingListSyncer shoppingListSyncer =
         ShoppingListSyncer.of(
             mock(SphereClient.class), mock(SphereClient.class), mock(Clock.class));
 
     // assertion
     final ShoppingListQuery query = shoppingListSyncer.getQuery();
-    assertThat(query).isEqualTo(expectedQuery);
+    assertThat(query.expansionPaths())
+        .containsExactly(
+            ExpansionPath.of("customer"),
+            ExpansionPath.of("custom.type"),
+            ExpansionPath.of("lineItems[*].variant"),
+            ExpansionPath.of("lineItems[*].custom.type"),
+            ExpansionPath.of("textLineItems[*].custom.type"));
   }
 
   @Test
@@ -109,18 +112,5 @@ class ShoppingListSyncerTest {
     assertThat(errorLog.getThrowable().get().getMessage())
         .isEqualTo(
             "ShoppingListDraft with name: LocalizedString(en -> shoppingList-name-1) doesn't have a key. Please make sure all shopping list drafts have keys.");
-  }
-
-  private ShoppingListQuery buildShoppingListQuery() {
-    return (ShoppingListQuery)
-        ((ShoppingListQuery)
-                ((ShoppingListQuery)
-                        ((ShoppingListQuery)
-                                ShoppingListQuery.of()
-                                    .withExpansionPaths(ShoppingListExpansionModel::customer)
-                                    .plusExpansionPaths(ExpansionPath.of("custom.type")))
-                            .plusExpansionPaths(ExpansionPath.of("lineItems[*].variant")))
-                    .plusExpansionPaths(ExpansionPath.of("lineItems[*].custom.type")))
-            .plusExpansionPaths(ExpansionPath.of("textLineItems[*].custom.type"));
   }
 }
