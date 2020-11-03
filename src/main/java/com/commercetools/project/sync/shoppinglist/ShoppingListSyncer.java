@@ -3,6 +3,8 @@ package com.commercetools.project.sync.shoppinglist;
 import static com.commercetools.project.sync.util.SyncUtils.IDENTIFIER_NOT_PRESENT;
 import static com.commercetools.project.sync.util.SyncUtils.logErrorCallback;
 import static com.commercetools.project.sync.util.SyncUtils.logWarningCallback;
+import static com.commercetools.sync.shoppinglists.utils.ShoppingListReferenceResolutionUtils.buildShoppingListQuery;
+import static com.commercetools.sync.shoppinglists.utils.ShoppingListReferenceResolutionUtils.mapToShoppingListDrafts;
 
 import com.commercetools.project.sync.Syncer;
 import com.commercetools.project.sync.service.CustomObjectService;
@@ -14,7 +16,6 @@ import com.commercetools.sync.shoppinglists.ShoppingListSync;
 import com.commercetools.sync.shoppinglists.ShoppingListSyncOptions;
 import com.commercetools.sync.shoppinglists.ShoppingListSyncOptionsBuilder;
 import com.commercetools.sync.shoppinglists.helpers.ShoppingListSyncStatistics;
-import com.commercetools.sync.shoppinglists.utils.ShoppingListReferenceResolutionUtils;
 import io.sphere.sdk.client.SphereClient;
 import io.sphere.sdk.commands.UpdateAction;
 import io.sphere.sdk.shoppinglists.ShoppingList;
@@ -91,13 +92,12 @@ public final class ShoppingListSyncer
   @Nonnull
   @Override
   protected CompletionStage<List<ShoppingListDraft>> transform(@Nonnull List<ShoppingList> page) {
-    return CompletableFuture.completedFuture(
-        ShoppingListReferenceResolutionUtils.mapToShoppingListDrafts(page));
+    return CompletableFuture.completedFuture(mapToShoppingListDrafts(page));
   }
 
   @Nonnull
   @Override
   protected ShoppingListQuery getQuery() {
-    return ShoppingListReferenceResolutionUtils.buildShoppingListQuery();
+    return buildShoppingListQuery();
   }
 }
