@@ -112,6 +112,15 @@ class ShoppingListSyncerTest {
   }
 
   private ShoppingListQuery buildShoppingListQuery() {
-    return (ShoppingListQuery)((ShoppingListQuery)((ShoppingListQuery)((ShoppingListQuery)ShoppingListQuery.of().withExpansionPaths(ShoppingListExpansionModel::customer).plusExpansionPaths(ExpansionPath.of("custom.type"))).plusExpansionPaths(ExpansionPath.of("lineItems[*].variant"))).plusExpansionPaths(ExpansionPath.of("lineItems[*].custom.type"))).plusExpansionPaths(ExpansionPath.of("textLineItems[*].custom.type"));
+    return (ShoppingListQuery)
+        ((ShoppingListQuery)
+                ((ShoppingListQuery)
+                        ((ShoppingListQuery)
+                                ShoppingListQuery.of()
+                                    .withExpansionPaths(ShoppingListExpansionModel::customer)
+                                    .plusExpansionPaths(ExpansionPath.of("custom.type")))
+                            .plusExpansionPaths(ExpansionPath.of("lineItems[*].variant")))
+                    .plusExpansionPaths(ExpansionPath.of("lineItems[*].custom.type")))
+            .plusExpansionPaths(ExpansionPath.of("textLineItems[*].custom.type"));
   }
 }

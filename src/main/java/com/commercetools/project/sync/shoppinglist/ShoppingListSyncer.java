@@ -54,6 +54,7 @@ public final class ShoppingListSyncer
       @Nonnull final SphereClient sourceClient,
       @Nonnull final SphereClient targetClient,
       @Nonnull final Clock clock) {
+
     final QuadConsumer<
             SyncException,
             Optional<ShoppingListDraft>,
@@ -67,6 +68,7 @@ public final class ShoppingListSyncer
                     exception,
                     oldResource.map(ShoppingList::getKey).orElse(IDENTIFIER_NOT_PRESENT),
                     updateActions);
+
     final TriConsumer<SyncException, Optional<ShoppingListDraft>, Optional<ShoppingList>>
         logWarningCallback =
             (exception, newResourceDraft, oldResource) ->
@@ -75,6 +77,7 @@ public final class ShoppingListSyncer
                     "shoppingList",
                     exception,
                     oldResource.map(ShoppingList::getKey).orElse(IDENTIFIER_NOT_PRESENT));
+
     final ShoppingListSyncOptions shoppingListSyncOptions =
         ShoppingListSyncOptionsBuilder.of(targetClient)
             .errorCallback(logErrorCallback)
