@@ -1,6 +1,8 @@
 package com.commercetools.project.sync.shoppinglist;
 
-import static com.commercetools.project.sync.util.SyncUtils.*;
+import static com.commercetools.project.sync.util.SyncUtils.IDENTIFIER_NOT_PRESENT;
+import static com.commercetools.project.sync.util.SyncUtils.logErrorCallback;
+import static com.commercetools.project.sync.util.SyncUtils.logWarningCallback;
 
 import com.commercetools.project.sync.Syncer;
 import com.commercetools.project.sync.service.CustomObjectService;
@@ -39,11 +41,11 @@ public final class ShoppingListSyncer
   private static final Logger LOGGER = LoggerFactory.getLogger(ShoppingListSyncer.class);
 
   private ShoppingListSyncer(
-      @Nonnull ShoppingListSync sync,
-      @Nonnull SphereClient sourceClient,
-      @Nonnull SphereClient targetClient,
-      @Nonnull CustomObjectService customObjectService,
-      @Nonnull Clock clock) {
+      @Nonnull final ShoppingListSync sync,
+      @Nonnull final SphereClient sourceClient,
+      @Nonnull final SphereClient targetClient,
+      @Nonnull final CustomObjectService customObjectService,
+      @Nonnull final Clock clock) {
     super(sync, sourceClient, targetClient, customObjectService, clock);
   }
 
