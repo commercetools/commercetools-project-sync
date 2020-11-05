@@ -6,6 +6,7 @@ import static com.commercetools.project.sync.util.IntegrationTestUtils.assertCat
 import static com.commercetools.project.sync.util.IntegrationTestUtils.assertProductExists;
 import static com.commercetools.project.sync.util.IntegrationTestUtils.assertProductTypeExists;
 import static com.commercetools.project.sync.util.IntegrationTestUtils.cleanUpProjects;
+import static com.commercetools.project.sync.util.QueryUtils.queryAndExecute;
 import static com.commercetools.project.sync.util.SphereClientUtils.CTP_SOURCE_CLIENT_CONFIG;
 import static com.commercetools.project.sync.util.SphereClientUtils.CTP_TARGET_CLIENT_CONFIG;
 import static com.commercetools.project.sync.util.SyncUtils.APPLICATION_DEFAULT_NAME;
@@ -55,6 +56,7 @@ import io.sphere.sdk.inventory.InventoryEntryDraft;
 import io.sphere.sdk.inventory.InventoryEntryDraftBuilder;
 import io.sphere.sdk.inventory.commands.InventoryEntryCreateCommand;
 import io.sphere.sdk.inventory.queries.InventoryEntryQuery;
+import io.sphere.sdk.models.ResourceIdentifier;
 import io.sphere.sdk.products.Product;
 import io.sphere.sdk.products.ProductDraft;
 import io.sphere.sdk.products.ProductDraftBuilder;
@@ -67,10 +69,13 @@ import io.sphere.sdk.producttypes.commands.ProductTypeCreateCommand;
 import io.sphere.sdk.producttypes.queries.ProductTypeQuery;
 import io.sphere.sdk.queries.PagedQueryResult;
 import io.sphere.sdk.queries.QueryPredicate;
+import io.sphere.sdk.shoppinglists.LineItemDraft;
+import io.sphere.sdk.shoppinglists.LineItemDraftBuilder;
 import io.sphere.sdk.shoppinglists.ShoppingList;
 import io.sphere.sdk.shoppinglists.ShoppingListDraft;
 import io.sphere.sdk.shoppinglists.ShoppingListDraftBuilder;
 import io.sphere.sdk.shoppinglists.commands.ShoppingListCreateCommand;
+import io.sphere.sdk.shoppinglists.commands.ShoppingListDeleteCommand;
 import io.sphere.sdk.shoppinglists.queries.ShoppingListQuery;
 import io.sphere.sdk.states.State;
 import io.sphere.sdk.states.StateDraft;
@@ -85,6 +90,8 @@ import io.sphere.sdk.taxcategories.TaxRateDraft;
 import io.sphere.sdk.taxcategories.TaxRateDraftBuilder;
 import io.sphere.sdk.taxcategories.commands.TaxCategoryCreateCommand;
 import io.sphere.sdk.taxcategories.queries.TaxCategoryQuery;
+import io.sphere.sdk.types.CustomFieldsDraft;
+import io.sphere.sdk.types.CustomFieldsDraftBuilder;
 import io.sphere.sdk.types.ResourceTypeIdsSetBuilder;
 import io.sphere.sdk.types.Type;
 import io.sphere.sdk.types.TypeDraft;
@@ -95,6 +102,7 @@ import java.time.Clock;
 import java.time.ZonedDateTime;
 import java.util.Collections;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import javax.annotation.Nonnull;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -113,14 +121,15 @@ class CliRunnerIT {
       "commercetools-project-sync.runnerName.ProductSync.timestampGenerator";
 
   @BeforeEach
-  void setup() {
+  void setup() throws ExecutionException, InterruptedException {
     syncerTestLogger.clearAll();
     cliRunnerTestLogger.clearAll();
     cleanUpProjects(createClient(CTP_SOURCE_CLIENT_CONFIG), createClient(CTP_TARGET_CLIENT_CONFIG));
     setupSourceProjectData(createClient(CTP_SOURCE_CLIENT_CONFIG));
   }
 
-  static void setupSourceProjectData(@Nonnull final SphereClient sourceProjectClient) {
+  static void setupSourceProjectData(@Nonnull final SphereClient sourceProjectClient)
+      throws ExecutionException, InterruptedException {
     final ProductTypeDraft productTypeDraft =
         ProductTypeDraftBuilder.of(
                 RESOURCE_KEY, "sample-product-type", "a productType for t-shirts", emptyList())
@@ -136,7 +145,7 @@ class CliRunnerIT {
         TypeDraftBuilder.of(
                 RESOURCE_KEY,
                 ofEnglish("category-custom-type"),
-                ResourceTypeIdsSetBuilder.of().addCategories())
+                ResourceTypeIdsSetBuilder.of().addCategories().add("shopping-list"))
             .build();
 
     final StateDraft stateDraft =
@@ -200,21 +209,8 @@ class CliRunnerIT {
     final CompletableFuture<CustomerSignInResult> customerFuture =
         sourceProjectClient.execute(CustomerCreateCommand.of(customerDraft)).toCompletableFuture();
 
-    final ShoppingListDraft shoppingListDraft =
-        ShoppingListDraftBuilder.of(ofEnglish("shoppingList-name")).key(RESOURCE_KEY).build();
-
-    final CompletableFuture<ShoppingList> shoppingListFuture =
-        sourceProjectClient
-            .execute(ShoppingListCreateCommand.of(shoppingListDraft))
-            .toCompletableFuture();
-
     CompletableFuture.allOf(
-            typeFuture,
-            customObjectFuture1,
-            customObjectFuture2,
-            categoryFuture,
-            customerFuture,
-            shoppingListFuture)
+            typeFuture, customObjectFuture1, customObjectFuture2, categoryFuture, customerFuture)
         .join();
 
     final ProductDraft productDraft =
@@ -226,6 +222,7 @@ class CliRunnerIT {
             .state(state)
             .taxCategory(taxCategory)
             .key(RESOURCE_KEY)
+            .publish(true)
             .build();
 
     final CompletableFuture<Product> productFuture =
@@ -255,6 +252,25 @@ class CliRunnerIT {
             .execute(CartDiscountCreateCommand.of(cartDiscountDraft))
             .toCompletableFuture();
     CompletableFuture.allOf(productFuture, inventoryFuture, cartDiscountFuture);
+
+    final CustomerSignInResult customerSignInResult = customerFuture.get();
+    final Product product = productFuture.get();
+    final LineItemDraft lineItemDraft = LineItemDraftBuilder.of(product.getId()).build();
+    final CustomFieldsDraft customFieldsDraft =
+        CustomFieldsDraftBuilder.ofTypeId(typeFuture.get().getId()).build();
+
+    final ShoppingListDraft shoppingListDraft =
+        ShoppingListDraftBuilder.of(ofEnglish("shoppingList-name"))
+            .key(RESOURCE_KEY)
+            .customer(ResourceIdentifier.ofId(customerSignInResult.getCustomer().getId()))
+            .lineItems(Collections.singletonList(lineItemDraft))
+            .custom(customFieldsDraft)
+            .build();
+
+    sourceProjectClient
+        .execute(ShoppingListCreateCommand.of(shoppingListDraft))
+        .toCompletableFuture()
+        .join();
   }
 
   @AfterAll
@@ -329,6 +345,10 @@ class CliRunnerIT {
     try (final SphereClient targetClient = createClient(CTP_TARGET_CLIENT_CONFIG)) {
       try (final SphereClient sourceClient = createClient(CTP_SOURCE_CLIENT_CONFIG)) {
 
+        // Shopping List contains Product, Customer and Type references. So, here it is recreating
+        // ShoppingList without any references.
+        prepareDataForShoppingListSync(sourceClient);
+
         final SyncerFactory syncerFactory =
             SyncerFactory.of(() -> sourceClient, () -> targetClient, Clock.systemDefaultZone());
 
@@ -354,6 +374,17 @@ class CliRunnerIT {
             postTargetClient, sourceProjectKey, "shoppingListSync", "runnerName");
       }
     }
+  }
+
+  private void prepareDataForShoppingListSync(SphereClient sourceClient) {
+    queryAndExecute(sourceClient, ShoppingListQuery.of(), ShoppingListDeleteCommand::of).join();
+    final ShoppingListDraft shoppingListDraft =
+        ShoppingListDraftBuilder.of(ofEnglish("shoppingList-name")).key(RESOURCE_KEY).build();
+
+    sourceClient
+        .execute(ShoppingListCreateCommand.of(shoppingListDraft))
+        .toCompletableFuture()
+        .join();
   }
 
   @Test

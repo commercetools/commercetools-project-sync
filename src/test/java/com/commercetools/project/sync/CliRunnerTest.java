@@ -807,8 +807,8 @@ class CliRunnerTest {
     inOrder.verify(sourceClient).execute(any(CartDiscountQuery.class));
     inOrder.verify(sourceClient).execute(any(InventoryEntryQuery.class));
     inOrder.verify(sourceClient).execute(any(CustomerQuery.class));
-    inOrder.verify(sourceClient).execute(any(ShoppingListQuery.class));
     inOrder.verify(sourceClient).execute(any(ProductQuery.class));
+    inOrder.verify(sourceClient).execute(any(ShoppingListQuery.class));
     verifyInteractionsWithClientAfterSync(sourceClient, 11);
   }
 

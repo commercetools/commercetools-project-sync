@@ -93,31 +93,30 @@ final class SyncerFactory {
                 new CompletableFuture[0]))
         .thenCompose(
             ignored -> {
-              final List<CompletableFuture<Void>>
-                  categoryAndInventoryAndCartDiscountAndCustomerAndShoppingListSync =
-                      asList(
-                          CategorySyncer.of(sourceClient, targetClient, clock)
-                              .sync(runnerNameOptionValue, isFullSync)
-                              .toCompletableFuture(),
-                          CartDiscountSyncer.of(sourceClient, targetClient, clock)
-                              .sync(runnerNameOptionValue, isFullSync)
-                              .toCompletableFuture(),
-                          InventoryEntrySyncer.of(sourceClient, targetClient, clock)
-                              .sync(runnerNameOptionValue, isFullSync)
-                              .toCompletableFuture(),
-                          CustomerSyncer.of(sourceClient, targetClient, clock)
-                              .sync(runnerNameOptionValue, isFullSync)
-                              .toCompletableFuture(),
-                          ShoppingListSyncer.of(sourceClient, targetClient, clock)
-                              .sync(runnerNameOptionValue, isFullSync)
-                              .toCompletableFuture());
+              final List<CompletableFuture<Void>> categoryAndInventoryAndCartDiscountAndCustomer =
+                  asList(
+                      CategorySyncer.of(sourceClient, targetClient, clock)
+                          .sync(runnerNameOptionValue, isFullSync)
+                          .toCompletableFuture(),
+                      CartDiscountSyncer.of(sourceClient, targetClient, clock)
+                          .sync(runnerNameOptionValue, isFullSync)
+                          .toCompletableFuture(),
+                      InventoryEntrySyncer.of(sourceClient, targetClient, clock)
+                          .sync(runnerNameOptionValue, isFullSync)
+                          .toCompletableFuture(),
+                      CustomerSyncer.of(sourceClient, targetClient, clock)
+                          .sync(runnerNameOptionValue, isFullSync)
+                          .toCompletableFuture());
               return CompletableFuture.allOf(
-                  categoryAndInventoryAndCartDiscountAndCustomerAndShoppingListSync.toArray(
-                      new CompletableFuture[0]));
+                  categoryAndInventoryAndCartDiscountAndCustomer.toArray(new CompletableFuture[0]));
             })
         .thenCompose(
             ignored ->
                 ProductSyncer.of(sourceClient, targetClient, clock)
+                    .sync(runnerNameOptionValue, isFullSync))
+        .thenCompose(
+            ignored ->
+                ShoppingListSyncer.of(sourceClient, targetClient, clock)
                     .sync(runnerNameOptionValue, isFullSync))
         .whenComplete((syncResult, throwable) -> closeClients());
   }
