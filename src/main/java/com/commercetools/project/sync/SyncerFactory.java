@@ -15,6 +15,7 @@ import com.commercetools.project.sync.customobject.CustomObjectSyncer;
 import com.commercetools.project.sync.inventoryentry.InventoryEntrySyncer;
 import com.commercetools.project.sync.product.ProductSyncer;
 import com.commercetools.project.sync.producttype.ProductTypeSyncer;
+import com.commercetools.project.sync.shoppinglist.ShoppingListSyncer;
 import com.commercetools.project.sync.state.StateSyncer;
 import com.commercetools.project.sync.taxcategory.TaxCategorySyncer;
 import com.commercetools.project.sync.type.TypeSyncer;
@@ -93,7 +94,7 @@ final class SyncerFactory {
         .thenCompose(
             ignored -> {
               final List<CompletableFuture<Void>>
-                  categoryAndInventoryAndCartDiscountAndCustomerSync =
+                  categoryAndInventoryAndCartDiscountAndCustomerAndShoppingListSync =
                       asList(
                           CategorySyncer.of(sourceClient, targetClient, clock)
                               .sync(runnerNameOptionValue, isFullSync)
@@ -106,9 +107,12 @@ final class SyncerFactory {
                               .toCompletableFuture(),
                           CustomerSyncer.of(sourceClient, targetClient, clock)
                               .sync(runnerNameOptionValue, isFullSync)
+                              .toCompletableFuture(),
+                          ShoppingListSyncer.of(sourceClient, targetClient, clock)
+                              .sync(runnerNameOptionValue, isFullSync)
                               .toCompletableFuture());
               return CompletableFuture.allOf(
-                  categoryAndInventoryAndCartDiscountAndCustomerSync.toArray(
+                  categoryAndInventoryAndCartDiscountAndCustomerAndShoppingListSync.toArray(
                       new CompletableFuture[0]));
             })
         .thenCompose(
@@ -214,6 +218,9 @@ final class SyncerFactory {
               syncProjectSyncCustomObjects);
         case CUSTOMER_SYNC:
           return CustomerSyncer.of(sourceClientSupplier.get(), targetClientSupplier.get(), clock);
+        case SHOPPING_LIST_SYNC:
+          return ShoppingListSyncer.of(
+              sourceClientSupplier.get(), targetClientSupplier.get(), clock);
         default:
           throw new IllegalArgumentException();
       }

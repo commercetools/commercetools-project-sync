@@ -40,6 +40,8 @@ import io.sphere.sdk.queries.PagedQueryResult;
 import io.sphere.sdk.queries.QueryPredicate;
 import io.sphere.sdk.shippingmethods.commands.ShippingMethodDeleteCommand;
 import io.sphere.sdk.shippingmethods.queries.ShippingMethodQuery;
+import io.sphere.sdk.shoppinglists.commands.ShoppingListDeleteCommand;
+import io.sphere.sdk.shoppinglists.queries.ShoppingListQuery;
 import io.sphere.sdk.states.commands.StateDeleteCommand;
 import io.sphere.sdk.states.queries.StateQuery;
 import io.sphere.sdk.taxcategories.commands.TaxCategoryDeleteCommand;
@@ -166,8 +168,11 @@ public final class IntegrationTestUtils {
         queryAndExecute(client, TaxCategoryQuery.of(), TaxCategoryDeleteCommand::of);
     final CompletableFuture<Void> deleteCustomer =
         queryAndExecute(client, CustomerQuery.of(), CustomerDeleteCommand::of);
+    final CompletableFuture<Void> deleteShoppingList =
+        queryAndExecute(client, ShoppingListQuery.of(), ShoppingListDeleteCommand::of);
 
-    CompletableFuture.allOf(deleteType, deleteShippingMethod, deleteTaxCategory, deleteCustomer)
+    CompletableFuture.allOf(
+            deleteType, deleteShippingMethod, deleteTaxCategory, deleteCustomer, deleteShoppingList)
         .join();
     deleteProductTypes(client);
   }

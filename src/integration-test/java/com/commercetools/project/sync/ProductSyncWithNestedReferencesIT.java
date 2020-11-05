@@ -15,6 +15,7 @@ import static com.commercetools.project.sync.util.TestUtils.assertCustomerSyncer
 import static com.commercetools.project.sync.util.TestUtils.assertInventoryEntrySyncerLoggingEvents;
 import static com.commercetools.project.sync.util.TestUtils.assertProductSyncerLoggingEvents;
 import static com.commercetools.project.sync.util.TestUtils.assertProductTypeSyncerLoggingEvents;
+import static com.commercetools.project.sync.util.TestUtils.assertShoppingListSyncerLoggingEvents;
 import static com.commercetools.project.sync.util.TestUtils.assertStateSyncerLoggingEvents;
 import static com.commercetools.project.sync.util.TestUtils.assertTaxCategorySyncerLoggingEvents;
 import static com.commercetools.project.sync.util.TestUtils.assertTypeSyncerLoggingEvents;
@@ -292,8 +293,9 @@ class ProductSyncWithNestedReferencesIT {
           syncerTestLogger, 1); // 1 state is built-in and it will always be processed
       assertCustomObjectSyncerLoggingEvents(syncerTestLogger, 2);
       assertCustomerSyncerLoggingEvents(syncerTestLogger, 0);
+      assertShoppingListSyncerLoggingEvents(syncerTestLogger, 0);
       // Every sync module is expected to have 2 logs (start and stats summary)
-      assertThat(syncerTestLogger.getAllLoggingEvents()).hasSize(20);
+      assertThat(syncerTestLogger.getAllLoggingEvents()).hasSize(22);
 
       assertAllResourcesAreSyncedToTarget(postTargetClient);
     }
