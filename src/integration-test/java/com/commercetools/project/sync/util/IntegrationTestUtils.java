@@ -30,6 +30,8 @@ import io.sphere.sdk.models.Versioned;
 import io.sphere.sdk.products.Product;
 import io.sphere.sdk.products.ProductVariant;
 import io.sphere.sdk.products.commands.ProductDeleteCommand;
+import io.sphere.sdk.products.commands.ProductUpdateCommand;
+import io.sphere.sdk.products.commands.updateactions.Unpublish;
 import io.sphere.sdk.products.queries.ProductQuery;
 import io.sphere.sdk.producttypes.ProductType;
 import io.sphere.sdk.producttypes.commands.ProductTypeDeleteCommand;
@@ -40,6 +42,8 @@ import io.sphere.sdk.queries.PagedQueryResult;
 import io.sphere.sdk.queries.QueryPredicate;
 import io.sphere.sdk.shippingmethods.commands.ShippingMethodDeleteCommand;
 import io.sphere.sdk.shippingmethods.queries.ShippingMethodQuery;
+import io.sphere.sdk.shoppinglists.commands.ShoppingListDeleteCommand;
+import io.sphere.sdk.shoppinglists.queries.ShoppingListQuery;
 import io.sphere.sdk.states.commands.StateDeleteCommand;
 import io.sphere.sdk.states.queries.StateQuery;
 import io.sphere.sdk.taxcategories.commands.TaxCategoryDeleteCommand;
@@ -138,6 +142,13 @@ public final class IntegrationTestUtils {
 
   private static void deleteProjectData(@Nonnull final SphereClient client) {
     queryAndExecute(client, CategoryQuery.of(), CategoryDeleteCommand::of).join();
+    queryAndExecute(
+            client,
+            ProductQuery.of(),
+            versioned -> ProductUpdateCommand.of(versioned, Unpublish.of()))
+        .join();
+    queryAndExecute(client, ShoppingListQuery.of(), ShoppingListDeleteCommand::of).join();
+
     final CompletableFuture<Void> deleteProduct =
         queryAndExecute(client, ProductQuery.of(), ProductDeleteCommand::of);
     final CompletableFuture<Void> deleteInventory =
