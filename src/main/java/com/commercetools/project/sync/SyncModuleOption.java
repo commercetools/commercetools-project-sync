@@ -9,6 +9,7 @@ import com.commercetools.sync.customobjects.CustomObjectSync;
 import com.commercetools.sync.inventories.InventorySync;
 import com.commercetools.sync.products.ProductSync;
 import com.commercetools.sync.producttypes.ProductTypeSync;
+import com.commercetools.sync.shoppinglists.ShoppingListSync;
 import com.commercetools.sync.states.StateSync;
 import com.commercetools.sync.taxcategories.TaxCategorySync;
 import com.commercetools.sync.types.TypeSync;
@@ -25,7 +26,8 @@ public enum SyncModuleOption {
   INVENTORY_ENTRY_SYNC("inventoryEntries", InventorySync.class),
   STATE_SYNC("states", StateSync.class),
   TAX_CATEGORY_SYNC("taxCategories", TaxCategorySync.class),
-  CUSTOMER_SYNC("customers", CustomerSync.class);
+  CUSTOMER_SYNC("customers", CustomerSync.class),
+  SHOPPING_LIST_SYNC("shoppingLists", ShoppingListSync.class);
 
   public final String syncOptionValue;
   private final Class<? extends BaseSync> syncClass;
