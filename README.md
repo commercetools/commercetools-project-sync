@@ -36,6 +36,7 @@ As of now, these are the supported resources:
 - TaxCategories
 - CustomObjects
 - Customers
+- ShoppingLists
 
 
 ### Prerequisites
@@ -59,6 +60,7 @@ As of now, these are the supported resources:
      | TaxCategory  | `key`  |
      | CustomObject  | `container` AND `key`  |
      | Customer  | `key`  |
+     | ShoppingList | `key` |
 
  - Set the following environment variables before running the application
    ```bash
@@ -98,7 +100,8 @@ As of now, these are the supported resources:
                                         "cartDiscounts", "customObjects",
                                         "categories", "products",
                                         "inventoryEntries", "states",
-                                        "taxCategories", "customers" or "all".
+                                        "taxCategories", "customers",
+                                        "shoppingLists" or "all".
        --syncProjectSyncCustomObjects   Sync custom objects that were created
                                         with project sync (this application).
     -v,--version                        Print the version of the application.
@@ -182,6 +185,7 @@ commercetools/commercetools-project-sync:3.8.0 -s all
  1. `Type` Sync and `ProductType` Sync and `States` Sync and `TaxCategory` Sync and `CustomObject` Sync in parallel.
  2. `Category` Sync and `InventoryEntry` Sync and `CartDiscount` Sync and `Customer` Sync in parallel.
  3. `Product` Sync.
+ 4. `ShoppingList` Sync.
 
  - To run the type sync
    ```bash
@@ -230,6 +234,11 @@ commercetools/commercetools-project-sync:3.8.0 -s all
 - To run the customer sync
    ```bash
    docker run commercetools/commercetools-project-sync:3.8.0 -s customers
+   ```
+  
+- To run the shoppingList sync
+   ```bash
+   docker run commercetools/commercetools-project-sync:3.8.0 -s shoppingLists
    ```
 
 - To run all sync modules using a runner name
