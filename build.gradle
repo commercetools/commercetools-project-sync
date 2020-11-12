@@ -32,7 +32,7 @@ ext {
     mockitoVersion = '3.6.0'
     slf4jVersion = '1.7.30'
     slf4jTestVersion = '1.2.0'
-    assertjVersion = '3.18.0'
+    assertjVersion = '3.18.1'
     pmdVersion = '5.6.1'
     jacocoVersion = '0.7.9'
     findbugsVersion = '3.0.1'
