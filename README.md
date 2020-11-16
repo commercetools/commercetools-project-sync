@@ -59,6 +59,7 @@ As of now, these are the supported resources:
      | TaxCategory  | `key`  |
      | CustomObject  | `container` AND `key`  |
      | Customer  | `key`  |
+     | Customer Address | `key` |
 
  - Set the following environment variables before running the application
    ```bash
