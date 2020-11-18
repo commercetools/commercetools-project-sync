@@ -61,6 +61,8 @@ As of now, these are the supported resources:
      | CustomObject  | `container` AND `key`  |
      | Customer  | `key`  |
      | ShoppingList | `key` |
+     | ShoppingList LineItem - Product Variant | `sku` |
+     | ShoppingList TextLineItem | `name` |
 
  - Set the following environment variables before running the application
    ```bash
@@ -160,7 +162,7 @@ Running a **Full sync** using `-f` or `--full` option will not create any `custo
 ##### Download
 
    ```bash
-docker pull commercetools/commercetools-project-sync:3.8.0
+docker pull commercetools/commercetools-project-sync:3.9.0
    ```
 ##### Run
 
@@ -172,14 +174,14 @@ docker run \
 -e TARGET_PROJECT_KEY=xxxx \
 -e TARGET_CLIENT_ID=xxxx \
 -e TARGET_CLIENT_SECRET=xxxx \
-commercetools/commercetools-project-sync:3.8.0 -s all
+commercetools/commercetools-project-sync:3.9.0 -s all
 ```
 
 
 ### Examples
  - To run the all sync modules from a source project to a target project
    ```bash
-   docker run commercetools/commercetools-project-sync:3.8.0 -s all
+   docker run commercetools/commercetools-project-sync:3.9.0 -s all
    ```
    This will run the following sync modules in the given order:
  1. `Type` Sync and `ProductType` Sync and `States` Sync and `TaxCategory` Sync and `CustomObject` Sync in parallel.
@@ -189,61 +191,61 @@ commercetools/commercetools-project-sync:3.8.0 -s all
 
  - To run the type sync
    ```bash
-   docker run commercetools/commercetools-project-sync:3.8.0 -s types
+   docker run commercetools/commercetools-project-sync:3.9.0 -s types
    ```
 
  - To run the productType sync
    ```bash
-   docker run commercetools/commercetools-project-sync:3.8.0 -s productTypes
+   docker run commercetools/commercetools-project-sync:3.9.0 -s productTypes
    ```
 
 - To run the states sync
    ```bash
-   docker run commercetools/commercetools-project-sync:3.8.0 -s states
+   docker run commercetools/commercetools-project-sync:3.9.0 -s states
    ```
 - To run the taxCategory sync
    ```bash
-   docker run commercetools/commercetools-project-sync:3.8.0 -s taxCategories
+   docker run commercetools/commercetools-project-sync:3.9.0 -s taxCategories
    ```
 
 - To run the category sync
    ```bash
-   docker run commercetools/commercetools-project-sync:3.8.0 -s categories
+   docker run commercetools/commercetools-project-sync:3.9.0 -s categories
    ```
 
 - To run the product sync
    ```bash
-   docker run commercetools/commercetools-project-sync:3.8.0 -s products
+   docker run commercetools/commercetools-project-sync:3.9.0 -s products
    ```
 
 - To run the cartDiscount sync
    ```bash
-   docker run commercetools/commercetools-project-sync:3.8.0 -s cartDiscounts
+   docker run commercetools/commercetools-project-sync:3.9.0 -s cartDiscounts
    ```
 
 - To run the inventoryEntry sync
    ```bash
-   docker run commercetools/commercetools-project-sync:3.8.0 -s inventoryEntries
+   docker run commercetools/commercetools-project-sync:3.9.0 -s inventoryEntries
    ```
 
 - To run the customObject sync
    ```bash
-   docker run commercetools/commercetools-project-sync:3.8.0 -s customObjects
+   docker run commercetools/commercetools-project-sync:3.9.0 -s customObjects
    ```
 
 - To run the customer sync
    ```bash
-   docker run commercetools/commercetools-project-sync:3.8.0 -s customers
+   docker run commercetools/commercetools-project-sync:3.9.0 -s customers
    ```
   
 - To run the shoppingList sync
    ```bash
-   docker run commercetools/commercetools-project-sync:3.8.0 -s shoppingLists
+   docker run commercetools/commercetools-project-sync:3.9.0 -s shoppingLists
    ```
 
 - To run all sync modules using a runner name
    ```bash
-   docker run commercetools/commercetools-project-sync:3.8.0 -s all -r myRunnerName
+   docker run commercetools/commercetools-project-sync:3.9.0 -s all -r myRunnerName
    ```
 
 
