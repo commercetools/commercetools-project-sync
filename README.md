@@ -60,6 +60,7 @@ As of now, these are the supported resources:
      | TaxCategory  | `key`  |
      | CustomObject  | `container` AND `key`  |
      | Customer  | `key`  |
+     | Customer Address | `key` |
      | ShoppingList | `key` |
      | ShoppingList LineItem - Product Variant | `sku` |
      | ShoppingList TextLineItem | `name` |
