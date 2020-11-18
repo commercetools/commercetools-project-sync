@@ -1,0 +1,36 @@
+{
+  "name": {
+    "en": "typeName"
+  },
+  "description": {
+    "en": "description"
+  },
+  "resourceTypeIds": [
+    "category"
+  ],
+  "fieldDefinitions": [
+    {
+      "name": "a",
+      "label": {
+        "en": "label_en"
+      },
+      "required": false,
+      "type": {
+        "name": "String"
+      },
+      "inputHint": "SingleLine"
+    },
+    {
+      "name": "b",
+      "label": {
+        "en": "label_en"
+      },
+      "required": false,
+      "type": {
+        "name": "String"
+      },
+      "inputHint": "SingleLine"
+    }
+  ]
+}
+
