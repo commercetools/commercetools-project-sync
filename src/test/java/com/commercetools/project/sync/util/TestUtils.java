@@ -50,9 +50,10 @@ public final class TestUtils {
     assertStateSyncerLoggingEvents(syncerTestLogger, numberOfResources + 1);
     assertTaxCategorySyncerLoggingEvents(syncerTestLogger, numberOfResources);
     assertCustomerSyncerLoggingEvents(syncerTestLogger, numberOfResources);
+    assertShoppingListSyncerLoggingEvents(syncerTestLogger, numberOfResources);
 
     // Every sync module is expected to have 2 logs (start and stats summary)
-    assertThat(syncerTestLogger.getAllLoggingEvents()).hasSize(20);
+    assertThat(syncerTestLogger.getAllLoggingEvents()).hasSize(22);
   }
 
   public static void assertTypeSyncerLoggingEvents(
@@ -154,6 +155,17 @@ public final class TestUtils {
             numberOfResources, numberOfResources);
 
     assertSyncerLoggingEvents(syncerTestLogger, "CustomerSync", customerStatsSummary);
+  }
+
+  public static void assertShoppingListSyncerLoggingEvents(
+      @Nonnull final TestLogger syncerTestLogger, final int numberOfResources) {
+    final String shoppingListStatsSummary =
+        format(
+            "Summary: %d shopping lists were processed in total (%d created, 0 updated and "
+                + "0 failed to sync).",
+            numberOfResources, numberOfResources);
+
+    assertSyncerLoggingEvents(syncerTestLogger, "ShoppingListSync", shoppingListStatsSummary);
   }
 
   public static void assertCustomObjectSyncerLoggingEvents(
