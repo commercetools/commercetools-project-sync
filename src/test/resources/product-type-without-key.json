@@ -1,0 +1,25 @@
+{
+  "id": "cda0dbf7-b42e-40bf-8453-241d5b587f93",
+  "version": 46,
+  "name": "main",
+  "description": "all fleisch",
+  "classifier": "Complex",
+  "attributes": [
+    {
+      "name": "priceInfo",
+      "label": {
+        "en": "Grundpreis"
+      },
+      "isRequired": false,
+      "type": {
+        "name": "text"
+      },
+      "attributeConstraint": "SameForAll",
+      "isSearchable": true,
+      "inputHint": "SingleLine",
+      "displayGroup": "Other"
+    }
+  ],
+  "createdAt": "2015-06-09T08:51:37.052Z",
+  "lastModifiedAt": "2017-05-22T14:15:26.431Z"
+}

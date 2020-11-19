@@ -1,0 +1,24 @@
+{
+  "id": "44e5e889-0878-4c30-941f-767cebebeb7f",
+  "version": 18,
+  "name": "Standard tax category",
+  "rates": [
+    {
+      "name": "19% MwSt test",
+      "amount": 0.19,
+      "includedInPrice": false,
+      "country": "DE",
+      "id": "IZV0fDOU",
+      "subRates": [
+        {
+          "name": "sub-rate 01",
+          "amount": "0.18"
+        },
+        {
+          "name": "sub-rate 02",
+          "amount": "0.01"
+        }
+      ]
+    }
+  ]
+}

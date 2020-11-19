@@ -1,0 +1,11 @@
+{
+  "type": "LineItemState",
+  "roles": [],
+  "name": {
+    "en": "State 1"
+  },
+  "description": {
+    "en": "State 1"
+  },
+  "initial": true
+}
