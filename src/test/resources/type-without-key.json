@@ -1,7 +1,6 @@
 {
-  "key": "1",
   "name": {
-    "en": "name"
+    "en": "typeName"
   },
   "description": {
     "en": "description"
