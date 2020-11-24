@@ -5,19 +5,37 @@ import static io.sphere.sdk.json.SphereJsonUtils.readObjectFromResource;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import com.commercetools.sync.types.TypeSync;
+import io.sphere.sdk.client.SphereApiConfig;
 import io.sphere.sdk.client.SphereClient;
+import io.sphere.sdk.queries.PagedQueryResult;
 import io.sphere.sdk.types.Type;
 import io.sphere.sdk.types.TypeDraft;
 import io.sphere.sdk.types.TypeDraftBuilder;
 import io.sphere.sdk.types.queries.TypeQuery;
+import java.time.Clock;
+import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import uk.org.lidalia.slf4jtest.LoggingEvent;
+import uk.org.lidalia.slf4jtest.TestLogger;
+import uk.org.lidalia.slf4jtest.TestLoggerFactory;
 
 class TypeSyncerTest {
+  private final TestLogger syncerTestLogger = TestLoggerFactory.getTestLogger(TypeSyncer.class);
+
+  @BeforeEach
+  void setup() {
+    syncerTestLogger.clearAll();
+  }
+
   @Test
   void of_ShouldCreateTypeSyncerInstance() {
     // test
@@ -69,5 +87,35 @@ class TypeSyncerTest {
 
     // assertion
     assertThat(query).isEqualTo(TypeQuery.of());
+  }
+
+  @Test
+  void syncWithError_WhenNoKeyIsProvided_ShouldCallErrorCallback() {
+    // preparation
+    final SphereClient sourceClient = mock(SphereClient.class);
+    final SphereClient targetClient = mock(SphereClient.class);
+    when(sourceClient.getConfig()).thenReturn(SphereApiConfig.of("source-project"));
+    when(targetClient.getConfig()).thenReturn(SphereApiConfig.of("target-project"));
+
+    final List<Type> typePage =
+        Collections.singletonList(readObjectFromResource("type-without-key.json", Type.class));
+
+    final PagedQueryResult<Type> pagedQueryResult = mock(PagedQueryResult.class);
+    when(pagedQueryResult.getResults()).thenReturn(typePage);
+    when(sourceClient.execute(any(TypeQuery.class)))
+        .thenReturn(CompletableFuture.completedFuture(pagedQueryResult));
+
+    // test
+    final TypeSyncer typeSyncer = TypeSyncer.of(sourceClient, targetClient, mock(Clock.class));
+    typeSyncer.sync(null, true).toCompletableFuture().join();
+
+    // assertion
+    final LoggingEvent errorLog = syncerTestLogger.getAllLoggingEvents().get(0);
+    assertThat(errorLog.getMessage())
+        .isEqualTo(
+            "Error when trying to sync type. Existing key: <<not present>>. Update actions: []");
+    assertThat(errorLog.getThrowable().get().getMessage())
+        .isEqualTo(
+            "TypeDraft with name: LocalizedString(en -> typeName) doesn't have a key. Please make sure all type drafts have keys.");
   }
 }

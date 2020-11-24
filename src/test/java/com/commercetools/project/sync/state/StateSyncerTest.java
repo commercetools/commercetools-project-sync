@@ -4,24 +4,40 @@ import static com.commercetools.project.sync.util.TestUtils.getMockedClock;
 import static io.sphere.sdk.json.SphereJsonUtils.readObjectFromResource;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import com.commercetools.sync.states.StateSync;
+import io.sphere.sdk.client.SphereApiConfig;
 import io.sphere.sdk.client.SphereClient;
 import io.sphere.sdk.models.LocalizedString;
+import io.sphere.sdk.queries.PagedQueryResult;
 import io.sphere.sdk.states.State;
 import io.sphere.sdk.states.StateDraft;
 import io.sphere.sdk.states.StateDraftBuilder;
 import io.sphere.sdk.states.StateType;
 import io.sphere.sdk.states.expansion.StateExpansionModel;
 import io.sphere.sdk.states.queries.StateQuery;
+import java.time.Clock;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import uk.org.lidalia.slf4jtest.LoggingEvent;
+import uk.org.lidalia.slf4jtest.TestLogger;
+import uk.org.lidalia.slf4jtest.TestLoggerFactory;
 
 class StateSyncerTest {
+  private final TestLogger syncerTestLogger = TestLoggerFactory.getTestLogger(StateSyncer.class);
+
+  @BeforeEach
+  void setup() {
+    syncerTestLogger.clearAll();
+  }
 
   @Test
   void of_ShouldCreateStateSyncerInstance() {
@@ -80,5 +96,35 @@ class StateSyncerTest {
     // assertion
     assertThat(query)
         .isEqualTo(StateQuery.of().withExpansionPaths(StateExpansionModel::transitions));
+  }
+
+  @Test
+  void syncWithError_WhenNoKeyIsProvided_ShouldCallErrorCallback() {
+    // preparation
+    final SphereClient sourceClient = mock(SphereClient.class);
+    final SphereClient targetClient = mock(SphereClient.class);
+    when(sourceClient.getConfig()).thenReturn(SphereApiConfig.of("source-project"));
+    when(targetClient.getConfig()).thenReturn(SphereApiConfig.of("target-project"));
+
+    final List<State> stateTypePage =
+        asList(readObjectFromResource("state-without-key.json", State.class));
+
+    final PagedQueryResult<State> pagedQueryResult = mock(PagedQueryResult.class);
+    when(pagedQueryResult.getResults()).thenReturn(stateTypePage);
+    when(sourceClient.execute(any(StateQuery.class)))
+        .thenReturn(CompletableFuture.completedFuture(pagedQueryResult));
+
+    // test
+    final StateSyncer stateSyncer = StateSyncer.of(sourceClient, targetClient, mock(Clock.class));
+    stateSyncer.sync(null, true).toCompletableFuture().join();
+
+    // assertion
+    final LoggingEvent errorLog = syncerTestLogger.getAllLoggingEvents().get(0);
+    assertThat(errorLog.getMessage())
+        .isEqualTo(
+            "Error when trying to sync state. Existing key: <<not present>>. Update actions: []");
+    assertThat(errorLog.getThrowable().get().getMessage())
+        .isEqualTo(
+            "StateDraft with name: LocalizedString(en -> State 1) doesn't have a key. Please make sure all state drafts have keys.");
   }
 }
