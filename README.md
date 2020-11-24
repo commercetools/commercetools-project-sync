@@ -1,7 +1,7 @@
 
 
 # commercetools-project-sync
-[![Build Status](https://travis-ci.org/commercetools/commercetools-project-sync.svg?branch=master)](https://travis-ci.org/commercetools/commercetools-project-sync)
+[![Build Status](https://travis-ci.com/commercetools/commercetools-project-sync.svg?branch=master)](https://travis-ci.com/commercetools/commercetools-project-sync)
 [![codecov](https://codecov.io/gh/commercetools/commercetools-project-sync/branch/master/graph/badge.svg)](https://codecov.io/gh/commercetools/commercetools-project-sync)
 [![Docker Pulls](https://img.shields.io/docker/pulls/commercetools/commercetools-project-sync)](https://hub.docker.com/r/commercetools/commercetools-project-sync)
 
