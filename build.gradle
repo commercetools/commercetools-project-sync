@@ -29,7 +29,7 @@ apply from: "$rootDir/gradle-scripts/test-logger.gradle"
 
 ext {
     commercetoolsJvmSdkVersion =  '1.55.0'
-    mockitoVersion = '3.6.26'
+    mockitoVersion = '3.6.28'
     slf4jVersion = '1.7.30'
     slf4jTestVersion = '1.2.0'
     assertjVersion = '3.18.1'
