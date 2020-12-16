@@ -12,10 +12,13 @@ import static com.commercetools.project.sync.util.SphereClientUtils.CTP_TARGET_C
 import static com.commercetools.project.sync.util.SyncUtils.APPLICATION_DEFAULT_NAME;
 import static com.commercetools.project.sync.util.SyncUtils.DEFAULT_RUNNER_NAME;
 import static com.commercetools.project.sync.util.TestUtils.assertAllSyncersLoggingEvents;
+import static com.commercetools.project.sync.util.TestUtils.assertCartDiscountSyncerLoggingEvents;
+import static com.commercetools.project.sync.util.TestUtils.assertCategorySyncerLoggingEvents;
 import static com.commercetools.project.sync.util.TestUtils.assertCustomObjectSyncerLoggingEvents;
 import static com.commercetools.project.sync.util.TestUtils.assertCustomerSyncerLoggingEvents;
 import static com.commercetools.project.sync.util.TestUtils.assertShoppingListSyncerLoggingEvents;
 import static com.commercetools.project.sync.util.TestUtils.assertSyncerLoggingEvents;
+import static com.commercetools.project.sync.util.TestUtils.assertTaxCategorySyncerLoggingEvents;
 import static io.sphere.sdk.models.LocalizedString.ofEnglish;
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
@@ -40,6 +43,7 @@ import io.sphere.sdk.categories.Category;
 import io.sphere.sdk.categories.CategoryDraft;
 import io.sphere.sdk.categories.CategoryDraftBuilder;
 import io.sphere.sdk.categories.commands.CategoryCreateCommand;
+import io.sphere.sdk.categories.queries.CategoryQuery;
 import io.sphere.sdk.client.SphereClient;
 import io.sphere.sdk.customers.Customer;
 import io.sphere.sdk.customers.CustomerDraft;
@@ -303,6 +307,88 @@ class CliRunnerIT {
         assertAllSyncersLoggingEvents(syncerTestLogger, cliRunnerTestLogger, 1);
 
         assertAllResourcesAreSyncedToTarget(postTargetClient);
+      }
+    }
+  }
+
+  @Test
+  void run_WithSyncAsArgumentWithCustomersAndShoppingLists_ShouldExecuteGivenSyncers() {
+    // preparation
+    try (final SphereClient targetClient = createClient(CTP_TARGET_CLIENT_CONFIG)) {
+      try (final SphereClient sourceClient = createClient(CTP_SOURCE_CLIENT_CONFIG)) {
+
+        prepareDataForShoppingListSync(sourceClient);
+        final SyncerFactory syncerFactory =
+            SyncerFactory.of(() -> sourceClient, () -> targetClient, Clock.systemDefaultZone());
+
+        // test
+        CliRunner.of().run(new String[] {"-s", "customers", "shoppingLists"}, syncerFactory);
+      }
+    }
+
+    // create clients again (for assertions and cleanup), since the run method closes the clients
+    // after execution is done.
+    try (final SphereClient postSourceClient = createClient(CTP_SOURCE_CLIENT_CONFIG)) {
+      try (final SphereClient postTargetClient = createClient(CTP_TARGET_CLIENT_CONFIG)) {
+        // assertions
+        assertThat(syncerTestLogger.getAllLoggingEvents()).hasSize(4);
+
+        assertCustomerSyncerLoggingEvents(syncerTestLogger, 1);
+        assertShoppingListSyncerLoggingEvents(syncerTestLogger, 1);
+
+        assertCustomersAreSyncedCorrectly(postTargetClient);
+        assertShoppingListsAreSyncedCorrectly(postTargetClient);
+
+        final String sourceProjectKey = postSourceClient.getConfig().getProjectKey();
+
+        assertLastSyncCustomObjectExists(
+            postTargetClient, sourceProjectKey, "customerSync", "runnerName");
+        assertLastSyncCustomObjectExists(
+            postTargetClient, sourceProjectKey, "shoppingListSync", "runnerName");
+      }
+    }
+  }
+
+  @Test
+  void
+      run_WithSyncAsArgumentWithCategoriesTaxCategoriesAndCartDiscounts_ShouldExecuteGivenSyncers() {
+    // preparation
+    try (final SphereClient targetClient = createClient(CTP_TARGET_CLIENT_CONFIG)) {
+      try (final SphereClient sourceClient = createClient(CTP_SOURCE_CLIENT_CONFIG)) {
+
+        final SyncerFactory syncerFactory =
+            SyncerFactory.of(() -> sourceClient, () -> targetClient, Clock.systemDefaultZone());
+
+        // test
+        CliRunner.of()
+            .run(
+                new String[] {"-s", "taxCategories", "categories", "cartDiscounts"}, syncerFactory);
+      }
+    }
+
+    // create clients again (for assertions and cleanup), since the run method closes the clients
+    // after execution is done.
+    try (final SphereClient postSourceClient = createClient(CTP_SOURCE_CLIENT_CONFIG)) {
+      try (final SphereClient postTargetClient = createClient(CTP_TARGET_CLIENT_CONFIG)) {
+        // assertions
+        assertThat(syncerTestLogger.getAllLoggingEvents()).hasSize(6);
+
+        assertCategorySyncerLoggingEvents(syncerTestLogger, 1);
+        assertTaxCategorySyncerLoggingEvents(syncerTestLogger, 1);
+        assertCartDiscountSyncerLoggingEvents(syncerTestLogger, 1);
+
+        assertCategoriesAreSyncedCorrectly(postTargetClient);
+        assertTaxCategoriesAreSyncedCorrectly(postTargetClient);
+        assertCartDiscountsAreSyncedCorrectly(postTargetClient);
+
+        final String sourceProjectKey = postSourceClient.getConfig().getProjectKey();
+
+        assertLastSyncCustomObjectExists(
+            postTargetClient, sourceProjectKey, "categorySync", "runnerName");
+        assertLastSyncCustomObjectExists(
+            postTargetClient, sourceProjectKey, "taxCategorySync", "runnerName");
+        assertLastSyncCustomObjectExists(
+            postTargetClient, sourceProjectKey, "cartDiscountSync", "runnerName");
       }
     }
   }
@@ -605,6 +691,39 @@ class CliRunnerIT {
             .toCompletableFuture()
             .join();
     assertThat(shoppingListPagedQueryResult.getResults()).hasSize(1);
+  }
+
+  private static void assertCategoriesAreSyncedCorrectly(@Nonnull final SphereClient ctpClient) {
+    final PagedQueryResult<Category> categoryPagedQueryResult =
+        ctpClient
+            .execute(
+                CategoryQuery.of()
+                    .withPredicates(QueryPredicate.of(format("key=\"%s\"", RESOURCE_KEY))))
+            .toCompletableFuture()
+            .join();
+    assertThat(categoryPagedQueryResult.getResults()).hasSize(1);
+  }
+
+  private static void assertTaxCategoriesAreSyncedCorrectly(@Nonnull final SphereClient ctpClient) {
+    final PagedQueryResult<TaxCategory> taxCategoryPagedQueryResult =
+        ctpClient
+            .execute(
+                TaxCategoryQuery.of()
+                    .withPredicates(QueryPredicate.of(format("key=\"%s\"", RESOURCE_KEY))))
+            .toCompletableFuture()
+            .join();
+    assertThat(taxCategoryPagedQueryResult.getResults()).hasSize(1);
+  }
+
+  private static void assertCartDiscountsAreSyncedCorrectly(@Nonnull final SphereClient ctpClient) {
+    final PagedQueryResult<CartDiscount> cartDiscountPagedQueryResult =
+        ctpClient
+            .execute(
+                CartDiscountQuery.of()
+                    .withPredicates(QueryPredicate.of(format("key=\"%s\"", RESOURCE_KEY))))
+            .toCompletableFuture()
+            .join();
+    assertThat(cartDiscountPagedQueryResult.getResults()).hasSize(1);
   }
 
   private void assertLastSyncCustomObjectIsCorrect(

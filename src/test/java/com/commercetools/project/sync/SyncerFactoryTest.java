@@ -68,6 +68,8 @@ import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import javax.annotation.Nonnull;
@@ -967,6 +969,148 @@ class SyncerFactoryTest {
     assertAllSyncersLoggingEvents(syncerTestLogger, cliRunnerTestLogger, 0);
   }
 
+  @Test
+  @SuppressWarnings("unchecked")
+  void syncProductTypesProductsCustomersAndShoppingLists_AsDelta_ShouldBuildSyncerAndExecuteSync() {
+    // preparation
+    final SphereClient sourceClient = mock(SphereClient.class);
+    when(sourceClient.getConfig()).thenReturn(SphereClientConfig.of("foo", "foo", "foo"));
+
+    final SphereClient targetClient = mock(SphereClient.class);
+    when(targetClient.getConfig()).thenReturn(SphereClientConfig.of("bar", "bar", "bar"));
+
+    when(sourceClient.execute(any(ProductTypeQuery.class)))
+        .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
+    when(sourceClient.execute(any(ProductQuery.class)))
+        .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
+    when(sourceClient.execute(any(CustomerQuery.class)))
+        .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
+    when(sourceClient.execute(any(ShoppingListQuery.class)))
+        .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
+
+    final ZonedDateTime currentCtpTimestamp = ZonedDateTime.now();
+    stubClientsCustomObjectService(targetClient, currentCtpTimestamp);
+
+    final SyncerFactory syncerFactory =
+        SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock());
+
+    // test
+    String[] syncResources = {"productTypes", "products", "customers", "shoppingLists"};
+    syncerFactory.syncMultipleResources(syncResources, null, false, false).join();
+
+    // assertions
+    verifyTimestampGeneratorCustomObjectUpsertIsCalled(
+        targetClient, "ProductTypeSync", DEFAULT_RUNNER_NAME);
+    verifyTimestampGeneratorCustomObjectUpsertIsCalled(
+        targetClient, "ProductSync", DEFAULT_RUNNER_NAME);
+    verifyTimestampGeneratorCustomObjectUpsertIsCalled(
+        targetClient, "CustomerSync", DEFAULT_RUNNER_NAME);
+    verifyTimestampGeneratorCustomObjectUpsertIsCalled(
+        targetClient, "ShoppingListSync", DEFAULT_RUNNER_NAME);
+    verify(targetClient, times(8)).execute(any(CustomObjectUpsertCommand.class));
+    verifyLastSyncCustomObjectQuery(targetClient, "productTypeSync", DEFAULT_RUNNER_NAME, "foo", 1);
+    verifyLastSyncCustomObjectQuery(targetClient, "productSync", DEFAULT_RUNNER_NAME, "foo", 1);
+    verifyLastSyncCustomObjectQuery(targetClient, "customerSync", DEFAULT_RUNNER_NAME, "foo", 1);
+    verifyLastSyncCustomObjectQuery(
+        targetClient, "shoppingListSync", DEFAULT_RUNNER_NAME, "foo", 1);
+    verify(sourceClient, times(1)).execute(any(ProductTypeQuery.class));
+    verify(sourceClient, times(1)).execute(any(ProductQuery.class));
+    verify(sourceClient, times(1)).execute(any(CustomerQuery.class));
+    verify(sourceClient, times(1)).execute(any(ShoppingListQuery.class));
+    verifyInteractionsWithClientAfterSync(sourceClient, 4);
+
+    assertThat(syncerTestLogger.getAllLoggingEvents()).hasSize(8);
+    assertProductTypeSyncerLoggingEvents(syncerTestLogger, 0);
+    assertProductSyncerLoggingEvents(syncerTestLogger, 0);
+    assertCustomerSyncerLoggingEvents(syncerTestLogger, 0);
+    assertShoppingListSyncerLoggingEvents(syncerTestLogger, 0);
+  }
+
+  @Test
+  @SuppressWarnings("unchecked")
+  void syncTypesAndCategories_AsDelta_ShouldBuildSyncerAndExecuteSync() {
+    // preparation
+    final SphereClient sourceClient = mock(SphereClient.class);
+    when(sourceClient.getConfig()).thenReturn(SphereClientConfig.of("foo", "foo", "foo"));
+
+    final SphereClient targetClient = mock(SphereClient.class);
+    when(targetClient.getConfig()).thenReturn(SphereClientConfig.of("bar", "bar", "bar"));
+
+    when(sourceClient.execute(any(TypeQuery.class)))
+        .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
+    when(sourceClient.execute(any(CategoryQuery.class)))
+        .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
+
+    final ZonedDateTime currentCtpTimestamp = ZonedDateTime.now();
+    stubClientsCustomObjectService(targetClient, currentCtpTimestamp);
+
+    final SyncerFactory syncerFactory =
+        SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock());
+
+    // test
+    String[] syncResources = {"types", "categories"};
+    syncerFactory.syncMultipleResources(syncResources, null, false, false).join();
+
+    // assertions
+    verifyTimestampGeneratorCustomObjectUpsertIsCalled(
+        targetClient, "TypeSync", DEFAULT_RUNNER_NAME);
+    verifyTimestampGeneratorCustomObjectUpsertIsCalled(
+        targetClient, "CategorySync", DEFAULT_RUNNER_NAME);
+    verify(targetClient, times(4)).execute(any(CustomObjectUpsertCommand.class));
+    verifyLastSyncCustomObjectQuery(targetClient, "typeSync", DEFAULT_RUNNER_NAME, "foo", 1);
+    verifyLastSyncCustomObjectQuery(targetClient, "categorySync", DEFAULT_RUNNER_NAME, "foo", 1);
+    verify(sourceClient, times(1)).execute(any(TypeQuery.class));
+    verify(sourceClient, times(1)).execute(any(CategoryQuery.class));
+    verifyInteractionsWithClientAfterSync(sourceClient, 2);
+
+    assertThat(syncerTestLogger.getAllLoggingEvents()).hasSize(4);
+    assertTypeSyncerLoggingEvents(syncerTestLogger, 0);
+    assertCategorySyncerLoggingEvents(syncerTestLogger, 0);
+  }
+
+  @Test
+  @SuppressWarnings("unchecked")
+  void syncProductsAndShoppingLists_AsDelta_ShouldBuildSyncerAndExecuteSync() {
+    // preparation
+    final SphereClient sourceClient = mock(SphereClient.class);
+    when(sourceClient.getConfig()).thenReturn(SphereClientConfig.of("foo", "foo", "foo"));
+
+    final SphereClient targetClient = mock(SphereClient.class);
+    when(targetClient.getConfig()).thenReturn(SphereClientConfig.of("bar", "bar", "bar"));
+
+    when(sourceClient.execute(any(ProductQuery.class)))
+        .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
+    when(sourceClient.execute(any(ShoppingListQuery.class)))
+        .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
+
+    final ZonedDateTime currentCtpTimestamp = ZonedDateTime.now();
+    stubClientsCustomObjectService(targetClient, currentCtpTimestamp);
+
+    final SyncerFactory syncerFactory =
+        SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock());
+
+    // test
+    String[] syncResources = {"products", "shoppingLists"};
+    syncerFactory.syncMultipleResources(syncResources, null, false, false).join();
+
+    // assertions
+    verifyTimestampGeneratorCustomObjectUpsertIsCalled(
+        targetClient, "ProductSync", DEFAULT_RUNNER_NAME);
+    verifyTimestampGeneratorCustomObjectUpsertIsCalled(
+        targetClient, "ShoppingListSync", DEFAULT_RUNNER_NAME);
+    verify(targetClient, times(4)).execute(any(CustomObjectUpsertCommand.class));
+    verifyLastSyncCustomObjectQuery(targetClient, "productSync", DEFAULT_RUNNER_NAME, "foo", 1);
+    verifyLastSyncCustomObjectQuery(
+        targetClient, "shoppingListSync", DEFAULT_RUNNER_NAME, "foo", 1);
+    verify(sourceClient, times(1)).execute(any(ProductQuery.class));
+    verify(sourceClient, times(1)).execute(any(ShoppingListQuery.class));
+    verifyInteractionsWithClientAfterSync(sourceClient, 2);
+
+    assertThat(syncerTestLogger.getAllLoggingEvents()).hasSize(4);
+    assertProductSyncerLoggingEvents(syncerTestLogger, 0);
+    assertShoppingListSyncerLoggingEvents(syncerTestLogger, 0);
+  }
+
   public static void assertAllSyncersLoggingEvents(
       @Nonnull final TestLogger syncerTestLogger,
       @Nonnull final TestLogger cliRunnerTestLogger,
@@ -1019,5 +1163,59 @@ class SyncerFactoryTest {
         .hasFailedWithThrowableThat()
         .isExactlyInstanceOf(IllegalArgumentException.class)
         .hasMessageContaining(errorMessage);
+  }
+
+  @Test
+  void sync_AsDelta_WithUnmatchedSyncOptionValue_ShouldResultIllegalArgumentException() {
+    final String syncOptionValue = "unknown";
+    final SphereClient sourceClient = mock(SphereClient.class);
+    when(sourceClient.getConfig()).thenReturn(SphereClientConfig.of("foo", "foo", "foo"));
+
+    final SphereClient targetClient = mock(SphereClient.class);
+    when(targetClient.getConfig()).thenReturn(SphereClientConfig.of("bar", "bar", "bar"));
+
+    final SyncerFactory syncerFactory =
+        SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock());
+
+    // test
+    CompletionStage<Void> result = syncerFactory.sync(syncOptionValue, null, false, false);
+
+    String errorMessage =
+        format(
+            "Unknown argument \"%s\" supplied to \"-s\" or \"--sync\" option! %s",
+            syncOptionValue, SYNC_MODULE_OPTION_DESCRIPTION);
+
+    assertThat(result)
+        .hasFailedWithThrowableThat()
+        .isExactlyInstanceOf(IllegalArgumentException.class)
+        .hasMessageContaining(errorMessage);
+  }
+
+  @Test
+  void sync_AsDelta_WithOneUnmatchedSyncOptionValue_ShouldResultIllegalArgumentException() {
+    final SphereClient sourceClient = mock(SphereClient.class);
+    when(sourceClient.getConfig()).thenReturn(SphereClientConfig.of("foo", "foo", "foo"));
+
+    final SphereClient targetClient = mock(SphereClient.class);
+    when(targetClient.getConfig()).thenReturn(SphereClientConfig.of("bar", "bar", "bar"));
+
+    final SyncerFactory syncerFactory =
+        SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock());
+
+    // test
+    String[] syncResources = {"productTypes", "unknown", "shoppingLists"};
+    CompletionStage<Void> result =
+        syncerFactory.syncMultipleResources(syncResources, null, false, false);
+
+    String errorMessage =
+        format(
+            "Unknown argument \"%s\" supplied to \"-s\" or \"--sync\" option! %s",
+            syncResources[1], SYNC_MODULE_OPTION_DESCRIPTION);
+
+    assertThat(result)
+        .failsWithin(1, TimeUnit.SECONDS)
+        .withThrowableOfType(ExecutionException.class)
+        .withCauseExactlyInstanceOf(IllegalArgumentException.class)
+        .withMessageContaining(errorMessage);
   }
 }

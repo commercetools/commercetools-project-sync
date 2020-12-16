@@ -102,6 +102,7 @@ final class CliRunner {
             .desc(SYNC_MODULE_OPTION_DESCRIPTION)
             .hasArg()
             .build();
+    syncOption.setArgs(Option.UNLIMITED_VALUES);
 
     final Option runnerOption =
         Option.builder(RUNNER_NAME_OPTION_SHORT)
@@ -195,16 +196,21 @@ final class CliRunner {
   private static CompletionStage<Void> processSyncOptionAndExecute(
       @Nonnull final CommandLine commandLine, @Nonnull final SyncerFactory syncerFactory) {
 
-    final String syncOptionValue = commandLine.getOptionValue(SYNC_MODULE_OPTION_SHORT);
+    final String[] syncOptionValues = commandLine.getOptionValues(SYNC_MODULE_OPTION_SHORT);
     final String runnerNameValue = commandLine.getOptionValue(RUNNER_NAME_OPTION_SHORT);
     final boolean isFullSync = commandLine.hasOption(FULL_SYNC_OPTION_SHORT);
     final boolean isSyncProjectSyncCustomObjects =
         commandLine.hasOption(SYNC_PROJECT_SYNC_CUSTOM_OBJECTS_OPTION_LONG);
 
-    return SYNC_MODULE_OPTION_ALL.equals(syncOptionValue)
-        ? syncerFactory.syncAll(runnerNameValue, isFullSync, isSyncProjectSyncCustomObjects)
-        : syncerFactory.sync(
-            syncOptionValue, runnerNameValue, isFullSync, isSyncProjectSyncCustomObjects);
+    if (SYNC_MODULE_OPTION_ALL.equals(syncOptionValues[0])) {
+      return syncerFactory.syncAll(runnerNameValue, isFullSync, isSyncProjectSyncCustomObjects);
+    } else if (syncOptionValues.length < 2) {
+      return syncerFactory.sync(
+          syncOptionValues[0], runnerNameValue, isFullSync, isSyncProjectSyncCustomObjects);
+    } else {
+      return syncerFactory.syncMultipleResources(
+          syncOptionValues, runnerNameValue, isFullSync, isSyncProjectSyncCustomObjects);
+    }
   }
 
   private static void printHelpToStdOut(@Nonnull final Options cliOptions) {
