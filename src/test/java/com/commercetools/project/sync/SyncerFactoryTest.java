@@ -1028,6 +1028,56 @@ class SyncerFactoryTest {
 
   @Test
   @SuppressWarnings("unchecked")
+  void syncStatesInventoryEntriesAndCustomObjects_AsDelta_ShouldBuildSyncerAndExecuteSync() {
+    // preparation
+    final SphereClient sourceClient = mock(SphereClient.class);
+    when(sourceClient.getConfig()).thenReturn(SphereClientConfig.of("foo", "foo", "foo"));
+
+    final SphereClient targetClient = mock(SphereClient.class);
+    when(targetClient.getConfig()).thenReturn(SphereClientConfig.of("bar", "bar", "bar"));
+
+    when(sourceClient.execute(any(StateQuery.class)))
+        .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
+    when(sourceClient.execute(any(InventoryEntryQuery.class)))
+        .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
+    when(sourceClient.execute(any(CustomObjectQuery.class)))
+        .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
+
+    final ZonedDateTime currentCtpTimestamp = ZonedDateTime.now();
+    stubClientsCustomObjectService(targetClient, currentCtpTimestamp);
+
+    final SyncerFactory syncerFactory =
+        SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock());
+
+    // test
+    String[] syncResources = {"states", "inventoryEntries", "customObjects"};
+    syncerFactory.syncMultipleResources(syncResources, null, false, false).join();
+
+    // assertions
+    verifyTimestampGeneratorCustomObjectUpsertIsCalled(
+        targetClient, "StateSync", DEFAULT_RUNNER_NAME);
+    verifyTimestampGeneratorCustomObjectUpsertIsCalled(
+        targetClient, "InventorySync", DEFAULT_RUNNER_NAME);
+    verifyTimestampGeneratorCustomObjectUpsertIsCalled(
+        targetClient, "CustomObjectSync", DEFAULT_RUNNER_NAME);
+    verify(targetClient, times(6)).execute(any(CustomObjectUpsertCommand.class));
+    verifyLastSyncCustomObjectQuery(targetClient, "stateSync", DEFAULT_RUNNER_NAME, "foo", 1);
+    verifyLastSyncCustomObjectQuery(targetClient, "inventorySync", DEFAULT_RUNNER_NAME, "foo", 1);
+    verifyLastSyncCustomObjectQuery(
+        targetClient, "customObjectSync", DEFAULT_RUNNER_NAME, "foo", 1);
+    verify(sourceClient, times(1)).execute(any(StateQuery.class));
+    verify(sourceClient, times(1)).execute(any(InventoryEntryQuery.class));
+    verify(sourceClient, times(1)).execute(any(CustomObjectQuery.class));
+    verifyInteractionsWithClientAfterSync(sourceClient, 3);
+
+    assertThat(syncerTestLogger.getAllLoggingEvents()).hasSize(6);
+    assertStateSyncerLoggingEvents(syncerTestLogger, 0);
+    assertInventoryEntrySyncerLoggingEvents(syncerTestLogger, 0);
+    assertCustomObjectSyncerLoggingEvents(syncerTestLogger, 0);
+  }
+
+  @Test
+  @SuppressWarnings("unchecked")
   void syncTypesAndCategories_AsDelta_ShouldBuildSyncerAndExecuteSync() {
     // preparation
     final SphereClient sourceClient = mock(SphereClient.class);
