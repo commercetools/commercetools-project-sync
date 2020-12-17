@@ -152,44 +152,47 @@ final class SyncerFactory {
       return exceptionallyCompletedFuture(exception);
     }
 
-    final List<CompletableFuture<Void>>
-        typeAndProductTypeAndStateAndTaxCategoryAndCustomObjectSync =
-            buildTypeAndProductTypeAndStateAndTaxCategoryAndCustomObject(
-                syncOptions,
-                runnerNameOptionValue,
-                isFullSync,
-                isSyncProjectSyncCustomObjects,
-                sourceClient,
-                targetClient);
+    final List<CompletableFuture<Void>> mainResourceSyncerList =
+        buildMainResourceSyncers(
+            syncOptions,
+            runnerNameOptionValue,
+            isFullSync,
+            isSyncProjectSyncCustomObjects,
+            sourceClient,
+            targetClient);
 
-    final List<CompletableFuture<Void>> categoryAndInventoryAndCartDiscountAndCustomer =
-        buildCategoryAndInventoryAndCartDiscountAndCustomer(
+    final List<CompletableFuture<Void>> secondaryResourceSyncerList =
+        buildSecondaryResourceSyncers(
             syncOptions, runnerNameOptionValue, isFullSync, sourceClient, targetClient);
 
-    CompletableFuture<Void> completableFuture =
-        CompletableFuture.allOf(
-            typeAndProductTypeAndStateAndTaxCategoryAndCustomObjectSync.toArray(
-                new CompletableFuture[0]));
+    final CompletableFuture<Void> mainResourceSyncers =
+        CompletableFuture.allOf(mainResourceSyncerList.toArray(new CompletableFuture[0]));
 
-    CompletableFuture<Void> completableFuture2 =
-        categoryAndInventoryAndCartDiscountAndCustomer.isEmpty()
-            ? completableFuture
-            : buildCategoryAndInventoryAndCartDiscountAndCustomerSync(
-                categoryAndInventoryAndCartDiscountAndCustomer, completableFuture);
+    final CompletableFuture<Void> chainedSecondaryResourceSyncers =
+        secondaryResourceSyncerList.isEmpty()
+            ? mainResourceSyncers
+            : mainResourceSyncers.thenCompose(
+                ignored ->
+                    CompletableFuture.allOf(
+                        secondaryResourceSyncerList.toArray(new CompletableFuture[0])));
 
-    CompletableFuture<Void> completableFuture3 =
+    final CompletableFuture<Void> chainedProductSyncer =
         syncOptions.contains(PRODUCT_SYNC)
-            ? buildProductSync(
-                runnerNameOptionValue, isFullSync, sourceClient, targetClient, completableFuture2)
-            : completableFuture2;
+            ? chainedSecondaryResourceSyncers.thenCompose(
+                ignored ->
+                    ProductSyncer.of(sourceClient, targetClient, clock)
+                        .sync(runnerNameOptionValue, isFullSync))
+            : chainedSecondaryResourceSyncers;
 
-    CompletableFuture<Void> completableFuture4 =
+    final CompletableFuture<Void> chainedShoppingListSyncer =
         syncOptions.contains(SHOPPING_LIST_SYNC)
-            ? buildShoppingListsSync(
-                runnerNameOptionValue, isFullSync, sourceClient, targetClient, completableFuture3)
-            : completableFuture3;
+            ? chainedProductSyncer.thenCompose(
+                ignored ->
+                    ShoppingListSyncer.of(sourceClient, targetClient, clock)
+                        .sync(runnerNameOptionValue, isFullSync))
+            : chainedProductSyncer;
 
-    return completableFuture4.whenComplete((syncResult, throwable) -> closeClients());
+    return chainedShoppingListSyncer.whenComplete((syncResult, throwable) -> closeClients());
   }
 
   @Nonnull
@@ -215,16 +218,6 @@ final class SyncerFactory {
         .collect(Collectors.toList());
   }
 
-  private CompletableFuture<Void> buildCategoryAndInventoryAndCartDiscountAndCustomerSync(
-      final List<CompletableFuture<Void>> categoryAndInventoryAndCartDiscountAndCustomer,
-      final CompletableFuture<Void> completableFuture) {
-
-    return completableFuture.thenCompose(
-        ignored ->
-            CompletableFuture.allOf(
-                categoryAndInventoryAndCartDiscountAndCustomer.toArray(new CompletableFuture[0])));
-  }
-
   private CompletableFuture<Void> buildShoppingListsSync(
       final @Nullable String runnerNameOptionValue,
       final boolean isFullSync,
@@ -238,57 +231,42 @@ final class SyncerFactory {
                 .sync(runnerNameOptionValue, isFullSync));
   }
 
-  private CompletableFuture<Void> buildProductSync(
+  private List<CompletableFuture<Void>> buildMainResourceSyncers(
+      @Nonnull List<SyncModuleOption> syncOptions,
       @Nullable final String runnerNameOptionValue,
       final boolean isFullSync,
+      final boolean isSyncProjectSyncCustomObjects,
       final SphereClient sourceClient,
-      final SphereClient targetClient,
-      final CompletableFuture<Void> completableFuture2) {
+      final SphereClient targetClient) {
 
-    return completableFuture2.thenCompose(
-        ignored ->
-            ProductSyncer.of(sourceClient, targetClient, clock)
-                .sync(runnerNameOptionValue, isFullSync));
-  }
-
-  private List<CompletableFuture<Void>>
-      buildTypeAndProductTypeAndStateAndTaxCategoryAndCustomObject(
-          @Nonnull List<SyncModuleOption> syncOptions,
-          @Nullable final String runnerNameOptionValue,
-          final boolean isFullSync,
-          final boolean isSyncProjectSyncCustomObjects,
-          final SphereClient sourceClient,
-          final SphereClient targetClient) {
-
-    List<CompletableFuture<Void>> typeAndProductTypeAndStateAndTaxCategoryAndCustomObjectSync =
-        new ArrayList<>();
+    final List<CompletableFuture<Void>> mainResourceSyncerList = new ArrayList<>(5);
 
     if (syncOptions.contains(PRODUCT_TYPE_SYNC)) {
-      typeAndProductTypeAndStateAndTaxCategoryAndCustomObjectSync.add(
+      mainResourceSyncerList.add(
           ProductTypeSyncer.of(sourceClient, targetClient, clock)
               .sync(runnerNameOptionValue, isFullSync)
               .toCompletableFuture());
     }
     if (syncOptions.contains(TYPE_SYNC)) {
-      typeAndProductTypeAndStateAndTaxCategoryAndCustomObjectSync.add(
+      mainResourceSyncerList.add(
           TypeSyncer.of(sourceClient, targetClient, clock)
               .sync(runnerNameOptionValue, isFullSync)
               .toCompletableFuture());
     }
     if (syncOptions.contains(STATE_SYNC)) {
-      typeAndProductTypeAndStateAndTaxCategoryAndCustomObjectSync.add(
+      mainResourceSyncerList.add(
           StateSyncer.of(sourceClient, targetClient, clock)
               .sync(runnerNameOptionValue, isFullSync)
               .toCompletableFuture());
     }
     if (syncOptions.contains(TAX_CATEGORY_SYNC)) {
-      typeAndProductTypeAndStateAndTaxCategoryAndCustomObjectSync.add(
+      mainResourceSyncerList.add(
           TaxCategorySyncer.of(sourceClient, targetClient, clock)
               .sync(runnerNameOptionValue, isFullSync)
               .toCompletableFuture());
     }
     if (syncOptions.contains(CUSTOM_OBJECT_SYNC)) {
-      typeAndProductTypeAndStateAndTaxCategoryAndCustomObjectSync.add(
+      mainResourceSyncerList.add(
           CustomObjectSyncer.of(
                   sourceClient,
                   targetClient,
@@ -299,44 +277,44 @@ final class SyncerFactory {
               .toCompletableFuture());
     }
 
-    return typeAndProductTypeAndStateAndTaxCategoryAndCustomObjectSync;
+    return mainResourceSyncerList;
   }
 
-  private List<CompletableFuture<Void>> buildCategoryAndInventoryAndCartDiscountAndCustomer(
+  private List<CompletableFuture<Void>> buildSecondaryResourceSyncers(
       @Nonnull List<SyncModuleOption> syncOptions,
       @Nullable final String runnerNameOptionValue,
       final boolean isFullSync,
       final SphereClient sourceClient,
       final SphereClient targetClient) {
-    List<CompletableFuture<Void>> categoryAndInventoryAndCartDiscountAndCustomer =
-        new ArrayList<>();
+
+    final List<CompletableFuture<Void>> secondaryResourceSyncerList = new ArrayList<>(4);
 
     if (syncOptions.contains(CATEGORY_SYNC)) {
-      categoryAndInventoryAndCartDiscountAndCustomer.add(
+      secondaryResourceSyncerList.add(
           CategorySyncer.of(sourceClient, targetClient, clock)
               .sync(runnerNameOptionValue, isFullSync)
               .toCompletableFuture());
     }
     if (syncOptions.contains(CART_DISCOUNT_SYNC)) {
-      categoryAndInventoryAndCartDiscountAndCustomer.add(
+      secondaryResourceSyncerList.add(
           CartDiscountSyncer.of(sourceClient, targetClient, clock)
               .sync(runnerNameOptionValue, isFullSync)
               .toCompletableFuture());
     }
     if (syncOptions.contains(INVENTORY_ENTRY_SYNC)) {
-      categoryAndInventoryAndCartDiscountAndCustomer.add(
+      secondaryResourceSyncerList.add(
           InventoryEntrySyncer.of(sourceClient, targetClient, clock)
               .sync(runnerNameOptionValue, isFullSync)
               .toCompletableFuture());
     }
     if (syncOptions.contains(CUSTOMER_SYNC)) {
-      categoryAndInventoryAndCartDiscountAndCustomer.add(
+      secondaryResourceSyncerList.add(
           CustomerSyncer.of(sourceClient, targetClient, clock)
               .sync(runnerNameOptionValue, isFullSync)
               .toCompletableFuture());
     }
 
-    return categoryAndInventoryAndCartDiscountAndCustomer;
+    return secondaryResourceSyncerList;
   }
 
   private void closeClients() {
