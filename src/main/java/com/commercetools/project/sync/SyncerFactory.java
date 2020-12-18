@@ -218,19 +218,6 @@ final class SyncerFactory {
         .collect(Collectors.toList());
   }
 
-  private CompletableFuture<Void> buildShoppingListsSync(
-      final @Nullable String runnerNameOptionValue,
-      final boolean isFullSync,
-      final SphereClient sourceClient,
-      final SphereClient targetClient,
-      final CompletableFuture<Void> completableFuture3) {
-
-    return completableFuture3.thenCompose(
-        ignored ->
-            ShoppingListSyncer.of(sourceClient, targetClient, clock)
-                .sync(runnerNameOptionValue, isFullSync));
-  }
-
   private List<CompletableFuture<Void>> buildMainResourceSyncers(
       @Nonnull List<SyncModuleOption> syncOptions,
       @Nullable final String runnerNameOptionValue,
