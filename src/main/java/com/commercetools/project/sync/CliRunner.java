@@ -202,11 +202,13 @@ final class CliRunner {
     final boolean isSyncProjectSyncCustomObjects =
         commandLine.hasOption(SYNC_PROJECT_SYNC_CUSTOM_OBJECTS_OPTION_LONG);
 
-    if (SYNC_MODULE_OPTION_ALL.equals(syncOptionValues[0])) {
-      return syncerFactory.syncAll(runnerNameValue, isFullSync, isSyncProjectSyncCustomObjects);
-    } else if (syncOptionValues.length < 2) {
-      return syncerFactory.sync(
-          syncOptionValues[0], runnerNameValue, isFullSync, isSyncProjectSyncCustomObjects);
+    if (syncOptionValues.length == 1) {
+      if (SYNC_MODULE_OPTION_ALL.equals(syncOptionValues[0])) {
+        return syncerFactory.syncAll(runnerNameValue, isFullSync, isSyncProjectSyncCustomObjects);
+      } else {
+        return syncerFactory.sync(
+            syncOptionValues[0], runnerNameValue, isFullSync, isSyncProjectSyncCustomObjects);
+      }
     } else {
       return syncerFactory.syncMultipleResources(
           syncOptionValues, runnerNameValue, isFullSync, isSyncProjectSyncCustomObjects);
