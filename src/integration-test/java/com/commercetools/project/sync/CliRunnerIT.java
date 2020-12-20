@@ -16,6 +16,7 @@ import static com.commercetools.project.sync.util.TestUtils.assertCartDiscountSy
 import static com.commercetools.project.sync.util.TestUtils.assertCategorySyncerLoggingEvents;
 import static com.commercetools.project.sync.util.TestUtils.assertCustomObjectSyncerLoggingEvents;
 import static com.commercetools.project.sync.util.TestUtils.assertCustomerSyncerLoggingEvents;
+import static com.commercetools.project.sync.util.TestUtils.assertProductSyncerLoggingEvents;
 import static com.commercetools.project.sync.util.TestUtils.assertShoppingListSyncerLoggingEvents;
 import static com.commercetools.project.sync.util.TestUtils.assertSyncerLoggingEvents;
 import static com.commercetools.project.sync.util.TestUtils.assertTaxCategorySyncerLoggingEvents;
@@ -69,6 +70,7 @@ import io.sphere.sdk.products.ProductDraft;
 import io.sphere.sdk.products.ProductDraftBuilder;
 import io.sphere.sdk.products.ProductVariantDraftBuilder;
 import io.sphere.sdk.products.commands.ProductCreateCommand;
+import io.sphere.sdk.products.queries.ProductQuery;
 import io.sphere.sdk.producttypes.ProductType;
 import io.sphere.sdk.producttypes.ProductTypeDraft;
 import io.sphere.sdk.producttypes.ProductTypeDraftBuilder;
@@ -312,6 +314,48 @@ class CliRunnerIT {
   }
 
   @Test
+  void run_WithSyncAsArgumentWhenAllArgumentsPassed_ShouldExecuteAllSyncers() {
+    // preparation
+    try (final SphereClient targetClient = createClient(CTP_TARGET_CLIENT_CONFIG)) {
+      try (final SphereClient sourceClient = createClient(CTP_SOURCE_CLIENT_CONFIG)) {
+
+        final SyncerFactory syncerFactory =
+            SyncerFactory.of(() -> sourceClient, () -> targetClient, Clock.systemDefaultZone());
+
+        // test
+        CliRunner.of()
+            .run(
+                new String[] {
+                  "-s",
+                  "types",
+                  "productTypes",
+                  "customers",
+                  "customObjects",
+                  "taxCategories",
+                  "categories",
+                  "inventoryEntries",
+                  "cartDiscounts",
+                  "states",
+                  "products",
+                  "shoppingLists"
+                },
+                syncerFactory);
+      }
+    }
+
+    // create clients again (for assertions and cleanup), since the run method closes the clients
+    // after execution is done.
+    try (final SphereClient postSourceClient = createClient(CTP_SOURCE_CLIENT_CONFIG)) {
+      try (final SphereClient postTargetClient = createClient(CTP_TARGET_CLIENT_CONFIG)) {
+        // assertions
+        assertAllSyncersLoggingEvents(syncerTestLogger, cliRunnerTestLogger, 1);
+
+        assertAllResourcesAreSyncedToTarget(postTargetClient);
+      }
+    }
+  }
+
+  @Test
   void run_WithSyncAsArgumentWithCustomersAndShoppingLists_ShouldExecuteGivenSyncers() {
     // preparation
     try (final SphereClient targetClient = createClient(CTP_TARGET_CLIENT_CONFIG)) {
@@ -389,6 +433,70 @@ class CliRunnerIT {
             postTargetClient, sourceProjectKey, "taxCategorySync", "runnerName");
         assertLastSyncCustomObjectExists(
             postTargetClient, sourceProjectKey, "cartDiscountSync", "runnerName");
+      }
+    }
+  }
+
+  @Test
+  void
+      run_WithSyncAsArgumentWithProductsAndShoppingListsAlongWithTheirReferencedResources_ShouldExecuteGivenSyncers() {
+    // preparation
+    try (final SphereClient targetClient = createClient(CTP_TARGET_CLIENT_CONFIG)) {
+      try (final SphereClient sourceClient = createClient(CTP_SOURCE_CLIENT_CONFIG)) {
+
+        final SyncerFactory syncerFactory =
+            SyncerFactory.of(() -> sourceClient, () -> targetClient, Clock.systemDefaultZone());
+
+        // test
+        CliRunner.of()
+            .run(
+                new String[] {
+                  "-s",
+                  "types",
+                  "productTypes",
+                  "states",
+                  "taxCategories",
+                  "products",
+                  "customers",
+                  "shoppingLists"
+                },
+                syncerFactory);
+      }
+    }
+
+    // create clients again (for assertions and cleanup), since the run method closes the clients
+    // after execution is done.
+    try (final SphereClient postSourceClient = createClient(CTP_SOURCE_CLIENT_CONFIG)) {
+      try (final SphereClient postTargetClient = createClient(CTP_TARGET_CLIENT_CONFIG)) {
+        // assertions
+        assertThat(syncerTestLogger.getAllLoggingEvents()).hasSize(14);
+
+        assertProductSyncerLoggingEvents(syncerTestLogger, 1);
+
+        assertTypesAreSyncedCorrectly(postTargetClient);
+        assertProductsAreSyncedCorrectly(postTargetClient);
+        assertProductTypesAreSyncedCorrectly(postTargetClient);
+        assertStatesAreSyncedCorrectly(postTargetClient);
+        assertTaxCategoriesAreSyncedCorrectly(postTargetClient);
+        assertCustomersAreSyncedCorrectly(postTargetClient);
+        assertShoppingListsAreSyncedCorrectly(postTargetClient);
+
+        final String sourceProjectKey = postSourceClient.getConfig().getProjectKey();
+
+        assertLastSyncCustomObjectExists(
+            postTargetClient, sourceProjectKey, "typeSync", "runnerName");
+        assertLastSyncCustomObjectExists(
+            postTargetClient, sourceProjectKey, "productSync", "runnerName");
+        assertLastSyncCustomObjectExists(
+            postTargetClient, sourceProjectKey, "productTypeSync", "runnerName");
+        assertLastSyncCustomObjectExists(
+            postTargetClient, sourceProjectKey, "stateSync", "runnerName");
+        assertLastSyncCustomObjectExists(
+            postTargetClient, sourceProjectKey, "taxCategorySync", "runnerName");
+        assertLastSyncCustomObjectExists(
+            postTargetClient, sourceProjectKey, "customerSync", "runnerName");
+        assertLastSyncCustomObjectExists(
+            postTargetClient, sourceProjectKey, "shoppingListSync", "runnerName");
       }
     }
   }
@@ -660,6 +768,21 @@ class CliRunnerIT {
     }
   }
 
+  private static void assertTypesAreSyncedCorrectly(@Nonnull final SphereClient ctpClient) {
+    final String queryPredicate = format("key=\"%s\"", RESOURCE_KEY);
+
+    final PagedQueryResult<Type> typeQueryResult =
+        ctpClient
+            .execute(TypeQuery.of().withPredicates(QueryPredicate.of(queryPredicate)))
+            .toCompletableFuture()
+            .join();
+
+    assertThat(typeQueryResult.getResults())
+        .hasSize(1)
+        .singleElement()
+        .satisfies(productType -> assertThat(productType.getKey()).isEqualTo(RESOURCE_KEY));
+  }
+
   private static void assertProductTypesAreSyncedCorrectly(@Nonnull final SphereClient ctpClient) {
 
     final PagedQueryResult<ProductType> productTypeQueryResult =
@@ -669,6 +792,17 @@ class CliRunnerIT {
         .hasSize(1)
         .singleElement()
         .satisfies(productType -> assertThat(productType.getKey()).isEqualTo(RESOURCE_KEY));
+  }
+
+  private static void assertProductsAreSyncedCorrectly(@Nonnull final SphereClient ctpClient) {
+
+    final PagedQueryResult<Product> productQueryResult =
+        ctpClient.execute(ProductQuery.of()).toCompletableFuture().join();
+
+    assertThat(productQueryResult.getResults())
+        .hasSize(1)
+        .singleElement()
+        .satisfies(product -> assertThat(product.getKey()).isEqualTo(RESOURCE_KEY));
   }
 
   private static void assertCustomersAreSyncedCorrectly(@Nonnull final SphereClient ctpClient) {
@@ -702,6 +836,17 @@ class CliRunnerIT {
             .toCompletableFuture()
             .join();
     assertThat(categoryPagedQueryResult.getResults()).hasSize(1);
+  }
+
+  private static void assertStatesAreSyncedCorrectly(@Nonnull final SphereClient ctpClient) {
+    final PagedQueryResult<State> statePagedQueryResult =
+        ctpClient
+            .execute(
+                StateQuery.of()
+                    .withPredicates(QueryPredicate.of(format("key=\"%s\"", RESOURCE_KEY))))
+            .toCompletableFuture()
+            .join();
+    assertThat(statePagedQueryResult.getResults()).hasSize(1);
   }
 
   private static void assertTaxCategoriesAreSyncedCorrectly(@Nonnull final SphereClient ctpClient) {
