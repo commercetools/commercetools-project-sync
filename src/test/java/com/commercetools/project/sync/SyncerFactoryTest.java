@@ -103,13 +103,14 @@ class SyncerFactoryTest {
                     () -> mock(SphereClient.class),
                     () -> mock(SphereClient.class),
                     getMockedClock())
-                .sync(null, "myRunnerName", false, false))
-        .hasFailedWithThrowableThat()
-        .isExactlyInstanceOf(IllegalArgumentException.class)
-        .hasMessageContaining(
+                .sync(new String[] {null}, "myRunnerName", false, false))
+        .failsWithin(1, TimeUnit.SECONDS)
+        .withThrowableOfType(ExecutionException.class)
+        .withCauseExactlyInstanceOf(IllegalArgumentException.class)
+        .withMessageContaining(
             format(
-                "Unknown argument \"%s\" supplied to \"-s\" or \"--sync\" option! %s",
-                null, SYNC_MODULE_OPTION_DESCRIPTION));
+                "Blank argument supplied to \"-s\" or \"--sync\" option! %s",
+                SYNC_MODULE_OPTION_DESCRIPTION));
   }
 
   @Test
