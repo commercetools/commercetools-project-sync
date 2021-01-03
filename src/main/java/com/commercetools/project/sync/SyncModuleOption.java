@@ -14,27 +14,41 @@ import com.commercetools.sync.states.StateSync;
 import com.commercetools.sync.taxcategories.TaxCategorySync;
 import com.commercetools.sync.types.TypeSync;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.stream.Stream;
 
 public enum SyncModuleOption {
-  TYPE_SYNC("types", TypeSync.class),
-  PRODUCT_TYPE_SYNC("productTypes", ProductTypeSync.class),
-  CART_DISCOUNT_SYNC("cartDiscounts", CartDiscountSync.class),
-  CUSTOM_OBJECT_SYNC("customObjects", CustomObjectSync.class),
-  CATEGORY_SYNC("categories", CategorySync.class),
-  PRODUCT_SYNC("products", ProductSync.class),
-  INVENTORY_ENTRY_SYNC("inventoryEntries", InventorySync.class),
-  STATE_SYNC("states", StateSync.class),
-  TAX_CATEGORY_SYNC("taxCategories", TaxCategorySync.class),
-  CUSTOMER_SYNC("customers", CustomerSync.class),
-  SHOPPING_LIST_SYNC("shoppingLists", ShoppingListSync.class);
+  TYPE_SYNC("types", TypeSync.class, Collections.EMPTY_LIST),
+  PRODUCT_TYPE_SYNC("productTypes", ProductTypeSync.class, Collections.EMPTY_LIST),
+  CART_DISCOUNT_SYNC("cartDiscounts", CartDiscountSync.class, Collections.singletonList(TYPE_SYNC)),
+  CUSTOM_OBJECT_SYNC("customObjects", CustomObjectSync.class, Collections.emptyList()),
+  CATEGORY_SYNC("categories", CategorySync.class, Collections.singletonList(TYPE_SYNC)),
+  INVENTORY_ENTRY_SYNC(
+      "inventoryEntries", InventorySync.class, Collections.singletonList(TYPE_SYNC)),
+  STATE_SYNC("states", StateSync.class, Collections.emptyList()),
+  TAX_CATEGORY_SYNC("taxCategories", TaxCategorySync.class, Collections.emptyList()),
+  CUSTOMER_SYNC("customers", CustomerSync.class, Collections.singletonList(TYPE_SYNC)),
+  PRODUCT_SYNC(
+      "products",
+      ProductSync.class,
+      Arrays.asList(TYPE_SYNC, PRODUCT_TYPE_SYNC, STATE_SYNC, CATEGORY_SYNC, TAX_CATEGORY_SYNC)),
+  SHOPPING_LIST_SYNC(
+      "shoppingLists",
+      ShoppingListSync.class,
+      Arrays.asList(TYPE_SYNC, CUSTOMER_SYNC, PRODUCT_SYNC));
 
   public final String syncOptionValue;
   private final Class<? extends BaseSync> syncClass;
+  private final List<SyncModuleOption> references;
 
-  SyncModuleOption(String syncOptionValue, Class<? extends BaseSync> syncClass) {
+  SyncModuleOption(
+      String syncOptionValue,
+      Class<? extends BaseSync> syncClass,
+      List<SyncModuleOption> references) {
     this.syncOptionValue = syncOptionValue;
     this.syncClass = syncClass;
+    this.references = references;
   }
 
   public String getSyncOptionValue() {
@@ -56,5 +70,9 @@ public enum SyncModuleOption {
         .filter(syncModuleOption -> syncModuleOption.getSyncOptionValue().equals(syncOptionValue))
         .findFirst()
         .orElseThrow(IllegalArgumentException::new);
+  }
+
+  public List<SyncModuleOption> getReferences() {
+    return references;
   }
 }

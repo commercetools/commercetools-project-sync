@@ -39,7 +39,7 @@ final class CliRunner {
 
   static final String SYNC_MODULE_OPTION_DESCRIPTION =
       format(
-          "Choose one of the following modules to run: \"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\" or \"%s\".",
+          "Choose one or more of the following modules to run: \"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\" or \"%s\".",
           (Object[])
               ArrayUtils.add(SyncModuleOption.getSyncOptionValues(), SYNC_MODULE_OPTION_ALL));
   static final String RUNNER_NAME_OPTION_DESCRIPTION =
@@ -202,17 +202,8 @@ final class CliRunner {
     final boolean isSyncProjectSyncCustomObjects =
         commandLine.hasOption(SYNC_PROJECT_SYNC_CUSTOM_OBJECTS_OPTION_LONG);
 
-    if (syncOptionValues.length == 1) {
-      if (SYNC_MODULE_OPTION_ALL.equals(syncOptionValues[0])) {
-        return syncerFactory.syncAll(runnerNameValue, isFullSync, isSyncProjectSyncCustomObjects);
-      } else {
-        return syncerFactory.sync(
-            syncOptionValues[0], runnerNameValue, isFullSync, isSyncProjectSyncCustomObjects);
-      }
-    } else {
-      return syncerFactory.syncMultipleResources(
-          syncOptionValues, runnerNameValue, isFullSync, isSyncProjectSyncCustomObjects);
-    }
+    return syncerFactory.sync(
+        syncOptionValues, runnerNameValue, isFullSync, isSyncProjectSyncCustomObjects);
   }
 
   private static void printHelpToStdOut(@Nonnull final Options cliOptions) {

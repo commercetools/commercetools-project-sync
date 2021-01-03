@@ -14,6 +14,7 @@
 - [Prerequisites](#prerequisites)
 - [Usage](#usage)
   - [Delta Sync](#delta-sync)
+  - [Running Multiple syncers](#running-multiple-syncers)
   - [Running the Docker Image](#running-the-docker-image)
     - [Download](#download)
     - [Run](#run)
@@ -98,7 +99,7 @@ As of now, these are the supported resources:
                                         name would lead to an unexpected
                                         behaviour. (optional parameter)
                                         default: 'runnerName'.
-    -s,--sync <arg>                     Choose one of the following modules
+    -s,--sync <args>                    Choose one or more of the following modules
                                         to run: "types", "productTypes",
                                         "cartDiscounts", "customObjects",
                                         "categories", "products",
@@ -157,6 +158,14 @@ The last sync timestamp `customObject` for a runner name `testRun` running a **T
 _Note:_ Another `customObject` with the `container` convention `commercetools-project-sync.{runnerName}.{syncModuleName}.timestampGenerator` is also created on the target project for capturing a unified timestamp from commercetools.
 
 Running a **Full sync** using `-f` or `--full` option will not create any `customObjects`.
+
+#### Running Multiple Syncers
+
+The application can sync multiple resources. For example, To run type sync and productType sync together, 
+You might pass `-s` option with `types, productTypes` as below,
+```bash
+-s types, productTypes
+```
 
 #### Running the Docker Image
 
@@ -242,6 +251,15 @@ commercetools/commercetools-project-sync:3.9.0 -s all
 - To run the shoppingList sync
    ```bash
    docker run commercetools/commercetools-project-sync:3.9.0 -s shoppingLists
+   ```
+- To run both products and shoppingList sync
+   ```bash
+   docker run commercetools/commercetools-project-sync:3.9.0 -s products, shoppingLists
+   ```
+  
+- To run type, productType and shoppingList sync
+   ```bash
+   docker run commercetools/commercetools-project-sync:3.9.0 -s types, productTypes, shoppingLists
    ```
 
 - To run all sync modules using a runner name

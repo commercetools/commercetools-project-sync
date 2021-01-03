@@ -108,8 +108,8 @@ class SyncerFactoryTest {
         .isExactlyInstanceOf(IllegalArgumentException.class)
         .hasMessageContaining(
             format(
-                "Blank argument supplied to \"-s\" or \"--sync\" option! %s",
-                SYNC_MODULE_OPTION_DESCRIPTION));
+                "Unknown argument \"%s\" supplied to \"-s\" or \"--sync\" option! %s",
+                null, SYNC_MODULE_OPTION_DESCRIPTION));
   }
 
   @Test
@@ -119,10 +119,11 @@ class SyncerFactoryTest {
                     () -> mock(SphereClient.class),
                     () -> mock(SphereClient.class),
                     getMockedClock())
-                .sync("", "myRunnerName", false, false))
-        .hasFailedWithThrowableThat()
-        .isExactlyInstanceOf(IllegalArgumentException.class)
-        .hasMessageContaining(
+                .sync(new String[] {""}, "myRunnerName", false, false))
+        .failsWithin(1, TimeUnit.SECONDS)
+        .withThrowableOfType(ExecutionException.class)
+        .withCauseExactlyInstanceOf(IllegalArgumentException.class)
+        .withMessageContaining(
             format(
                 "Blank argument supplied to \"-s\" or \"--sync\" option! %s",
                 SYNC_MODULE_OPTION_DESCRIPTION));
@@ -130,7 +131,7 @@ class SyncerFactoryTest {
 
   @Test
   void sync_WithUnknownOptionValue_ShouldCompleteExceptionallyWithIllegalArgumentException() {
-    final String unknownOptionValue = "anyOption";
+    final String[] unknownOptionValue = {"anyOption"};
 
     assertThat(
             SyncerFactory.of(
@@ -143,7 +144,7 @@ class SyncerFactoryTest {
         .hasMessageContaining(
             format(
                 "Unknown argument \"%s\" supplied to \"-s\" or \"--sync\" option! %s",
-                unknownOptionValue, SYNC_MODULE_OPTION_DESCRIPTION));
+                unknownOptionValue[0], SYNC_MODULE_OPTION_DESCRIPTION));
   }
 
   @Test
@@ -166,7 +167,7 @@ class SyncerFactoryTest {
     stubClientsCustomObjectService(targetClient, currentCtpTimestamp);
 
     // test
-    syncerFactory.sync("products", "myRunnerName", false, false);
+    syncerFactory.sync(new String[] {"products"}, "myRunnerName", false, false);
 
     // assertions
     verify(sourceClient, times(1)).execute(any(ProductQuery.class));
@@ -229,7 +230,7 @@ class SyncerFactoryTest {
     stubClientsCustomObjectService(targetClient, currentCtpTimestamp);
 
     // test
-    syncerFactory.sync("products", "myRunnerName", true, false);
+    syncerFactory.sync(new String[] {"products"}, "myRunnerName", true, false);
 
     // assertions
     verify(sourceClient, times(1)).execute(any(ProductQuery.class));
@@ -297,7 +298,7 @@ class SyncerFactoryTest {
         SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock());
 
     // test
-    syncerFactory.sync("products", "myRunnerName", true, false);
+    syncerFactory.sync(new String[] {"products"}, "myRunnerName", true, false);
 
     // assertions
     verify(sourceClient, times(1)).execute(any(ProductQuery.class));
@@ -401,7 +402,7 @@ class SyncerFactoryTest {
         SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock());
 
     // test
-    syncerFactory.sync("products", "myRunnerName", true, false);
+    syncerFactory.sync(new String[] {"products"}, "myRunnerName", true, false);
 
     // assertions
     verify(sourceClient, times(2)).execute(any(ProductQuery.class));
@@ -548,7 +549,7 @@ class SyncerFactoryTest {
     stubClientsCustomObjectService(targetClient, currentCtpTimestamp);
 
     // test
-    syncerFactory.sync("categories", null, false, false);
+    syncerFactory.sync(new String[] {"categories"}, null, false, false);
 
     // assertions
     verify(sourceClient, times(1)).execute(any(CategoryQuery.class));
@@ -611,7 +612,7 @@ class SyncerFactoryTest {
     stubClientsCustomObjectService(targetClient, currentCtpTimestamp);
 
     // test
-    syncerFactory.sync("productTypes", "", false, false);
+    syncerFactory.sync(new String[] {"productTypes"}, "", false, false);
 
     // assertions
     verify(sourceClient, times(1)).execute(any(ProductTypeQuery.class));
@@ -675,7 +676,7 @@ class SyncerFactoryTest {
         SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock());
 
     // test
-    syncerFactory.sync("types", "foo", false, false);
+    syncerFactory.sync(new String[] {"types"}, "foo", false, false);
 
     // assertions
     verify(sourceClient, times(1)).execute(any(TypeQuery.class));
@@ -737,7 +738,7 @@ class SyncerFactoryTest {
         SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock());
 
     // test
-    syncerFactory.sync("inventoryEntries", null, false, false);
+    syncerFactory.sync(new String[] {"inventoryEntries"}, null, false, false);
 
     // assertions
     verify(sourceClient, times(1)).execute(any(InventoryEntryQuery.class));
@@ -800,14 +801,18 @@ class SyncerFactoryTest {
         SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock());
 
     // test
-    final CompletionStage<Void> result = syncerFactory.sync("inventoryEntries", null, false, false);
+    final CompletionStage<Void> result =
+        syncerFactory.sync(new String[] {"inventoryEntries"}, null, false, false);
 
     // assertions
     verifyTimestampGeneratorCustomObjectUpsertIsCalled(
         targetClient, "InventorySync", DEFAULT_RUNNER_NAME);
     verify(sourceClient, times(1)).execute(any(InventoryEntryQuery.class));
     verifyInteractionsWithClientAfterSync(sourceClient, 1);
-    assertThat(result).hasFailedWithThrowableThat().isExactlyInstanceOf(BadGatewayException.class);
+    assertThat(result)
+        .failsWithin(1, TimeUnit.SECONDS)
+        .withThrowableOfType(ExecutionException.class)
+        .withCauseExactlyInstanceOf(BadGatewayException.class);
   }
 
   @Test
@@ -829,14 +834,18 @@ class SyncerFactoryTest {
         SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock());
 
     // test
-    final CompletionStage<Void> result = syncerFactory.sync("inventoryEntries", "", false, false);
+    final CompletionStage<Void> result =
+        syncerFactory.sync(new String[] {"inventoryEntries"}, "", false, false);
 
     // assertions
     verifyTimestampGeneratorCustomObjectUpsertIsCalled(
         targetClient, "InventorySync", DEFAULT_RUNNER_NAME);
     verify(sourceClient, times(0)).execute(any(InventoryEntryQuery.class));
     verifyInteractionsWithClientAfterSync(sourceClient, 1);
-    assertThat(result).hasFailedWithThrowableThat().isExactlyInstanceOf(BadGatewayException.class);
+    assertThat(result)
+        .failsWithin(1, TimeUnit.SECONDS)
+        .withThrowableOfType(ExecutionException.class)
+        .withCauseExactlyInstanceOf(BadGatewayException.class);
   }
 
   @Test
@@ -864,14 +873,17 @@ class SyncerFactoryTest {
 
     // test
     final CompletionStage<Void> result =
-        syncerFactory.sync("inventoryEntries", "bar", false, false);
+        syncerFactory.sync(new String[] {"inventoryEntries"}, "bar", false, false);
 
     // assertions
     verifyTimestampGeneratorCustomObjectUpsertIsCalled(targetClient, "InventorySync", "bar");
     verifyLastSyncCustomObjectQuery(targetClient, "inventorySync", "bar", "foo", 1);
     verify(sourceClient, times(0)).execute(any(InventoryEntryQuery.class));
     verifyInteractionsWithClientAfterSync(sourceClient, 1);
-    assertThat(result).hasFailedWithThrowableThat().isExactlyInstanceOf(BadGatewayException.class);
+    assertThat(result)
+        .failsWithin(1, TimeUnit.SECONDS)
+        .withThrowableOfType(ExecutionException.class)
+        .withCauseExactlyInstanceOf(BadGatewayException.class);
   }
 
   @Test
@@ -914,7 +926,7 @@ class SyncerFactoryTest {
         SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock());
 
     // test
-    syncerFactory.syncAll(null, false, false).join();
+    syncerFactory.sync(new String[] {"all"}, null, false, false).join();
 
     // assertions
     verifyTimestampGeneratorCustomObjectUpsertIsCalled(
@@ -995,8 +1007,8 @@ class SyncerFactoryTest {
         SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock());
 
     // test
-    String[] syncResources = {"productTypes", "products", "customers", "shoppingLists"};
-    syncerFactory.syncMultipleResources(syncResources, null, false, false).join();
+    String[] syncModuleOptions = {"productTypes", "products", "customers", "shoppingLists"};
+    syncerFactory.sync(syncModuleOptions, null, false, false).join();
 
     // assertions
     verifyTimestampGeneratorCustomObjectUpsertIsCalled(
@@ -1050,8 +1062,8 @@ class SyncerFactoryTest {
         SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock());
 
     // test
-    String[] syncResources = {"states", "inventoryEntries", "customObjects"};
-    syncerFactory.syncMultipleResources(syncResources, null, false, false).join();
+    String[] syncModuleOptions = {"states", "inventoryEntries", "customObjects"};
+    syncerFactory.sync(syncModuleOptions, null, false, false).join();
 
     // assertions
     verifyTimestampGeneratorCustomObjectUpsertIsCalled(
@@ -1098,8 +1110,8 @@ class SyncerFactoryTest {
         SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock());
 
     // test
-    String[] syncResources = {"types", "categories"};
-    syncerFactory.syncMultipleResources(syncResources, null, false, false).join();
+    String[] syncModuleOptions = {"types", "categories"};
+    syncerFactory.sync(syncModuleOptions, null, false, false).join();
 
     // assertions
     verifyTimestampGeneratorCustomObjectUpsertIsCalled(
@@ -1140,8 +1152,8 @@ class SyncerFactoryTest {
         SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock());
 
     // test
-    String[] syncResources = {"products", "shoppingLists"};
-    syncerFactory.syncMultipleResources(syncResources, null, false, false).join();
+    String[] syncModuleOptions = {"products", "shoppingLists"};
+    syncerFactory.sync(syncModuleOptions, null, false, false).join();
 
     // assertions
     verifyTimestampGeneratorCustomObjectUpsertIsCalled(
@@ -1191,7 +1203,7 @@ class SyncerFactoryTest {
 
   @Test
   void sync_AsDelta_WithUnmatchedSyncOptionValue_ShouldBuildSyncerAndExecuteSync() {
-    final String syncOptionValue = "unknown";
+    final String[] syncOptionValue = {"unknown"};
     final SphereClient sourceClient = mock(SphereClient.class);
     when(sourceClient.getConfig()).thenReturn(SphereClientConfig.of("foo", "foo", "foo"));
 
@@ -1207,17 +1219,18 @@ class SyncerFactoryTest {
     String errorMessage =
         format(
             "Unknown argument \"%s\" supplied to \"-s\" or \"--sync\" option! %s",
-            syncOptionValue, SYNC_MODULE_OPTION_DESCRIPTION);
+            syncOptionValue[0], SYNC_MODULE_OPTION_DESCRIPTION);
 
     assertThat(result)
-        .hasFailedWithThrowableThat()
-        .isExactlyInstanceOf(IllegalArgumentException.class)
-        .hasMessageContaining(errorMessage);
+        .failsWithin(1, TimeUnit.SECONDS)
+        .withThrowableOfType(ExecutionException.class)
+        .withCauseExactlyInstanceOf(IllegalArgumentException.class)
+        .withMessageContaining(errorMessage);
   }
 
   @Test
   void sync_AsDelta_WithUnmatchedSyncOptionValue_ShouldResultIllegalArgumentException() {
-    final String syncOptionValue = "unknown";
+    final String[] syncOptionValue = {"unknown"};
     final SphereClient sourceClient = mock(SphereClient.class);
     when(sourceClient.getConfig()).thenReturn(SphereClientConfig.of("foo", "foo", "foo"));
 
@@ -1233,12 +1246,13 @@ class SyncerFactoryTest {
     String errorMessage =
         format(
             "Unknown argument \"%s\" supplied to \"-s\" or \"--sync\" option! %s",
-            syncOptionValue, SYNC_MODULE_OPTION_DESCRIPTION);
+            syncOptionValue[0], SYNC_MODULE_OPTION_DESCRIPTION);
 
     assertThat(result)
-        .hasFailedWithThrowableThat()
-        .isExactlyInstanceOf(IllegalArgumentException.class)
-        .hasMessageContaining(errorMessage);
+        .failsWithin(1, TimeUnit.SECONDS)
+        .withThrowableOfType(ExecutionException.class)
+        .withCauseExactlyInstanceOf(IllegalArgumentException.class)
+        .withMessageContaining(errorMessage);
   }
 
   @Test
@@ -1254,8 +1268,7 @@ class SyncerFactoryTest {
 
     // test
     String[] syncResources = {"productTypes", "unknown", "shoppingLists"};
-    CompletionStage<Void> result =
-        syncerFactory.syncMultipleResources(syncResources, null, false, false);
+    CompletionStage<Void> result = syncerFactory.sync(syncResources, null, false, false);
 
     String errorMessage =
         format(
