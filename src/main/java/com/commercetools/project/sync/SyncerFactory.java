@@ -188,19 +188,17 @@ final class SyncerFactory {
                                 syncModuleOption.getReferences(), syncModuleOptions)));
 
     Map<Integer, List<SyncModuleOption>> groupedSyncModuleOptions = new TreeMap<>();
-    for (Map.Entry<SyncModuleOption, Integer> syncOptionWithReferenceCount :
+    for (Map.Entry<SyncModuleOption, Integer> pivotEntry :
         syncModuleOptionWithReferencesCount.entrySet()) {
-      if (!groupedSyncModuleOptions.containsKey(syncOptionWithReferenceCount.getValue())) {
+      if (!groupedSyncModuleOptions.containsKey(pivotEntry.getValue())) {
         List<SyncModuleOption> syncOptionsList = new ArrayList<>();
-        for (Map.Entry<SyncModuleOption, Integer> syncModuleOptionIntegerEntry :
+        for (Map.Entry<SyncModuleOption, Integer> iteratingEntry :
             syncModuleOptionWithReferencesCount.entrySet()) {
-          if (syncOptionWithReferenceCount
-              .getValue()
-              .equals(syncModuleOptionIntegerEntry.getValue())) {
-            syncOptionsList.add(syncModuleOptionIntegerEntry.getKey());
+          if (pivotEntry.getValue().equals(iteratingEntry.getValue())) {
+            syncOptionsList.add(iteratingEntry.getKey());
           }
         }
-        groupedSyncModuleOptions.put(syncOptionWithReferenceCount.getValue(), syncOptionsList);
+        groupedSyncModuleOptions.put(pivotEntry.getValue(), syncOptionsList);
       }
     }
     return groupedSyncModuleOptions.values();
