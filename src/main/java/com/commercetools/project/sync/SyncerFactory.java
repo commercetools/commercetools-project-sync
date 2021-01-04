@@ -240,37 +240,55 @@ final class SyncerFactory {
           @Nonnull final String runnerNameOptionValue,
           final boolean syncProjectSyncCustomObjects) {
 
+    Syncer<
+        ? extends ResourceView,
+        ?,
+        ? extends BaseSyncStatistics,
+        ? extends BaseSyncOptions<?, ?>,
+        ? extends QueryDsl<?, ?>,
+        ? extends BaseSync<?, ?, ?>> syncer = null;
+
     switch (syncModuleOption) {
       case CART_DISCOUNT_SYNC:
-        return CartDiscountSyncer.of(sourceClientSupplier.get(), targetClientSupplier.get(), clock);
+        syncer = CartDiscountSyncer.of(sourceClientSupplier.get(), targetClientSupplier.get(), clock);
+        break;
       case PRODUCT_TYPE_SYNC:
-        return ProductTypeSyncer.of(sourceClientSupplier.get(), targetClientSupplier.get(), clock);
+        syncer = ProductTypeSyncer.of(sourceClientSupplier.get(), targetClientSupplier.get(), clock);
+        break;
       case CATEGORY_SYNC:
-        return CategorySyncer.of(sourceClientSupplier.get(), targetClientSupplier.get(), clock);
+        syncer = CategorySyncer.of(sourceClientSupplier.get(), targetClientSupplier.get(), clock);
+        break;
       case PRODUCT_SYNC:
-        return ProductSyncer.of(sourceClientSupplier.get(), targetClientSupplier.get(), clock);
+        syncer = ProductSyncer.of(sourceClientSupplier.get(), targetClientSupplier.get(), clock);
+        break;
       case INVENTORY_ENTRY_SYNC:
-        return InventoryEntrySyncer.of(
+        syncer = InventoryEntrySyncer.of(
             sourceClientSupplier.get(), targetClientSupplier.get(), clock);
+        break;
       case TAX_CATEGORY_SYNC:
-        return TaxCategorySyncer.of(sourceClientSupplier.get(), targetClientSupplier.get(), clock);
+        syncer = TaxCategorySyncer.of(sourceClientSupplier.get(), targetClientSupplier.get(), clock);
+        break;
       case TYPE_SYNC:
-        return TypeSyncer.of(sourceClientSupplier.get(), targetClientSupplier.get(), clock);
+        syncer = TypeSyncer.of(sourceClientSupplier.get(), targetClientSupplier.get(), clock);
+        break;
       case STATE_SYNC:
-        return StateSyncer.of(sourceClientSupplier.get(), targetClientSupplier.get(), clock);
+        syncer = StateSyncer.of(sourceClientSupplier.get(), targetClientSupplier.get(), clock);
+        break;
       case CUSTOM_OBJECT_SYNC:
-        return CustomObjectSyncer.of(
+        syncer = CustomObjectSyncer.of(
             sourceClientSupplier.get(),
             targetClientSupplier.get(),
             clock,
             runnerNameOptionValue,
             syncProjectSyncCustomObjects);
+        break;
       case CUSTOMER_SYNC:
-        return CustomerSyncer.of(sourceClientSupplier.get(), targetClientSupplier.get(), clock);
+        syncer = CustomerSyncer.of(sourceClientSupplier.get(), targetClientSupplier.get(), clock);
+        break;
       case SHOPPING_LIST_SYNC:
-        return ShoppingListSyncer.of(sourceClientSupplier.get(), targetClientSupplier.get(), clock);
-      default:
-        throw new IllegalArgumentException();
+        syncer = ShoppingListSyncer.of(sourceClientSupplier.get(), targetClientSupplier.get(), clock);
+        break;
     }
+    return syncer;
   }
 }
