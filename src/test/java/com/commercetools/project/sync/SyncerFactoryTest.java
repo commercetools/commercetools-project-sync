@@ -142,9 +142,10 @@ class SyncerFactoryTest {
                     () -> mock(SphereClient.class),
                     getMockedClock())
                 .sync(unknownOptionValue, "myRunnerName", false, false))
-        .hasFailedWithThrowableThat()
-        .isExactlyInstanceOf(IllegalArgumentException.class)
-        .hasMessageContaining(
+        .failsWithin(1, TimeUnit.SECONDS)
+        .withThrowableOfType(ExecutionException.class)
+        .withCauseExactlyInstanceOf(IllegalArgumentException.class)
+        .withMessageContaining(
             format(
                 "Unknown argument \"%s\" supplied to \"-s\" or \"--sync\" option! %s",
                 unknownOptionValue[0], SYNC_MODULE_OPTION_DESCRIPTION));
@@ -1218,60 +1219,6 @@ class SyncerFactoryTest {
   }
 
   @Test
-  void sync_AsDelta_WithUnmatchedSyncOptionValue_ShouldBuildSyncerAndExecuteSync() {
-    final String[] syncOptionValue = {"unknown"};
-    final SphereClient sourceClient = mock(SphereClient.class);
-    when(sourceClient.getConfig()).thenReturn(SphereClientConfig.of("foo", "foo", "foo"));
-
-    final SphereClient targetClient = mock(SphereClient.class);
-    when(targetClient.getConfig()).thenReturn(SphereClientConfig.of("bar", "bar", "bar"));
-
-    final SyncerFactory syncerFactory =
-        SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock());
-
-    // test
-    CompletionStage<Void> result = syncerFactory.sync(syncOptionValue, null, false, false);
-
-    String errorMessage =
-        format(
-            "Unknown argument \"%s\" supplied to \"-s\" or \"--sync\" option! %s",
-            syncOptionValue[0], SYNC_MODULE_OPTION_DESCRIPTION);
-
-    assertThat(result)
-        .failsWithin(1, TimeUnit.SECONDS)
-        .withThrowableOfType(ExecutionException.class)
-        .withCauseExactlyInstanceOf(IllegalArgumentException.class)
-        .withMessageContaining(errorMessage);
-  }
-
-  @Test
-  void sync_AsDelta_WithUnmatchedSyncOptionValue_ShouldResultIllegalArgumentException() {
-    final String[] syncOptionValue = {"unknown"};
-    final SphereClient sourceClient = mock(SphereClient.class);
-    when(sourceClient.getConfig()).thenReturn(SphereClientConfig.of("foo", "foo", "foo"));
-
-    final SphereClient targetClient = mock(SphereClient.class);
-    when(targetClient.getConfig()).thenReturn(SphereClientConfig.of("bar", "bar", "bar"));
-
-    final SyncerFactory syncerFactory =
-        SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock());
-
-    // test
-    CompletionStage<Void> result = syncerFactory.sync(syncOptionValue, null, false, false);
-
-    String errorMessage =
-        format(
-            "Unknown argument \"%s\" supplied to \"-s\" or \"--sync\" option! %s",
-            syncOptionValue[0], SYNC_MODULE_OPTION_DESCRIPTION);
-
-    assertThat(result)
-        .failsWithin(1, TimeUnit.SECONDS)
-        .withThrowableOfType(ExecutionException.class)
-        .withCauseExactlyInstanceOf(IllegalArgumentException.class)
-        .withMessageContaining(errorMessage);
-  }
-
-  @Test
   void sync_AsDelta_WithOneUnmatchedSyncOptionValue_ShouldResultIllegalArgumentException() {
     final SphereClient sourceClient = mock(SphereClient.class);
     when(sourceClient.getConfig()).thenReturn(SphereClientConfig.of("foo", "foo", "foo"));
@@ -1290,6 +1237,34 @@ class SyncerFactoryTest {
         format(
             "Unknown argument \"%s\" supplied to \"-s\" or \"--sync\" option! %s",
             syncResources[1], SYNC_MODULE_OPTION_DESCRIPTION);
+
+    assertThat(result)
+        .failsWithin(1, TimeUnit.SECONDS)
+        .withThrowableOfType(ExecutionException.class)
+        .withCauseExactlyInstanceOf(IllegalArgumentException.class)
+        .withMessageContaining(errorMessage);
+  }
+
+  @Test
+  void sync_AsDelta_WithSyncOptionValuesAndAll_ShouldResultIllegalArgumentException() {
+    final SphereClient sourceClient = mock(SphereClient.class);
+    when(sourceClient.getConfig()).thenReturn(SphereClientConfig.of("foo", "foo", "foo"));
+
+    final SphereClient targetClient = mock(SphereClient.class);
+    when(targetClient.getConfig()).thenReturn(SphereClientConfig.of("bar", "bar", "bar"));
+
+    final SyncerFactory syncerFactory =
+        SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock());
+
+    // test
+    String[] syncResources = {"productTypes", "all", "shoppingLists"};
+    CompletionStage<Void> result = syncerFactory.sync(syncResources, null, false, false);
+
+    String errorMessage =
+        format(
+            "Wrong arguments supplied to \"-s\" or \"--sync\" option! "
+                + "'all' option cannot be passed along with other arguments.\" %s",
+            SYNC_MODULE_OPTION_DESCRIPTION);
 
     assertThat(result)
         .failsWithin(1, TimeUnit.SECONDS)

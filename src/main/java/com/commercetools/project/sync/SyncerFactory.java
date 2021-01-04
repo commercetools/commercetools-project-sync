@@ -122,34 +122,16 @@ final class SyncerFactory {
   private static List<SyncModuleOption> validateAndCollectSyncOptionValues(
       @Nonnull final String[] syncOptionValues) {
 
-    if (null == syncOptionValues) {
-      final String errorMessage =
-          format(
-              "Unknown argument \"%s\" supplied to \"-%s\" or \"--%s\" option! %s",
-              null,
-              SYNC_MODULE_OPTION_SHORT,
-              SYNC_MODULE_OPTION_LONG,
-              SYNC_MODULE_OPTION_DESCRIPTION);
-      throw new IllegalArgumentException(errorMessage);
-    }
     if (syncOptionValues.length == 1 && SYNC_MODULE_OPTION_ALL.equals(syncOptionValues[0])) {
+      isSyncOptionValueBlank(syncOptionValues[0]);
       return Arrays.asList(SyncModuleOption.values());
     } else {
       return Arrays.stream(syncOptionValues)
           .map(
               syncOption -> {
-                if (isBlank(syncOption)) {
-                  final String errorMessage =
-                      format(
-                          "Blank argument supplied to \"-%s\" or \"--%s\" option! %s",
-                          SYNC_MODULE_OPTION_SHORT,
-                          SYNC_MODULE_OPTION_LONG,
-                          SYNC_MODULE_OPTION_DESCRIPTION);
-
-                  throw new IllegalArgumentException(errorMessage);
-                }
-
+                isSyncOptionValueBlank(syncOption);
                 final String trimmedValue = syncOption.trim();
+                isSyncOptionValueAll(syncOption);
                 try {
                   return SyncModuleOption.getSyncModuleOptionBySyncOptionValue(trimmedValue);
                 } catch (IllegalArgumentException e) {
@@ -164,6 +146,29 @@ final class SyncerFactory {
                 }
               })
           .collect(Collectors.toList());
+    }
+  }
+
+  private static void isSyncOptionValueAll(String syncOptionValue) {
+    if (("all").equalsIgnoreCase(syncOptionValue)) {
+      final String errorMessage =
+          format(
+              "Wrong arguments supplied to \"-%s\" or \"--%s\" option! "
+                  + "'all' option cannot be passed along with other arguments.\" %s",
+              SYNC_MODULE_OPTION_SHORT, SYNC_MODULE_OPTION_LONG, SYNC_MODULE_OPTION_DESCRIPTION);
+
+      throw new IllegalArgumentException(errorMessage);
+    }
+  }
+
+  private static void isSyncOptionValueBlank(String syncOptionValue) {
+    if (isBlank(syncOptionValue)) {
+      final String errorMessage =
+          format(
+              "Blank argument supplied to \"-%s\" or \"--%s\" option! %s",
+              SYNC_MODULE_OPTION_SHORT, SYNC_MODULE_OPTION_LONG, SYNC_MODULE_OPTION_DESCRIPTION);
+
+      throw new IllegalArgumentException(errorMessage);
     }
   }
 
