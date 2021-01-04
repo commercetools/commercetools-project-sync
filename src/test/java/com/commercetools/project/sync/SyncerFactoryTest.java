@@ -77,6 +77,8 @@ import org.assertj.core.api.Condition;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import org.mockito.InOrder;
+import org.mockito.Mockito;
 import uk.org.lidalia.slf4jext.Level;
 import uk.org.lidalia.slf4jtest.LoggingEvent;
 import uk.org.lidalia.slf4jtest.TestLogger;
@@ -1026,10 +1028,20 @@ class SyncerFactoryTest {
     verifyLastSyncCustomObjectQuery(targetClient, "customerSync", DEFAULT_RUNNER_NAME, "foo", 1);
     verifyLastSyncCustomObjectQuery(
         targetClient, "shoppingListSync", DEFAULT_RUNNER_NAME, "foo", 1);
-    verify(sourceClient, times(1)).execute(any(ProductTypeQuery.class));
-    verify(sourceClient, times(1)).execute(any(ProductQuery.class));
+
+    final InOrder inOrder = Mockito.inOrder(sourceClient);
+
+    // According to sync algorithm, ProductType and Customer will run sync in parallel, Product and
+    // ShoppingList sequentially.
+    // Example: Given: ['productTypes', 'customers', 'products', 'shoppingLists']
+    // From the given arguments, algorithm will group the resources as below,
+    // [productTypes, customers] [products] [shoppingLists]
+    inOrder.verify(sourceClient, times(1)).execute(any(ProductTypeQuery.class));
     verify(sourceClient, times(1)).execute(any(CustomerQuery.class));
-    verify(sourceClient, times(1)).execute(any(ShoppingListQuery.class));
+
+    inOrder.verify(sourceClient, times(1)).execute(any(ProductQuery.class));
+
+    inOrder.verify(sourceClient, times(1)).execute(any(ShoppingListQuery.class));
     verifyInteractionsWithClientAfterSync(sourceClient, 4);
 
     assertThat(syncerTestLogger.getAllLoggingEvents()).hasSize(8);
@@ -1122,8 +1134,11 @@ class SyncerFactoryTest {
     verify(targetClient, times(4)).execute(any(CustomObjectUpsertCommand.class));
     verifyLastSyncCustomObjectQuery(targetClient, "typeSync", DEFAULT_RUNNER_NAME, "foo", 1);
     verifyLastSyncCustomObjectQuery(targetClient, "categorySync", DEFAULT_RUNNER_NAME, "foo", 1);
-    verify(sourceClient, times(1)).execute(any(TypeQuery.class));
-    verify(sourceClient, times(1)).execute(any(CategoryQuery.class));
+
+    final InOrder inOrder = Mockito.inOrder(sourceClient);
+
+    inOrder.verify(sourceClient, times(1)).execute(any(TypeQuery.class));
+    inOrder.verify(sourceClient, times(1)).execute(any(CategoryQuery.class));
     verifyInteractionsWithClientAfterSync(sourceClient, 2);
 
     assertThat(syncerTestLogger.getAllLoggingEvents()).hasSize(4);

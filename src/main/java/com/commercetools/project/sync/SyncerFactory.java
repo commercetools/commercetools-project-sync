@@ -177,7 +177,7 @@ final class SyncerFactory {
                     key -> key,
                     option ->
                         (option.getReferences().isEmpty())
-                            ? 0
+                            ? 1
                             : countReferences(option.getReferences(), syncModuleOptions)));
 
     Map<Integer, List<SyncModuleOption>> groupedSyncModuleOptions = new TreeMap<>();
@@ -205,7 +205,7 @@ final class SyncerFactory {
     if (null == syncOptionDependencies || syncOptionDependencies.isEmpty()) {
       return 1;
     }
-    int count = 0;
+    int count = 1;
     for (SyncModuleOption value : syncOptionDependencies) {
       if (!syncModuleOptions.contains(value)) {
         continue;

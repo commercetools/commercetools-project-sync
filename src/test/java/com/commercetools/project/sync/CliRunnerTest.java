@@ -781,9 +781,22 @@ class CliRunnerTest {
 
     final InOrder inOrder = Mockito.inOrder(sourceClient);
 
+    // Resources are grouped based on their references count.
+    // Each group will run sequentially but the sync within the group runs in parallel.
+    // So verifying the order of one resource in each group.
     inOrder.verify(sourceClient).execute(any(ProductTypeQuery.class));
+    verify(sourceClient, times(1)).execute(any(TypeQuery.class));
+    verify(sourceClient, times(1)).execute(any(CustomObjectQuery.class));
+    verify(sourceClient, times(1)).execute(any(StateQuery.class));
+    verify(sourceClient, times(1)).execute(any(TaxCategoryQuery.class));
+
     inOrder.verify(sourceClient).execute(any(InventoryEntryQuery.class));
+    verify(sourceClient, times(1)).execute(any(CategoryQuery.class));
+    verify(sourceClient, times(1)).execute(any(CartDiscountQuery.class));
+    verify(sourceClient, times(1)).execute(any(CustomerQuery.class));
+
     inOrder.verify(sourceClient).execute(any(ProductQuery.class));
+
     inOrder.verify(sourceClient).execute(any(ShoppingListQuery.class));
 
     verify(sourceClient, times(1)).close();
