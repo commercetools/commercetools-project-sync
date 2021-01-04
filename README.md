@@ -161,7 +161,7 @@ Running a **Full sync** using `-f` or `--full` option will not create any `custo
 
 #### Running Multiple Syncers
 
-The application can sync multiple resources. For example, To run type sync and productType sync together, 
+The application can sync multiple resources. For example, to run `type` and `productType` sync together, 
 You might pass `-s` option with `types, productTypes` as below,
 ```bash
 -s types, productTypes
@@ -266,5 +266,4 @@ commercetools/commercetools-project-sync:3.9.0 -s all
    ```bash
    docker run commercetools/commercetools-project-sync:3.9.0 -s all -r myRunnerName
    ```
-
 
