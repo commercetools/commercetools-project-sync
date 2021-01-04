@@ -194,10 +194,9 @@ final class SyncerFactory {
         List<SyncModuleOption> syncOptionsList = new ArrayList<>();
         for (Map.Entry<SyncModuleOption, Integer> syncModuleOptionIntegerEntry :
             syncModuleOptionWithReferencesCount.entrySet()) {
-          if (0
-              == syncOptionWithReferenceCount
-                  .getValue()
-                  .compareTo(syncModuleOptionIntegerEntry.getValue())) {
+          if (syncOptionWithReferenceCount
+              .getValue()
+              .equals(syncModuleOptionIntegerEntry.getValue())) {
             syncOptionsList.add(syncModuleOptionIntegerEntry.getKey());
           }
         }
