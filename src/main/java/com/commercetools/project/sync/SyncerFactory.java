@@ -240,19 +240,22 @@ final class SyncerFactory {
           final boolean syncProjectSyncCustomObjects) {
 
     Syncer<
-        ? extends ResourceView,
-        ?,
-        ? extends BaseSyncStatistics,
-        ? extends BaseSyncOptions<?, ?>,
-        ? extends QueryDsl<?, ?>,
-        ? extends BaseSync<?, ?, ?>> syncer = null;
+            ? extends ResourceView,
+            ?,
+            ? extends BaseSyncStatistics,
+            ? extends BaseSyncOptions<?, ?>,
+            ? extends QueryDsl<?, ?>,
+            ? extends BaseSync<?, ?, ?>>
+        syncer = null;
 
     switch (syncModuleOption) {
       case CART_DISCOUNT_SYNC:
-        syncer = CartDiscountSyncer.of(sourceClientSupplier.get(), targetClientSupplier.get(), clock);
+        syncer =
+            CartDiscountSyncer.of(sourceClientSupplier.get(), targetClientSupplier.get(), clock);
         break;
       case PRODUCT_TYPE_SYNC:
-        syncer = ProductTypeSyncer.of(sourceClientSupplier.get(), targetClientSupplier.get(), clock);
+        syncer =
+            ProductTypeSyncer.of(sourceClientSupplier.get(), targetClientSupplier.get(), clock);
         break;
       case CATEGORY_SYNC:
         syncer = CategorySyncer.of(sourceClientSupplier.get(), targetClientSupplier.get(), clock);
@@ -261,11 +264,12 @@ final class SyncerFactory {
         syncer = ProductSyncer.of(sourceClientSupplier.get(), targetClientSupplier.get(), clock);
         break;
       case INVENTORY_ENTRY_SYNC:
-        syncer = InventoryEntrySyncer.of(
-            sourceClientSupplier.get(), targetClientSupplier.get(), clock);
+        syncer =
+            InventoryEntrySyncer.of(sourceClientSupplier.get(), targetClientSupplier.get(), clock);
         break;
       case TAX_CATEGORY_SYNC:
-        syncer = TaxCategorySyncer.of(sourceClientSupplier.get(), targetClientSupplier.get(), clock);
+        syncer =
+            TaxCategorySyncer.of(sourceClientSupplier.get(), targetClientSupplier.get(), clock);
         break;
       case TYPE_SYNC:
         syncer = TypeSyncer.of(sourceClientSupplier.get(), targetClientSupplier.get(), clock);
@@ -274,18 +278,20 @@ final class SyncerFactory {
         syncer = StateSyncer.of(sourceClientSupplier.get(), targetClientSupplier.get(), clock);
         break;
       case CUSTOM_OBJECT_SYNC:
-        syncer = CustomObjectSyncer.of(
-            sourceClientSupplier.get(),
-            targetClientSupplier.get(),
-            clock,
-            runnerNameOptionValue,
-            syncProjectSyncCustomObjects);
+        syncer =
+            CustomObjectSyncer.of(
+                sourceClientSupplier.get(),
+                targetClientSupplier.get(),
+                clock,
+                runnerNameOptionValue,
+                syncProjectSyncCustomObjects);
         break;
       case CUSTOMER_SYNC:
         syncer = CustomerSyncer.of(sourceClientSupplier.get(), targetClientSupplier.get(), clock);
         break;
       case SHOPPING_LIST_SYNC:
-        syncer = ShoppingListSyncer.of(sourceClientSupplier.get(), targetClientSupplier.get(), clock);
+        syncer =
+            ShoppingListSyncer.of(sourceClientSupplier.get(), targetClientSupplier.get(), clock);
         break;
     }
     return syncer;

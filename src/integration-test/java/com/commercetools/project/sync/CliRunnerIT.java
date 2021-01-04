@@ -440,7 +440,7 @@ class CliRunnerIT {
 
   @Test
   void
-  run_WithSyncAsArgumentWithProductTypesCategoriesAndShoppingLists_ShouldExecuteGivenSyncers() {
+      run_WithSyncAsArgumentWithProductTypesCategoriesAndShoppingLists_ShouldExecuteGivenSyncers() {
     // preparation
     try (final SphereClient targetClient = createClient(CTP_TARGET_CLIENT_CONFIG)) {
       try (final SphereClient sourceClient = createClient(CTP_SOURCE_CLIENT_CONFIG)) {
@@ -451,8 +451,7 @@ class CliRunnerIT {
 
         // test
         CliRunner.of()
-                 .run(
-                     new String[] {"-s", "productTypes", "categories", "shoppingLists"}, syncerFactory);
+            .run(new String[] {"-s", "productTypes", "categories", "shoppingLists"}, syncerFactory);
       }
     }
 

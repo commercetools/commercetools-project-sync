@@ -16,7 +16,6 @@ import static com.commercetools.project.sync.util.SyncUtils.APPLICATION_DEFAULT_
 import static com.commercetools.project.sync.util.SyncUtils.APPLICATION_DEFAULT_VERSION;
 import static com.commercetools.project.sync.util.TestUtils.getMockedClock;
 import static com.commercetools.project.sync.util.TestUtils.stubClientsCustomObjectService;
-import static com.commercetools.project.sync.util.TestUtils.verifyInteractionsWithClientAfterSync;
 import static java.lang.String.format;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
