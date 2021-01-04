@@ -228,7 +228,6 @@ final class SyncerFactory {
    *
    * @param syncModuleOption the string value passed to the sync option.
    * @return The instance of the syncer corresponding to the passed option value.
-   * @throws IllegalArgumentException if a wrong option value is passed to the sync option.
    */
   private Syncer<
           ? extends ResourceView,
