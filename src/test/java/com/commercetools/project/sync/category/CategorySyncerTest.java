@@ -6,12 +6,16 @@ import static com.commercetools.sync.categories.utils.CategoryReferenceResolutio
 import static io.sphere.sdk.json.SphereJsonUtils.readObjectFromResource;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
+import static java.util.Collections.singleton;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.commercetools.sync.categories.CategorySync;
+import com.commercetools.sync.commons.helpers.ResourceKeyIdGraphQlRequest;
+import com.commercetools.sync.commons.models.ResourceKeyId;
+import com.commercetools.sync.commons.models.ResourceKeyIdGraphQlResult;
 import io.sphere.sdk.categories.Category;
 import io.sphere.sdk.categories.CategoryDraft;
 import io.sphere.sdk.categories.queries.CategoryQuery;
@@ -149,6 +153,14 @@ class CategorySyncerTest {
     when(targetPagedQueryResult.getResults()).thenReturn(targetCategories);
     when(targetClient.execute(any(CategoryQuery.class)))
         .thenReturn(CompletableFuture.completedFuture(targetPagedQueryResult));
+
+    final ResourceKeyIdGraphQlResult resourceKeyIdGraphQlResult =
+        mock(ResourceKeyIdGraphQlResult.class);
+    when(resourceKeyIdGraphQlResult.getResults())
+        .thenReturn(
+            singleton(new ResourceKeyId("categoryKey2", "ba81a6da-cf83-435b-a89e-2afab579846f")));
+    when(targetClient.execute(any(ResourceKeyIdGraphQlRequest.class)))
+        .thenReturn(CompletableFuture.completedFuture(resourceKeyIdGraphQlResult));
 
     // test
     final CategorySyncer categorySyncer =
