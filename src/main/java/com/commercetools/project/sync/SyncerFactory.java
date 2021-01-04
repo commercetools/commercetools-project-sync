@@ -93,6 +93,7 @@ final class SyncerFactory {
                       isSyncProjectSyncCustomObjects,
                       syncOptions));
     }
+
     return stagedSyncersToRunSequentially.whenComplete((syncResult, throwable) -> closeClients());
   }
 
@@ -103,6 +104,7 @@ final class SyncerFactory {
       final boolean isSyncProjectSyncCustomObjects,
       final List<SyncModuleOption> syncOptions) {
     final List<CompletableFuture<Void>> syncersToRunParallel = new ArrayList<>();
+
     for (SyncModuleOption syncOptionValue : syncOptions) {
       Syncer<
               ? extends ResourceView,
@@ -116,6 +118,7 @@ final class SyncerFactory {
       syncersToRunParallel.add(
           syncer.sync(runnerNameOptionValue, isFullSync).toCompletableFuture());
     }
+
     return CompletableFuture.allOf(syncersToRunParallel.toArray(new CompletableFuture[0]));
   }
 
@@ -173,6 +176,22 @@ final class SyncerFactory {
     }
   }
 
+  /**
+   * Algorithm to group SyncModuleOptions based on their references count and run sync sequentially
+   * for each group in count order(Ascending). This grouping will help the program to run
+   * efficiently with proper order and better performance.
+   *
+   * <p>Example: When the given arguments for sync are [types,productTypes,products,shoppingLists].
+   * This will return as [types, productTypes] [products] [shoppingLists]
+   *
+   * <p>Order is important here to make sure the resources run after their references sync is
+   * completed. In the above example, Products sync is run after the group [types, productTypes]
+   * which can be referenced in Products. ShoppingLists sync can have Product references, So it will
+   * run after Products sync.
+   *
+   * @param syncModuleOptions list of SyncModuleOption values passed as arguments.
+   * @return The Collection of SyncModuleOptions grouped accordingly with their references count.
+   */
   private static Collection<List<SyncModuleOption>> groupSyncModuleOptions(
       List<SyncModuleOption> syncModuleOptions) {
     Map<SyncModuleOption, Integer> syncModuleOptionWithReferencesCount =
@@ -188,29 +207,40 @@ final class SyncerFactory {
                                 syncModuleOption.getReferences(), syncModuleOptions)));
 
     Map<Integer, List<SyncModuleOption>> groupedSyncModuleOptions = new TreeMap<>();
+
     for (Map.Entry<SyncModuleOption, Integer> pivotEntry :
         syncModuleOptionWithReferencesCount.entrySet()) {
       if (!groupedSyncModuleOptions.containsKey(pivotEntry.getValue())) {
         List<SyncModuleOption> syncOptionsList = new ArrayList<>();
+
         for (Map.Entry<SyncModuleOption, Integer> iteratingEntry :
             syncModuleOptionWithReferencesCount.entrySet()) {
           if (pivotEntry.getValue().equals(iteratingEntry.getValue())) {
             syncOptionsList.add(iteratingEntry.getKey());
           }
         }
+
         groupedSyncModuleOptions.put(pivotEntry.getValue(), syncOptionsList);
       }
     }
     return groupedSyncModuleOptions.values();
   }
 
+  /**
+   * Recursive function to count the total number of references for a given resource and its
+   * references.
+   *
+   * @param syncOptionReferences list of references of a given SyncModuleOption.
+   * @param syncModuleOptions list of SyncModuleOption values passed as arguments.
+   * @return The number of references to the passed syncOptionReferences.
+   */
   private static int countReferences(
-      List<SyncModuleOption> syncOptionDependencies, List<SyncModuleOption> syncModuleOptions) {
-    if (null == syncOptionDependencies || syncOptionDependencies.isEmpty()) {
+      List<SyncModuleOption> syncOptionReferences, List<SyncModuleOption> syncModuleOptions) {
+    if (null == syncOptionReferences || syncOptionReferences.isEmpty()) {
       return 1;
     }
     int count = 1;
-    for (SyncModuleOption value : syncOptionDependencies) {
+    for (SyncModuleOption value : syncOptionReferences) {
       if (syncModuleOptions.contains(value)) {
         count += countReferences(value.getReferences(), syncModuleOptions);
       }
