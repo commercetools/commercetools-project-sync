@@ -34,6 +34,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
@@ -181,9 +182,10 @@ final class SyncerFactory {
                 Collectors.toMap(
                     Function.identity(),
                     syncModuleOption ->
-                        (option.getReferences().isEmpty())
+                        (syncModuleOption.getReferences().isEmpty())
                             ? 1
-                            : countReferences(option.getReferences(), syncModuleOptions)));
+                            : countReferences(
+                                syncModuleOption.getReferences(), syncModuleOptions)));
 
     Map<Integer, List<SyncModuleOption>> groupedSyncModuleOptions = new TreeMap<>();
     for (Map.Entry<SyncModuleOption, Integer> syncOptionWithReferenceCount :
@@ -212,10 +214,9 @@ final class SyncerFactory {
     }
     int count = 1;
     for (SyncModuleOption value : syncOptionDependencies) {
-      if (!syncModuleOptions.contains(value)) {
-        continue;
+      if (syncModuleOptions.contains(value)) {
+        count += countReferences(value.getReferences(), syncModuleOptions);
       }
-      count += countReferences(value.getReferences(), syncModuleOptions);
     }
     return count;
   }
