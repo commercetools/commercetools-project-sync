@@ -179,7 +179,7 @@ final class SyncerFactory {
             .stream()
             .collect(
                 Collectors.toMap(
-                    key -> key,
+                    Function.identity(),
                     option ->
                         (option.getReferences().isEmpty())
                             ? 1
