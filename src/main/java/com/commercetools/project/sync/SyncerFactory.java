@@ -227,7 +227,6 @@ final class SyncerFactory {
    * @return The instance of the syncer corresponding to the passed option value.
    * @throws IllegalArgumentException if a wrong option value is passed to the sync option.
    */
-  @Nonnull
   private Syncer<
           ? extends ResourceView,
           ?,
