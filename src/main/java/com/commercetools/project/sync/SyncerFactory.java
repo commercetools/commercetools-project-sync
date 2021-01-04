@@ -180,7 +180,7 @@ final class SyncerFactory {
             .collect(
                 Collectors.toMap(
                     Function.identity(),
-                    option ->
+                    syncModuleOption ->
                         (option.getReferences().isEmpty())
                             ? 1
                             : countReferences(option.getReferences(), syncModuleOptions)));
