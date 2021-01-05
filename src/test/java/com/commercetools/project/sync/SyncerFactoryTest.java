@@ -23,6 +23,7 @@ import static io.sphere.sdk.utils.SphereInternalUtils.asSet;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
+import static java.util.Collections.singleton;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.atLeast;
@@ -38,6 +39,9 @@ import com.commercetools.project.sync.model.response.ReferenceIdKey;
 import com.commercetools.project.sync.model.response.ResultingResourcesContainer;
 import com.commercetools.project.sync.product.ProductSyncer;
 import com.commercetools.project.sync.util.MockPagedQueryResult;
+import com.commercetools.sync.commons.helpers.ResourceKeyIdGraphQlRequest;
+import com.commercetools.sync.commons.models.ResourceKeyId;
+import com.commercetools.sync.commons.models.ResourceKeyIdGraphQlResult;
 import com.commercetools.sync.products.helpers.ProductSyncStatistics;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.sphere.sdk.cartdiscounts.queries.CartDiscountQuery;
@@ -394,6 +398,14 @@ class SyncerFactoryTest {
         .thenReturn(
             CompletableFuture.completedFuture(
                 new CombinedResult(productsResult, categoriesResult, productTypesResult)));
+
+    final ResourceKeyIdGraphQlResult resourceKeyIdGraphQlResult =
+        mock(ResourceKeyIdGraphQlResult.class);
+    when(resourceKeyIdGraphQlResult.getResults())
+        .thenReturn(
+            singleton(new ResourceKeyId("productKey3", "53c4a8b4-754f-4b95-b6f2-3e1e70e3d0c1")));
+    when(targetClient.execute(any(ResourceKeyIdGraphQlRequest.class)))
+        .thenReturn(CompletableFuture.completedFuture(resourceKeyIdGraphQlResult));
 
     final SyncerFactory syncerFactory =
         SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock());
