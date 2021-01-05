@@ -177,44 +177,45 @@ final class SyncerFactory {
   }
 
   /**
-   * Algorithm to group SyncModuleOptions based on their references count and run sync sequentially
-   * for each group in count order(Ascending). This grouping will help the program to run
-   * efficiently with proper order and better performance.
+   * Algorithm to group SyncModuleOptions based on their EssentialSyncOptions count and run sync
+   * sequentially for each group in count order(Ascending). This grouping will help the program to
+   * run efficiently with proper order and better performance.
    *
    * <p>Example: When the given arguments for sync are [types,productTypes,products,shoppingLists].
    * This will return as [types, productTypes] [products] [shoppingLists]
    *
-   * <p>Order is important here to make sure the resources run after their references sync is
-   * completed. In the above example, Products sync is run after the group [types, productTypes]
+   * <p>Order is important here to make sure the resources run after their EssentialSyncOptions sync
+   * is completed. In the above example, Products sync is run after the group [types, productTypes]
    * which can be referenced in Products. ShoppingLists sync can have Product references, So it will
    * run after Products sync.
    *
    * @param syncModuleOptions list of SyncModuleOption values passed as arguments.
-   * @return The Collection of SyncModuleOptions grouped accordingly with their references count.
+   * @return The Collection of SyncModuleOptions grouped accordingly with their essentialSyncOptions
+   *     count.
    */
   private static Collection<List<SyncModuleOption>> groupSyncModuleOptions(
       List<SyncModuleOption> syncModuleOptions) {
-    Map<SyncModuleOption, Integer> syncModuleOptionWithReferencesCount =
+    Map<SyncModuleOption, Integer> syncModuleOptionWithEssentialSyncOptionsCount =
         syncModuleOptions
             .stream()
             .collect(
                 Collectors.toMap(
                     Function.identity(),
                     syncModuleOption ->
-                        (syncModuleOption.getReferences().isEmpty())
+                        (syncModuleOption.getEssentialSyncOptions().isEmpty())
                             ? 1
-                            : countReferences(
-                                syncModuleOption.getReferences(), syncModuleOptions)));
+                            : countEssentialSyncOptions(
+                                syncModuleOption.getEssentialSyncOptions(), syncModuleOptions)));
 
     Map<Integer, List<SyncModuleOption>> groupedSyncModuleOptions = new TreeMap<>();
 
     for (Map.Entry<SyncModuleOption, Integer> pivotEntry :
-        syncModuleOptionWithReferencesCount.entrySet()) {
+        syncModuleOptionWithEssentialSyncOptionsCount.entrySet()) {
       if (!groupedSyncModuleOptions.containsKey(pivotEntry.getValue())) {
         List<SyncModuleOption> syncOptionsList = new ArrayList<>();
 
         for (Map.Entry<SyncModuleOption, Integer> iteratingEntry :
-            syncModuleOptionWithReferencesCount.entrySet()) {
+            syncModuleOptionWithEssentialSyncOptionsCount.entrySet()) {
           if (pivotEntry.getValue().equals(iteratingEntry.getValue())) {
             syncOptionsList.add(iteratingEntry.getKey());
           }
@@ -230,19 +231,19 @@ final class SyncerFactory {
    * Recursive function to count the total number of references for a given resource and its
    * references.
    *
-   * @param syncOptionReferences list of references of a given SyncModuleOption.
+   * @param essentialSyncOptions list of references of a given SyncModuleOption.
    * @param syncModuleOptions list of SyncModuleOption values passed as arguments.
-   * @return The number of references to the passed syncOptionReferences.
+   * @return The number of references to the passed essentialSyncOptions.
    */
-  private static int countReferences(
-      List<SyncModuleOption> syncOptionReferences, List<SyncModuleOption> syncModuleOptions) {
-    if (null == syncOptionReferences || syncOptionReferences.isEmpty()) {
+  private static int countEssentialSyncOptions(
+      List<SyncModuleOption> essentialSyncOptions, List<SyncModuleOption> syncModuleOptions) {
+    if (null == essentialSyncOptions || essentialSyncOptions.isEmpty()) {
       return 1;
     }
     int count = 1;
-    for (SyncModuleOption value : syncOptionReferences) {
+    for (SyncModuleOption value : essentialSyncOptions) {
       if (syncModuleOptions.contains(value)) {
-        count += countReferences(value.getReferences(), syncModuleOptions);
+        count += countEssentialSyncOptions(value.getEssentialSyncOptions(), syncModuleOptions);
       }
     }
     return count;

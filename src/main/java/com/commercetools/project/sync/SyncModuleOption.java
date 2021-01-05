@@ -40,15 +40,15 @@ public enum SyncModuleOption {
 
   public final String syncOptionValue;
   private final Class<? extends BaseSync> syncClass;
-  private final List<SyncModuleOption> references;
+  private final List<SyncModuleOption> essentialSyncOptions;
 
   SyncModuleOption(
       String syncOptionValue,
       Class<? extends BaseSync> syncClass,
-      List<SyncModuleOption> references) {
+      List<SyncModuleOption> essentialSyncOptions) {
     this.syncOptionValue = syncOptionValue;
     this.syncClass = syncClass;
-    this.references = references;
+    this.essentialSyncOptions = essentialSyncOptions;
   }
 
   public String getSyncOptionValue() {
@@ -72,7 +72,7 @@ public enum SyncModuleOption {
         .orElseThrow(IllegalArgumentException::new);
   }
 
-  public List<SyncModuleOption> getReferences() {
-    return references;
+  public List<SyncModuleOption> getEssentialSyncOptions() {
+    return essentialSyncOptions;
   }
 }
