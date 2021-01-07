@@ -1,11 +1,11 @@
 package com.commercetools.project.sync;
 
+import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_ALL;
 import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_DESCRIPTION;
 import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_LONG;
 import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_SHORT;
 import static io.sphere.sdk.utils.CompletableFutureUtils.exceptionallyCompletedFuture;
 import static java.lang.String.format;
-import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import com.commercetools.project.sync.cartdiscount.CartDiscountSyncer;
@@ -22,14 +22,21 @@ import com.commercetools.project.sync.type.TypeSyncer;
 import com.commercetools.sync.commons.BaseSync;
 import com.commercetools.sync.commons.BaseSyncOptions;
 import com.commercetools.sync.commons.helpers.BaseSyncStatistics;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.sphere.sdk.client.SphereClient;
 import io.sphere.sdk.models.ResourceView;
 import io.sphere.sdk.queries.QueryDsl;
 import java.time.Clock;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
+import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
@@ -55,70 +62,191 @@ final class SyncerFactory {
     return new SyncerFactory(sourceClient, targetClient, clock);
   }
 
+  @SuppressFBWarnings(
+      "NP_NONNULL_PARAM_VIOLATION") // https://github.com/findbugsproject/findbugs/issues/79
   @Nonnull
-  CompletableFuture<Void> syncAll(
+  CompletableFuture<Void> sync(
+      @Nonnull final String[] syncOptionValues,
       @Nullable final String runnerNameOptionValue,
       final boolean isFullSync,
       final boolean isSyncProjectSyncCustomObjects) {
 
-    final SphereClient sourceClient = sourceClientSupplier.get();
-    final SphereClient targetClient = targetClientSupplier.get();
+    final List<SyncModuleOption> syncModuleOptions;
+    try {
+      syncModuleOptions = validateAndCollectSyncOptionValues(syncOptionValues);
+    } catch (IllegalArgumentException exception) {
+      return exceptionallyCompletedFuture(exception);
+    }
 
-    final List<CompletableFuture<Void>>
-        typeAndProductTypeAndStateAndTaxCategoryAndCustomObjectSync =
-            asList(
-                ProductTypeSyncer.of(sourceClient, targetClient, clock)
-                    .sync(runnerNameOptionValue, isFullSync)
-                    .toCompletableFuture(),
-                TypeSyncer.of(sourceClient, targetClient, clock)
-                    .sync(runnerNameOptionValue, isFullSync)
-                    .toCompletableFuture(),
-                StateSyncer.of(sourceClient, targetClient, clock)
-                    .sync(runnerNameOptionValue, isFullSync)
-                    .toCompletableFuture(),
-                TaxCategorySyncer.of(sourceClient, targetClient, clock)
-                    .sync(runnerNameOptionValue, isFullSync)
-                    .toCompletableFuture(),
-                CustomObjectSyncer.of(
-                        sourceClient,
-                        targetClient,
-                        clock,
-                        runnerNameOptionValue,
-                        isSyncProjectSyncCustomObjects)
-                    .sync(runnerNameOptionValue, isFullSync)
-                    .toCompletableFuture());
+    final Collection<List<SyncModuleOption>> groupedSyncModuleOptions =
+        groupSyncModuleOptions(syncModuleOptions);
+    CompletableFuture<Void> stagedSyncersToRunSequentially =
+        CompletableFuture.completedFuture(null);
 
-    return CompletableFuture.allOf(
-            typeAndProductTypeAndStateAndTaxCategoryAndCustomObjectSync.toArray(
-                new CompletableFuture[0]))
-        .thenCompose(
-            ignored -> {
-              final List<CompletableFuture<Void>> categoryAndInventoryAndCartDiscountAndCustomer =
-                  asList(
-                      CategorySyncer.of(sourceClient, targetClient, clock)
-                          .sync(runnerNameOptionValue, isFullSync)
-                          .toCompletableFuture(),
-                      CartDiscountSyncer.of(sourceClient, targetClient, clock)
-                          .sync(runnerNameOptionValue, isFullSync)
-                          .toCompletableFuture(),
-                      InventoryEntrySyncer.of(sourceClient, targetClient, clock)
-                          .sync(runnerNameOptionValue, isFullSync)
-                          .toCompletableFuture(),
-                      CustomerSyncer.of(sourceClient, targetClient, clock)
-                          .sync(runnerNameOptionValue, isFullSync)
-                          .toCompletableFuture());
-              return CompletableFuture.allOf(
-                  categoryAndInventoryAndCartDiscountAndCustomer.toArray(new CompletableFuture[0]));
-            })
-        .thenCompose(
-            ignored ->
-                ProductSyncer.of(sourceClient, targetClient, clock)
-                    .sync(runnerNameOptionValue, isFullSync))
-        .thenCompose(
-            ignored ->
-                ShoppingListSyncer.of(sourceClient, targetClient, clock)
-                    .sync(runnerNameOptionValue, isFullSync))
-        .whenComplete((syncResult, throwable) -> closeClients());
+    for (List<SyncModuleOption> syncOptions : groupedSyncModuleOptions) {
+      stagedSyncersToRunSequentially =
+          stagedSyncersToRunSequentially.thenCompose(
+              ignore ->
+                  chainSyncExecution(
+                      runnerNameOptionValue,
+                      isFullSync,
+                      isSyncProjectSyncCustomObjects,
+                      syncOptions));
+    }
+
+    return stagedSyncersToRunSequentially.whenComplete((syncResult, throwable) -> closeClients());
+  }
+
+  @Nonnull
+  private CompletableFuture<Void> chainSyncExecution(
+      @Nullable final String runnerNameOptionValue,
+      final boolean isFullSync,
+      final boolean isSyncProjectSyncCustomObjects,
+      final List<SyncModuleOption> syncOptions) {
+    final List<CompletableFuture<Void>> syncersToRunParallel = new ArrayList<>();
+
+    for (SyncModuleOption syncOptionValue : syncOptions) {
+      Syncer<
+              ? extends ResourceView,
+              ?,
+              ? extends BaseSyncStatistics,
+              ? extends BaseSyncOptions<?, ?>,
+              ? extends QueryDsl<?, ?>,
+              ? extends BaseSync<?, ?, ?>>
+          syncer =
+              buildSyncer(syncOptionValue, runnerNameOptionValue, isSyncProjectSyncCustomObjects);
+      syncersToRunParallel.add(
+          syncer.sync(runnerNameOptionValue, isFullSync).toCompletableFuture());
+    }
+
+    return CompletableFuture.allOf(syncersToRunParallel.toArray(new CompletableFuture[0]));
+  }
+
+  @Nonnull
+  private static List<SyncModuleOption> validateAndCollectSyncOptionValues(
+      @Nonnull final String[] syncOptionValues) {
+
+    if (syncOptionValues.length == 1 && SYNC_MODULE_OPTION_ALL.equals(syncOptionValues[0])) {
+      isSyncOptionValueBlank(syncOptionValues[0]);
+      return Arrays.asList(SyncModuleOption.values());
+    } else {
+      return Arrays.stream(syncOptionValues)
+          .map(
+              syncOption -> {
+                isSyncOptionValueBlank(syncOption);
+                final String trimmedValue = syncOption.trim();
+                isSyncOptionValueAll(syncOption);
+                try {
+                  return SyncModuleOption.getSyncModuleOptionBySyncOptionValue(trimmedValue);
+                } catch (IllegalArgumentException e) {
+                  final String errorMessage =
+                      format(
+                          "Unknown argument \"%s\" supplied to \"-%s\" or \"--%s\" option! %s",
+                          trimmedValue,
+                          SYNC_MODULE_OPTION_SHORT,
+                          SYNC_MODULE_OPTION_LONG,
+                          SYNC_MODULE_OPTION_DESCRIPTION);
+                  throw new IllegalArgumentException(errorMessage);
+                }
+              })
+          .collect(Collectors.toList());
+    }
+  }
+
+  private static void isSyncOptionValueAll(String syncOptionValue) {
+    if (("all").equalsIgnoreCase(syncOptionValue)) {
+      final String errorMessage =
+          format(
+              "Wrong arguments supplied to \"-%s\" or \"--%s\" option! "
+                  + "'all' option cannot be passed along with other arguments.\" %s",
+              SYNC_MODULE_OPTION_SHORT, SYNC_MODULE_OPTION_LONG, SYNC_MODULE_OPTION_DESCRIPTION);
+
+      throw new IllegalArgumentException(errorMessage);
+    }
+  }
+
+  private static void isSyncOptionValueBlank(String syncOptionValue) {
+    if (isBlank(syncOptionValue)) {
+      final String errorMessage =
+          format(
+              "Blank argument supplied to \"-%s\" or \"--%s\" option! %s",
+              SYNC_MODULE_OPTION_SHORT, SYNC_MODULE_OPTION_LONG, SYNC_MODULE_OPTION_DESCRIPTION);
+
+      throw new IllegalArgumentException(errorMessage);
+    }
+  }
+
+  /**
+   * Algorithm to group SyncModuleOptions based on their EssentialSyncOptions count and run sync
+   * sequentially for each group in count order(Ascending). This grouping will help the program to
+   * run efficiently with proper order and better performance.
+   *
+   * <p>Example: When the given arguments for sync are [types,productTypes,products,shoppingLists].
+   * This will return as [types, productTypes] [products] [shoppingLists]
+   *
+   * <p>Order is important here to make sure the resources run after their EssentialSyncOptions sync
+   * is completed. In the above example, Products sync is run after the group [types, productTypes]
+   * which can be referenced in Products. ShoppingLists sync can have Product references, So it will
+   * run after Products sync.
+   *
+   * @param syncModuleOptions list of SyncModuleOption values passed as arguments.
+   * @return The Collection of SyncModuleOptions grouped accordingly with their essentialSyncOptions
+   *     count.
+   */
+  private static Collection<List<SyncModuleOption>> groupSyncModuleOptions(
+      List<SyncModuleOption> syncModuleOptions) {
+    Map<SyncModuleOption, Integer> syncModuleOptionWithEssentialSyncOptionsCount =
+        syncModuleOptions
+            .stream()
+            .collect(
+                Collectors.toMap(
+                    Function.identity(),
+                    syncModuleOption ->
+                        (syncModuleOption.getEssentialSyncOptions().isEmpty())
+                            ? 1
+                            : countEssentialSyncOptions(
+                                syncModuleOption.getEssentialSyncOptions(), syncModuleOptions)));
+
+    Map<Integer, List<SyncModuleOption>> groupedSyncModuleOptions = new TreeMap<>();
+
+    for (Map.Entry<SyncModuleOption, Integer> pivotEntry :
+        syncModuleOptionWithEssentialSyncOptionsCount.entrySet()) {
+      if (!groupedSyncModuleOptions.containsKey(pivotEntry.getValue())) {
+        List<SyncModuleOption> syncOptionsList = new ArrayList<>();
+
+        for (Map.Entry<SyncModuleOption, Integer> iteratingEntry :
+            syncModuleOptionWithEssentialSyncOptionsCount.entrySet()) {
+          if (pivotEntry.getValue().equals(iteratingEntry.getValue())) {
+            syncOptionsList.add(iteratingEntry.getKey());
+          }
+        }
+
+        groupedSyncModuleOptions.put(pivotEntry.getValue(), syncOptionsList);
+      }
+    }
+    return groupedSyncModuleOptions.values();
+  }
+
+  /**
+   * Recursive function to count the total number of references for a given resource and its
+   * references.
+   *
+   * @param essentialSyncOptions list of references of a given SyncModuleOption.
+   * @param syncModuleOptions list of SyncModuleOption values passed as arguments.
+   * @return The number of references to the passed essentialSyncOptions.
+   */
+  private static int countEssentialSyncOptions(
+      List<SyncModuleOption> essentialSyncOptions, List<SyncModuleOption> syncModuleOptions) {
+    if (null == essentialSyncOptions || essentialSyncOptions.isEmpty()) {
+      return 1;
+    }
+    int count = 1;
+    for (SyncModuleOption value : essentialSyncOptions) {
+      if (syncModuleOptions.contains(value)) {
+        count += countEssentialSyncOptions(value.getEssentialSyncOptions(), syncModuleOptions);
+      }
+    }
+    return count;
   }
 
   private void closeClients() {
@@ -126,51 +254,12 @@ final class SyncerFactory {
     targetClientSupplier.get().close();
   }
 
-  @Nonnull
-  CompletionStage<Void> sync(
-      @Nullable final String syncOptionValue,
-      @Nullable final String runnerNameOptionValue,
-      final boolean isFullSync,
-      final boolean isSyncProjectSyncCustomObjects) {
-
-    if (isBlank(syncOptionValue)) {
-      final String errorMessage =
-          format(
-              "Blank argument supplied to \"-%s\" or \"--%s\" option! %s",
-              SYNC_MODULE_OPTION_SHORT, SYNC_MODULE_OPTION_LONG, SYNC_MODULE_OPTION_DESCRIPTION);
-
-      return exceptionallyCompletedFuture(new IllegalArgumentException(errorMessage));
-    }
-
-    Syncer<
-            ? extends ResourceView,
-            ?,
-            ? extends BaseSyncStatistics,
-            ? extends BaseSyncOptions<?, ?>,
-            ? extends QueryDsl<?, ?>,
-            ? extends BaseSync<?, ?, ?>>
-        syncer;
-
-    try {
-      syncer = buildSyncer(syncOptionValue, runnerNameOptionValue, isSyncProjectSyncCustomObjects);
-    } catch (IllegalArgumentException exception) {
-
-      return exceptionallyCompletedFuture(exception);
-    }
-
-    return syncer
-        .sync(runnerNameOptionValue, isFullSync)
-        .whenComplete((syncResult, throwable) -> closeClients());
-  }
-
   /**
    * Builds an instance of {@link Syncer} corresponding to the passed option value.
    *
-   * @param syncOptionValue the string value passed to the sync option.
+   * @param syncModuleOption the string value passed to the sync option.
    * @return The instance of the syncer corresponding to the passed option value.
-   * @throws IllegalArgumentException if a wrong option value is passed to the sync option.
    */
-  @Nonnull
   private Syncer<
           ? extends ResourceView,
           ?,
@@ -179,59 +268,65 @@ final class SyncerFactory {
           ? extends QueryDsl<?, ?>,
           ? extends BaseSync<?, ?, ?>>
       buildSyncer(
-          @Nonnull final String syncOptionValue,
+          @Nonnull final SyncModuleOption syncModuleOption,
           @Nonnull final String runnerNameOptionValue,
           final boolean syncProjectSyncCustomObjects) {
 
-    final String trimmedValue = syncOptionValue.trim();
-    try {
-      final SyncModuleOption syncModuleOption =
-          SyncModuleOption.getSyncModuleOptionBySyncOptionValue(trimmedValue);
-      switch (syncModuleOption) {
-        case CART_DISCOUNT_SYNC:
-          return CartDiscountSyncer.of(
-              sourceClientSupplier.get(), targetClientSupplier.get(), clock);
-        case PRODUCT_TYPE_SYNC:
-          return ProductTypeSyncer.of(
-              sourceClientSupplier.get(), targetClientSupplier.get(), clock);
-        case CATEGORY_SYNC:
-          return CategorySyncer.of(sourceClientSupplier.get(), targetClientSupplier.get(), clock);
-        case PRODUCT_SYNC:
-          return ProductSyncer.of(sourceClientSupplier.get(), targetClientSupplier.get(), clock);
-        case INVENTORY_ENTRY_SYNC:
-          return InventoryEntrySyncer.of(
-              sourceClientSupplier.get(), targetClientSupplier.get(), clock);
-        case TAX_CATEGORY_SYNC:
-          return TaxCategorySyncer.of(
-              sourceClientSupplier.get(), targetClientSupplier.get(), clock);
-        case TYPE_SYNC:
-          return TypeSyncer.of(sourceClientSupplier.get(), targetClientSupplier.get(), clock);
-        case STATE_SYNC:
-          return StateSyncer.of(sourceClientSupplier.get(), targetClientSupplier.get(), clock);
-        case CUSTOM_OBJECT_SYNC:
-          return CustomObjectSyncer.of(
-              sourceClientSupplier.get(),
-              targetClientSupplier.get(),
-              clock,
-              runnerNameOptionValue,
-              syncProjectSyncCustomObjects);
-        case CUSTOMER_SYNC:
-          return CustomerSyncer.of(sourceClientSupplier.get(), targetClientSupplier.get(), clock);
-        case SHOPPING_LIST_SYNC:
-          return ShoppingListSyncer.of(
-              sourceClientSupplier.get(), targetClientSupplier.get(), clock);
-        default:
-          throw new IllegalArgumentException();
-      }
-    } catch (IllegalArgumentException e) {
-      final String errorMessage =
-          format(
-              "Unknown argument \"%s\" supplied to \"-%s\" or \"--%s\" option! %s",
-              trimmedValue,
-              SYNC_MODULE_OPTION_SHORT,
-              SYNC_MODULE_OPTION_LONG,
-              SYNC_MODULE_OPTION_DESCRIPTION);
-      throw new IllegalArgumentException(errorMessage);
+    Syncer<
+            ? extends ResourceView,
+            ?,
+            ? extends BaseSyncStatistics,
+            ? extends BaseSyncOptions<?, ?>,
+            ? extends QueryDsl<?, ?>,
+            ? extends BaseSync<?, ?, ?>>
+        syncer = null;
+
+    switch (syncModuleOption) {
+      case CART_DISCOUNT_SYNC:
+        syncer =
+            CartDiscountSyncer.of(sourceClientSupplier.get(), targetClientSupplier.get(), clock);
+        break;
+      case PRODUCT_TYPE_SYNC:
+        syncer =
+            ProductTypeSyncer.of(sourceClientSupplier.get(), targetClientSupplier.get(), clock);
+        break;
+      case CATEGORY_SYNC:
+        syncer = CategorySyncer.of(sourceClientSupplier.get(), targetClientSupplier.get(), clock);
+        break;
+      case PRODUCT_SYNC:
+        syncer = ProductSyncer.of(sourceClientSupplier.get(), targetClientSupplier.get(), clock);
+        break;
+      case INVENTORY_ENTRY_SYNC:
+        syncer =
+            InventoryEntrySyncer.of(sourceClientSupplier.get(), targetClientSupplier.get(), clock);
+        break;
+      case TAX_CATEGORY_SYNC:
+        syncer =
+            TaxCategorySyncer.of(sourceClientSupplier.get(), targetClientSupplier.get(), clock);
+        break;
+      case TYPE_SYNC:
+        syncer = TypeSyncer.of(sourceClientSupplier.get(), targetClientSupplier.get(), clock);
+        break;
+      case STATE_SYNC:
+        syncer = StateSyncer.of(sourceClientSupplier.get(), targetClientSupplier.get(), clock);
+        break;
+      case CUSTOM_OBJECT_SYNC:
+        syncer =
+            CustomObjectSyncer.of(
+                sourceClientSupplier.get(),
+                targetClientSupplier.get(),
+                clock,
+                runnerNameOptionValue,
+                syncProjectSyncCustomObjects);
+        break;
+      case CUSTOMER_SYNC:
+        syncer = CustomerSyncer.of(sourceClientSupplier.get(), targetClientSupplier.get(), clock);
+        break;
+      case SHOPPING_LIST_SYNC:
+        syncer =
+            ShoppingListSyncer.of(sourceClientSupplier.get(), targetClientSupplier.get(), clock);
+        break;
     }
+    return syncer;
   }
 }
