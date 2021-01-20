@@ -5,7 +5,7 @@ import static com.commercetools.project.sync.util.SyncUtils.getApplicationVersio
 import static io.sphere.sdk.utils.CompletableFutureUtils.exceptionallyCompletedFuture;
 import static java.lang.String.format;
 
-import com.commercetools.project.sync.exception.NoStackTraceIllegalArgumentException;
+import com.commercetools.project.sync.exception.CLIException;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.util.Arrays;
 import java.util.concurrent.CompletableFuture;
@@ -158,7 +158,7 @@ final class CliRunner {
     if (options.length == 0) {
 
       return exceptionallyCompletedFuture(
-          new NoStackTraceIllegalArgumentException("Please pass at least 1 option to the CLI."));
+          new CLIException("Please pass at least 1 option to the CLI."));
 
     } else {
       final Option option =
@@ -168,7 +168,7 @@ final class CliRunner {
               .orElse(null);
       if (option == null) {
         return exceptionallyCompletedFuture(
-            new NoStackTraceIllegalArgumentException(
+            new CLIException(
                 format(
                     "Please pass at least 1 more option other than %s to the CLI.",
                     SYNC_PROJECT_SYNC_CUSTOM_OBJECTS_OPTION_LONG)));
@@ -188,8 +188,7 @@ final class CliRunner {
           // arguments);
           // in the CliRunner#run method.
           return exceptionallyCompletedFuture(
-              new NoStackTraceIllegalArgumentException(
-                  format("Unrecognized option: -%s", optionName)));
+              new CLIException(format("Unrecognized option: -%s", optionName)));
       }
     }
   }

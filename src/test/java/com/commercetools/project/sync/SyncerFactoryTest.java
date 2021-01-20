@@ -32,7 +32,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.commercetools.project.sync.exception.NoStackTraceIllegalArgumentException;
+import com.commercetools.project.sync.exception.CLIException;
 import com.commercetools.project.sync.model.request.CombinedResourceKeysRequest;
 import com.commercetools.project.sync.model.response.CombinedResult;
 import com.commercetools.project.sync.model.response.LastSyncCustomObject;
@@ -113,7 +113,7 @@ class SyncerFactoryTest {
                 .sync(new String[] {null}, "myRunnerName", false, false))
         .failsWithin(1, TimeUnit.SECONDS)
         .withThrowableOfType(ExecutionException.class)
-        .withCauseExactlyInstanceOf(NoStackTraceIllegalArgumentException.class)
+        .withCauseExactlyInstanceOf(CLIException.class)
         .withMessageContaining(
             format(
                 "Blank argument supplied to \"-s\" or \"--sync\" option! %s",
@@ -130,7 +130,7 @@ class SyncerFactoryTest {
                 .sync(new String[] {""}, "myRunnerName", false, false))
         .failsWithin(1, TimeUnit.SECONDS)
         .withThrowableOfType(ExecutionException.class)
-        .withCauseExactlyInstanceOf(NoStackTraceIllegalArgumentException.class)
+        .withCauseExactlyInstanceOf(CLIException.class)
         .withMessageContaining(
             format(
                 "Blank argument supplied to \"-s\" or \"--sync\" option! %s",
@@ -149,7 +149,7 @@ class SyncerFactoryTest {
                 .sync(unknownOptionValue, "myRunnerName", false, false))
         .failsWithin(1, TimeUnit.SECONDS)
         .withThrowableOfType(ExecutionException.class)
-        .withCauseExactlyInstanceOf(NoStackTraceIllegalArgumentException.class)
+        .withCauseExactlyInstanceOf(CLIException.class)
         .withMessageContaining(
             format(
                 "Unknown argument \"%s\" supplied to \"-s\" or \"--sync\" option! %s",
@@ -1254,7 +1254,7 @@ class SyncerFactoryTest {
     assertThat(result)
         .failsWithin(1, TimeUnit.SECONDS)
         .withThrowableOfType(ExecutionException.class)
-        .withCauseExactlyInstanceOf(NoStackTraceIllegalArgumentException.class)
+        .withCauseExactlyInstanceOf(CLIException.class)
         .withMessageContaining(errorMessage);
   }
 
@@ -1282,7 +1282,7 @@ class SyncerFactoryTest {
     assertThat(result)
         .failsWithin(1, TimeUnit.SECONDS)
         .withThrowableOfType(ExecutionException.class)
-        .withCauseExactlyInstanceOf(NoStackTraceIllegalArgumentException.class)
+        .withCauseExactlyInstanceOf(CLIException.class)
         .withMessageContaining(errorMessage);
   }
 }

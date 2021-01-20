@@ -1,11 +1,9 @@
 package com.commercetools.project.sync.exception;
 
-/**
- * Custom Exception class to return IllegalArgumentException without Stacktrace.
- */
-public class NoStackTraceIllegalArgumentException extends IllegalArgumentException {
+/** Custom Exception class to return IllegalArgumentException without Stacktrace. */
+public class CLIException extends IllegalArgumentException {
 
-  public NoStackTraceIllegalArgumentException(String message) {
+  public CLIException(String message) {
     super(message);
   }
 
