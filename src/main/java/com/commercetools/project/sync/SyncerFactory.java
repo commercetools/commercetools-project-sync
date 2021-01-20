@@ -12,6 +12,7 @@ import com.commercetools.project.sync.cartdiscount.CartDiscountSyncer;
 import com.commercetools.project.sync.category.CategorySyncer;
 import com.commercetools.project.sync.customer.CustomerSyncer;
 import com.commercetools.project.sync.customobject.CustomObjectSyncer;
+import com.commercetools.project.sync.exception.NoStackTraceIllegalArgumentException;
 import com.commercetools.project.sync.inventoryentry.InventoryEntrySyncer;
 import com.commercetools.project.sync.product.ProductSyncer;
 import com.commercetools.project.sync.producttype.ProductTypeSyncer;
@@ -74,7 +75,7 @@ final class SyncerFactory {
     final List<SyncModuleOption> syncModuleOptions;
     try {
       syncModuleOptions = validateAndCollectSyncOptionValues(syncOptionValues);
-    } catch (IllegalArgumentException exception) {
+    } catch (NoStackTraceIllegalArgumentException exception) {
       return exceptionallyCompletedFuture(exception);
     }
 
@@ -146,7 +147,7 @@ final class SyncerFactory {
                           SYNC_MODULE_OPTION_SHORT,
                           SYNC_MODULE_OPTION_LONG,
                           SYNC_MODULE_OPTION_DESCRIPTION);
-                  throw new IllegalArgumentException(errorMessage);
+                  throw new NoStackTraceIllegalArgumentException(errorMessage);
                 }
               })
           .collect(Collectors.toList());
@@ -161,7 +162,7 @@ final class SyncerFactory {
                   + "'all' option cannot be passed along with other arguments.\" %s",
               SYNC_MODULE_OPTION_SHORT, SYNC_MODULE_OPTION_LONG, SYNC_MODULE_OPTION_DESCRIPTION);
 
-      throw new IllegalArgumentException(errorMessage);
+      throw new NoStackTraceIllegalArgumentException(errorMessage);
     }
   }
 
@@ -172,7 +173,7 @@ final class SyncerFactory {
               "Blank argument supplied to \"-%s\" or \"--%s\" option! %s",
               SYNC_MODULE_OPTION_SHORT, SYNC_MODULE_OPTION_LONG, SYNC_MODULE_OPTION_DESCRIPTION);
 
-      throw new IllegalArgumentException(errorMessage);
+      throw new NoStackTraceIllegalArgumentException(errorMessage);
     }
   }
 
