@@ -27,6 +27,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.commercetools.project.sync.exception.CliException;
 import com.google.common.base.Optional;
 import io.sphere.sdk.cartdiscounts.queries.CartDiscountQuery;
 import io.sphere.sdk.categories.queries.CategoryQuery;
@@ -102,7 +103,7 @@ class CliRunnerTest {
               assertThat(actualThrowableOpt).isNotNull();
               assertThat(actualThrowableOpt.isPresent()).isTrue();
               final Throwable actualThrowable = actualThrowableOpt.get();
-              assertThat(actualThrowable).isExactlyInstanceOf(IllegalArgumentException.class);
+              assertThat(actualThrowable).isExactlyInstanceOf(CliException.class);
               assertThat(actualThrowable.getMessage())
                   .contains("Please pass at least 1 option to the CLI.");
             });
@@ -830,7 +831,7 @@ class CliRunnerTest {
               assertThat(actualThrowableOpt).isNotNull();
               assertThat(actualThrowableOpt.isPresent()).isTrue();
               final Throwable actualThrowable = actualThrowableOpt.get();
-              assertThat(actualThrowable).isExactlyInstanceOf(IllegalArgumentException.class);
+              assertThat(actualThrowable).isExactlyInstanceOf(CliException.class);
               assertThat(actualThrowable.getMessage())
                   .isEqualTo(
                       format(

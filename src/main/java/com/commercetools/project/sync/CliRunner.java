@@ -5,6 +5,7 @@ import static com.commercetools.project.sync.util.SyncUtils.getApplicationVersio
 import static io.sphere.sdk.utils.CompletableFutureUtils.exceptionallyCompletedFuture;
 import static java.lang.String.format;
 
+import com.commercetools.project.sync.exception.CliException;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.util.Arrays;
 import java.util.concurrent.CompletableFuture;
@@ -157,7 +158,7 @@ final class CliRunner {
     if (options.length == 0) {
 
       return exceptionallyCompletedFuture(
-          new IllegalArgumentException("Please pass at least 1 option to the CLI."));
+          new CliException("Please pass at least 1 option to the CLI."));
 
     } else {
       final Option option =
@@ -167,28 +168,27 @@ final class CliRunner {
               .orElse(null);
       if (option == null) {
         return exceptionallyCompletedFuture(
-            new IllegalArgumentException(
+            new CliException(
                 format(
                     "Please pass at least 1 more option other than %s to the CLI.",
                     SYNC_PROJECT_SYNC_CUSTOM_OBJECTS_OPTION_LONG)));
       }
       final String optionName = option.getOpt();
-      switch (optionName) {
-        case SYNC_MODULE_OPTION_SHORT:
-          return processSyncOptionAndExecute(commandLine, syncerFactory);
-        case HELP_OPTION_SHORT:
-          printHelpToStdOut(cliOptions);
-          return CompletableFuture.completedFuture(null);
-        case VERSION_OPTION_SHORT:
-          printApplicationVersion();
-          return CompletableFuture.completedFuture(null);
-        default:
-          // Unreachable code since this case is already handled by parser.parse(options,
-          // arguments);
-          // in the CliRunner#run method.
-          return exceptionallyCompletedFuture(
-              new IllegalStateException(format("Unrecognized option: -%s", optionName)));
+      CompletionStage<Void> resultCompletionStage = CompletableFuture.completedFuture(null);
+
+      if (SYNC_MODULE_OPTION_SHORT.equalsIgnoreCase(optionName)) {
+        resultCompletionStage = processSyncOptionAndExecute(commandLine, syncerFactory);
       }
+
+      if (HELP_OPTION_SHORT.equalsIgnoreCase(optionName)) {
+        printHelpToStdOut(cliOptions);
+      }
+
+      if (VERSION_OPTION_SHORT.equalsIgnoreCase(optionName)) {
+        printApplicationVersion();
+      }
+
+      return resultCompletionStage;
     }
   }
 
