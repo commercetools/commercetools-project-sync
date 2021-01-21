@@ -173,21 +173,21 @@ final class CliRunner {
                     "Please pass at least 1 more option other than %s to the CLI.",
                     SYNC_PROJECT_SYNC_CUSTOM_OBJECTS_OPTION_LONG)));
       }
-      CompletionStage<Void> resultCompletionStage = null;
       final String optionName = option.getOpt();
-      switch (optionName) {
-        case SYNC_MODULE_OPTION_SHORT:
-          resultCompletionStage = processSyncOptionAndExecute(commandLine, syncerFactory);
-          break;
-        case HELP_OPTION_SHORT:
-          printHelpToStdOut(cliOptions);
-          resultCompletionStage = CompletableFuture.completedFuture(null);
-          break;
-        case VERSION_OPTION_SHORT:
-          printApplicationVersion();
-          resultCompletionStage = CompletableFuture.completedFuture(null);
-          break;
+      CompletionStage<Void> resultCompletionStage = CompletableFuture.completedFuture(null);
+
+      if (SYNC_MODULE_OPTION_SHORT.equalsIgnoreCase(optionName)) {
+        resultCompletionStage = processSyncOptionAndExecute(commandLine, syncerFactory);
       }
+
+      if (HELP_OPTION_SHORT.equalsIgnoreCase(optionName)) {
+        printHelpToStdOut(cliOptions);
+      }
+
+      if (VERSION_OPTION_SHORT.equalsIgnoreCase(optionName)) {
+        printApplicationVersion();
+      }
+
       return resultCompletionStage;
     }
   }
