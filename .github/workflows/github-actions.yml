@@ -26,3 +26,14 @@ jobs:
             ${{ runner.os }}-gradle-
       - name: Build with Gradle
         run: ./gradlew clean build
+        env:
+          SOURCE_PROJECT_KEY: "source-project-key"
+          SOURCE_CLIENT_ID: "sourceClientId"
+          SOURCE_CLIENT_SECRET: "sourceClientSecret"
+          SOURCE_AUTH_URL: "https://auth.eu-central-1.aws.commercetools.com/"
+          SOURCE_API_URL: "https://api.eu-central-1.aws.commercetools.com/"
+          TARGET_PROJECT_KEY: "target-project-key"
+          TARGET_CLIENT_ID: "targetClientId"
+          TARGET_CLIENT_SECRET: "targetClientSecret"
+          TARGET_AUTH_URL: "https://auth.eu-central-1.aws.commercetools.com/"
+          TARGET_API_URL: "https://api.eu-central-1.aws.commercetools.com/"
