@@ -3,7 +3,7 @@ name: project_sync_cd
 on:
   push:
     tags:
-      - 'v*.*.*'
+      - '*.*.*'
 jobs:
   docker:
     runs-on: ubuntu-latest
