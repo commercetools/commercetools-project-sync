@@ -26,6 +26,5 @@ jobs:
         id: docker_build_extension
         uses: docker/build-push-action@v2
         with:
-          file: ./docker-push.sh
           push: true
           tags: commercetools/commercetools-project-sync:${{ steps.vars.outputs.tag }}
