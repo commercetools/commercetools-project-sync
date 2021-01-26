@@ -21,3 +21,6 @@ jobs:
           java-version: 8
       - name: Build and push image to docker using gradle plugin
         run: ./gradlew dockerPushImage
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
