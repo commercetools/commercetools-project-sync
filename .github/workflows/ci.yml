@@ -24,12 +24,12 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew clean build
         env:
-          SOURCE_PROJECT_KEY: "project-sync-source"
+          SOURCE_PROJECT_KEY: project-sync-source
           SOURCE_CLIENT_ID: ${{ secrets.SOURCE_CLIENT_ID }}
           SOURCE_CLIENT_SECRET: ${{ secrets.SOURCE_CLIENT_SECRET }}
           SOURCE_AUTH_URL: ${{ secrets.SOURCE_AUTH_URL }}
           SOURCE_API_URL: ${{ secrets.SOURCE_API_URL }}
-          TARGET_PROJECT_KEY: ${{ secrets.TARGET_PROJECT_KEY }}
+          TARGET_PROJECT_KEY: project-sync-target
           TARGET_CLIENT_ID: ${{ secrets.TARGET_CLIENT_ID }}
           TARGET_CLIENT_SECRET: ${{ secrets.TARGET_CLIENT_SECRET }}
           TARGET_AUTH_URL: ${{ secrets.TARGET_AUTH_URL }}
