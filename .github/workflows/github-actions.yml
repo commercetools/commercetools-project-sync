@@ -27,13 +27,13 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew clean build
         env:
-          SOURCE_PROJECT_KEY: "source-project-key"
-          SOURCE_CLIENT_ID: "sourceClientId"
-          SOURCE_CLIENT_SECRET: "sourceClientSecret"
-          SOURCE_AUTH_URL: "https://auth.eu-central-1.aws.commercetools.com/"
-          SOURCE_API_URL: "https://api.eu-central-1.aws.commercetools.com/"
-          TARGET_PROJECT_KEY: "target-project-key"
-          TARGET_CLIENT_ID: "targetClientId"
-          TARGET_CLIENT_SECRET: "targetClientSecret"
-          TARGET_AUTH_URL: "https://auth.eu-central-1.aws.commercetools.com/"
-          TARGET_API_URL: "https://api.eu-central-1.aws.commercetools.com/"
+          SOURCE_PROJECT_KEY: ${{ secrets.SOURCE_PROJECT_KEY }}
+          SOURCE_CLIENT_ID: ${{ secrets.SOURCE_CLIENT_ID }}
+          SOURCE_CLIENT_SECRET: ${{ secrets.SOURCE_CLIENT_SECRET }}
+          SOURCE_AUTH_URL: ${{ secrets.SOURCE_AUTH_URL }}
+          SOURCE_API_URL: ${{ secrets.SOURCE_API_URL }}
+          TARGET_PROJECT_KEY: ${{ secrets.TARGET_PROJECT_KEY }}
+          TARGET_CLIENT_ID: ${{ secrets.TARGET_CLIENT_ID }}
+          TARGET_CLIENT_SECRET: ${{ secrets.TARGET_CLIENT_SECRET }}
+          TARGET_AUTH_URL: ${{ secrets.TARGET_AUTH_URL }}
+          TARGET_API_URL: ${{ secrets.TARGET_API_URL }}
