@@ -1,4 +1,4 @@
-name: project_sync_cd
+name: cd
 
 on:
   push:
