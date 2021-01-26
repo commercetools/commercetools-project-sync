@@ -22,7 +22,7 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew clean build
         env:
-          SOURCE_PROJECT_KEY: ${{ secrets.SOURCE_PROJECT_KEY }}
+          SOURCE_PROJECT_KEY: "project-sync-source"
           SOURCE_CLIENT_ID: ${{ secrets.SOURCE_CLIENT_ID }}
           SOURCE_CLIENT_SECRET: ${{ secrets.SOURCE_CLIENT_SECRET }}
           SOURCE_AUTH_URL: ${{ secrets.SOURCE_AUTH_URL }}
