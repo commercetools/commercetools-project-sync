@@ -37,3 +37,5 @@ jobs:
           TARGET_CLIENT_SECRET: ${{ secrets.TARGET_CLIENT_SECRET }}
           TARGET_AUTH_URL: ${{ secrets.TARGET_AUTH_URL }}
           TARGET_API_URL: ${{ secrets.TARGET_API_URL }}
+      - name: Codecov
+        uses: codecov/codecov-action@v1
