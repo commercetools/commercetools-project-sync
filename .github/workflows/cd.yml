@@ -1,6 +1,9 @@
-name: cd
+name: CD
 
-on: [push]
+on:
+  push:
+    tags:
+      - '*.*.*'
 
 jobs:
   docker:
