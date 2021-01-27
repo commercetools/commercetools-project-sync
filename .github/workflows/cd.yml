@@ -1,26 +1,22 @@
 name: cd
 
-on:
-  push:
-    tags:
-      - '*.*.*'
+on: [push]
+
 jobs:
   docker:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - name: serializing workflow runs
-        uses: softprops/turnstyle@v1
-        with: 
-          same-branch-only: false
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Set output
+        id: vars
+        run: echo ::set-output name=tag::${GITHUB_REF#refs/*/}
       - name: Set up JDK 1.8
         uses: actions/setup-java@v1
         with:
           java-version: 8
       - name: Build and push image to docker using gradle plugin
-        run: ./gradlew dockerPushImage
+        run: ./gradlew dockerPushImage -Dbuild.version=${{ steps.vars.outputs.tag }} --daemon
         env:
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
           DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
