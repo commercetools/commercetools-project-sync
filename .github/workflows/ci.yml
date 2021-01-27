@@ -1,0 +1,38 @@
+# This workflow will build a Java project with Gradle
+# For more information see: https://help.github.com/actions/language-and-framework-guides/building-and-testing-java-with-gradle
+
+name: CI
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: serializing workflow runs
+        uses: softprops/turnstyle@v1
+        with:
+          same-branch-only: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Set up JDK 1.8
+        uses: actions/setup-java@v1
+        with:
+          java-version: 8
+      - name: Build with Gradle
+        run: ./gradlew clean build
+        env:
+          SOURCE_PROJECT_KEY: project-sync-source
+          SOURCE_CLIENT_ID: ${{ secrets.SOURCE_CLIENT_ID }}
+          SOURCE_CLIENT_SECRET: ${{ secrets.SOURCE_CLIENT_SECRET }}
+          SOURCE_AUTH_URL: ${{ secrets.SOURCE_AUTH_URL }}
+          SOURCE_API_URL: ${{ secrets.SOURCE_API_URL }}
+          TARGET_PROJECT_KEY: project-sync-target
+          TARGET_CLIENT_ID: ${{ secrets.TARGET_CLIENT_ID }}
+          TARGET_CLIENT_SECRET: ${{ secrets.TARGET_CLIENT_SECRET }}
+          TARGET_AUTH_URL: ${{ secrets.TARGET_AUTH_URL }}
+          TARGET_API_URL: ${{ secrets.TARGET_API_URL }}
+      - name: Codecov
+        uses: codecov/codecov-action@v1
