@@ -90,13 +90,15 @@ It is recommended to set it in your IDE auto formatting settings for this projec
  ````bash
 ./gradlew dockerBuildImage
 ````
-The docker image is built and published to your desktop docker.
+The docker image has been built and published to your desktop docker.
 
 Example:
 For testing all resources sync,
 ````bash
 docker run commercetools/commercetools-project-sync:<version> -s all
 ````
+
+For more detailed information on the build and release process, see [Build and Release](BUILD.md) documentation.
 
 ## License
 Copyright (c) 2019 commercetools
