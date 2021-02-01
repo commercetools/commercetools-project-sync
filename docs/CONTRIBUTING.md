@@ -101,4 +101,4 @@ docker run commercetools/commercetools-project-sync:<version> -s all
 For more detailed information on the build and release process, see [Build and Release](BUILD.md) documentation.
 
 ## License
-Copyright (c) 2021 commercetools
+Copyright (c) 2019 commercetools
