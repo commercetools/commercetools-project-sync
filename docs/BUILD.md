@@ -11,7 +11,7 @@
 
 # Release workflow
 
-The main goal of the build process is to build and publish the docker image to the docker hub repo: 'commercetools/commercetools-project-sync'
+The main goal of the build process is to build and publish the docker image to the docker hub repo: [commercetools/commercetools-project-sync](https://hub.docker.com/r/commercetools/commercetools-project-sync/tags)
      
 ## Step 1: Release
 
