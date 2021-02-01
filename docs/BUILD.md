@@ -38,3 +38,4 @@ After clicking publish button, Github actions will trigger the CD build. Check [
 
 - [Publish](#step-2-publish) completed without an issue.
 - The new version image has been published to the docker: [commercetools/commercetools-project-sync](https://hub.docker.com/r/commercetools/commercetools-project-sync/tags)
+- Pull the docker image to your local machine and test if the new version works as expected.
