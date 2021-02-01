@@ -84,11 +84,21 @@ It is recommended to set it in your IDE auto formatting settings for this projec
 ````
 
 ### Build 
- After every successful build on travis, a Docker image is built. Every image is tagged twice:
- - `$TRAVIS_COMMIT` [travis' environment variable](https://docs.travis-ci.com/user/environment-variables/#default-environment-variables)
- - `$TRAVIS_BRANCH` [travis' environment variable](https://docs.travis-ci.com/user/environment-variables/#default-environment-variables)
- 
-This images are pushed to the docker hub repo: [commercetools/commercetools-project-sync](https://hub.docker.com/r/commercetools/commercetools-project-sync/)
+
+ Gradle docker plugin is used to build and deploy the docker images. 
+ To build the docker image locally, please run
+ ````bash
+./gradlew dockerBuildImage
+````
+The docker image has been built and published to your desktop docker.
+
+Example:
+For testing all resources, please run:
+````bash
+docker run commercetools/commercetools-project-sync:<version> -s all
+````
+
+For more detailed information on the build and release process, see [Build and Release](BUILD.md) documentation.
 
 ## License
 Copyright (c) 2019 commercetools
