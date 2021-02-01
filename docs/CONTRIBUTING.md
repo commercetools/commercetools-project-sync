@@ -93,7 +93,7 @@ It is recommended to set it in your IDE auto formatting settings for this projec
 The docker image has been built and published to your desktop docker.
 
 Example:
-For testing all resources sync,
+For testing all resources, please run:
 ````bash
 docker run commercetools/commercetools-project-sync:<version> -s all
 ````
