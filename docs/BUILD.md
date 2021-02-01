@@ -23,10 +23,10 @@ Create a PR for the new release:
 
 ------
     
-To release the library, you need to ["create a new release"](https://github.com/commercetools/commercetools-project-sync/releases/new) with Github, 
+To release the library, you need to [create a new release](https://github.com/commercetools/commercetools-project-sync/releases/new) with Github, 
 describe the new release and publish it. 
 
-For example, The release description should show of new features, bug fixes and updates of the dependencies versions(https://github.com/commercetools/commercetools-project-sync/releases/tag/3.10.0)
+For example, The release description should show of new features, bug fixes and updates of the dependencies versions. check [previous version tag.](https://github.com/commercetools/commercetools-project-sync/releases/tag/3.10.0)
 
 ## Step 2: Publish
 
