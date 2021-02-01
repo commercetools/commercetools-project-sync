@@ -18,7 +18,7 @@ The main goal of the build process is to build and publish the docker image to t
 Create a PR for the new release: 
 - Increment the release version to the new library version, please follow the [semantic versioning](https://semver.org/) for finding the new version.
 - Make sure all the dependencies are up-to-date everywhere in the documentation files and project files.
-- Make sure to add a section for the release in the [release notes](/docs/RELEASE_NOTES.md). 
+- Make sure to update the [release notes](/docs/RELEASE_NOTES.md). 
 - Ask for review for this PR and then "squash and merge" to master.
 
 
