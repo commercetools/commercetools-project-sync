@@ -86,7 +86,7 @@ It is recommended to set it in your IDE auto formatting settings for this projec
 ### Build 
 
  Gradle docker plugin is used to build and deploy the docker images. 
- To build the docker image to your desktop docker,
+ To build the docker image locally, please run
  ````bash
 ./gradlew dockerBuildImage
 ````
