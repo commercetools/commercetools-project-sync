@@ -73,8 +73,13 @@ public class ReferencesServiceImpl extends BaseServiceImpl implements References
             return fetchCustomObjectKeys(customObjectIds);
         }
 
-        int CHUNK_SIZE = 500;
-        List<List<String>> productIdsChunk = ChunkUtils.chunk(nonCachedProductIds, CHUNK_SIZE);
+        /*
+         * An id is a 36 characters long string. (i.e: 53c4a8b4-754f-4b95-b6f2-3e1e70e3d0c3) We
+         * chunk them in 300 ids we will have around a query around 11.000 characters. Above this size it
+         * could return - Error 413 (Request Entity Too Large)
+         */
+        final int CHUNK_SIZE = 300;        List<List<String>> productIdsChunk = ChunkUtils.chunk(nonCachedProductIds,
+            CHUNK_SIZE);
         List<List<String>> categoryIdsChunk = ChunkUtils.chunk(nonCachedCategoryIds, CHUNK_SIZE);
         List<List<String>> productTypeIdsChunk = ChunkUtils.chunk(nonCachedProductTypeIds, CHUNK_SIZE);
 
