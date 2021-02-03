@@ -28,6 +28,7 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import static java.lang.String.format;
+import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 public class ReferencesServiceImpl extends BaseServiceImpl implements ReferencesService {
@@ -106,7 +107,7 @@ public class ReferencesServiceImpl extends BaseServiceImpl implements References
     private List<ResourceIdsGraphQlRequest> createResourceIdsGraphQlRequests(
         @Nonnull final List<List<String>> chunkedIds, @Nonnull final GraphQlQueryResources resourceType) {
         return chunkedIds.stream().map(chunk -> new ResourceIdsGraphQlRequest(new HashSet<>(chunk),
-            resourceType)).collect(Collectors.toList());
+            resourceType)).collect(toList());
     }
 
     @Nonnull
@@ -124,33 +125,29 @@ public class ReferencesServiceImpl extends BaseServiceImpl implements References
             return CompletableFuture.completedFuture(allResourcesIdToKey);
         }
 
-        final Consumer<List<CustomObject<JsonNode>>> pageConsumer =
-            page ->
-                page.forEach(
-                    resource ->
-                        allResourcesIdToKey.put(
-                            resource.getId(), CustomObjectCompositeIdentifier.of(resource).toString()));
+        /*
+         * A key is a 36 characters long string. (i.e: 53c4a8b4-754f-4b95-b6f2-3e1e70e3d0c3) We
+         * chunk them in 300 ids we will have around a query around 11.000 characters. Above this size it
+         * could return - Error 413 (Request Entity Too Large)
+         */
+        final int CHUNK_SIZE = 300;
+        final List<List<String>> chunkedIds = ChunkUtils.chunk(nonCachedCustomObjectIds, CHUNK_SIZE);
 
-        final CustomObjectQuery<JsonNode> jsonNodeCustomObjectQuery =
-            CustomObjectQuery.ofJsonNode()
-                             .withPredicates(buildCustomObjectIdsQueryPredicate(nonCachedCustomObjectIds));
+        final List<CustomObjectQuery<JsonNode>> chunkedRequests =
+            chunkedIds.stream()
+                      .map(
+                          ids ->
+                              CustomObjectQuery.ofJsonNode()
+                                               .plusPredicates(p -> p.id().isIn(ids)))
+                      .collect(toList());
 
-        return CtpQueryUtils.queryAll(getCtpClient(), jsonNodeCustomObjectQuery, pageConsumer)
-                            .thenApply(result -> allResourcesIdToKey);
-    }
-
-    private QueryPredicate<CustomObject<JsonNode>> buildCustomObjectIdsQueryPredicate(
-        @Nonnull final Set<String> customObjectIds) {
-        final List<String> idsSurroundedWithDoubleQuotes =
-            customObjectIds
-                .stream()
-                .filter(StringUtils::isNotBlank)
-                .map(customObjectId -> format("\"%s\"", customObjectId))
-                .collect(Collectors.toList());
-        String idsQueryString = idsSurroundedWithDoubleQuotes.toString();
-        // Strip square brackets from list string. For example: ["id1", "id2"] -> "id1", "id2"
-        idsQueryString = idsQueryString.substring(1, idsQueryString.length() - 1);
-        return QueryPredicate.of(format("id in (%s)", idsQueryString));
+        return ChunkUtils.executeChunks(getCtpClient(), chunkedRequests)
+                         .thenApply(ChunkUtils::flattenPagedQueryResults)
+                         .thenApply(customObjects ->
+                             customObjects.stream()
+                                          .map(customObject -> allResourcesIdToKey.put(customObject.getId(),
+                                              CustomObjectCompositeIdentifier.of(customObject).toString())))
+                        .thenApply(o -> allResourcesIdToKey);
     }
 
     private void cacheKeys(final Set<ResourceKeyId> results) {
