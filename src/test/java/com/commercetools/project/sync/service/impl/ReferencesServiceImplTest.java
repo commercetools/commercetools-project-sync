@@ -67,7 +67,7 @@ class ReferencesServiceImplTest {
     final HashMap<String, String> expectedCache = new HashMap<>();
     expectedCache.put("productTypeId", "productTypeKey");
     assertThat(idToKeysStage).isCompletedWithValue(expectedCache);
-    verify(ctpClient, times(3)).execute(any(ResourceIdsGraphQlRequest.class));
+    verify(ctpClient, times(1)).execute(any(ResourceIdsGraphQlRequest.class));
   }
 
   @SuppressFBWarnings(
@@ -208,7 +208,7 @@ class ReferencesServiceImplTest {
     assertThat(idToKeysStage).isCompletedWithValue(expectedCache);
 
     //  second fetch doesnt make request to ctp
-    verify(ctpClient, times(6)).execute(any(ResourceIdsGraphQlRequest.class));
+    verify(ctpClient, times(4)).execute(any(ResourceIdsGraphQlRequest.class));
     verify(ctpClient, times(1)).execute(any(CustomObjectQuery.class));
   }
 

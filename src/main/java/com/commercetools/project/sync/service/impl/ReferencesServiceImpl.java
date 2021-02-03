@@ -2,10 +2,10 @@ package com.commercetools.project.sync.service.impl;
 
 import com.commercetools.project.sync.model.request.ResourceIdsGraphQlRequest;
 import com.commercetools.project.sync.service.ReferencesService;
-import com.commercetools.sync.commons.models.GraphQlBaseRequest;
+import com.commercetools.project.sync.util.ChunkUtils;
 import com.commercetools.sync.commons.models.GraphQlQueryResources;
 import com.commercetools.sync.commons.models.ResourceKeyId;
-import com.commercetools.sync.commons.models.ResourceKeyIdGraphQlResult;
+import com.commercetools.sync.commons.utils.CollectionUtils;
 import com.commercetools.sync.commons.utils.CtpQueryUtils;
 import com.commercetools.sync.customobjects.helpers.CustomObjectCompositeIdentifier;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -16,9 +16,9 @@ import io.sphere.sdk.queries.QueryPredicate;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -31,126 +31,132 @@ import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 public class ReferencesServiceImpl extends BaseServiceImpl implements ReferencesService {
-  private final Map<String, String> allResourcesIdToKey = new HashMap<>();
+    private final Map<String, String> allResourcesIdToKey = new HashMap<>();
 
-  public ReferencesServiceImpl(@Nonnull final SphereClient ctpClient) {
-    super(ctpClient);
-  }
-
-  /**
-   * Given 4 {@link Set}s of ids of products, categories, productTypes and custom objects, this
-   * method first checks if there is a key mapping for each id in the {@code idToKey} cache. If
-   * there exists a mapping for all the ids, the method returns a future containing the existing
-   * {@code idToKey} cache as it is. If there is at least one missing mapping, it attempts to make a
-   * GraphQL request (note: rest request for custom objects) to CTP to fetch all ids and keys of
-   * every missing product, category, productType or custom object Id in a combined request. For
-   * each fetched key/id pair, the method will insert it into the {@code idToKey} cache and then
-   * return the cache in a {@link CompletableFuture} after the request is successful.
-   *
-   * @param productIds the product ids to find a key mapping for.
-   * @param categoryIds the category ids to find a key mapping for.
-   * @param productTypeIds the productType ids to find a key mapping for.
-   * @param customObjectIds the custom object ids to find a key mapping for.
-   * @return a map of id to key representing products, categories, productTypes and customObjects in
-   *     the CTP project defined by the injected {@code ctpClient}.
-   */
-  @Nonnull
-  @Override
-  public CompletionStage<Map<String, String>> getIdToKeys(
-      @Nonnull final Set<String> productIds,
-      @Nonnull final Set<String> categoryIds,
-      @Nonnull final Set<String> productTypeIds,
-      @Nonnull final Set<String> customObjectIds) {
-
-    final Set<String> nonCachedProductIds = getNonCachedIds(productIds);
-    final Set<String> nonCachedCategoryIds = getNonCachedIds(categoryIds);
-    final Set<String> nonCachedProductTypeIds = getNonCachedIds(productTypeIds);
-    final Set<String> nonCachedCustomObjectIds = getNonCachedIds(customObjectIds);
-
-    if (nonCachedProductIds.isEmpty()
-        && nonCachedCategoryIds.isEmpty()
-        && nonCachedProductTypeIds.isEmpty()) {
-      return fetchCustomObjectKeys(customObjectIds);
+    public ReferencesServiceImpl(@Nonnull final SphereClient ctpClient) {
+        super(ctpClient);
     }
 
-    // TODO: Make sure each nonCached set has less than 500 resources, otherwise batch requests
-    // https://github.com/commercetools/commercetools-project-sync/issues/42
+    /**
+     * Given 4 {@link Set}s of ids of products, categories, productTypes and custom objects, this
+     * method first checks if there is a key mapping for each id in the {@code idToKey} cache. If
+     * there exists a mapping for all the ids, the method returns a future containing the existing
+     * {@code idToKey} cache as it is. If there is at least one missing mapping, it attempts to make a
+     * GraphQL request (note: rest request for custom objects) to CTP to fetch all ids and keys of
+     * every missing product, category, productType or custom object Id in a combined request. For
+     * each fetched key/id pair, the method will insert it into the {@code idToKey} cache and then
+     * return the cache in a {@link CompletableFuture} after the request is successful.
+     *
+     * @param productIds      the product ids to find a key mapping for.
+     * @param categoryIds     the category ids to find a key mapping for.
+     * @param productTypeIds  the productType ids to find a key mapping for.
+     * @param customObjectIds the custom object ids to find a key mapping for.
+     * @return a map of id to key representing products, categories, productTypes and customObjects in
+     * the CTP project defined by the injected {@code ctpClient}.
+     */
+    @Nonnull
+    @Override
+    public CompletionStage<Map<String, String>> getIdToKeys(
+        @Nonnull final Set<String> productIds,
+        @Nonnull final Set<String> categoryIds,
+        @Nonnull final Set<String> productTypeIds,
+        @Nonnull final Set<String> customObjectIds) {
 
-    ResourceIdsGraphQlRequest productIdsGraphQlRequest =
-        new ResourceIdsGraphQlRequest(nonCachedProductIds, GraphQlQueryResources.PRODUCTS);
-    ResourceIdsGraphQlRequest categoryIdsGraphQlRequest =
-        new ResourceIdsGraphQlRequest(nonCachedCategoryIds, GraphQlQueryResources.CATEGORIES);
-    ResourceIdsGraphQlRequest productTypeIdsGraphQlRequest =
-        new ResourceIdsGraphQlRequest(nonCachedProductTypeIds, GraphQlQueryResources.PRODUCT_TYPES);
+        final Set<String> nonCachedProductIds = getNonCachedIds(productIds);
+        final Set<String> nonCachedCategoryIds = getNonCachedIds(categoryIds);
+        final Set<String> nonCachedProductTypeIds = getNonCachedIds(productTypeIds);
+        final Set<String> nonCachedCustomObjectIds = getNonCachedIds(customObjectIds);
 
-    // TODO: Adapt to run grapqhl and rest call in parallel.
-    final Consumer<Set<ResourceKeyId>> resultConsumer = results -> cacheKeys(results);
+        if (nonCachedProductIds.isEmpty()
+            && nonCachedCategoryIds.isEmpty()
+            && nonCachedProductTypeIds.isEmpty()) {
+            return fetchCustomObjectKeys(customObjectIds);
+        }
 
-    CompletableFuture productsFuture = CtpQueryUtils.queryAll(
-        getCtpClient(), productIdsGraphQlRequest, resultConsumer).toCompletableFuture();
-    CompletableFuture categoriesFuture = CtpQueryUtils.queryAll(
-        getCtpClient(), categoryIdsGraphQlRequest, resultConsumer).toCompletableFuture();
-    CompletableFuture productTypesFuture = CtpQueryUtils.queryAll(
-        getCtpClient(), productTypeIdsGraphQlRequest, resultConsumer).toCompletableFuture();
+        int CHUNK_SIZE = 500;
+        List<List<String>> productIdsChunk = ChunkUtils.chunk(nonCachedProductIds, CHUNK_SIZE);
+        List<List<String>> categoryIdsChunk = ChunkUtils.chunk(nonCachedCategoryIds, CHUNK_SIZE);
+        List<List<String>> productTypeIdsChunk = ChunkUtils.chunk(nonCachedProductTypeIds, CHUNK_SIZE);
 
-    return CompletableFuture.allOf(productsFuture, categoriesFuture, productTypesFuture)
-        .thenApply(result -> allResourcesIdToKey)
-        .thenCompose(ignored -> fetchCustomObjectKeys(nonCachedCustomObjectIds));
-  }
+        List<ResourceIdsGraphQlRequest> collectedRequests = new ArrayList<>();
 
-  @Nonnull
-  private Set<String> getNonCachedIds(@Nonnull final Set<String> ids) {
-    return ids.stream()
-        .filter(id -> !allResourcesIdToKey.containsKey(id))
-        .collect(Collectors.toSet());
-  }
+        collectedRequests.addAll(
+            createResourceIdsGraphQlRequests(productIdsChunk, GraphQlQueryResources.PRODUCTS));
+        collectedRequests.addAll(
+            createResourceIdsGraphQlRequests(categoryIdsChunk, GraphQlQueryResources.CATEGORIES));
+        collectedRequests.addAll(
+            createResourceIdsGraphQlRequests(productTypeIdsChunk, GraphQlQueryResources.PRODUCT_TYPES));
 
-  @Nonnull
-  private CompletionStage<Map<String, String>> fetchCustomObjectKeys(
-      @Nonnull final Set<String> nonCachedCustomObjectIds) {
-
-    if (nonCachedCustomObjectIds.isEmpty()) {
-      return CompletableFuture.completedFuture(allResourcesIdToKey);
+        // TODO: Adapt to run grapqhl and rest call in parallel.
+        return ChunkUtils.executeChunks(getCtpClient(), collectedRequests)
+                         .thenApply(ChunkUtils::flattenGraphQLBaseResults)
+                         .thenApply(results -> {
+                             cacheKeys(results);
+                             return allResourcesIdToKey;
+                         })
+                         .thenCompose(ignored -> fetchCustomObjectKeys(nonCachedCustomObjectIds));
     }
 
-    final Consumer<List<CustomObject<JsonNode>>> pageConsumer =
-        page ->
-            page.forEach(
-                resource ->
-                    allResourcesIdToKey.put(
-                        resource.getId(), CustomObjectCompositeIdentifier.of(resource).toString()));
+    @Nonnull
+    private List<ResourceIdsGraphQlRequest> createResourceIdsGraphQlRequests(
+        @Nonnull final List<List<String>> chunkedIds, @Nonnull final GraphQlQueryResources resourceType) {
+        return chunkedIds.stream().map(chunk -> new ResourceIdsGraphQlRequest(new HashSet<>(chunk),
+            resourceType)).collect(Collectors.toList());
+    }
 
-    final CustomObjectQuery<JsonNode> jsonNodeCustomObjectQuery =
-        CustomObjectQuery.ofJsonNode()
-            .withPredicates(buildCustomObjectIdsQueryPredicate(nonCachedCustomObjectIds));
+    @Nonnull
+    private Set<String> getNonCachedIds(@Nonnull final Set<String> ids) {
+        return ids.stream()
+                  .filter(id -> !allResourcesIdToKey.containsKey(id))
+                  .collect(Collectors.toSet());
+    }
 
-    return CtpQueryUtils.queryAll(getCtpClient(), jsonNodeCustomObjectQuery, pageConsumer)
-        .thenApply(result -> allResourcesIdToKey);
-  }
+    @Nonnull
+    private CompletionStage<Map<String, String>> fetchCustomObjectKeys(
+        @Nonnull final Set<String> nonCachedCustomObjectIds) {
 
-  private QueryPredicate<CustomObject<JsonNode>> buildCustomObjectIdsQueryPredicate(
-      @Nonnull final Set<String> customObjectIds) {
-    final List<String> idsSurroundedWithDoubleQuotes =
-        customObjectIds
-            .stream()
-            .filter(StringUtils::isNotBlank)
-            .map(customObjectId -> format("\"%s\"", customObjectId))
-            .collect(Collectors.toList());
-    String idsQueryString = idsSurroundedWithDoubleQuotes.toString();
-    // Strip square brackets from list string. For example: ["id1", "id2"] -> "id1", "id2"
-    idsQueryString = idsQueryString.substring(1, idsQueryString.length() - 1);
-    return QueryPredicate.of(format("id in (%s)", idsQueryString));
-  }
+        if (nonCachedCustomObjectIds.isEmpty()) {
+            return CompletableFuture.completedFuture(allResourcesIdToKey);
+        }
 
-  private void cacheKeys(final Set<ResourceKeyId> results) {
-    results
-        .forEach(
-            resourceKeyId -> {
-              final String key = resourceKeyId.getKey();
-              final String id = resourceKeyId.getId();
-              if (!isBlank(key)) {
-                allResourcesIdToKey.put(id, key);
-              }
-            });
-  }
+        final Consumer<List<CustomObject<JsonNode>>> pageConsumer =
+            page ->
+                page.forEach(
+                    resource ->
+                        allResourcesIdToKey.put(
+                            resource.getId(), CustomObjectCompositeIdentifier.of(resource).toString()));
+
+        final CustomObjectQuery<JsonNode> jsonNodeCustomObjectQuery =
+            CustomObjectQuery.ofJsonNode()
+                             .withPredicates(buildCustomObjectIdsQueryPredicate(nonCachedCustomObjectIds));
+
+        return CtpQueryUtils.queryAll(getCtpClient(), jsonNodeCustomObjectQuery, pageConsumer)
+                            .thenApply(result -> allResourcesIdToKey);
+    }
+
+    private QueryPredicate<CustomObject<JsonNode>> buildCustomObjectIdsQueryPredicate(
+        @Nonnull final Set<String> customObjectIds) {
+        final List<String> idsSurroundedWithDoubleQuotes =
+            customObjectIds
+                .stream()
+                .filter(StringUtils::isNotBlank)
+                .map(customObjectId -> format("\"%s\"", customObjectId))
+                .collect(Collectors.toList());
+        String idsQueryString = idsSurroundedWithDoubleQuotes.toString();
+        // Strip square brackets from list string. For example: ["id1", "id2"] -> "id1", "id2"
+        idsQueryString = idsQueryString.substring(1, idsQueryString.length() - 1);
+        return QueryPredicate.of(format("id in (%s)", idsQueryString));
+    }
+
+    private void cacheKeys(final Set<ResourceKeyId> results) {
+        results
+            .forEach(
+                resourceKeyId -> {
+                    final String key = resourceKeyId.getKey();
+                    final String id = resourceKeyId.getId();
+                    if (!isBlank(key)) {
+                        allResourcesIdToKey.put(id, key);
+                    }
+                });
+    }
 }

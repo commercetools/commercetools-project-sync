@@ -393,8 +393,7 @@ class SyncerFactoryTest {
             SphereJsonUtils.readObject(jsonAsString, ResourceKeyIdGraphQlResult.class);
 
         String jsonStringProductTypes =
-            "{\"results\":[{\"id\":\"53c4a8b4-754f-4b95-b6f2-3e1e70e3d0c2\","
-                + "\"key\":\"prodType1\"}]}";
+            "{\"results\":[{\"id\":\"53c4a8b4-754f-4b95-b6f2-3e1e70e3d0c2\",\"key\":\"prodType1\"}]}";
         final ResourceKeyIdGraphQlResult productTypesResult =
             SphereJsonUtils.readObject(jsonStringProductTypes, ResourceKeyIdGraphQlResult.class);
 
@@ -406,17 +405,16 @@ class SyncerFactoryTest {
         final BadGatewayException badGatewayException = new BadGatewayException("Error!");
         when(sourceClient.execute(any(ResourceIdsGraphQlRequest.class)))
             .thenReturn(CompletableFutureUtils.failed(badGatewayException))
-            .thenReturn(
-                CompletableFuture.completedFuture(productsResult))
-            .thenReturn(CompletableFuture.completedFuture(productTypesResult))
-            .thenReturn(CompletableFuture.completedFuture(categoriesResult));
+            .thenReturn(CompletableFuture.completedFuture(productsResult))
+            .thenReturn(CompletableFuture.completedFuture(categoriesResult))
+            .thenReturn(CompletableFuture.completedFuture(productTypesResult));
 
         final ResourceKeyIdGraphQlResult resourceKeyIdGraphQlResult =
             mock(ResourceKeyIdGraphQlResult.class);
         when(resourceKeyIdGraphQlResult.getResults())
             .thenReturn(
                 singleton(new ResourceKeyId("productKey3", "53c4a8b4-754f-4b95-b6f2-3e1e70e3d0c1")));
-        when(targetClient.execute(any(ResourceKeyIdGraphQlRequest.class)))
+        when(targetClient.execute(any(ResourceIdsGraphQlRequest.class)))
             .thenReturn(CompletableFuture.completedFuture(resourceKeyIdGraphQlResult));
 
         final SyncerFactory syncerFactory =
@@ -428,7 +426,7 @@ class SyncerFactoryTest {
         // assertions
         verify(sourceClient, times(2)).execute(any(ProductQuery.class));
         verify(sourceClient, times(6)).execute(any(ResourceIdsGraphQlRequest.class));
-        verifyInteractionsWithClientAfterSync(sourceClient, 2);
+        verifyInteractionsWithClientAfterSync(sourceClient, 3);
 
         final Condition<LoggingEvent> startLog =
             new Condition<>(
