@@ -226,7 +226,7 @@ class ReferencesServiceImplTest {
     ResourceKeyId categoryKeyId = new ResourceKeyId("", "categoryId");
     when(mockResultCategories.getResults()).thenReturn(singleton(categoryKeyId));
     ResourceKeyIdGraphQlResult mockResultProductTypes = mock(ResourceKeyIdGraphQlResult.class);
-    ResourceKeyId productTypeKeyId = new ResourceKeyId(null, "productTypeId");
+    ResourceKeyId productTypeKeyId = new ResourceKeyId("", "productTypeId");
     when(mockResultProductTypes.getResults()).thenReturn(singleton(productTypeKeyId));
 
     when(ctpClient.execute(any(ResourceIdsGraphQlRequest.class)))

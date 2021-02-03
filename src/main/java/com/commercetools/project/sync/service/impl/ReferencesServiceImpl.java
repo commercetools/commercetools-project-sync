@@ -142,7 +142,7 @@ public class ReferencesServiceImpl extends BaseServiceImpl implements References
     return QueryPredicate.of(format("id in (%s)", idsQueryString));
   }
 
-  private void cacheKeys(@Nullable final Set<ResourceKeyId> results) {
+  private void cacheKeys(final Set<ResourceKeyId> results) {
     results
         .forEach(
             resourceKeyId -> {
