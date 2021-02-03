@@ -405,6 +405,8 @@ class SyncerFactoryTest {
         final BadGatewayException badGatewayException = new BadGatewayException("Error!");
         when(sourceClient.execute(any(ResourceIdsGraphQlRequest.class)))
             .thenReturn(CompletableFutureUtils.failed(badGatewayException))
+            .thenReturn(CompletableFutureUtils.failed(badGatewayException))
+            .thenReturn(CompletableFutureUtils.failed(badGatewayException))
             .thenReturn(CompletableFuture.completedFuture(productsResult))
             .thenReturn(CompletableFuture.completedFuture(categoriesResult))
             .thenReturn(CompletableFuture.completedFuture(productTypesResult));
@@ -414,7 +416,7 @@ class SyncerFactoryTest {
         when(resourceKeyIdGraphQlResult.getResults())
             .thenReturn(
                 singleton(new ResourceKeyId("productKey3", "53c4a8b4-754f-4b95-b6f2-3e1e70e3d0c1")));
-        when(targetClient.execute(any(ResourceIdsGraphQlRequest.class)))
+        when(targetClient.execute(any(ResourceKeyIdGraphQlRequest.class)))
             .thenReturn(CompletableFuture.completedFuture(resourceKeyIdGraphQlResult));
 
         final SyncerFactory syncerFactory =
@@ -426,7 +428,7 @@ class SyncerFactoryTest {
         // assertions
         verify(sourceClient, times(2)).execute(any(ProductQuery.class));
         verify(sourceClient, times(6)).execute(any(ResourceIdsGraphQlRequest.class));
-        verifyInteractionsWithClientAfterSync(sourceClient, 3);
+        verifyInteractionsWithClientAfterSync(sourceClient, 2);
 
         final Condition<LoggingEvent> startLog =
             new Condition<>(
