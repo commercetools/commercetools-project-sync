@@ -1,12 +1,11 @@
 package com.commercetools.project.sync.service.impl;
 
-import static java.lang.String.format;
-import static org.apache.commons.lang3.StringUtils.isBlank;
-
-import com.commercetools.project.sync.model.request.CombinedResourceKeysRequest;
-import com.commercetools.project.sync.model.response.CombinedResult;
-import com.commercetools.project.sync.model.response.ResultingResourcesContainer;
+import com.commercetools.project.sync.model.request.ResourceIdsGraphQlRequest;
 import com.commercetools.project.sync.service.ReferencesService;
+import com.commercetools.sync.commons.models.GraphQlBaseRequest;
+import com.commercetools.sync.commons.models.GraphQlQueryResources;
+import com.commercetools.sync.commons.models.ResourceKeyId;
+import com.commercetools.sync.commons.models.ResourceKeyIdGraphQlResult;
 import com.commercetools.sync.commons.utils.CtpQueryUtils;
 import com.commercetools.sync.customobjects.helpers.CustomObjectCompositeIdentifier;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -14,6 +13,11 @@ import io.sphere.sdk.client.SphereClient;
 import io.sphere.sdk.customobjects.CustomObject;
 import io.sphere.sdk.customobjects.queries.CustomObjectQuery;
 import io.sphere.sdk.queries.QueryPredicate;
+import org.apache.commons.lang3.StringUtils;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -22,9 +26,9 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import org.apache.commons.lang3.StringUtils;
+
+import static java.lang.String.format;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 public class ReferencesServiceImpl extends BaseServiceImpl implements ReferencesService {
   private final Map<String, String> allResourcesIdToKey = new HashMap<>();
@@ -71,18 +75,26 @@ public class ReferencesServiceImpl extends BaseServiceImpl implements References
 
     // TODO: Make sure each nonCached set has less than 500 resources, otherwise batch requests
     // https://github.com/commercetools/commercetools-project-sync/issues/42
-    final CombinedResourceKeysRequest combinedResourceKeysRequest =
-        new CombinedResourceKeysRequest(
-            nonCachedProductIds, nonCachedCategoryIds, nonCachedProductTypeIds);
+
+    ResourceIdsGraphQlRequest productIdsGraphQlRequest =
+        new ResourceIdsGraphQlRequest(nonCachedProductIds, GraphQlQueryResources.PRODUCTS);
+    ResourceIdsGraphQlRequest categoryIdsGraphQlRequest =
+        new ResourceIdsGraphQlRequest(nonCachedCategoryIds, GraphQlQueryResources.CATEGORIES);
+    ResourceIdsGraphQlRequest productTypeIdsGraphQlRequest =
+        new ResourceIdsGraphQlRequest(nonCachedProductTypeIds, GraphQlQueryResources.PRODUCT_TYPES);
 
     // TODO: Adapt to run grapqhl and rest call in parallel.
-    return getCtpClient()
-        .execute(combinedResourceKeysRequest)
-        .thenApply(
-            combinedResult -> {
-              cacheKeys(combinedResult);
-              return allResourcesIdToKey;
-            })
+    final Consumer<Set<ResourceKeyId>> resultConsumer = results -> cacheKeys(results);
+
+    CompletableFuture productsFuture = CtpQueryUtils.queryAll(
+        getCtpClient(), productIdsGraphQlRequest, resultConsumer).toCompletableFuture();
+    CompletableFuture categoriesFuture = CtpQueryUtils.queryAll(
+        getCtpClient(), categoryIdsGraphQlRequest, resultConsumer).toCompletableFuture();
+    CompletableFuture productTypesFuture = CtpQueryUtils.queryAll(
+        getCtpClient(), productTypeIdsGraphQlRequest, resultConsumer).toCompletableFuture();
+
+    return CompletableFuture.allOf(productsFuture, categoriesFuture, productTypesFuture)
+        .thenApply(result -> allResourcesIdToKey)
         .thenCompose(ignored -> fetchCustomObjectKeys(nonCachedCustomObjectIds));
   }
 
@@ -91,29 +103,6 @@ public class ReferencesServiceImpl extends BaseServiceImpl implements References
     return ids.stream()
         .filter(id -> !allResourcesIdToKey.containsKey(id))
         .collect(Collectors.toSet());
-  }
-
-  private void cacheKeys(@Nullable final CombinedResult combinedResult) {
-    if (combinedResult != null) {
-      cacheKeys(combinedResult.getProducts());
-      cacheKeys(combinedResult.getCategories());
-      cacheKeys(combinedResult.getProductTypes());
-    }
-  }
-
-  private void cacheKeys(@Nullable final ResultingResourcesContainer resultsContainer) {
-    if (resultsContainer != null) {
-      resultsContainer
-          .getResults()
-          .forEach(
-              referenceIdKey -> {
-                final String key = referenceIdKey.getKey();
-                final String id = referenceIdKey.getId();
-                if (!isBlank(key)) {
-                  allResourcesIdToKey.put(id, key);
-                }
-              });
-    }
   }
 
   @Nonnull
@@ -151,5 +140,17 @@ public class ReferencesServiceImpl extends BaseServiceImpl implements References
     // Strip square brackets from list string. For example: ["id1", "id2"] -> "id1", "id2"
     idsQueryString = idsQueryString.substring(1, idsQueryString.length() - 1);
     return QueryPredicate.of(format("id in (%s)", idsQueryString));
+  }
+
+  private void cacheKeys(@Nullable final Set<ResourceKeyId> results) {
+    results
+        .forEach(
+            resourceKeyId -> {
+              final String key = resourceKeyId.getKey();
+              final String id = resourceKeyId.getId();
+              if (!isBlank(key)) {
+                allResourcesIdToKey.put(id, key);
+              }
+            });
   }
 }
