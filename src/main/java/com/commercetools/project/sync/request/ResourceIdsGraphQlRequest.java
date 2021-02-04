@@ -1,4 +1,4 @@
-package com.commercetools.project.sync.model.request;
+package com.commercetools.project.sync.request;
 
 import com.commercetools.sync.commons.helpers.GraphQlBaseRequestImpl;
 import com.commercetools.sync.commons.models.GraphQlQueryResources;

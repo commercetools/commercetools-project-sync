@@ -1,7 +1,7 @@
 package com.commercetools.project.sync;
 
 import com.commercetools.project.sync.exception.CliException;
-import com.commercetools.project.sync.model.request.ResourceIdsGraphQlRequest;
+import com.commercetools.project.sync.request.ResourceIdsGraphQlRequest;
 import com.commercetools.project.sync.model.response.LastSyncCustomObject;
 import com.commercetools.project.sync.product.ProductSyncer;
 import com.commercetools.project.sync.util.MockPagedQueryResult;

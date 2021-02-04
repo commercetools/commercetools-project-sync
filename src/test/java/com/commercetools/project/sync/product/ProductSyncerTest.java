@@ -1,6 +1,6 @@
 package com.commercetools.project.sync.product;
 
-import com.commercetools.project.sync.model.request.ResourceIdsGraphQlRequest;
+import com.commercetools.project.sync.request.ResourceIdsGraphQlRequest;
 import com.commercetools.sync.commons.models.ResourceKeyIdGraphQlResult;
 import com.commercetools.sync.products.ProductSync;
 import com.fasterxml.jackson.databind.JsonNode;

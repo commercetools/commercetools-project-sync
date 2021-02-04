@@ -1,19 +1,14 @@
 package com.commercetools.project.sync.service.impl;
 
-import com.commercetools.project.sync.model.request.ResourceIdsGraphQlRequest;
+import com.commercetools.project.sync.request.ResourceIdsGraphQlRequest;
 import com.commercetools.project.sync.service.ReferencesService;
 import com.commercetools.project.sync.util.ChunkUtils;
 import com.commercetools.sync.commons.models.GraphQlQueryResources;
 import com.commercetools.sync.commons.models.ResourceKeyId;
-import com.commercetools.sync.commons.utils.CollectionUtils;
-import com.commercetools.sync.commons.utils.CtpQueryUtils;
 import com.commercetools.sync.customobjects.helpers.CustomObjectCompositeIdentifier;
 import com.fasterxml.jackson.databind.JsonNode;
 import io.sphere.sdk.client.SphereClient;
-import io.sphere.sdk.customobjects.CustomObject;
 import io.sphere.sdk.customobjects.queries.CustomObjectQuery;
-import io.sphere.sdk.queries.QueryPredicate;
-import org.apache.commons.lang3.StringUtils;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
@@ -24,10 +19,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
@@ -79,8 +72,8 @@ public class ReferencesServiceImpl extends BaseServiceImpl implements References
          * chunk them in 300 ids we will have around a query around 11.000 characters. Above this size it
          * could return - Error 413 (Request Entity Too Large)
          */
-        final int CHUNK_SIZE = 300;        List<List<String>> productIdsChunk = ChunkUtils.chunk(nonCachedProductIds,
-            CHUNK_SIZE);
+        final int CHUNK_SIZE = 300;
+        List<List<String>> productIdsChunk = ChunkUtils.chunk(nonCachedProductIds, CHUNK_SIZE);
         List<List<String>> categoryIdsChunk = ChunkUtils.chunk(nonCachedCategoryIds, CHUNK_SIZE);
         List<List<String>> productTypeIdsChunk = ChunkUtils.chunk(nonCachedProductTypeIds, CHUNK_SIZE);
 
