@@ -27,90 +27,90 @@ import org.junit.jupiter.api.Test;
 
 class ChunkUtilsTest {
 
-    @Test
-    void chunk_WithEmptyList_ShouldNotChunkItems() {
-        final List<List<Object>> chunk = ChunkUtils.chunk(emptyList(), 5);
+  @Test
+  void chunk_WithEmptyList_ShouldNotChunkItems() {
+    final List<List<Object>> chunk = ChunkUtils.chunk(emptyList(), 5);
 
-        assertThat(chunk).isEmpty();
-    }
+    assertThat(chunk).isEmpty();
+  }
 
-    @Test
-    void chunk_WithList_ShouldChunkItemsIntoMultipleLists() {
-        final List<List<String>> chunks =
-            ChunkUtils.chunk(asList("1", "2", "3", "4", "5", "6", "7", "8", "9", "10"), 3);
+  @Test
+  void chunk_WithList_ShouldChunkItemsIntoMultipleLists() {
+    final List<List<String>> chunks =
+        ChunkUtils.chunk(asList("1", "2", "3", "4", "5", "6", "7", "8", "9", "10"), 3);
 
-        assertThat(chunks).hasSize(4);
-        assertThat(chunks)
-            .isEqualTo(
-                asList(
-                    asList("1", "2", "3"),
-                    asList("4", "5", "6"),
-                    asList("7", "8", "9"),
-                    singletonList("10")));
-    }
+    assertThat(chunks).hasSize(4);
+    assertThat(chunks)
+        .isEqualTo(
+            asList(
+                asList("1", "2", "3"),
+                asList("4", "5", "6"),
+                asList("7", "8", "9"),
+                singletonList("10")));
+  }
 
-    @Test
-    void executeChunks_withEmptyRequestList_ShouldReturnEmptyList() {
-        final List<Object> results =
-            ChunkUtils.executeChunks(mock(SphereClient.class), emptyList()).join();
+  @Test
+  void executeChunks_withEmptyRequestList_ShouldReturnEmptyList() {
+    final List<Object> results =
+        ChunkUtils.executeChunks(mock(SphereClient.class), emptyList()).join();
 
-        assertThat(results).isEmpty();
-    }
+    assertThat(results).isEmpty();
+  }
 
-    @Test
-    void executeChunks_withQueryBuilderRequests_ShouldReturnResults() {
-        final SphereClient client = mock(SphereClient.class);
+  @Test
+  void executeChunks_withQueryBuilderRequests_ShouldReturnResults() {
+    final SphereClient client = mock(SphereClient.class);
 
-        final PagedQueryResult<Category> pagedQueryResult = mock(PagedQueryResult.class);
-        when(pagedQueryResult.getResults())
-            .thenReturn(
-                Arrays.asList(mock(Category.class), mock(Category.class), mock(Category.class)));
+    final PagedQueryResult<Category> pagedQueryResult = mock(PagedQueryResult.class);
+    when(pagedQueryResult.getResults())
+        .thenReturn(
+            Arrays.asList(mock(Category.class), mock(Category.class), mock(Category.class)));
 
-        when(client.execute(any())).thenReturn(completedFuture(pagedQueryResult));
-        when(client.execute(any())).thenReturn(completedFuture(pagedQueryResult));
+    when(client.execute(any())).thenReturn(completedFuture(pagedQueryResult));
+    when(client.execute(any())).thenReturn(completedFuture(pagedQueryResult));
 
-        final List<PagedQueryResult<Category>> results =
-            ChunkUtils.executeChunks(
+    final List<PagedQueryResult<Category>> results =
+        ChunkUtils.executeChunks(
                 client,
                 asList(
                     CategoryQueryBuilder.of()
-                                        .plusPredicates(queryModel -> queryModel.key().isIn(asList("1", "2", "3")))
-                                        .build(),
+                        .plusPredicates(queryModel -> queryModel.key().isIn(asList("1", "2", "3")))
+                        .build(),
                     CategoryQueryBuilder.of()
-                                        .plusPredicates(queryModel -> queryModel.key().isIn(asList("4", "5", "6")))
-                                        .build()))
-                      .join();
+                        .plusPredicates(queryModel -> queryModel.key().isIn(asList("4", "5", "6")))
+                        .build()))
+            .join();
 
-        assertThat(results).hasSize(2);
+    assertThat(results).hasSize(2);
 
-        final List<Category> categories = ChunkUtils.flattenPagedQueryResults(results);
-        assertThat(categories).hasSize(6);
-    }
+    final List<Category> categories = ChunkUtils.flattenPagedQueryResults(results);
+    assertThat(categories).hasSize(6);
+  }
 
-    @Test
-    void executeChunks_withGraphqlRequests_ShouldReturnResults() {
-        final SphereClient client = mock(SphereClient.class);
+  @Test
+  void executeChunks_withGraphqlRequests_ShouldReturnResults() {
+    final SphereClient client = mock(SphereClient.class);
 
-        final ResourceKeyIdGraphQlResult resourceKeyIdGraphQlResult =
-            mock(ResourceKeyIdGraphQlResult.class);
-        when(resourceKeyIdGraphQlResult.getResults())
-            .thenReturn(
-                new HashSet<>(
-                    Arrays.asList(
-                        new ResourceKeyId("coKey1", "coId1"), new ResourceKeyId("coKey2", "coId2"))));
+    final ResourceKeyIdGraphQlResult resourceKeyIdGraphQlResult =
+        mock(ResourceKeyIdGraphQlResult.class);
+    when(resourceKeyIdGraphQlResult.getResults())
+        .thenReturn(
+            new HashSet<>(
+                Arrays.asList(
+                    new ResourceKeyId("coKey1", "coId1"), new ResourceKeyId("coKey2", "coId2"))));
 
-        when(client.execute(any(ResourceKeyIdGraphQlRequest.class)))
-            .thenReturn(CompletableFuture.completedFuture(resourceKeyIdGraphQlResult));
+    when(client.execute(any(ResourceKeyIdGraphQlRequest.class)))
+        .thenReturn(CompletableFuture.completedFuture(resourceKeyIdGraphQlResult));
 
-        final ResourceKeyIdGraphQlRequest request =
-            new ResourceKeyIdGraphQlRequest(singleton("key-1"), GraphQlQueryResources.CATEGORIES);
+    final ResourceKeyIdGraphQlRequest request =
+        new ResourceKeyIdGraphQlRequest(singleton("key-1"), GraphQlQueryResources.CATEGORIES);
 
-        final List<ResourceKeyIdGraphQlResult> results =
-            ChunkUtils.executeChunks(client, asList(request, request, request)).join();
+    final List<ResourceKeyIdGraphQlResult> results =
+        ChunkUtils.executeChunks(client, asList(request, request, request)).join();
 
-        assertThat(results).hasSize(3);
+    assertThat(results).hasSize(3);
 
-        final Set<ResourceKeyId> resourceKeyIds = ChunkUtils.flattenGraphQLBaseResults(results);
-        assertThat(resourceKeyIds).hasSize(2);
-    }
+    final Set<ResourceKeyId> resourceKeyIds = ChunkUtils.flattenGraphQLBaseResults(results);
+    assertThat(resourceKeyIds).hasSize(2);
+  }
 }

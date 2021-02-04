@@ -1,5 +1,9 @@
 package com.commercetools.project.sync.request;
 
+import static java.util.Collections.singleton;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
 import com.commercetools.sync.commons.helpers.ResourceKeyIdGraphQlRequest;
 import com.commercetools.sync.commons.models.GraphQlBaseRequest;
 import com.commercetools.sync.commons.models.GraphQlQueryResources;
@@ -8,14 +12,9 @@ import io.sphere.sdk.client.HttpRequestIntent;
 import io.sphere.sdk.http.HttpMethod;
 import io.sphere.sdk.http.HttpResponse;
 import io.sphere.sdk.http.StringHttpRequestBody;
-import org.junit.jupiter.api.Test;
-
 import java.util.HashSet;
 import java.util.Set;
-
-import static java.util.Collections.singleton;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import org.junit.jupiter.api.Test;
 
 class ResourceIdsGraphQlRequestTest {
 

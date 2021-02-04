@@ -169,6 +169,7 @@ class ReferencesServiceImplTest {
     when(mockCustomObject.getId()).thenReturn("customObjectId");
     when(mockCustomObject.getKey()).thenReturn("customObjectKey");
     when(mockCustomObject.getContainer()).thenReturn("customObjectContainer");
+
     final PagedQueryResult<CustomObject<JsonNode>> result = mock(PagedQueryResult.class);
     when(result.getResults()).thenReturn(singletonList(mockCustomObject));
 

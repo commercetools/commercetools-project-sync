@@ -1,18 +1,17 @@
 package com.commercetools.project.sync.request;
 
-import com.commercetools.sync.commons.helpers.GraphQlBaseRequestImpl;
-import com.commercetools.sync.commons.models.GraphQlQueryResources;
-import com.commercetools.sync.commons.models.ResourceKeyIdGraphQlResult;
-import io.sphere.sdk.http.HttpResponse;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import java.util.Set;
-
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.joining;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+
+import com.commercetools.sync.commons.helpers.GraphQlBaseRequestImpl;
+import com.commercetools.sync.commons.models.GraphQlQueryResources;
+import com.commercetools.sync.commons.models.ResourceKeyIdGraphQlResult;
+import io.sphere.sdk.http.HttpResponse;
+import java.util.Set;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 public class ResourceIdsGraphQlRequest extends GraphQlBaseRequestImpl<ResourceKeyIdGraphQlResult> {
   protected final Set<String> idsToSearch;
