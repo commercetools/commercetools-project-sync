@@ -3,17 +3,14 @@ package com.commercetools.project.sync.product;
 import static com.commercetools.project.sync.util.TestUtils.getMockedClock;
 import static io.sphere.sdk.json.SphereJsonUtils.readObjectFromResource;
 import static io.sphere.sdk.models.LocalizedString.ofEnglish;
-import static io.sphere.sdk.utils.SphereInternalUtils.asSet;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import com.commercetools.project.sync.model.request.CombinedResourceKeysRequest;
-import com.commercetools.project.sync.model.response.CombinedResult;
-import com.commercetools.project.sync.model.response.ReferenceIdKey;
-import com.commercetools.project.sync.model.response.ResultingResourcesContainer;
+import com.commercetools.project.sync.model.ResourceIdsGraphQlRequest;
+import com.commercetools.sync.commons.models.ResourceKeyIdGraphQlResult;
 import com.commercetools.sync.products.ProductSync;
 import com.fasterxml.jackson.databind.JsonNode;
 import io.sphere.sdk.client.BadGatewayException;
@@ -21,6 +18,7 @@ import io.sphere.sdk.client.SphereApiConfig;
 import io.sphere.sdk.client.SphereClient;
 import io.sphere.sdk.commands.UpdateAction;
 import io.sphere.sdk.expansion.ExpansionPath;
+import io.sphere.sdk.json.SphereJsonUtils;
 import io.sphere.sdk.products.Product;
 import io.sphere.sdk.products.ProductCatalogData;
 import io.sphere.sdk.products.ProductDraft;
@@ -72,24 +70,28 @@ class ProductSyncerTest {
             readObjectFromResource("product-key-1.json", Product.class),
             readObjectFromResource("product-key-2.json", Product.class));
 
-    final ResultingResourcesContainer productsResult =
-        new ResultingResourcesContainer(
-            asSet(
-                new ReferenceIdKey("53c4a8b4-754f-4b95-b6f2-3e1e70e3d0c1", "prod1"),
-                new ReferenceIdKey("53c4a8b4-754f-4b95-b6f2-3e1e70e3d0c5", "prod2")));
-    final ResultingResourcesContainer productTypesResult =
-        new ResultingResourcesContainer(
-            asSet(new ReferenceIdKey("53c4a8b4-754f-4b95-b6f2-3e1e70e3d0c2", "prodType1")));
-    final ResultingResourcesContainer categoriesResult =
-        new ResultingResourcesContainer(
-            asSet(
-                new ReferenceIdKey("53c4a8b4-754f-4b95-b6f2-3e1e70e3d0c3", "cat1"),
-                new ReferenceIdKey("53c4a8b4-754f-4b95-b6f2-3e1e70e3d0c4", "cat2")));
+    String jsonStringProducts =
+        "{\"results\":[{\"id\":\"53c4a8b4-754f-4b95-b6f2-3e1e70e3d0c1\",\"key\":\"prod1\"},"
+            + "{\"id\":\"53c4a8b4-754f-4b95-b6f2-3e1e70e3d0c5\",\"key\":\"prod2\"}]}";
+    final ResourceKeyIdGraphQlResult productsResult =
+        SphereJsonUtils.readObject(jsonStringProducts, ResourceKeyIdGraphQlResult.class);
 
-    when(sourceClient.execute(any(CombinedResourceKeysRequest.class)))
-        .thenReturn(
-            CompletableFuture.completedFuture(
-                new CombinedResult(productsResult, categoriesResult, productTypesResult)));
+    String jsonStringProductTypes =
+        "{\"results\":[{\"id\":\"53c4a8b4-754f-4b95-b6f2-3e1e70e3d0c2\","
+            + "\"key\":\"prodType1\"}]}";
+    final ResourceKeyIdGraphQlResult productTypesResult =
+        SphereJsonUtils.readObject(jsonStringProductTypes, ResourceKeyIdGraphQlResult.class);
+
+    String jsonStringCategories =
+        "{\"results\":[{\"id\":\"53c4a8b4-754f-4b95-b6f2-3e1e70e3d0c3\",\"key\":\"cat1\"},"
+            + "{\"id\":\"53c4a8b4-754f-4b95-b6f2-3e1e70e3d0c4\",\"key\":\"cat2\"}]}";
+    final ResourceKeyIdGraphQlResult categoriesResult =
+        SphereJsonUtils.readObject(jsonStringCategories, ResourceKeyIdGraphQlResult.class);
+
+    when(sourceClient.execute(any(ResourceIdsGraphQlRequest.class)))
+        .thenReturn(CompletableFuture.completedFuture(productsResult))
+        .thenReturn(CompletableFuture.completedFuture(productTypesResult))
+        .thenReturn(CompletableFuture.completedFuture(categoriesResult));
 
     // test
     final List<ProductDraft> draftsFromPageStage =
@@ -205,20 +207,26 @@ class ProductSyncerTest {
             readObjectFromResource("product-key-1.json", Product.class),
             readObjectFromResource("product-key-2.json", Product.class));
 
-    final ResultingResourcesContainer productsResult =
-        new ResultingResourcesContainer(
-            asSet(new ReferenceIdKey("53c4a8b4-754f-4b95-b6f2-3e1e70e3d0c1", "prod1")));
-    final ResultingResourcesContainer productTypesResult =
-        new ResultingResourcesContainer(
-            asSet(new ReferenceIdKey("53c4a8b4-754f-4b95-b6f2-3e1e70e3d0c2", "prodType1")));
-    final ResultingResourcesContainer categoriesResult =
-        new ResultingResourcesContainer(
-            asSet(new ReferenceIdKey("53c4a8b4-754f-4b95-b6f2-3e1e70e3d0c3", "cat1")));
+    String jsonStringProducts =
+        "{\"results\":[{\"id\":\"53c4a8b4-754f-4b95-b6f2-3e1e70e3d0c1\"," + "\"key\":\"prod1\"}]}";
+    final ResourceKeyIdGraphQlResult productsResult =
+        SphereJsonUtils.readObject(jsonStringProducts, ResourceKeyIdGraphQlResult.class);
 
-    when(sourceClient.execute(any(CombinedResourceKeysRequest.class)))
-        .thenReturn(
-            CompletableFuture.completedFuture(
-                new CombinedResult(productsResult, categoriesResult, productTypesResult)));
+    String jsonStringProductTypes =
+        "{\"results\":[{\"id\":\"53c4a8b4-754f-4b95-b6f2-3e1e70e3d0c2\","
+            + "\"key\":\"prodType1\"}]}";
+    final ResourceKeyIdGraphQlResult productTypesResult =
+        SphereJsonUtils.readObject(jsonStringProductTypes, ResourceKeyIdGraphQlResult.class);
+
+    String jsonStringCategories =
+        "{\"results\":[{\"id\":\"53c4a8b4-754f-4b95-b6f2-3e1e70e3d0c3\"," + "\"key\":\"cat1\"}]}";
+    final ResourceKeyIdGraphQlResult categoriesResult =
+        SphereJsonUtils.readObject(jsonStringCategories, ResourceKeyIdGraphQlResult.class);
+
+    when(sourceClient.execute(any(ResourceIdsGraphQlRequest.class)))
+        .thenReturn(CompletableFuture.completedFuture(productsResult))
+        .thenReturn(CompletableFuture.completedFuture(categoriesResult))
+        .thenReturn(CompletableFuture.completedFuture(productTypesResult));
 
     // test
     final List<ProductDraft> draftsFromPageStage =
@@ -285,7 +293,7 @@ class ProductSyncerTest {
 
     final BadGatewayException badGatewayException =
         new BadGatewayException("Failed Graphql request");
-    when(sourceClient.execute(any(CombinedResourceKeysRequest.class)))
+    when(sourceClient.execute(any(ResourceIdsGraphQlRequest.class)))
         .thenReturn(CompletableFutureUtils.failed(badGatewayException));
 
     // test

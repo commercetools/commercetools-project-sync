@@ -19,7 +19,6 @@ import static com.commercetools.project.sync.util.TestUtils.getMockedClock;
 import static com.commercetools.project.sync.util.TestUtils.mockLastSyncCustomObject;
 import static com.commercetools.project.sync.util.TestUtils.stubClientsCustomObjectService;
 import static com.commercetools.project.sync.util.TestUtils.verifyInteractionsWithClientAfterSync;
-import static io.sphere.sdk.utils.SphereInternalUtils.asSet;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
@@ -33,11 +32,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.commercetools.project.sync.exception.CliException;
-import com.commercetools.project.sync.model.request.CombinedResourceKeysRequest;
-import com.commercetools.project.sync.model.response.CombinedResult;
+import com.commercetools.project.sync.model.ResourceIdsGraphQlRequest;
 import com.commercetools.project.sync.model.response.LastSyncCustomObject;
-import com.commercetools.project.sync.model.response.ReferenceIdKey;
-import com.commercetools.project.sync.model.response.ResultingResourcesContainer;
 import com.commercetools.project.sync.product.ProductSyncer;
 import com.commercetools.project.sync.util.MockPagedQueryResult;
 import com.commercetools.sync.commons.helpers.ResourceKeyIdGraphQlRequest;
@@ -300,7 +296,7 @@ class SyncerFactoryTest {
     final BadGatewayException badGatewayException = new BadGatewayException("Error!");
     when(targetClient.execute(any(ProductCreateCommand.class)))
         .thenReturn(CompletableFutureUtils.failed(badGatewayException));
-    when(sourceClient.execute(any(CombinedResourceKeysRequest.class)))
+    when(sourceClient.execute(any(ResourceIdsGraphQlRequest.class)))
         .thenReturn(CompletableFutureUtils.failed(badGatewayException));
 
     final SyncerFactory syncerFactory =
@@ -311,7 +307,7 @@ class SyncerFactoryTest {
 
     // assertions
     verify(sourceClient, times(1)).execute(any(ProductQuery.class));
-    verify(sourceClient, times(1)).execute(any(CombinedResourceKeysRequest.class));
+    verify(sourceClient, times(3)).execute(any(ResourceIdsGraphQlRequest.class));
     verifyInteractionsWithClientAfterSync(sourceClient, 1);
 
     final Condition<LoggingEvent> startLog =
@@ -390,22 +386,29 @@ class SyncerFactoryTest {
     when(targetClient.execute(any(ProductCreateCommand.class)))
         .thenReturn(CompletableFuture.completedFuture(product2));
 
-    final ResultingResourcesContainer productsResult =
-        new ResultingResourcesContainer(
-            asSet(new ReferenceIdKey("53c4a8b4-754f-4b95-b6f2-3e1e70e3d0c1", "productKey3")));
-    final ResultingResourcesContainer productTypesResult =
-        new ResultingResourcesContainer(
-            asSet(new ReferenceIdKey("53c4a8b4-754f-4b95-b6f2-3e1e70e3d0c2", "prodType1")));
-    final ResultingResourcesContainer categoriesResult =
-        new ResultingResourcesContainer(
-            asSet(new ReferenceIdKey("53c4a8b4-754f-4b95-b6f2-3e1e70e3d0c3", "cat1")));
+    String jsonAsString =
+        "{\"results\":[{\"id\":\"53c4a8b4-754f-4b95-b6f2-3e1e70e3d0c1\",\"key\":\"productKey3\"}]}";
+    final ResourceKeyIdGraphQlResult productsResult =
+        SphereJsonUtils.readObject(jsonAsString, ResourceKeyIdGraphQlResult.class);
+
+    String jsonStringProductTypes =
+        "{\"results\":[{\"id\":\"53c4a8b4-754f-4b95-b6f2-3e1e70e3d0c2\",\"key\":\"prodType1\"}]}";
+    final ResourceKeyIdGraphQlResult productTypesResult =
+        SphereJsonUtils.readObject(jsonStringProductTypes, ResourceKeyIdGraphQlResult.class);
+
+    String jsonStringCategories =
+        "{\"results\":[{\"id\":\"53c4a8b4-754f-4b95-b6f2-3e1e70e3d0c3\",\"key\":\"cat1\"}]}";
+    final ResourceKeyIdGraphQlResult categoriesResult =
+        SphereJsonUtils.readObject(jsonStringCategories, ResourceKeyIdGraphQlResult.class);
 
     final BadGatewayException badGatewayException = new BadGatewayException("Error!");
-    when(sourceClient.execute(any(CombinedResourceKeysRequest.class)))
+    when(sourceClient.execute(any(ResourceIdsGraphQlRequest.class)))
         .thenReturn(CompletableFutureUtils.failed(badGatewayException))
-        .thenReturn(
-            CompletableFuture.completedFuture(
-                new CombinedResult(productsResult, categoriesResult, productTypesResult)));
+        .thenReturn(CompletableFutureUtils.failed(badGatewayException))
+        .thenReturn(CompletableFutureUtils.failed(badGatewayException))
+        .thenReturn(CompletableFuture.completedFuture(productsResult))
+        .thenReturn(CompletableFuture.completedFuture(categoriesResult))
+        .thenReturn(CompletableFuture.completedFuture(productTypesResult));
 
     final ResourceKeyIdGraphQlResult resourceKeyIdGraphQlResult =
         mock(ResourceKeyIdGraphQlResult.class);
@@ -423,7 +426,7 @@ class SyncerFactoryTest {
 
     // assertions
     verify(sourceClient, times(2)).execute(any(ProductQuery.class));
-    verify(sourceClient, times(2)).execute(any(CombinedResourceKeysRequest.class));
+    verify(sourceClient, times(6)).execute(any(ResourceIdsGraphQlRequest.class));
     verifyInteractionsWithClientAfterSync(sourceClient, 2);
 
     final Condition<LoggingEvent> startLog =

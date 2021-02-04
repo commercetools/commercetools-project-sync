@@ -1,33 +1,36 @@
 package com.commercetools.project.sync.service.impl;
 
-import static java.lang.String.format;
+import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
-import com.commercetools.project.sync.model.request.CombinedResourceKeysRequest;
-import com.commercetools.project.sync.model.response.CombinedResult;
-import com.commercetools.project.sync.model.response.ResultingResourcesContainer;
+import com.commercetools.project.sync.model.ResourceIdsGraphQlRequest;
 import com.commercetools.project.sync.service.ReferencesService;
-import com.commercetools.sync.commons.utils.CtpQueryUtils;
+import com.commercetools.sync.commons.models.GraphQlQueryResources;
+import com.commercetools.sync.commons.models.ResourceKeyId;
+import com.commercetools.sync.commons.utils.ChunkUtils;
 import com.commercetools.sync.customobjects.helpers.CustomObjectCompositeIdentifier;
 import com.fasterxml.jackson.databind.JsonNode;
 import io.sphere.sdk.client.SphereClient;
-import io.sphere.sdk.customobjects.CustomObject;
 import io.sphere.sdk.customobjects.queries.CustomObjectQuery;
-import io.sphere.sdk.queries.QueryPredicate;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import org.apache.commons.lang3.StringUtils;
 
 public class ReferencesServiceImpl extends BaseServiceImpl implements ReferencesService {
   private final Map<String, String> allResourcesIdToKey = new HashMap<>();
+  /*
+   * An id is a 36 characters long string. (i.e: 53c4a8b4-754f-4b95-b6f2-3e1e70e3d0c3) We
+   * chunk them in 300 ids, we will have a query around 11.000 characters. Above this size it
+   * could return - Error 413 (Request Entity Too Large)
+   */
+  public static final int CHUNK_SIZE = 300;
 
   public ReferencesServiceImpl(@Nonnull final SphereClient ctpClient) {
     super(ctpClient);
@@ -69,21 +72,38 @@ public class ReferencesServiceImpl extends BaseServiceImpl implements References
       return fetchCustomObjectKeys(customObjectIds);
     }
 
-    // TODO: Make sure each nonCached set has less than 500 resources, otherwise batch requests
-    // https://github.com/commercetools/commercetools-project-sync/issues/42
-    final CombinedResourceKeysRequest combinedResourceKeysRequest =
-        new CombinedResourceKeysRequest(
-            nonCachedProductIds, nonCachedCategoryIds, nonCachedProductTypeIds);
+    List<List<String>> productIdsChunk = ChunkUtils.chunk(nonCachedProductIds, CHUNK_SIZE);
+    List<List<String>> categoryIdsChunk = ChunkUtils.chunk(nonCachedCategoryIds, CHUNK_SIZE);
+    List<List<String>> productTypeIdsChunk = ChunkUtils.chunk(nonCachedProductTypeIds, CHUNK_SIZE);
+
+    List<ResourceIdsGraphQlRequest> collectedRequests = new ArrayList<>();
+
+    collectedRequests.addAll(
+        createResourceIdsGraphQlRequests(productIdsChunk, GraphQlQueryResources.PRODUCTS));
+    collectedRequests.addAll(
+        createResourceIdsGraphQlRequests(categoryIdsChunk, GraphQlQueryResources.CATEGORIES));
+    collectedRequests.addAll(
+        createResourceIdsGraphQlRequests(productTypeIdsChunk, GraphQlQueryResources.PRODUCT_TYPES));
 
     // TODO: Adapt to run grapqhl and rest call in parallel.
-    return getCtpClient()
-        .execute(combinedResourceKeysRequest)
+    return ChunkUtils.executeChunks(getCtpClient(), collectedRequests)
+        .thenApply(ChunkUtils::flattenGraphQLBaseResults)
         .thenApply(
-            combinedResult -> {
-              cacheKeys(combinedResult);
+            results -> {
+              cacheKeys(results);
               return allResourcesIdToKey;
             })
         .thenCompose(ignored -> fetchCustomObjectKeys(nonCachedCustomObjectIds));
+  }
+
+  @Nonnull
+  private List<ResourceIdsGraphQlRequest> createResourceIdsGraphQlRequests(
+      @Nonnull final List<List<String>> chunkedIds,
+      @Nonnull final GraphQlQueryResources resourceType) {
+    return chunkedIds
+        .stream()
+        .map(chunk -> new ResourceIdsGraphQlRequest(new HashSet<>(chunk), resourceType))
+        .collect(toList());
   }
 
   @Nonnull
@@ -91,29 +111,6 @@ public class ReferencesServiceImpl extends BaseServiceImpl implements References
     return ids.stream()
         .filter(id -> !allResourcesIdToKey.containsKey(id))
         .collect(Collectors.toSet());
-  }
-
-  private void cacheKeys(@Nullable final CombinedResult combinedResult) {
-    if (combinedResult != null) {
-      cacheKeys(combinedResult.getProducts());
-      cacheKeys(combinedResult.getCategories());
-      cacheKeys(combinedResult.getProductTypes());
-    }
-  }
-
-  private void cacheKeys(@Nullable final ResultingResourcesContainer resultsContainer) {
-    if (resultsContainer != null) {
-      resultsContainer
-          .getResults()
-          .forEach(
-              referenceIdKey -> {
-                final String key = referenceIdKey.getKey();
-                final String id = referenceIdKey.getId();
-                if (!isBlank(key)) {
-                  allResourcesIdToKey.put(id, key);
-                }
-              });
-    }
   }
 
   @Nonnull
@@ -124,32 +121,38 @@ public class ReferencesServiceImpl extends BaseServiceImpl implements References
       return CompletableFuture.completedFuture(allResourcesIdToKey);
     }
 
-    final Consumer<List<CustomObject<JsonNode>>> pageConsumer =
-        page ->
-            page.forEach(
-                resource ->
-                    allResourcesIdToKey.put(
-                        resource.getId(), CustomObjectCompositeIdentifier.of(resource).toString()));
+    final List<List<String>> chunkedIds = ChunkUtils.chunk(nonCachedCustomObjectIds, CHUNK_SIZE);
 
-    final CustomObjectQuery<JsonNode> jsonNodeCustomObjectQuery =
-        CustomObjectQuery.ofJsonNode()
-            .withPredicates(buildCustomObjectIdsQueryPredicate(nonCachedCustomObjectIds));
+    final List<CustomObjectQuery<JsonNode>> chunkedRequests =
+        chunkedIds
+            .stream()
+            .map(ids -> CustomObjectQuery.ofJsonNode().plusPredicates(p -> p.id().isIn(ids)))
+            .collect(toList());
 
-    return CtpQueryUtils.queryAll(getCtpClient(), jsonNodeCustomObjectQuery, pageConsumer)
-        .thenApply(result -> allResourcesIdToKey);
+    return ChunkUtils.executeChunks(getCtpClient(), chunkedRequests)
+        .thenApply(ChunkUtils::flattenPagedQueryResults)
+        .thenApply(
+            customObjects -> {
+              customObjects
+                  .stream()
+                  .forEach(
+                      customObject -> {
+                        allResourcesIdToKey.put(
+                            customObject.getId(),
+                            CustomObjectCompositeIdentifier.of(customObject).toString());
+                      });
+              return allResourcesIdToKey;
+            });
   }
 
-  private QueryPredicate<CustomObject<JsonNode>> buildCustomObjectIdsQueryPredicate(
-      @Nonnull final Set<String> customObjectIds) {
-    final List<String> idsSurroundedWithDoubleQuotes =
-        customObjectIds
-            .stream()
-            .filter(StringUtils::isNotBlank)
-            .map(customObjectId -> format("\"%s\"", customObjectId))
-            .collect(Collectors.toList());
-    String idsQueryString = idsSurroundedWithDoubleQuotes.toString();
-    // Strip square brackets from list string. For example: ["id1", "id2"] -> "id1", "id2"
-    idsQueryString = idsQueryString.substring(1, idsQueryString.length() - 1);
-    return QueryPredicate.of(format("id in (%s)", idsQueryString));
+  private void cacheKeys(final Set<ResourceKeyId> results) {
+    results.forEach(
+        resourceKeyId -> {
+          final String key = resourceKeyId.getKey();
+          final String id = resourceKeyId.getId();
+          if (!isBlank(key)) {
+            allResourcesIdToKey.put(id, key);
+          }
+        });
   }
 }
