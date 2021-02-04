@@ -25,6 +25,11 @@ import javax.annotation.Nonnull;
 
 public class ReferencesServiceImpl extends BaseServiceImpl implements ReferencesService {
   private final Map<String, String> allResourcesIdToKey = new HashMap<>();
+  /*
+   * An id is a 36 characters long string. (i.e: 53c4a8b4-754f-4b95-b6f2-3e1e70e3d0c3) We
+   * chunk them in 300 ids, we will have a query around 11.000 characters. Above this size it
+   * could return - Error 413 (Request Entity Too Large)
+   */
   public static final int CHUNK_SIZE = 300;
 
   public ReferencesServiceImpl(@Nonnull final SphereClient ctpClient) {
@@ -67,11 +72,6 @@ public class ReferencesServiceImpl extends BaseServiceImpl implements References
       return fetchCustomObjectKeys(customObjectIds);
     }
 
-    /*
-     * An id is a 36 characters long string. (i.e: 53c4a8b4-754f-4b95-b6f2-3e1e70e3d0c3) We
-     * chunk them in 300 ids we will have around a query around 11.000 characters. Above this size it
-     * could return - Error 413 (Request Entity Too Large)
-     */
     List<List<String>> productIdsChunk = ChunkUtils.chunk(nonCachedProductIds, CHUNK_SIZE);
     List<List<String>> categoryIdsChunk = ChunkUtils.chunk(nonCachedCategoryIds, CHUNK_SIZE);
     List<List<String>> productTypeIdsChunk = ChunkUtils.chunk(nonCachedProductTypeIds, CHUNK_SIZE);
@@ -121,11 +121,6 @@ public class ReferencesServiceImpl extends BaseServiceImpl implements References
       return CompletableFuture.completedFuture(allResourcesIdToKey);
     }
 
-    /*
-     * A key is a 36 characters long string. (i.e: 53c4a8b4-754f-4b95-b6f2-3e1e70e3d0c3) We
-     * chunk them in 300 ids we will have around a query around 11.000 characters. Above this size it
-     * could return - Error 413 (Request Entity Too Large)
-     */
     final List<List<String>> chunkedIds = ChunkUtils.chunk(nonCachedCustomObjectIds, CHUNK_SIZE);
 
     final List<CustomObjectQuery<JsonNode>> chunkedRequests =
