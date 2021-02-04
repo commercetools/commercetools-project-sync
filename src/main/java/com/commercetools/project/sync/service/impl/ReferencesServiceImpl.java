@@ -24,9 +24,10 @@ import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 
 public class ReferencesServiceImpl extends BaseServiceImpl implements ReferencesService {
-  private final Map<String, String> allResourcesIdToKey = new HashMap<>();
+    private final Map<String, String> allResourcesIdToKey = new HashMap<>();
+    public static final int CHUNK_SIZE = 300;
 
-  public ReferencesServiceImpl(@Nonnull final SphereClient ctpClient) {
+    public ReferencesServiceImpl(@Nonnull final SphereClient ctpClient) {
     super(ctpClient);
   }
 
@@ -71,7 +72,6 @@ public class ReferencesServiceImpl extends BaseServiceImpl implements References
      * chunk them in 300 ids we will have around a query around 11.000 characters. Above this size it
      * could return - Error 413 (Request Entity Too Large)
      */
-    final int CHUNK_SIZE = 300;
     List<List<String>> productIdsChunk = ChunkUtils.chunk(nonCachedProductIds, CHUNK_SIZE);
     List<List<String>> categoryIdsChunk = ChunkUtils.chunk(nonCachedCategoryIds, CHUNK_SIZE);
     List<List<String>> productTypeIdsChunk = ChunkUtils.chunk(nonCachedProductTypeIds, CHUNK_SIZE);
@@ -126,8 +126,7 @@ public class ReferencesServiceImpl extends BaseServiceImpl implements References
      * chunk them in 300 ids we will have around a query around 11.000 characters. Above this size it
      * could return - Error 413 (Request Entity Too Large)
      */
-    final int CHUNK_SIZE = 300;
-    final List<List<String>> chunkedIds = ChunkUtils.chunk(nonCachedCustomObjectIds, CHUNK_SIZE);
+      final List<List<String>> chunkedIds = ChunkUtils.chunk(nonCachedCustomObjectIds, CHUNK_SIZE);
 
     final List<CustomObjectQuery<JsonNode>> chunkedRequests =
         chunkedIds
