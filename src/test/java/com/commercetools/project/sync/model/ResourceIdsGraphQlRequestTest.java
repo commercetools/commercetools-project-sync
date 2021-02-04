@@ -1,4 +1,4 @@
-package com.commercetools.project.sync.request;
+package com.commercetools.project.sync.model;
 
 import static java.util.Collections.singleton;
 import static org.assertj.core.api.Assertions.assertThat;

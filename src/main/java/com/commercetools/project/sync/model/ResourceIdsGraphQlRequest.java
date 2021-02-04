@@ -1,4 +1,4 @@
-package com.commercetools.project.sync.request;
+package com.commercetools.project.sync.model;
 
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;

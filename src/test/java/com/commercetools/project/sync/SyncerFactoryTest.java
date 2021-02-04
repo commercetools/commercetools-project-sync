@@ -32,9 +32,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.commercetools.project.sync.exception.CliException;
+import com.commercetools.project.sync.model.ResourceIdsGraphQlRequest;
 import com.commercetools.project.sync.model.response.LastSyncCustomObject;
 import com.commercetools.project.sync.product.ProductSyncer;
-import com.commercetools.project.sync.request.ResourceIdsGraphQlRequest;
 import com.commercetools.project.sync.util.MockPagedQueryResult;
 import com.commercetools.sync.commons.helpers.ResourceKeyIdGraphQlRequest;
 import com.commercetools.sync.commons.models.ResourceKeyId;

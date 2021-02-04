@@ -3,7 +3,7 @@ package com.commercetools.project.sync.service.impl;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
-import com.commercetools.project.sync.request.ResourceIdsGraphQlRequest;
+import com.commercetools.project.sync.model.ResourceIdsGraphQlRequest;
 import com.commercetools.project.sync.service.ReferencesService;
 import com.commercetools.project.sync.util.ChunkUtils;
 import com.commercetools.sync.commons.models.GraphQlQueryResources;

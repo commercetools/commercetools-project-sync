@@ -9,7 +9,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import com.commercetools.project.sync.request.ResourceIdsGraphQlRequest;
+import com.commercetools.project.sync.model.ResourceIdsGraphQlRequest;
 import com.commercetools.sync.commons.models.ResourceKeyIdGraphQlResult;
 import com.commercetools.sync.products.ProductSync;
 import com.fasterxml.jackson.databind.JsonNode;
