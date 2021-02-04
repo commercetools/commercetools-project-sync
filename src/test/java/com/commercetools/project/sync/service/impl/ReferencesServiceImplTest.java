@@ -19,7 +19,6 @@ import com.commercetools.project.sync.service.ReferencesService;
 import com.commercetools.sync.commons.models.ResourceKeyId;
 import com.commercetools.sync.commons.models.ResourceKeyIdGraphQlResult;
 import com.fasterxml.jackson.databind.JsonNode;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.sphere.sdk.client.SphereApiConfig;
 import io.sphere.sdk.client.SphereClient;
 import io.sphere.sdk.customobjects.CustomObject;
@@ -68,27 +67,6 @@ class ReferencesServiceImplTest {
     expectedCache.put("productTypeId", "productTypeKey");
     assertThat(idToKeysStage).isCompletedWithValue(expectedCache);
     verify(ctpClient, times(1)).execute(any(ResourceIdsGraphQlRequest.class));
-  }
-
-  @SuppressFBWarnings(
-      "NP_NONNULL_PARAM_VIOLATION") // https://github.com/findbugsproject/findbugs/issues/79
-  @Test
-  void getIdToKeys_WithNullResponse_ShouldReturnCurrentCacheWithoutCachingNewIds() {
-    // preparation
-    final SphereClient ctpClient = mock(SphereClient.class);
-    when(ctpClient.getConfig()).thenReturn(SphereApiConfig.of("test-project"));
-    when(ctpClient.execute(any(ResourceIdsGraphQlRequest.class)))
-        .thenReturn(CompletableFuture.completedFuture(null));
-    final ReferencesService referencesService = new ReferencesServiceImpl(ctpClient);
-
-    // test
-    final CompletionStage<Map<String, String>> idToKeysStage =
-        referencesService.getIdToKeys(
-            asSet("productId"), asSet("categoryId"), asSet("productTypeId"), emptySet());
-
-    // assertion
-    assertThat(idToKeysStage).isCompletedWithValue(new HashMap<>());
-    verify(ctpClient, times(3)).execute(any(ResourceIdsGraphQlRequest.class));
   }
 
   @Test
