@@ -6,10 +6,10 @@ import static java.lang.String.format;
 import static java.util.stream.Collectors.toSet;
 
 import com.commercetools.project.sync.Syncer;
+import com.commercetools.project.sync.product.service.ProductReferenceTransformService;
+import com.commercetools.project.sync.product.service.impl.ProductReferenceTransformServiceImpl;
 import com.commercetools.project.sync.service.CustomObjectService;
-import com.commercetools.project.sync.service.ReferencesService;
 import com.commercetools.project.sync.service.impl.CustomObjectServiceImpl;
-import com.commercetools.project.sync.service.impl.ReferencesServiceImpl;
 import com.commercetools.sync.commons.exceptions.SyncException;
 import com.commercetools.sync.commons.utils.QuadConsumer;
 import com.commercetools.sync.commons.utils.TriConsumer;
@@ -17,14 +17,12 @@ import com.commercetools.sync.products.ProductSync;
 import com.commercetools.sync.products.ProductSyncOptions;
 import com.commercetools.sync.products.ProductSyncOptionsBuilder;
 import com.commercetools.sync.products.helpers.ProductSyncStatistics;
-import com.commercetools.sync.products.utils.ProductReferenceResolutionUtils;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.sphere.sdk.categories.Category;
 import io.sphere.sdk.client.SphereClient;
 import io.sphere.sdk.commands.UpdateAction;
 import io.sphere.sdk.customobjects.CustomObject;
-import io.sphere.sdk.expansion.ExpansionPath;
 import io.sphere.sdk.products.AttributeContainer;
 import io.sphere.sdk.products.Product;
 import io.sphere.sdk.products.ProductDraft;
@@ -32,7 +30,6 @@ import io.sphere.sdk.products.ProductVariant;
 import io.sphere.sdk.products.attributes.Attribute;
 import io.sphere.sdk.products.commands.updateactions.Publish;
 import io.sphere.sdk.products.commands.updateactions.Unpublish;
-import io.sphere.sdk.products.expansion.ProductExpansionModel;
 import io.sphere.sdk.products.queries.ProductQuery;
 import io.sphere.sdk.producttypes.ProductType;
 import java.time.Clock;
@@ -66,7 +63,7 @@ public final class ProductSyncer
           + "not be synced because it has the following reference attribute(s): \n"
           + "%s.\nThese references are either pointing to a non-existent resource or to an existing one but with a blank key. "
           + "Please make sure these referenced resources are existing and have non-blank (i.e. non-null and non-empty) keys.";
-  private final ReferencesService referencesService;
+  private final ProductReferenceTransformService referencesService;
 
   /** Instantiates a {@link Syncer} instance. */
   private ProductSyncer(
@@ -74,7 +71,7 @@ public final class ProductSyncer
       @Nonnull final SphereClient sourceClient,
       @Nonnull final SphereClient targetClient,
       @Nonnull final CustomObjectService customObjectService,
-      @Nonnull final ReferencesService referencesService,
+      @Nonnull final ProductReferenceTransformService referencesService,
       @Nonnull final Clock clock) {
     super(productSync, sourceClient, targetClient, customObjectService, clock);
     this.referencesService = referencesService;
@@ -105,7 +102,8 @@ public final class ProductSyncer
 
     final CustomObjectService customObjectService = new CustomObjectServiceImpl(targetClient);
 
-    final ReferencesService referencesService = new ReferencesServiceImpl(sourceClient);
+    final ProductReferenceTransformService referencesService =
+        new ProductReferenceTransformServiceImpl(sourceClient);
 
     return new ProductSyncer(
         productSync, sourceClient, targetClient, customObjectService, referencesService, clock);
@@ -127,7 +125,7 @@ public final class ProductSyncer
               }
               return products;
             })
-        .thenApply(ProductReferenceResolutionUtils::mapToProductDrafts);
+        .thenCompose(products -> this.referencesService.transformProductReferences(products));
   }
 
   @Nonnull
@@ -282,22 +280,7 @@ public final class ProductSyncer
   @Nonnull
   @Override
   protected ProductQuery getQuery() {
-    // TODO: Eventually don't expand all references and cache references for replacement.
-    // https://github.com/commercetools/commercetools-project-sync/issues/49
-    return ProductQuery.of()
-        .withExpansionPaths(ProductExpansionModel::productType)
-        .plusExpansionPaths(ProductExpansionModel::taxCategory)
-        .plusExpansionPaths(ExpansionPath.of("state"))
-        .plusExpansionPaths(expansionModel -> expansionModel.masterData().staged().categories())
-        .plusExpansionPaths(
-            expansionModel -> expansionModel.masterData().staged().allVariants().prices().channel())
-        .plusExpansionPaths(
-            ExpansionPath.of("masterData.staged.masterVariant.prices[*].custom.type"))
-        .plusExpansionPaths(ExpansionPath.of("masterData.staged.variants[*].prices[*].custom.type"))
-        .plusExpansionPaths(
-            ExpansionPath.of("masterData.staged.masterVariant.assets[*].custom.type"))
-        .plusExpansionPaths(
-            ExpansionPath.of("masterData.staged.variants[*].assets[*].custom.type"));
+    return ProductQuery.of();
   }
 
   /**

@@ -1,4 +1,4 @@
-package com.commercetools.project.sync.service.impl;
+package com.commercetools.project.sync.product.service;
 
 import static io.sphere.sdk.utils.SphereInternalUtils.asSet;
 import static java.util.Arrays.asList;
@@ -15,7 +15,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.commercetools.project.sync.model.ResourceIdsGraphQlRequest;
-import com.commercetools.project.sync.service.ReferencesService;
+import com.commercetools.project.sync.product.service.impl.ProductReferenceTransformServiceImpl;
 import com.commercetools.sync.commons.models.ResourceKeyId;
 import com.commercetools.sync.commons.models.ResourceKeyIdGraphQlResult;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -36,7 +36,8 @@ class ReferencesServiceImplTest {
   void getIdToKeys_WithAllEmptyIds_ShouldReturnCompletedFutureOfCacheWithoutMakingCtpRequest() {
     // preparation
     final SphereClient ctpClient = mock(SphereClient.class);
-    final ReferencesService referencesService = new ReferencesServiceImpl(ctpClient);
+    final ProductReferenceTransformService referencesService =
+        new ProductReferenceTransformServiceImpl(ctpClient);
 
     // test
     final CompletionStage<Map<String, String>> idToKeysStage =
@@ -56,7 +57,8 @@ class ReferencesServiceImplTest {
     when(mockResult.getResults()).thenReturn(singleton(resourceKeyId));
     when(ctpClient.execute(any(ResourceIdsGraphQlRequest.class)))
         .thenReturn(CompletableFuture.completedFuture(mockResult));
-    final ReferencesService referencesService = new ReferencesServiceImpl(ctpClient);
+    final ProductReferenceTransformService referencesService =
+        new ProductReferenceTransformServiceImpl(ctpClient);
 
     // test
     final CompletionStage<Map<String, String>> idToKeysStage =
@@ -100,7 +102,8 @@ class ReferencesServiceImplTest {
     when(ctpClient.execute(any(CustomObjectQuery.class)))
         .thenReturn(CompletableFuture.completedFuture(result));
 
-    final ReferencesService referencesService = new ReferencesServiceImpl(ctpClient);
+    final ProductReferenceTransformService referencesService =
+        new ProductReferenceTransformServiceImpl(ctpClient);
 
     // test
     final CompletionStage<Map<String, String>> idToKeysStage =
@@ -160,7 +163,8 @@ class ReferencesServiceImplTest {
     when(ctpClient.execute(any(CustomObjectQuery.class)))
         .thenReturn(CompletableFuture.completedFuture(result));
 
-    final ReferencesService referencesService = new ReferencesServiceImpl(ctpClient);
+    final ProductReferenceTransformService referencesService =
+        new ProductReferenceTransformServiceImpl(ctpClient);
 
     // test
     final CompletionStage<Map<String, String>> idToKeysStage =
@@ -212,7 +216,8 @@ class ReferencesServiceImplTest {
         .thenReturn(CompletableFuture.completedFuture(mockResultProducts))
         .thenReturn(CompletableFuture.completedFuture(mockResultCategories))
         .thenReturn(CompletableFuture.completedFuture(mockResultProductTypes));
-    final ReferencesService referencesService = new ReferencesServiceImpl(ctpClient);
+    final ProductReferenceTransformService referencesService =
+        new ProductReferenceTransformServiceImpl(ctpClient);
 
     // test
     final CompletionStage<Map<String, String>> idToKeysStage =

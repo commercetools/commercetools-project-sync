@@ -17,7 +17,6 @@ import io.sphere.sdk.client.BadGatewayException;
 import io.sphere.sdk.client.SphereApiConfig;
 import io.sphere.sdk.client.SphereClient;
 import io.sphere.sdk.commands.UpdateAction;
-import io.sphere.sdk.expansion.ExpansionPath;
 import io.sphere.sdk.json.SphereJsonUtils;
 import io.sphere.sdk.products.Product;
 import io.sphere.sdk.products.ProductCatalogData;
@@ -315,7 +314,7 @@ class ProductSyncerTest {
   }
 
   @Test
-  void getQuery_ShouldBuildProductQuery() {
+  void getQuery_ShouldBuildProductQueryWithoutAnyExpansionPaths() {
     // preparation
     final ProductSyncer productSyncer =
         ProductSyncer.of(mock(SphereClient.class), mock(SphereClient.class), getMockedClock());
@@ -324,18 +323,7 @@ class ProductSyncerTest {
     final ProductQuery query = productSyncer.getQuery();
 
     // assertion
-    assertThat(query.expansionPaths())
-        .containsExactly(
-            ExpansionPath.of("productType"),
-            ExpansionPath.of("taxCategory"),
-            ExpansionPath.of("state"),
-            ExpansionPath.of("masterData.staged.categories[*]"),
-            ExpansionPath.of("masterData.staged.masterVariant.prices[*].channel"),
-            ExpansionPath.of("masterData.staged.variants[*].prices[*].channel"),
-            ExpansionPath.of("masterData.staged.masterVariant.prices[*].custom.type"),
-            ExpansionPath.of("masterData.staged.variants[*].prices[*].custom.type"),
-            ExpansionPath.of("masterData.staged.masterVariant.assets[*].custom.type"),
-            ExpansionPath.of("masterData.staged.variants[*].assets[*].custom.type"));
+    assertThat(query.expansionPaths()).isEmpty();
   }
 
   @Test

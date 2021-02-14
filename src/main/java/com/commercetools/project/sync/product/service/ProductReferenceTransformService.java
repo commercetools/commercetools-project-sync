@@ -1,11 +1,17 @@
-package com.commercetools.project.sync.service;
+package com.commercetools.project.sync.product.service;
 
+import io.sphere.sdk.products.Product;
+import io.sphere.sdk.products.ProductDraft;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletionStage;
 import javax.annotation.Nonnull;
 
-public interface ReferencesService {
+public interface ProductReferenceTransformService {
+
+  @Nonnull
+  CompletionStage<List<ProductDraft>> transformProductReferences(@Nonnull List<Product> products);
 
   @Nonnull
   CompletionStage<Map<String, String>> getIdToKeys(

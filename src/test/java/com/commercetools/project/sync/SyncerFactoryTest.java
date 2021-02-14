@@ -426,7 +426,7 @@ class SyncerFactoryTest {
 
     // assertions
     verify(sourceClient, times(2)).execute(any(ProductQuery.class));
-    verify(sourceClient, times(6)).execute(any(ResourceIdsGraphQlRequest.class));
+    verify(sourceClient, times(9)).execute(any(ResourceIdsGraphQlRequest.class));
     verifyInteractionsWithClientAfterSync(sourceClient, 2);
 
     final Condition<LoggingEvent> startLog =
