@@ -1,8 +1,7 @@
 package com.commercetools.project.sync.category;
 
 import static com.commercetools.project.sync.util.TestUtils.getMockedClock;
-import static com.commercetools.sync.categories.utils.CategoryReferenceResolutionUtils.buildCategoryQuery;
-import static com.commercetools.sync.categories.utils.CategoryReferenceResolutionUtils.mapToCategoryDrafts;
+import static com.commercetools.project.sync.util.referenceresolution.CategoryReferenceResolutionUtils.mapToCategoryDrafts;
 import static io.sphere.sdk.json.SphereJsonUtils.readObjectFromResource;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
@@ -21,10 +20,14 @@ import io.sphere.sdk.categories.CategoryDraft;
 import io.sphere.sdk.categories.queries.CategoryQuery;
 import io.sphere.sdk.client.SphereApiConfig;
 import io.sphere.sdk.client.SphereClient;
+import io.sphere.sdk.json.SphereJsonUtils;
 import io.sphere.sdk.queries.PagedQueryResult;
+import io.sphere.sdk.queries.QueryExecutionUtils;
 import java.time.Clock;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.stream.Collectors;
@@ -49,16 +52,19 @@ class CategorySyncerTest {
         CategorySyncer.of(mock(SphereClient.class), mock(SphereClient.class), getMockedClock());
 
     // assertions
+    CategoryQuery expectedQuery =
+        CategoryQuery.of().withLimit(QueryExecutionUtils.DEFAULT_PAGE_SIZE);
     assertThat(categorySyncer).isNotNull();
-    assertThat(categorySyncer.getQuery()).isEqualTo(buildCategoryQuery());
+    assertThat(categorySyncer.getQuery()).isEqualTo(expectedQuery);
     assertThat(categorySyncer.getSync()).isExactlyInstanceOf(CategorySync.class);
   }
 
   @Test
   void transform_ShouldReplaceCategoryReferenceIdsWithKeys() {
     // preparation
+    final SphereClient sourceClient = mock(SphereClient.class);
     final CategorySyncer categorySyncer =
-        CategorySyncer.of(mock(SphereClient.class), mock(SphereClient.class), getMockedClock());
+        CategorySyncer.of(sourceClient, mock(SphereClient.class), getMockedClock());
     final List<Category> categoryPage =
         asList(
             readObjectFromResource("category-key-1.json", Category.class),
@@ -70,12 +76,23 @@ class CategorySyncerTest {
             .map(category -> category.getCustom().getType().getId())
             .collect(Collectors.toList());
 
+    String jsonStringCategories =
+        "{\"results\":[{\"id\":\"53c4a8b4-754f-4b95-b6f2-3e1e70e3d0c3\",\"key\":\"cat1\"}]}";
+    final ResourceKeyIdGraphQlResult categoriesResult =
+        SphereJsonUtils.readObject(jsonStringCategories, ResourceKeyIdGraphQlResult.class);
+
+    when(sourceClient.execute(any()))
+        .thenReturn(CompletableFuture.completedFuture(categoriesResult));
+
     // test
     final CompletionStage<List<CategoryDraft>> draftsFromPageStage =
         categorySyncer.transform(categoryPage);
 
+    Map<String, String> cache = new HashMap<>();
+    cache.put("53c4a8b4-754f-4b95-b6f2-3e1e70e3d0c3", "cat1");
+
     // assertions
-    final List<CategoryDraft> expectedResult = mapToCategoryDrafts(categoryPage);
+    final List<CategoryDraft> expectedResult = mapToCategoryDrafts(categoryPage, cache);
     final List<String> referenceKeys =
         expectedResult
             .stream()
@@ -96,7 +113,9 @@ class CategorySyncerTest {
     final CategoryQuery query = categorySyncer.getQuery();
 
     // assertion
-    assertThat(query).isEqualTo(buildCategoryQuery());
+    CategoryQuery expectedQuery =
+        CategoryQuery.of().withLimit(QueryExecutionUtils.DEFAULT_PAGE_SIZE);
+    assertThat(query).isEqualTo(expectedQuery);
   }
 
   @Test

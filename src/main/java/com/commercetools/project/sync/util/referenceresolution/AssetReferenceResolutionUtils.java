@@ -17,8 +17,8 @@ import javax.annotation.Nonnull;
 public final class AssetReferenceResolutionUtils {
 
   /**
-   * Takes an asset list that is supposed to have all its assets' custom references cached in
-   * order to be able to fetch the keys for the custom references. This method returns as a result a
+   * Takes an asset list that is supposed to have all its assets' custom references cached in order
+   * to be able to fetch the keys for the custom references. This method returns as a result a
    * {@link List} of {@link AssetDraft} that has all custom references with keys.
    *
    * <p>Any custom reference that is not cached will have its id in place and not replaced by the
