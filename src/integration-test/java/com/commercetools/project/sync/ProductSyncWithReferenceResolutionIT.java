@@ -24,7 +24,6 @@ import io.sphere.sdk.models.LocalizedString;
 import io.sphere.sdk.models.TextInputHint;
 import io.sphere.sdk.products.PriceDraft;
 import io.sphere.sdk.products.PriceDraftBuilder;
-import io.sphere.sdk.products.Product;
 import io.sphere.sdk.products.ProductDraft;
 import io.sphere.sdk.products.ProductDraftBuilder;
 import io.sphere.sdk.products.ProductVariantDraft;
@@ -56,22 +55,19 @@ import io.sphere.sdk.types.Type;
 import io.sphere.sdk.types.TypeDraft;
 import io.sphere.sdk.types.TypeDraftBuilder;
 import io.sphere.sdk.types.commands.TypeCreateCommand;
-
+import io.sphere.sdk.utils.MoneyImpl;
 import java.math.BigDecimal;
 import java.time.Clock;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-
-import io.sphere.sdk.utils.MoneyImpl;
+import javax.annotation.Nonnull;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import uk.org.lidalia.slf4jext.Level;
 import uk.org.lidalia.slf4jtest.TestLogger;
 import uk.org.lidalia.slf4jtest.TestLoggerFactory;
-
-import javax.annotation.Nonnull;
 
 public class ProductSyncWithReferenceResolutionIT {
 
@@ -113,23 +109,25 @@ public class ProductSyncWithReferenceResolutionIT {
 
     final TypeDraft typeDraft =
         TypeDraftBuilder.of(
-            TYPE_KEY, LocalizedString.ofEnglish("name_1"),
-            ResourceTypeIdsSetBuilder.of().addCategories().addPrices().addAssets().build())
-                        .description(LocalizedString.ofEnglish("description_1"))
-                        .fieldDefinitions(Arrays.asList(FIELD_DEFINITION_1))
-                        .build();
+                TYPE_KEY,
+                LocalizedString.ofEnglish("name_1"),
+                ResourceTypeIdsSetBuilder.of().addCategories().addPrices().addAssets().build())
+            .description(LocalizedString.ofEnglish("description_1"))
+            .fieldDefinitions(Arrays.asList(FIELD_DEFINITION_1))
+            .build();
 
-    final Type type = sourceProjectClient.execute(TypeCreateCommand.of(typeDraft)).toCompletableFuture().join();
+    final Type type =
+        sourceProjectClient.execute(TypeCreateCommand.of(typeDraft)).toCompletableFuture().join();
 
     final CategoryDraft categoryDraft =
         CategoryDraftBuilder.of(ofEnglish("t-shirts"), ofEnglish("t-shirts"))
-                            .key(RESOURCE_KEY)
-                            .build();
+            .key(RESOURCE_KEY)
+            .build();
 
     sourceProjectClient
-            .execute(CategoryCreateCommand.of(categoryDraft))
-            .toCompletableFuture()
-            .join();
+        .execute(CategoryCreateCommand.of(categoryDraft))
+        .toCompletableFuture()
+        .join();
 
     final StateDraft stateDraft =
         StateDraftBuilder.of(RESOURCE_KEY, StateType.PRODUCT_STATE)
@@ -159,16 +157,12 @@ public class ProductSyncWithReferenceResolutionIT {
 
     final PriceDraft priceBuilder =
         PriceDraftBuilder.of(MoneyImpl.of(BigDecimal.TEN, DefaultCurrencyUnits.EUR))
-                         //.customerGroup(ResourceIdentifier.ofId("customerGroupId"))
-                         .custom(CustomFieldsDraft.ofTypeIdAndJson(type.getId(), new HashMap<>()))
-                         .build();
+            // .customerGroup(ResourceIdentifier.ofId("customerGroupId"))
+            .custom(CustomFieldsDraft.ofTypeIdAndJson(type.getId(), new HashMap<>()))
+            .build();
 
     final ProductVariantDraft variantDraft1 =
-        ProductVariantDraftBuilder.of()
-                                  .key("variantKey")
-                                  .sku("sku1")
-                                  .prices(priceBuilder)
-                                  .build();
+        ProductVariantDraftBuilder.of().key("variantKey").sku("sku1").prices(priceBuilder).build();
 
     final ProductDraft productDraft =
         ProductDraftBuilder.of(
@@ -184,10 +178,7 @@ public class ProductSyncWithReferenceResolutionIT {
             .publish(true)
             .build();
 
-    sourceProjectClient
-            .execute(ProductCreateCommand.of(productDraft))
-            .toCompletableFuture()
-            .join();
+    sourceProjectClient.execute(ProductCreateCommand.of(productDraft)).toCompletableFuture().join();
   }
 
   @AfterAll
@@ -196,8 +187,7 @@ public class ProductSyncWithReferenceResolutionIT {
   }
 
   @Test
-  void
-      run_WithSyncAsArgumentWithAllArgAsFullSync_ShouldResolveReferencesAndExecuteSyncers() {
+  void run_WithSyncAsArgumentWithAllArgAsFullSync_ShouldResolveReferencesAndExecuteSyncers() {
     // preparation
     try (final SphereClient targetClient = createClient(CTP_TARGET_CLIENT_CONFIG)) {
       try (final SphereClient sourceClient = createClient(CTP_SOURCE_CLIENT_CONFIG)) {
