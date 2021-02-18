@@ -91,6 +91,8 @@ public class ProductReferenceTransformServiceImpl extends BaseServiceImpl
         this.transformPricesCustomTypeReference(products).toCompletableFuture());
     transformReferencesToRunParallel.add(
         this.transformAssetsCustomTypeReference(products).toCompletableFuture());
+    transformReferencesToRunParallel.add(
+        this.transformPricesCustomerGroupReference(products).toCompletableFuture());
 
     return CompletableFuture.allOf(
             transformReferencesToRunParallel.toArray(new CompletableFuture[0]))
@@ -302,6 +304,37 @@ public class ProductReferenceTransformServiceImpl extends BaseServiceImpl
             .collect(toList());
 
     return executeAndCacheReferenceIds(products, customTypeIds, GraphQlQueryResources.TYPES);
+  }
+
+  @Nonnull
+  private CompletionStage<List<Product>> transformPricesCustomerGroupReference(
+      @Nonnull final List<Product> products) {
+
+    List<String> customerGroupIds =
+        products
+            .stream()
+            .map(product -> product.getMasterData().getStaged().getAllVariants())
+            .map(
+                productVariants ->
+                    productVariants
+                        .stream()
+                        .filter(Objects::nonNull)
+                        .map(
+                            productVariant ->
+                                productVariant
+                                    .getPrices()
+                                    .stream()
+                                    .map(price -> price.getCustomerGroup())
+                                    .filter(Objects::nonNull)
+                                    .map(Reference::getId)
+                                    .collect(toList()))
+                        .flatMap(Collection::stream)
+                        .collect(toList()))
+            .flatMap(Collection::stream)
+            .collect(toList());
+
+    return executeAndCacheReferenceIds(
+        products, customerGroupIds, GraphQlQueryResources.CUSTOMER_GROUPS);
   }
 
   private CompletionStage<List<Product>> executeAndCacheReferenceIds(

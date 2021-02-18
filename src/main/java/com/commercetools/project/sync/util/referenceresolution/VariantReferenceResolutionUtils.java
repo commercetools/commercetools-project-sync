@@ -31,6 +31,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
@@ -132,11 +133,12 @@ public final class VariantReferenceResolutionUtils {
                     .custom(mapToCustomFieldsDraft(price, referenceIdToKeyMap))
                     .channel(getResourceIdentifierWithKey(price.getChannel(), referenceIdToKeyMap))
                     .customerGroup(
-                        getReferenceWithKeyReplaced(
+                        getResourceReferenceWithKeyReplaced(
                             price.getCustomerGroup(),
                             () ->
                                 CustomerGroup.referenceOfId(
-                                    price.getCustomerGroup().getObj().getKey())))
+                                    referenceIdToKeyMap.get(price.getCustomerGroup().getId())),
+                            referenceIdToKeyMap))
                     .build())
         .collect(toList());
   }
@@ -167,6 +169,18 @@ public final class VariantReferenceResolutionUtils {
     }
 
     return null;
+  }
+
+  @Nullable
+  private static <T> Reference<T> getResourceReferenceWithKeyReplaced(
+      @Nullable final Reference<T> reference,
+      @Nonnull final Supplier<Reference<T>> keyInReferenceSupplier,
+      @Nonnull final Map<String, String> referenceIdToKeyMap) {
+
+    if (reference != null && referenceIdToKeyMap.containsKey(reference.getId())) {
+      return keyInReferenceSupplier.get();
+    }
+    return reference;
   }
 
   /**
