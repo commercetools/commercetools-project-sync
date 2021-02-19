@@ -31,7 +31,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
@@ -132,7 +131,8 @@ public final class VariantReferenceResolutionUtils {
                 PriceDraftBuilder.of(price)
                     .custom(mapToCustomFieldsDraft(price, referenceIdToKeyMap))
                     .channel(getResourceIdentifierWithKey(price.getChannel(), referenceIdToKeyMap))
-                    .customerGroup(getResourceIdentifierWithKey(price.getCustomerGroup(), referenceIdToKeyMap))
+                    .customerGroup(
+                        getResourceIdentifierWithKey(price.getCustomerGroup(), referenceIdToKeyMap))
                     .build())
         .collect(toList());
   }
