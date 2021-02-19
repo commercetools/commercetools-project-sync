@@ -21,6 +21,7 @@ import io.sphere.sdk.categories.commands.CategoryCreateCommand;
 import io.sphere.sdk.client.SphereClient;
 import io.sphere.sdk.models.DefaultCurrencyUnits;
 import io.sphere.sdk.models.LocalizedString;
+import io.sphere.sdk.models.ResourceIdentifier;
 import io.sphere.sdk.models.TextInputHint;
 import io.sphere.sdk.products.PriceDraft;
 import io.sphere.sdk.products.PriceDraftBuilder;
@@ -157,7 +158,7 @@ public class ProductSyncWithReferenceResolutionIT {
 
     final PriceDraft priceBuilder =
         PriceDraftBuilder.of(MoneyImpl.of(BigDecimal.TEN, DefaultCurrencyUnits.EUR))
-            // .customerGroup(ResourceIdentifier.ofId("customerGroupId"))
+            .customerGroup(ResourceIdentifier.ofId("customerGroupId"))
             .custom(CustomFieldsDraft.ofTypeIdAndJson(type.getId(), new HashMap<>()))
             .build();
 

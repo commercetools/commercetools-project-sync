@@ -132,13 +132,7 @@ public final class VariantReferenceResolutionUtils {
                 PriceDraftBuilder.of(price)
                     .custom(mapToCustomFieldsDraft(price, referenceIdToKeyMap))
                     .channel(getResourceIdentifierWithKey(price.getChannel(), referenceIdToKeyMap))
-                    .customerGroup(
-                        getResourceReferenceWithKeyReplaced(
-                            price.getCustomerGroup(),
-                            () ->
-                                CustomerGroup.referenceOfId(
-                                    referenceIdToKeyMap.get(price.getCustomerGroup().getId())),
-                            referenceIdToKeyMap))
+                    .customerGroup(getResourceIdentifierWithKey(price.getCustomerGroup(), referenceIdToKeyMap))
                     .build())
         .collect(toList());
   }
@@ -169,18 +163,6 @@ public final class VariantReferenceResolutionUtils {
     }
 
     return null;
-  }
-
-  @Nullable
-  private static <T> Reference<T> getResourceReferenceWithKeyReplaced(
-      @Nullable final Reference<T> reference,
-      @Nonnull final Supplier<Reference<T>> keyInReferenceSupplier,
-      @Nonnull final Map<String, String> referenceIdToKeyMap) {
-
-    if (reference != null && referenceIdToKeyMap.containsKey(reference.getId())) {
-      return keyInReferenceSupplier.get();
-    }
-    return reference;
   }
 
   /**
