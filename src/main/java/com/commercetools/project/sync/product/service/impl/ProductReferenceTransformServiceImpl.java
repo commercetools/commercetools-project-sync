@@ -53,19 +53,6 @@ public class ProductReferenceTransformServiceImpl extends BaseServiceImpl
     super(ctpClient);
   }
 
-  /**
-   * Given a {@link List} of products, this method will transform Products to ProductDrafts by
-   * resolving the References {@link ProductType},{@link TaxCategory},{@link State}, {@link
-   * Category}, {@link Type} and {@link Channel}. If there exists a mapping for all the ids in
-   * {@code referenceIdToKeyCache}, the method replaces id field with key. If there is at least one
-   * missing mapping, it attempts to make a GraphQL request to CTP to fetch all ids and keys of
-   * every missing productType, TaxCategory, State, Category and Channel. For each fetched key/id
-   * pair, the method will insert it into the {@code referenceIdToKeyCache} cache after the request
-   * is successful.
-   *
-   * @param products the products to find a key mapping for all the references and cache them.
-   * @return productDrafts with the references replaced Id with keys.
-   */
   @Nonnull
   @Override
   public CompletionStage<List<ProductDraft>> transformProductReferences(
@@ -356,23 +343,6 @@ public class ProductReferenceTransformServiceImpl extends BaseServiceImpl
             });
   }
 
-  /**
-   * Given 4 {@link Set}s of ids of products, categories, productTypes and custom objects, this
-   * method first checks if there is a key mapping for each id in the {@code idToKey} cache. If
-   * there exists a mapping for all the ids, the method returns a future containing the existing
-   * {@code idToKey} cache as it is. If there is at least one missing mapping, it attempts to make a
-   * GraphQL request (note: rest request for custom objects) to CTP to fetch all ids and keys of
-   * every missing product, category, productType or custom object Id in a combined request. For
-   * each fetched key/id pair, the method will insert it into the {@code idToKey} cache and then
-   * return the cache in a {@link CompletableFuture} after the request is successful.
-   *
-   * @param productIds the product ids to find a key mapping for.
-   * @param categoryIds the category ids to find a key mapping for.
-   * @param productTypeIds the productType ids to find a key mapping for.
-   * @param customObjectIds the custom object ids to find a key mapping for.
-   * @return a map of id to key representing products, categories, productTypes and customObjects in
-   *     the CTP project defined by the injected {@code ctpClient}.
-   */
   @Nonnull
   @Override
   public CompletionStage<Map<String, String>> getIdToKeys(
