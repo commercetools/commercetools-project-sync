@@ -1,6 +1,7 @@
 package com.commercetools.project.sync.category.service.impl;
 
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import com.commercetools.project.sync.category.service.CategoryReferenceTransformService;
@@ -14,7 +15,6 @@ import io.sphere.sdk.categories.CategoryDraft;
 import io.sphere.sdk.client.SphereClient;
 import io.sphere.sdk.models.Asset;
 import io.sphere.sdk.models.Reference;
-import io.sphere.sdk.types.Type;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -58,13 +58,13 @@ public class CategoryReferenceTransformServiceImpl extends BaseServiceImpl
   private CompletionStage<List<Category>> transformParentCategoryReference(
       @Nonnull final List<Category> categories) {
 
-    List<String> parentCategoryIds =
+    Set<String> parentCategoryIds =
         categories
             .stream()
             .map(Category::getParent)
             .filter(Objects::nonNull)
             .map(Reference::getId)
-            .collect(Collectors.toList());
+            .collect(Collectors.toSet());
 
     return executeAndCacheReferenceIds(
         categories, parentCategoryIds, GraphQlQueryResources.CATEGORIES);
@@ -74,13 +74,13 @@ public class CategoryReferenceTransformServiceImpl extends BaseServiceImpl
   private CompletionStage<List<Category>> transformCustomTypeReference(
       @Nonnull final List<Category> categories) {
 
-    List<String> customTypeIds =
+    Set<String> customTypeIds =
         categories
             .stream()
             .map(Category::getCustom)
             .filter(Objects::nonNull)
             .map(customFields -> customFields.getType().getId())
-            .collect(Collectors.toList());
+            .collect(Collectors.toSet());
 
     return executeAndCacheReferenceIds(categories, customTypeIds, GraphQlQueryResources.TYPES);
   }
@@ -89,7 +89,7 @@ public class CategoryReferenceTransformServiceImpl extends BaseServiceImpl
   private CompletionStage<List<Category>> transformAssetsCustomTypeReference(
       @Nonnull final List<Category> categories) {
 
-    List<String> typeIds =
+    Set<String> typeIds =
         categories
             .stream()
             .map(category -> category.getAssets())
@@ -103,14 +103,14 @@ public class CategoryReferenceTransformServiceImpl extends BaseServiceImpl
                         .map(customFields -> customFields.getType().getId())
                         .collect(toList()))
             .flatMap(Collection::stream)
-            .collect(toList());
+            .collect(toSet());
 
     return executeAndCacheReferenceIds(categories, typeIds, GraphQlQueryResources.TYPES);
   }
 
   private CompletionStage<List<Category>> executeAndCacheReferenceIds(
       @Nonnull final List<Category> categories,
-      final List<String> ids,
+      final Set<String> ids,
       final GraphQlQueryResources requestType) {
     final Set<String> nonCachedReferenceIds = getNonCachedReferenceIds(ids);
     if (nonCachedReferenceIds.isEmpty()) {
@@ -128,7 +128,7 @@ public class CategoryReferenceTransformServiceImpl extends BaseServiceImpl
   }
 
   @Nonnull
-  private Set<String> getNonCachedReferenceIds(@Nonnull final List<String> referenceIds) {
+  private Set<String> getNonCachedReferenceIds(@Nonnull final Set<String> referenceIds) {
     return referenceIds
         .stream()
         .filter(id -> null == referenceIdToKeyCache.getIfPresent(id))

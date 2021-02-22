@@ -1,6 +1,7 @@
 package com.commercetools.project.sync.product.service.impl;
 
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import com.commercetools.project.sync.model.ResourceIdsGraphQlRequest;
@@ -12,8 +13,6 @@ import com.commercetools.sync.commons.models.ResourceKeyId;
 import com.commercetools.sync.commons.utils.ChunkUtils;
 import com.commercetools.sync.customobjects.helpers.CustomObjectCompositeIdentifier;
 import com.fasterxml.jackson.databind.JsonNode;
-import io.sphere.sdk.categories.Category;
-import io.sphere.sdk.channels.Channel;
 import io.sphere.sdk.client.SphereClient;
 import io.sphere.sdk.customobjects.queries.CustomObjectQuery;
 import io.sphere.sdk.models.Reference;
@@ -22,10 +21,6 @@ import io.sphere.sdk.products.Product;
 import io.sphere.sdk.products.ProductDraft;
 import io.sphere.sdk.products.ProductLike;
 import io.sphere.sdk.products.ProductVariant;
-import io.sphere.sdk.producttypes.ProductType;
-import io.sphere.sdk.states.State;
-import io.sphere.sdk.taxcategories.TaxCategory;
-import io.sphere.sdk.types.Type;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -93,12 +88,8 @@ public class ProductReferenceTransformServiceImpl extends BaseServiceImpl
   private CompletionStage<List<Product>> transformProductTypeReference(
       @Nonnull final List<Product> products) {
 
-    List<String> productTypeIds =
-        products
-            .stream()
-            .map(ProductLike::getProductType)
-            .map(Reference::getId)
-            .collect(Collectors.toList());
+    Set<String> productTypeIds =
+        products.stream().map(ProductLike::getProductType).map(Reference::getId).collect(toSet());
 
     return executeAndCacheReferenceIds(
         products, productTypeIds, GraphQlQueryResources.PRODUCT_TYPES);
@@ -108,13 +99,13 @@ public class ProductReferenceTransformServiceImpl extends BaseServiceImpl
   private CompletionStage<List<Product>> transformTaxCategoryReference(
       @Nonnull final List<Product> products) {
 
-    List<String> taxCategoryIds =
+    Set<String> taxCategoryIds =
         products
             .stream()
             .map(ProductLike::getTaxCategory)
             .filter(Objects::nonNull)
             .map(Reference::getId)
-            .collect(Collectors.toList());
+            .collect(toSet());
 
     return executeAndCacheReferenceIds(
         products, taxCategoryIds, GraphQlQueryResources.TAX_CATEGORIES);
@@ -124,13 +115,13 @@ public class ProductReferenceTransformServiceImpl extends BaseServiceImpl
   private CompletionStage<List<Product>> transformStateReference(
       @Nonnull final List<Product> products) {
 
-    List<String> stateIds =
+    Set<String> stateIds =
         products
             .stream()
             .map(Product::getState)
             .filter(Objects::nonNull)
             .map(Reference::getId)
-            .collect(Collectors.toList());
+            .collect(toSet());
 
     return executeAndCacheReferenceIds(products, stateIds, GraphQlQueryResources.STATES);
   }
@@ -139,7 +130,7 @@ public class ProductReferenceTransformServiceImpl extends BaseServiceImpl
   private CompletionStage<List<Product>> transformCategoryReference(
       @Nonnull final List<Product> products) {
 
-    List<String> categoryIds =
+    Set<String> categoryIds =
         products
             .stream()
             .map(product -> product.getMasterData().getStaged().getCategories())
@@ -148,7 +139,7 @@ public class ProductReferenceTransformServiceImpl extends BaseServiceImpl
                 categories ->
                     categories.stream().map(Reference::getId).collect(Collectors.toList()))
             .flatMap(Collection::stream)
-            .collect(toList());
+            .collect(toSet());
 
     return executeAndCacheReferenceIds(products, categoryIds, GraphQlQueryResources.CATEGORIES);
   }
@@ -157,7 +148,7 @@ public class ProductReferenceTransformServiceImpl extends BaseServiceImpl
   private CompletionStage<List<Product>> transformPricesChannelReference(
       @Nonnull final List<Product> products) {
 
-    List<String> channelIds =
+    Set<String> channelIds =
         products
             .stream()
             .map(product -> product.getMasterData().getStaged().getAllVariants())
@@ -178,7 +169,7 @@ public class ProductReferenceTransformServiceImpl extends BaseServiceImpl
                         .flatMap(Collection::stream)
                         .collect(toList()))
             .flatMap(Collection::stream)
-            .collect(toList());
+            .collect(toSet());
 
     return executeAndCacheReferenceIds(products, channelIds, GraphQlQueryResources.CHANNELS);
   }
@@ -187,7 +178,7 @@ public class ProductReferenceTransformServiceImpl extends BaseServiceImpl
   private CompletionStage<List<Product>> transformAssetsCustomTypeReference(
       @Nonnull final List<Product> products) {
 
-    List<String> typeIds =
+    Set<String> typeIds =
         products
             .stream()
             .map(product -> product.getMasterData().getStaged().getAllVariants())
@@ -208,7 +199,7 @@ public class ProductReferenceTransformServiceImpl extends BaseServiceImpl
                         .flatMap(Collection::stream)
                         .collect(toList()))
             .flatMap(Collection::stream)
-            .collect(toList());
+            .collect(toSet());
 
     return executeAndCacheReferenceIds(products, typeIds, GraphQlQueryResources.TYPES);
   }
@@ -217,7 +208,7 @@ public class ProductReferenceTransformServiceImpl extends BaseServiceImpl
   private CompletionStage<List<Product>> transformPricesCustomTypeReference(
       @Nonnull final List<Product> products) {
 
-    List<String> typeIds =
+    Set<String> typeIds =
         products
             .stream()
             .map(product -> product.getMasterData().getStaged().getAllVariants())
@@ -238,7 +229,7 @@ public class ProductReferenceTransformServiceImpl extends BaseServiceImpl
                         .flatMap(Collection::stream)
                         .collect(toList()))
             .flatMap(Collection::stream)
-            .collect(toList());
+            .collect(toSet());
 
     return executeAndCacheReferenceIds(products, typeIds, GraphQlQueryResources.TYPES);
   }
@@ -247,7 +238,7 @@ public class ProductReferenceTransformServiceImpl extends BaseServiceImpl
   private CompletionStage<List<Product>> transformMasterVariantPricesCustomTypeReference(
       @Nonnull final List<Product> products) {
 
-    List<String> typeIds =
+    Set<String> typeIds =
         products
             .stream()
             .map(product -> product.getMasterData().getStaged().getMasterVariant())
@@ -263,7 +254,7 @@ public class ProductReferenceTransformServiceImpl extends BaseServiceImpl
                         .map(customType -> customType.getType().getId())
                         .collect(Collectors.toList()))
             .flatMap(Collection::stream)
-            .collect(toList());
+            .collect(toSet());
 
     return executeAndCacheReferenceIds(products, typeIds, GraphQlQueryResources.TYPES);
   }
@@ -272,7 +263,7 @@ public class ProductReferenceTransformServiceImpl extends BaseServiceImpl
   private CompletionStage<List<Product>> transformMasterVariantAssetsCustomTypeReference(
       @Nonnull final List<Product> products) {
 
-    List<String> customTypeIds =
+    Set<String> customTypeIds =
         products
             .stream()
             .map(product -> product.getMasterData().getStaged().getMasterVariant())
@@ -288,7 +279,7 @@ public class ProductReferenceTransformServiceImpl extends BaseServiceImpl
                         .map(customType -> customType.getType().getId())
                         .collect(Collectors.toList()))
             .flatMap(Collection::stream)
-            .collect(toList());
+            .collect(toSet());
 
     return executeAndCacheReferenceIds(products, customTypeIds, GraphQlQueryResources.TYPES);
   }
@@ -297,7 +288,7 @@ public class ProductReferenceTransformServiceImpl extends BaseServiceImpl
   private CompletionStage<List<Product>> transformPricesCustomerGroupReference(
       @Nonnull final List<Product> products) {
 
-    List<String> customerGroupIds =
+    Set<String> customerGroupIds =
         products
             .stream()
             .map(product -> product.getMasterData().getStaged().getAllVariants())
@@ -318,7 +309,7 @@ public class ProductReferenceTransformServiceImpl extends BaseServiceImpl
                         .flatMap(Collection::stream)
                         .collect(toList()))
             .flatMap(Collection::stream)
-            .collect(toList());
+            .collect(toSet());
 
     return executeAndCacheReferenceIds(
         products, customerGroupIds, GraphQlQueryResources.CUSTOMER_GROUPS);
@@ -326,7 +317,7 @@ public class ProductReferenceTransformServiceImpl extends BaseServiceImpl
 
   private CompletionStage<List<Product>> executeAndCacheReferenceIds(
       @Nonnull final List<Product> products,
-      final List<String> ids,
+      final Set<String> ids,
       final GraphQlQueryResources requestType) {
     final Set<String> nonCachedReferenceIds = getNonCachedReferenceIds(ids);
     if (nonCachedReferenceIds.isEmpty()) {
@@ -398,17 +389,15 @@ public class ProductReferenceTransformServiceImpl extends BaseServiceImpl
 
   @Nonnull
   private Set<String> getNonCachedIds(@Nonnull final Set<String> ids) {
-    return ids.stream()
-        .filter(id -> !allResourcesIdToKey.containsKey(id))
-        .collect(Collectors.toSet());
+    return ids.stream().filter(id -> !allResourcesIdToKey.containsKey(id)).collect(toSet());
   }
 
   @Nonnull
-  private Set<String> getNonCachedReferenceIds(@Nonnull final List<String> referenceIds) {
+  private Set<String> getNonCachedReferenceIds(@Nonnull final Set<String> referenceIds) {
     return referenceIds
         .stream()
         .filter(id -> null == referenceIdToKeyCache.getIfPresent(id))
-        .collect(Collectors.toSet());
+        .collect(toSet());
   }
 
   @Nonnull
