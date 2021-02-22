@@ -108,7 +108,7 @@ public class CategoryReferenceTransformServiceImpl extends BaseServiceImpl
     return executeAndCacheReferenceIds(categories, typeIds, GraphQlQueryResources.TYPES);
   }
 
-  private CompletionStage<List<Category>> executeAndCacheReferenceIds(
+  private CompletionStage<List<Category>> fetchAndFillReferenceIdToKeyCache(
       @Nonnull final List<Category> categories,
       final Set<String> ids,
       final GraphQlQueryResources requestType) {
