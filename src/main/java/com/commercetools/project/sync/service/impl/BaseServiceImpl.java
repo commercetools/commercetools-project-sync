@@ -8,7 +8,12 @@ import javax.annotation.Nonnull;
 public class BaseServiceImpl {
   private final SphereClient ctpClient;
   protected final Cache<String, String> referenceIdToKeyCache;
-  protected long cacheSize = 10_000;
+
+  // TODO: This can be static instead of an instance-based cache.
+  // Assume the CategoryReferenceTransformServiceImpl has cached almost all categories ids to keys,
+  // and then ProductReferenceTransformServiceImpl will be initialized with a new cache which will
+  // fetch all referenced category keys again.
+  private long cacheSize = 10_000;
 
   protected BaseServiceImpl(@Nonnull final SphereClient ctpClient) {
     this.ctpClient = ctpClient;
