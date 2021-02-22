@@ -32,6 +32,7 @@ public final class CustomTypeReferenceResolutionUtils {
    *     not reference cached it returns a {@link CustomFieldsDraft} without a key. If the resource
    *     has no or null {@link Custom}, then it returns {@code null}.
    */
+  // TODO: Update javadocs after implementing the new structure with cache.
   @Nullable
   public static <T extends Custom> CustomFieldsDraft mapToCustomFieldsDraft(
       @Nonnull final T resource, @Nonnull final Map<String, String> referenceIdToKeyMap) {
@@ -55,6 +56,7 @@ public final class CustomTypeReferenceResolutionUtils {
    *     reference in the map(cache) it returns a {@link CustomFieldsDraft} without a key. If the
    *     resource has no or null {@link Custom}, then it returns {@code null}.
    */
+  // TODO: Update javadocs after implementing the new structure with cache.
   @Nullable
   public static CustomFieldsDraft mapToCustomFieldsDraft(
       @Nullable final CustomFields custom, @Nonnull final Map<String, String> referenceIdToKeyMap) {

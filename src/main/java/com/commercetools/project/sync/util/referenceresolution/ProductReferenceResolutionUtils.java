@@ -110,6 +110,7 @@ public final class ProductReferenceResolutionUtils {
    * @return a {@link List} of {@link ProductDraft} built from the supplied {@link List} of {@link
    *     Product}.
    */
+  // TODO: Update javadocs after implementing the new structure with cache.
   @Nonnull
   public static List<ProductDraft> mapToProductDrafts(
       @Nonnull final List<Product> products, Map<String, String> referenceIdToKeyMap) {
