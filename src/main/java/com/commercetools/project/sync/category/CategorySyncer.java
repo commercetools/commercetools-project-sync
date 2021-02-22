@@ -102,6 +102,6 @@ public final class CategorySyncer
   @Nonnull
   @Override
   protected CategoryQuery getQuery() {
-    return CategoryQuery.of().withLimit(QueryExecutionUtils.DEFAULT_PAGE_SIZE);
+    return CategoryQuery.of();
   }
 }
