@@ -34,7 +34,7 @@ public class CategoryReferenceTransformServiceImpl extends BaseServiceImpl
 
   @Nonnull
   @Override
-  public CompletionStage<List<CategoryDraft>> transformCategoryReferences(
+  public CompletableFuture<List<CategoryDraft>> transformCategoryReferences(
       @Nonnull final List<Category> categories) {
 
     final List<CompletableFuture<List<Category>>> transformReferencesToRunParallel =

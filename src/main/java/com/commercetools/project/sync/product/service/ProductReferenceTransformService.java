@@ -32,7 +32,7 @@ public interface ProductReferenceTransformService {
    * @return productDrafts with the references replaced Id with keys.
    */
   @Nonnull
-  CompletionStage<List<ProductDraft>> transformProductReferences(@Nonnull List<Product> products);
+  CompletableFuture<List<ProductDraft>> transformProductReferences(@Nonnull List<Product> products);
 
   /**
    * Given 4 {@link Set}s of ids of products, categories, productTypes and custom objects, this

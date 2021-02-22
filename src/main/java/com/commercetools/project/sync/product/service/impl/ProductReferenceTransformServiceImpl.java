@@ -55,7 +55,7 @@ public class ProductReferenceTransformServiceImpl extends BaseServiceImpl
 
   @Nonnull
   @Override
-  public CompletionStage<List<ProductDraft>> transformProductReferences(
+  public CompletableFuture<List<ProductDraft>> transformProductReferences(
       @Nonnull final List<Product> products) {
 
     final List<CompletableFuture<List<Product>>> transformReferencesToRunParallel =

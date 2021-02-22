@@ -5,7 +5,7 @@ import io.sphere.sdk.categories.CategoryDraft;
 import io.sphere.sdk.types.Type;
 
 import java.util.List;
-import java.util.concurrent.CompletionStage;
+import java.util.concurrent.CompletableFuture;
 import javax.annotation.Nonnull;
 
 public interface CategoryReferenceTransformService {
@@ -22,6 +22,6 @@ public interface CategoryReferenceTransformService {
    * @return categoryDrafts with the references replaced Id with keys.
    */
   @Nonnull
-  CompletionStage<List<CategoryDraft>> transformCategoryReferences(
+  CompletableFuture<List<CategoryDraft>> transformCategoryReferences(
       @Nonnull List<Category> categories);
 }
