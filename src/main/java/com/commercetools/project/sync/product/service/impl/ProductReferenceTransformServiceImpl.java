@@ -141,7 +141,8 @@ public class ProductReferenceTransformServiceImpl extends BaseServiceImpl
             .flatMap(Collection::stream)
             .collect(toSet());
 
-    return fetchAndFillReferenceIdToKeyCache(products, categoryIds, GraphQlQueryResources.CATEGORIES);
+    return fetchAndFillReferenceIdToKeyCache(
+        products, categoryIds, GraphQlQueryResources.CATEGORIES);
   }
 
   @Nonnull
@@ -315,6 +316,8 @@ public class ProductReferenceTransformServiceImpl extends BaseServiceImpl
         products, customerGroupIds, GraphQlQueryResources.CUSTOMER_GROUPS);
   }
 
+  // TODO: This method along with "getNonCachedReferenceIds" and "cacheProductTypeKeys"
+  // can be kept in a generic class and reuse for all the resources.
   private CompletionStage<List<Product>> fetchAndFillReferenceIdToKeyCache(
       @Nonnull final List<Product> products,
       final Set<String> ids,

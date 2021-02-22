@@ -20,7 +20,6 @@ import io.sphere.sdk.categories.CategoryDraft;
 import io.sphere.sdk.categories.queries.CategoryQuery;
 import io.sphere.sdk.client.SphereClient;
 import io.sphere.sdk.commands.UpdateAction;
-import io.sphere.sdk.queries.QueryExecutionUtils;
 import java.time.Clock;
 import java.util.List;
 import java.util.Optional;

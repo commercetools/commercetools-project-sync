@@ -82,7 +82,8 @@ public class CategoryReferenceTransformServiceImpl extends BaseServiceImpl
             .map(customFields -> customFields.getType().getId())
             .collect(Collectors.toSet());
 
-    return fetchAndFillReferenceIdToKeyCache(categories, customTypeIds, GraphQlQueryResources.TYPES);
+    return fetchAndFillReferenceIdToKeyCache(
+        categories, customTypeIds, GraphQlQueryResources.TYPES);
   }
 
   @Nonnull
@@ -108,6 +109,8 @@ public class CategoryReferenceTransformServiceImpl extends BaseServiceImpl
     return fetchAndFillReferenceIdToKeyCache(categories, typeIds, GraphQlQueryResources.TYPES);
   }
 
+  // TODO: This method along with "getNonCachedReferenceIds" and "cacheCategoryReferenceKeys"
+  // can be kept in a generic class and reuse for all the resources.
   private CompletionStage<List<Category>> fetchAndFillReferenceIdToKeyCache(
       @Nonnull final List<Category> categories,
       final Set<String> ids,
