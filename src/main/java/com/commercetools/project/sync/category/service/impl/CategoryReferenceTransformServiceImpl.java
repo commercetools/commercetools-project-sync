@@ -66,7 +66,7 @@ public class CategoryReferenceTransformServiceImpl extends BaseServiceImpl
             .map(Reference::getId)
             .collect(Collectors.toSet());
 
-    return executeAndCacheReferenceIds(
+    return fetchAndFillReferenceIdToKeyCache(
         categories, parentCategoryIds, GraphQlQueryResources.CATEGORIES);
   }
 
@@ -82,7 +82,7 @@ public class CategoryReferenceTransformServiceImpl extends BaseServiceImpl
             .map(customFields -> customFields.getType().getId())
             .collect(Collectors.toSet());
 
-    return executeAndCacheReferenceIds(categories, customTypeIds, GraphQlQueryResources.TYPES);
+    return fetchAndFillReferenceIdToKeyCache(categories, customTypeIds, GraphQlQueryResources.TYPES);
   }
 
   @Nonnull
@@ -105,7 +105,7 @@ public class CategoryReferenceTransformServiceImpl extends BaseServiceImpl
             .flatMap(Collection::stream)
             .collect(toSet());
 
-    return executeAndCacheReferenceIds(categories, typeIds, GraphQlQueryResources.TYPES);
+    return fetchAndFillReferenceIdToKeyCache(categories, typeIds, GraphQlQueryResources.TYPES);
   }
 
   private CompletionStage<List<Category>> fetchAndFillReferenceIdToKeyCache(

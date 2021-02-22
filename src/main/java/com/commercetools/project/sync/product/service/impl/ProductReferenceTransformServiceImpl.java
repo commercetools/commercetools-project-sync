@@ -91,7 +91,7 @@ public class ProductReferenceTransformServiceImpl extends BaseServiceImpl
     Set<String> productTypeIds =
         products.stream().map(ProductLike::getProductType).map(Reference::getId).collect(toSet());
 
-    return executeAndCacheReferenceIds(
+    return fetchAndFillReferenceIdToKeyCache(
         products, productTypeIds, GraphQlQueryResources.PRODUCT_TYPES);
   }
 
@@ -107,7 +107,7 @@ public class ProductReferenceTransformServiceImpl extends BaseServiceImpl
             .map(Reference::getId)
             .collect(toSet());
 
-    return executeAndCacheReferenceIds(
+    return fetchAndFillReferenceIdToKeyCache(
         products, taxCategoryIds, GraphQlQueryResources.TAX_CATEGORIES);
   }
 
@@ -123,7 +123,7 @@ public class ProductReferenceTransformServiceImpl extends BaseServiceImpl
             .map(Reference::getId)
             .collect(toSet());
 
-    return executeAndCacheReferenceIds(products, stateIds, GraphQlQueryResources.STATES);
+    return fetchAndFillReferenceIdToKeyCache(products, stateIds, GraphQlQueryResources.STATES);
   }
 
   @Nonnull
@@ -141,7 +141,7 @@ public class ProductReferenceTransformServiceImpl extends BaseServiceImpl
             .flatMap(Collection::stream)
             .collect(toSet());
 
-    return executeAndCacheReferenceIds(products, categoryIds, GraphQlQueryResources.CATEGORIES);
+    return fetchAndFillReferenceIdToKeyCache(products, categoryIds, GraphQlQueryResources.CATEGORIES);
   }
 
   @Nonnull
@@ -171,7 +171,7 @@ public class ProductReferenceTransformServiceImpl extends BaseServiceImpl
             .flatMap(Collection::stream)
             .collect(toSet());
 
-    return executeAndCacheReferenceIds(products, channelIds, GraphQlQueryResources.CHANNELS);
+    return fetchAndFillReferenceIdToKeyCache(products, channelIds, GraphQlQueryResources.CHANNELS);
   }
 
   @Nonnull
@@ -201,7 +201,7 @@ public class ProductReferenceTransformServiceImpl extends BaseServiceImpl
             .flatMap(Collection::stream)
             .collect(toSet());
 
-    return executeAndCacheReferenceIds(products, typeIds, GraphQlQueryResources.TYPES);
+    return fetchAndFillReferenceIdToKeyCache(products, typeIds, GraphQlQueryResources.TYPES);
   }
 
   @Nonnull
@@ -231,7 +231,7 @@ public class ProductReferenceTransformServiceImpl extends BaseServiceImpl
             .flatMap(Collection::stream)
             .collect(toSet());
 
-    return executeAndCacheReferenceIds(products, typeIds, GraphQlQueryResources.TYPES);
+    return fetchAndFillReferenceIdToKeyCache(products, typeIds, GraphQlQueryResources.TYPES);
   }
 
   @Nonnull
@@ -256,7 +256,7 @@ public class ProductReferenceTransformServiceImpl extends BaseServiceImpl
             .flatMap(Collection::stream)
             .collect(toSet());
 
-    return executeAndCacheReferenceIds(products, typeIds, GraphQlQueryResources.TYPES);
+    return fetchAndFillReferenceIdToKeyCache(products, typeIds, GraphQlQueryResources.TYPES);
   }
 
   @Nonnull
@@ -281,7 +281,7 @@ public class ProductReferenceTransformServiceImpl extends BaseServiceImpl
             .flatMap(Collection::stream)
             .collect(toSet());
 
-    return executeAndCacheReferenceIds(products, customTypeIds, GraphQlQueryResources.TYPES);
+    return fetchAndFillReferenceIdToKeyCache(products, customTypeIds, GraphQlQueryResources.TYPES);
   }
 
   @Nonnull
@@ -311,11 +311,11 @@ public class ProductReferenceTransformServiceImpl extends BaseServiceImpl
             .flatMap(Collection::stream)
             .collect(toSet());
 
-    return executeAndCacheReferenceIds(
+    return fetchAndFillReferenceIdToKeyCache(
         products, customerGroupIds, GraphQlQueryResources.CUSTOMER_GROUPS);
   }
 
-  private CompletionStage<List<Product>> executeAndCacheReferenceIds(
+  private CompletionStage<List<Product>> fetchAndFillReferenceIdToKeyCache(
       @Nonnull final List<Product> products,
       final Set<String> ids,
       final GraphQlQueryResources requestType) {
