@@ -76,8 +76,6 @@ public class ProductSyncWithReferenceResolutionIT {
   private static final TestLogger cliRunnerTestLogger =
       TestLoggerFactory.getTestLogger(CliRunner.class);
   private static final String RESOURCE_KEY = "foo";
-  private static final String PROJECT_SYNC_CONTAINER_NAME =
-      "commercetools-project-sync.runnerName.ProductSync.timestampGenerator";
   private static final String TYPE_KEY = "typeKey";
 
   @BeforeEach
