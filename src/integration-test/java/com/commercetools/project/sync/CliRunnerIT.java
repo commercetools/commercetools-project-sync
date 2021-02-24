@@ -1062,7 +1062,8 @@ class CliRunnerIT {
   }
 
   @Test
-  void run_WithSyncAsArgumentWithAllArgAsFullSyncAndWithCustomQueryAndFetchSizeForProducts_ShouldExecuteAllSyncers() {
+  void
+      run_WithSyncAsArgumentWithAllArgAsFullSyncAndWithCustomQueryAndFetchSizeForProducts_ShouldExecuteAllSyncers() {
     // preparation
     try (final SphereClient targetClient = createClient(CTP_TARGET_CLIENT_CONFIG)) {
       try (final SphereClient sourceClient = createClient(CTP_SOURCE_CLIENT_CONFIG)) {
@@ -1077,8 +1078,18 @@ class CliRunnerIT {
             "{\"fetchSize\": " + fetchSize + ", \"customQuery\": " + customQuery + "}";
 
         // test
-        CliRunner.of().run(new String[] {"-s", "all", "-r", "runnerName", "-f",
-            "-productSyncConfig", productSyncConfigValue}, syncerFactory);
+        CliRunner.of()
+            .run(
+                new String[] {
+                  "-s",
+                  "all",
+                  "-r",
+                  "runnerName",
+                  "-f",
+                  "-productSyncConfig",
+                  productSyncConfigValue
+                },
+                syncerFactory);
       }
     }
 
