@@ -108,6 +108,10 @@ As of now, these are the supported resources:
                                         "shoppingLists" or "all".
        --syncProjectSyncCustomObjects   Sync custom objects that were created
                                         with project sync (this application).
+       --productSyncConfig              Sync Products with custom fetch limit and  
+                                        custom query. Please provide a valid fetch
+                                        limit (0 > fetchLimit) and valid custom query to 
+                                        fetch the products.                 
     -v,--version                        Print the version of the application.
    ```
 
@@ -166,6 +170,16 @@ the  `-s` option with `types productTypes` as below:
 ```bash
 -s types productTypes
 ```
+
+#### Running Product Sync with custom fetchLimit and customQuery
+
+The application can sync products with the custom values provided as an argument. For example, to run `products` sync with custom values, 
+the  `-productSyncConfig` option should be used along with the `-s products` as below:
+```bash
+-s products -productSyncConfig {"fetchSize": 100, "customQuery": "masterData(published=true) AND masterData(staged(masterVariant(key= \"foo\")))"}
+```
+
+Note: The value for productSyncConfig argument should be in json format and as shown in above example, please use escape character \ for the nested double quote values.
 
 #### Running the Docker Image
 

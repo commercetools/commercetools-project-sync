@@ -59,7 +59,8 @@ final class CliRunner {
   static final String SYNC_PROJECT_SYNC_CUSTOM_OBJECTS_OPTION_DESCRIPTION =
       "Sync custom objects that were created with project sync (this application).";
   static final String PRODUCT_SYNC_CUSTOM_QUERY_AND_FETCH_SIZE_OPTION_DESCRIPTION =
-      "Sync Products with custom query and custom fetch size.";
+      "Sync Products with custom query and custom fetch size. Please provide a valid fetch limit (0 > limit) and valid "
+          + "custom query to fetch the products.";
 
   private static final Logger LOGGER = LoggerFactory.getLogger(CliRunner.class);
 
