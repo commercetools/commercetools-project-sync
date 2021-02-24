@@ -9,6 +9,7 @@ import com.commercetools.project.sync.exception.CliException;
 import com.commercetools.project.sync.model.ProductSyncCustomRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
@@ -30,6 +31,7 @@ final class CliRunner {
   static final String FULL_SYNC_OPTION_SHORT = "f";
   static final String HELP_OPTION_SHORT = "h";
   static final String VERSION_OPTION_SHORT = "v";
+  static final String PRODUCT_SYNC_CONFIG_OPTION = "productSyncConfig";
 
   static final String SYNC_MODULE_OPTION_LONG = "sync";
   static final String RUNNER_NAME_OPTION_LONG = "runnerName";
@@ -56,6 +58,8 @@ final class CliRunner {
   static final String VERSION_OPTION_DESCRIPTION = "Print the version of the application.";
   static final String SYNC_PROJECT_SYNC_CUSTOM_OBJECTS_OPTION_DESCRIPTION =
       "Sync custom objects that were created with project sync (this application).";
+  static final String PRODUCT_SYNC_CUSTOM_QUERY_AND_FETCH_SIZE_OPTION_DESCRIPTION =
+      "Sync Products with custom query and custom fetch size.";
 
   private static final Logger LOGGER = LoggerFactory.getLogger(CliRunner.class);
 
@@ -120,6 +124,13 @@ final class CliRunner {
             .desc(FULL_SYNC_OPTION_DESCRIPTION)
             .build();
 
+    final Option productSyncConfigOption =
+        Option.builder()
+            .longOpt(PRODUCT_SYNC_CONFIG_OPTION)
+            .desc(PRODUCT_SYNC_CUSTOM_QUERY_AND_FETCH_SIZE_OPTION_DESCRIPTION)
+            .hasArg()
+            .build();
+
     final Option helpOption =
         Option.builder(HELP_OPTION_SHORT)
             .longOpt(HELP_OPTION_LONG)
@@ -144,6 +155,7 @@ final class CliRunner {
     options.addOption(helpOption);
     options.addOption(versionOption);
     options.addOption(syncProjectSyncCustomObjectsOption);
+    options.addOption(productSyncConfigOption);
 
     return options;
   }
@@ -203,9 +215,40 @@ final class CliRunner {
     final boolean isFullSync = commandLine.hasOption(FULL_SYNC_OPTION_SHORT);
     final boolean isSyncProjectSyncCustomObjects =
         commandLine.hasOption(SYNC_PROJECT_SYNC_CUSTOM_OBJECTS_OPTION_LONG);
+    final boolean isProductSyncConfigOptionPresent =
+        commandLine.hasOption(PRODUCT_SYNC_CONFIG_OPTION);
 
+    final ProductSyncCustomRequest productSyncCustomRequest;
+    try {
+      productSyncCustomRequest =
+          isProductSyncConfigOptionPresent
+              ? parseProductSyncConfigOption(commandLine.getOptionValue(PRODUCT_SYNC_CONFIG_OPTION))
+              : null;
+
+    } catch (CliException e) {
+      return exceptionallyCompletedFuture(e);
+    }
     return syncerFactory.sync(
-        syncOptionValues, runnerNameValue, isFullSync, isSyncProjectSyncCustomObjects);
+        syncOptionValues,
+        runnerNameValue,
+        isFullSync,
+        isSyncProjectSyncCustomObjects,
+        productSyncCustomRequest);
+  }
+
+  public static ProductSyncCustomRequest parseProductSyncConfigOption(String customRequest) {
+
+    final ObjectMapper objectMapper = new ObjectMapper();
+
+    final ProductSyncCustomRequest productSyncCustomRequest;
+    try {
+      productSyncCustomRequest =
+          objectMapper.readValue(customRequest, ProductSyncCustomRequest.class);
+    } catch (IOException | IllegalArgumentException e) {
+      throw new CliException(e.getMessage());
+    }
+
+    return productSyncCustomRequest;
   }
 
   private static void printHelpToStdOut(@Nonnull final Options cliOptions) {

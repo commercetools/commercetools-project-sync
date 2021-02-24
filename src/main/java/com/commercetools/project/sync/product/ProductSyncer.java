@@ -294,7 +294,13 @@ public final class ProductSyncer
   @Nonnull
   @Override
   protected ProductQuery getQuery() {
-    return ProductQuery.of();
+    if (null != this.productSyncCustomRequest) {
+      return ProductQuery.of()
+          .withLimit(this.productSyncCustomRequest.getFetchSize())
+          .withPredicates(QueryPredicate.of(this.productSyncCustomRequest.getCustomQuery()));
+    } else {
+      return ProductQuery.of();
+    }
   }
 
   /**

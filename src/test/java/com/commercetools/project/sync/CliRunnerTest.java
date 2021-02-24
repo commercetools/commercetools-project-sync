@@ -247,8 +247,123 @@ class CliRunnerTest {
     CliRunner.of().run(new String[] {"-s", "products", "-f"}, syncerFactory);
 
     // assertions
-    verify(syncerFactory, times(1)).sync(new String[] {"products"}, null, true, false);
+    verify(syncerFactory, times(1)).sync(new String[] {"products"}, null, true, false, null);
     verify(sourceClient, times(1)).execute(any(ProductQuery.class));
+  }
+
+  @Test
+  void
+      run_AsProductSyncWithCustomProductQueriesAndFetchSizeLimit_ShouldBuildSyncerAndExecuteQuerySuccessfully() {
+    // preparation
+    final SphereClient sourceClient = mock(SphereClient.class);
+    when(sourceClient.getConfig()).thenReturn(SphereClientConfig.of("foo", "foo", "foo"));
+
+    final SphereClient targetClient = mock(SphereClient.class);
+    when(targetClient.getConfig()).thenReturn(SphereClientConfig.of("bar", "bar", "bar"));
+
+    when(sourceClient.execute(any(ProductQuery.class)))
+        .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
+
+    final Long fetchSize = 100L;
+    final String customQuery =
+        "\"published=true AND masterData(masterVariant(attributes(name= \\\"abc\\\" AND value=123)))\"";
+    final String productSyncConfigValue =
+        "{\"fetchSize\": " + fetchSize + ", \"customQuery\": " + customQuery + "}";
+
+    final SyncerFactory syncerFactory =
+        spy(SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock()));
+
+    stubClientsCustomObjectService(targetClient, ZonedDateTime.now());
+    // test
+    CliRunner.of()
+        .run(
+            new String[] {"-s", "products", "-f", "-productSyncConfig", productSyncConfigValue},
+            syncerFactory);
+
+    // assertions
+    verify(sourceClient, times(1)).execute(any(ProductQuery.class));
+  }
+
+  @Test
+  void run_WithWrongFormatProductSyncConfigArgument_ShouldThrowCLIException() {
+    // preparation
+    final SphereClient sourceClient = mock(SphereClient.class);
+    when(sourceClient.getConfig()).thenReturn(SphereClientConfig.of("foo", "foo", "foo"));
+
+    final SphereClient targetClient = mock(SphereClient.class);
+    when(targetClient.getConfig()).thenReturn(SphereClientConfig.of("bar", "bar", "bar"));
+
+    final Long fetchSize = 100L;
+    final String customQuery =
+        "\"published=true AND masterData(masterVariant(attributes(name= \"abc\\\" AND value=123)))\"";
+    final String productSyncConfigValue =
+        "{\"fetchSize\": " + fetchSize + ", \"customQuery\": " + customQuery + "}";
+
+    final SyncerFactory syncerFactory =
+        spy(SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock()));
+
+    // test
+    CliRunner.of()
+        .run(
+            new String[] {"-s", "products", "-f", "-productSyncConfig", productSyncConfigValue},
+            syncerFactory);
+
+    // assertion
+    assertThat(testLogger.getAllLoggingEvents())
+        .hasSize(1)
+        .singleElement()
+        .satisfies(
+            loggingEvent -> {
+              assertThat(loggingEvent.getLevel()).isEqualTo(Level.ERROR);
+              assertThat(loggingEvent.getMessage()).contains("Failed to run sync process.");
+              final Optional<Throwable> actualThrowableOpt = loggingEvent.getThrowable();
+              assertThat(actualThrowableOpt).isNotNull();
+              assertThat(actualThrowableOpt.isPresent()).isTrue();
+              final Throwable actualThrowable = actualThrowableOpt.get();
+              assertThat(actualThrowable).isExactlyInstanceOf(CliException.class);
+            });
+  }
+
+  @Test
+  void run_WithInvalidFetchSizeInProductSyncConfigArgument_ShouldThrowCLIException() {
+    // preparation
+    final SphereClient sourceClient = mock(SphereClient.class);
+    when(sourceClient.getConfig()).thenReturn(SphereClientConfig.of("foo", "foo", "foo"));
+
+    final SphereClient targetClient = mock(SphereClient.class);
+    when(targetClient.getConfig()).thenReturn(SphereClientConfig.of("bar", "bar", "bar"));
+
+    final Long fetchSize = -100L;
+    final String customQuery =
+        "\"published=true AND masterData(masterVariant(attributes(name= \"abc\\\" AND value=123)))\"";
+    final String productSyncConfigValue =
+        "{\"fetchSize\": " + fetchSize + ", \"customQuery\": " + customQuery + "}";
+
+    final SyncerFactory syncerFactory =
+        spy(SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock()));
+
+    // test
+    CliRunner.of()
+        .run(
+            new String[] {"-s", "products", "-f", "-productSyncConfig", productSyncConfigValue},
+            syncerFactory);
+
+    // assertion
+    assertThat(testLogger.getAllLoggingEvents())
+        .hasSize(1)
+        .singleElement()
+        .satisfies(
+            loggingEvent -> {
+              assertThat(loggingEvent.getLevel()).isEqualTo(Level.ERROR);
+              assertThat(loggingEvent.getMessage()).contains("Failed to run sync process.");
+              final Optional<Throwable> actualThrowableOpt = loggingEvent.getThrowable();
+              assertThat(actualThrowableOpt).isNotNull();
+              assertThat(actualThrowableOpt.isPresent()).isTrue();
+              final Throwable actualThrowable = actualThrowableOpt.get();
+              assertThat(actualThrowable).isExactlyInstanceOf(CliException.class);
+              assertThat(actualThrowable.getMessage())
+                  .contains("fetchSize -100 cannot be less than 1.");
+            });
   }
 
   @Test
@@ -272,7 +387,7 @@ class CliRunnerTest {
     CliRunner.of().run(new String[] {"-s", "taxCategories"}, syncerFactory);
 
     // assertions
-    verify(syncerFactory, times(1)).sync(new String[] {"taxCategories"}, null, false, false);
+    verify(syncerFactory, times(1)).sync(new String[] {"taxCategories"}, null, false, false, null);
     verify(sourceClient, times(1)).execute(any(TaxCategoryQuery.class));
   }
 
@@ -297,7 +412,7 @@ class CliRunnerTest {
     CliRunner.of().run(new String[] {"-s", "taxCategories", "-f"}, syncerFactory);
 
     // assertions
-    verify(syncerFactory, times(1)).sync(new String[] {"taxCategories"}, null, true, false);
+    verify(syncerFactory, times(1)).sync(new String[] {"taxCategories"}, null, true, false, null);
     verify(sourceClient, times(1)).execute(any(TaxCategoryQuery.class));
   }
 
@@ -319,7 +434,7 @@ class CliRunnerTest {
     CliRunner.of().run(new String[] {"-s", "customers"}, syncerFactory);
 
     // assertions
-    verify(syncerFactory, times(1)).sync(new String[] {"customers"}, null, false, false);
+    verify(syncerFactory, times(1)).sync(new String[] {"customers"}, null, false, false, null);
     verify(sourceClient, times(1)).execute(any(CustomerQuery.class));
   }
 
@@ -344,7 +459,7 @@ class CliRunnerTest {
     CliRunner.of().run(new String[] {"-s", "customers", "-f"}, syncerFactory);
 
     // assertions
-    verify(syncerFactory, times(1)).sync(new String[] {"customers"}, null, true, false);
+    verify(syncerFactory, times(1)).sync(new String[] {"customers"}, null, true, false, null);
     verify(sourceClient, times(1)).execute(any(CustomerQuery.class));
   }
 
@@ -366,7 +481,7 @@ class CliRunnerTest {
     CliRunner.of().run(new String[] {"-s", "shoppingLists"}, syncerFactory);
 
     // assertions
-    verify(syncerFactory, times(1)).sync(new String[] {"shoppingLists"}, null, false, false);
+    verify(syncerFactory, times(1)).sync(new String[] {"shoppingLists"}, null, false, false, null);
     verify(sourceClient, times(1)).execute(any(ShoppingListQuery.class));
   }
 
@@ -391,7 +506,7 @@ class CliRunnerTest {
     CliRunner.of().run(new String[] {"-s", "shoppingLists", "-f"}, syncerFactory);
 
     // assertions
-    verify(syncerFactory, times(1)).sync(new String[] {"shoppingLists"}, null, true, false);
+    verify(syncerFactory, times(1)).sync(new String[] {"shoppingLists"}, null, true, false, null);
     verify(sourceClient, times(1)).execute(any(ShoppingListQuery.class));
   }
 
@@ -416,7 +531,7 @@ class CliRunnerTest {
     CliRunner.of().run(new String[] {"-s", "customObjects"}, syncerFactory);
 
     // assertions
-    verify(syncerFactory, times(1)).sync(new String[] {"customObjects"}, null, false, false);
+    verify(syncerFactory, times(1)).sync(new String[] {"customObjects"}, null, false, false, null);
     verify(sourceClient, times(1)).execute(any(CustomObjectQuery.class));
   }
 
@@ -441,7 +556,7 @@ class CliRunnerTest {
     CliRunner.of().run(new String[] {"-s", "customObjects", "-f"}, syncerFactory);
 
     // assertions
-    verify(syncerFactory, times(1)).sync(new String[] {"customObjects"}, null, true, false);
+    verify(syncerFactory, times(1)).sync(new String[] {"customObjects"}, null, true, false, null);
     verify(sourceClient, times(1)).execute(any(CustomObjectQuery.class));
   }
 
@@ -466,7 +581,7 @@ class CliRunnerTest {
     CliRunner.of().run(new String[] {"-s", "cartDiscounts", "-f"}, syncerFactory);
 
     // assertions
-    verify(syncerFactory, times(1)).sync(new String[] {"cartDiscounts"}, null, true, false);
+    verify(syncerFactory, times(1)).sync(new String[] {"cartDiscounts"}, null, true, false, null);
     verify(sourceClient, times(1)).execute(any(CartDiscountQuery.class));
   }
 
@@ -491,7 +606,7 @@ class CliRunnerTest {
     CliRunner.of().run(new String[] {"-s", "states", "-f"}, syncerFactory);
 
     // assertions
-    verify(syncerFactory, times(1)).sync(new String[] {"states"}, null, true, false);
+    verify(syncerFactory, times(1)).sync(new String[] {"states"}, null, true, false, null);
     verify(sourceClient, times(1)).execute(any(StateQuery.class));
   }
 
@@ -516,7 +631,7 @@ class CliRunnerTest {
     CliRunner.of().run(new String[] {"--sync", "products"}, syncerFactory);
 
     // assertions
-    verify(syncerFactory, times(1)).sync(new String[] {"products"}, null, false, false);
+    verify(syncerFactory, times(1)).sync(new String[] {"products"}, null, false, false, null);
     verify(sourceClient, times(1)).execute(any(ProductQuery.class));
   }
 
@@ -541,7 +656,8 @@ class CliRunnerTest {
     CliRunner.of().run(new String[] {"--sync", "products", "-r", "Runner123"}, syncerFactory);
 
     // assertions
-    verify(syncerFactory, times(1)).sync(new String[] {"products"}, "Runner123", false, false);
+    verify(syncerFactory, times(1))
+        .sync(new String[] {"products"}, "Runner123", false, false, null);
     verify(sourceClient, times(1)).execute(any(ProductQuery.class));
   }
 

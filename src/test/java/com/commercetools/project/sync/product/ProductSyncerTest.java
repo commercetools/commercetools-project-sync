@@ -9,6 +9,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import com.commercetools.project.sync.model.ProductSyncCustomRequest;
 import com.commercetools.project.sync.model.ResourceIdsGraphQlRequest;
 import com.commercetools.sync.commons.models.ResourceKeyIdGraphQlResult;
 import com.commercetools.sync.products.ProductSync;
@@ -25,6 +26,7 @@ import io.sphere.sdk.products.commands.updateactions.ChangeName;
 import io.sphere.sdk.products.commands.updateactions.Publish;
 import io.sphere.sdk.products.commands.updateactions.Unpublish;
 import io.sphere.sdk.products.queries.ProductQuery;
+import io.sphere.sdk.queries.QueryPredicate;
 import io.sphere.sdk.utils.CompletableFutureUtils;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -50,7 +52,8 @@ class ProductSyncerTest {
   void of_ShouldCreateProductSyncerInstance() {
     // test
     final ProductSyncer productSyncer =
-        ProductSyncer.of(mock(SphereClient.class), mock(SphereClient.class), getMockedClock());
+        ProductSyncer.of(
+            mock(SphereClient.class), mock(SphereClient.class), getMockedClock(), null);
 
     // assertions
     assertThat(productSyncer).isNotNull();
@@ -63,7 +66,7 @@ class ProductSyncerTest {
     // preparation
     final SphereClient sourceClient = mock(SphereClient.class);
     final ProductSyncer productSyncer =
-        ProductSyncer.of(sourceClient, mock(SphereClient.class), getMockedClock());
+        ProductSyncer.of(sourceClient, mock(SphereClient.class), getMockedClock(), null);
     final List<Product> productPage =
         asList(
             readObjectFromResource("product-key-1.json", Product.class),
@@ -200,7 +203,7 @@ class ProductSyncerTest {
     final SphereClient sourceClient = mock(SphereClient.class);
     when(sourceClient.getConfig()).thenReturn(SphereApiConfig.of("test-project"));
     final ProductSyncer productSyncer =
-        ProductSyncer.of(sourceClient, mock(SphereClient.class), getMockedClock());
+        ProductSyncer.of(sourceClient, mock(SphereClient.class), getMockedClock(), null);
     final List<Product> productPage =
         asList(
             readObjectFromResource("product-key-1.json", Product.class),
@@ -284,7 +287,7 @@ class ProductSyncerTest {
     // preparation
     final SphereClient sourceClient = mock(SphereClient.class);
     final ProductSyncer productSyncer =
-        ProductSyncer.of(sourceClient, mock(SphereClient.class), getMockedClock());
+        ProductSyncer.of(sourceClient, mock(SphereClient.class), getMockedClock(), null);
     final List<Product> productPage =
         asList(
             readObjectFromResource("product-key-1.json", Product.class),
@@ -317,13 +320,40 @@ class ProductSyncerTest {
   void getQuery_ShouldBuildProductQueryWithoutAnyExpansionPaths() {
     // preparation
     final ProductSyncer productSyncer =
-        ProductSyncer.of(mock(SphereClient.class), mock(SphereClient.class), getMockedClock());
+        ProductSyncer.of(
+            mock(SphereClient.class), mock(SphereClient.class), getMockedClock(), null);
 
     // test
     final ProductQuery query = productSyncer.getQuery();
 
     // assertion
     assertThat(query.expansionPaths()).isEmpty();
+  }
+
+  @Test
+  void getQuery_ShouldBuildProductQueryWithCustomQueryAndFetchSize() {
+    // preparation
+    final Long fetchSize = 100L;
+    final String customQuery =
+        "published=true AND masterData(masterVariant(attributes(name= \"abc\" AND value=123)))";
+
+    final ProductSyncCustomRequest productSyncCustomRequest = new ProductSyncCustomRequest();
+    productSyncCustomRequest.setCustomQuery(customQuery);
+    productSyncCustomRequest.setFetchSize(fetchSize);
+
+    final ProductSyncer productSyncer =
+        ProductSyncer.of(
+            mock(SphereClient.class),
+            mock(SphereClient.class),
+            getMockedClock(),
+            productSyncCustomRequest);
+
+    // test
+    final ProductQuery query = productSyncer.getQuery();
+
+    // assertion
+    assertThat(query.limit()).isEqualTo(100);
+    assertThat(query.predicates()).contains(QueryPredicate.of(customQuery));
   }
 
   @Test
