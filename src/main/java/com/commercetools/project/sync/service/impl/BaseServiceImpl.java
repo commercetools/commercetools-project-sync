@@ -10,7 +10,9 @@ import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import io.sphere.sdk.client.SphereClient;
 import io.sphere.sdk.models.WithKey;
+import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
@@ -50,7 +52,7 @@ public class BaseServiceImpl {
         .toCompletableFuture()
         .thenApply(
             results -> {
-              cacheProductTypeKeys(results.getResults());
+              cacheResourceReferenceKeys(results.getResults());
               return resourceList;
             });
   }
@@ -63,14 +65,17 @@ public class BaseServiceImpl {
         .collect(toSet());
   }
 
-  private void cacheProductTypeKeys(final Set<ResourceKeyId> results) {
-    results.forEach(
-        resourceKeyId -> {
-          final String key = resourceKeyId.getKey();
-          final String id = resourceKeyId.getId();
-          if (!isBlank(key)) {
-            referenceIdToKeyCache.put(id, key);
-          }
-        });
+  private void cacheResourceReferenceKeys(final Set<ResourceKeyId> results) {
+    Optional.ofNullable(results)
+        .orElseGet(Collections::emptySet)
+        .stream()
+        .forEach(
+            resourceKeyId -> {
+              final String key = resourceKeyId.getKey();
+              final String id = resourceKeyId.getId();
+              if (!isBlank(key)) {
+                referenceIdToKeyCache.put(id, key);
+              }
+            });
   }
 }
