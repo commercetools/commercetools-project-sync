@@ -1,5 +1,6 @@
 package com.commercetools.project.sync.util.referenceresolution;
 
+import static com.commercetools.project.sync.util.SyncUtils.getResourceIdentifierWithKey;
 import static com.commercetools.project.sync.util.referenceresolution.AssetReferenceResolutionUtils.mapToAssetDrafts;
 import static com.commercetools.project.sync.util.referenceresolution.CustomTypeReferenceResolutionUtils.mapToCustomFieldsDraft;
 import static com.commercetools.sync.commons.utils.ResourceIdentifierUtils.REFERENCE_TYPE_ID_FIELD;
@@ -13,7 +14,6 @@ import io.sphere.sdk.channels.Channel;
 import io.sphere.sdk.customergroups.CustomerGroup;
 import io.sphere.sdk.models.Reference;
 import io.sphere.sdk.models.ResourceIdentifier;
-import io.sphere.sdk.models.WithKey;
 import io.sphere.sdk.products.PriceDraft;
 import io.sphere.sdk.products.PriceDraftBuilder;
 import io.sphere.sdk.products.Product;
@@ -32,7 +32,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 
 /**
  * Util class which provides utilities that can be used when syncing resources from a source
@@ -132,34 +131,6 @@ public final class VariantReferenceResolutionUtils {
                         getResourceIdentifierWithKey(price.getCustomerGroup(), referenceIdToKeyMap))
                     .build())
         .collect(toList());
-  }
-
-  /**
-   * Given a reference to a resource of type {@code T}, this method checks if the reference is in
-   * map(cache). If it is, then it return the resource identifier with key. Otherwise, it returns
-   * the resource identifier with id. Since, the reference could be {@code null}, this method could
-   * also return null if the reference was not in the map(cache).
-   *
-   * @param reference the reference of the resource to check if it's in the map(cache).
-   * @param <T> the type of the resource.
-   * @param referenceIdToKeyMap the cache contains reference Id to Keys.
-   * @return returns the resource identifier with key if the {@code reference} is in map(cache).
-   *     Otherwise, it returns the resource identifier with id.
-   */
-  @Nullable
-  static <T extends WithKey> ResourceIdentifier<T> getResourceIdentifierWithKey(
-      @Nullable final Reference<T> reference,
-      @Nonnull final Map<String, String> referenceIdToKeyMap) {
-
-    if (reference != null) {
-      final String id = reference.getId();
-      if (referenceIdToKeyMap.containsKey(id)) {
-        return ResourceIdentifier.ofKey(referenceIdToKeyMap.get(id));
-      }
-      return ResourceIdentifier.ofId(id);
-    }
-
-    return null;
   }
 
   /**
