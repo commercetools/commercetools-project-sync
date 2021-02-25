@@ -85,7 +85,7 @@ public class ProductReferenceTransformServiceImpl extends BaseServiceImpl
   private CompletionStage<List<Product>> transformProductTypeReference(
       @Nonnull final List<Product> products) {
 
-    Set<String> productTypeIds =
+    final Set<String> productTypeIds =
         products.stream().map(ProductLike::getProductType).map(Reference::getId).collect(toSet());
 
     return fetchAndFillReferenceIdToKeyCache(
@@ -96,7 +96,7 @@ public class ProductReferenceTransformServiceImpl extends BaseServiceImpl
   private CompletionStage<List<Product>> transformTaxCategoryReference(
       @Nonnull final List<Product> products) {
 
-    Set<String> taxCategoryIds =
+    final Set<String> taxCategoryIds =
         products
             .stream()
             .map(ProductLike::getTaxCategory)
@@ -112,7 +112,7 @@ public class ProductReferenceTransformServiceImpl extends BaseServiceImpl
   private CompletionStage<List<Product>> transformStateReference(
       @Nonnull final List<Product> products) {
 
-    Set<String> stateIds =
+    final Set<String> stateIds =
         products
             .stream()
             .map(Product::getState)
@@ -127,7 +127,7 @@ public class ProductReferenceTransformServiceImpl extends BaseServiceImpl
   private CompletionStage<List<Product>> transformCategoryReference(
       @Nonnull final List<Product> products) {
 
-    Set<String> categoryIds =
+    final Set<String> categoryIds =
         products
             .stream()
             .map(product -> product.getMasterData().getStaged().getCategories())
@@ -146,7 +146,7 @@ public class ProductReferenceTransformServiceImpl extends BaseServiceImpl
   private CompletionStage<List<Product>> transformPricesChannelReference(
       @Nonnull final List<Product> products) {
 
-    Set<String> channelIds =
+    final Set<String> channelIds =
         products
             .stream()
             .map(product -> product.getMasterData().getStaged().getAllVariants())
@@ -176,7 +176,7 @@ public class ProductReferenceTransformServiceImpl extends BaseServiceImpl
   private CompletionStage<List<Product>> transformAssetsCustomTypeReference(
       @Nonnull final List<Product> products) {
 
-    Set<String> typeIds =
+    final Set<String> typeIds =
         products
             .stream()
             .map(product -> product.getMasterData().getStaged().getAllVariants())
@@ -206,7 +206,7 @@ public class ProductReferenceTransformServiceImpl extends BaseServiceImpl
   private CompletionStage<List<Product>> transformPricesCustomTypeReference(
       @Nonnull final List<Product> products) {
 
-    Set<String> typeIds =
+    final Set<String> typeIds =
         products
             .stream()
             .map(product -> product.getMasterData().getStaged().getAllVariants())
@@ -237,7 +237,7 @@ public class ProductReferenceTransformServiceImpl extends BaseServiceImpl
   private CompletionStage<List<Product>> transformMasterVariantPricesCustomTypeReference(
       @Nonnull final List<Product> products) {
 
-    Set<String> typeIds =
+    final Set<String> typeIds =
         products
             .stream()
             .map(product -> product.getMasterData().getStaged().getMasterVariant())
@@ -262,7 +262,7 @@ public class ProductReferenceTransformServiceImpl extends BaseServiceImpl
   private CompletionStage<List<Product>> transformMasterVariantAssetsCustomTypeReference(
       @Nonnull final List<Product> products) {
 
-    Set<String> customTypeIds =
+    final Set<String> customTypeIds =
         products
             .stream()
             .map(product -> product.getMasterData().getStaged().getMasterVariant())
@@ -287,7 +287,7 @@ public class ProductReferenceTransformServiceImpl extends BaseServiceImpl
   private CompletionStage<List<Product>> transformPricesCustomerGroupReference(
       @Nonnull final List<Product> products) {
 
-    Set<String> customerGroupIds =
+    final Set<String> customerGroupIds =
         products
             .stream()
             .map(product -> product.getMasterData().getStaged().getAllVariants())

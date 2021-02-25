@@ -55,7 +55,7 @@ public class CategoryReferenceTransformServiceImpl extends BaseServiceImpl
   private CompletionStage<List<Category>> transformParentCategoryReference(
       @Nonnull final List<Category> categories) {
 
-    Set<String> parentCategoryIds =
+    final Set<String> parentCategoryIds =
         categories
             .stream()
             .map(Category::getParent)
@@ -71,7 +71,7 @@ public class CategoryReferenceTransformServiceImpl extends BaseServiceImpl
   private CompletionStage<List<Category>> transformCustomTypeReference(
       @Nonnull final List<Category> categories) {
 
-    Set<String> customTypeIds =
+    final Set<String> customTypeIds =
         categories
             .stream()
             .map(Category::getCustom)
@@ -87,7 +87,7 @@ public class CategoryReferenceTransformServiceImpl extends BaseServiceImpl
   private CompletionStage<List<Category>> transformAssetsCustomTypeReference(
       @Nonnull final List<Category> categories) {
 
-    Set<String> typeIds =
+    final Set<String> typeIds =
         categories
             .stream()
             .map(category -> category.getAssets())

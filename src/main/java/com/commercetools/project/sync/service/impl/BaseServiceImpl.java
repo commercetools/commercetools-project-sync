@@ -40,8 +40,8 @@ public class BaseServiceImpl {
 
   protected <T extends WithKey> CompletionStage<List<T>> fetchAndFillReferenceIdToKeyCache(
       @Nonnull final List<T> resourceList,
-      final Set<String> ids,
-      final GraphQlQueryResources requestType) {
+      @Nonnull final Set<String> ids,
+      @Nonnull final GraphQlQueryResources requestType) {
     final Set<String> nonCachedReferenceIds = getNonCachedReferenceIds(ids);
     if (nonCachedReferenceIds.isEmpty()) {
       return CompletableFuture.completedFuture(resourceList);
