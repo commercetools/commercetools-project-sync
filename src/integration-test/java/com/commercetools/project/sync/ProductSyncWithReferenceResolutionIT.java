@@ -5,24 +5,35 @@ import static com.commercetools.project.sync.util.IntegrationTestUtils.assertCat
 import static com.commercetools.project.sync.util.IntegrationTestUtils.assertProductExists;
 import static com.commercetools.project.sync.util.IntegrationTestUtils.assertProductTypeExists;
 import static com.commercetools.project.sync.util.IntegrationTestUtils.cleanUpProjects;
+import static com.commercetools.project.sync.util.QueryUtils.queryAndExecute;
 import static com.commercetools.project.sync.util.SphereClientUtils.CTP_SOURCE_CLIENT_CONFIG;
 import static com.commercetools.project.sync.util.SphereClientUtils.CTP_TARGET_CLIENT_CONFIG;
+import static com.neovisionaries.i18n.CountryCode.DE;
+import static io.sphere.sdk.models.DefaultCurrencyUnits.EUR;
 import static io.sphere.sdk.models.LocalizedString.ofEnglish;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
+import static java.util.Optional.ofNullable;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.neovisionaries.i18n.CountryCode;
 import io.sphere.sdk.categories.CategoryDraft;
 import io.sphere.sdk.categories.CategoryDraftBuilder;
 import io.sphere.sdk.categories.commands.CategoryCreateCommand;
+import io.sphere.sdk.channels.Channel;
 import io.sphere.sdk.client.SphereClient;
-import io.sphere.sdk.models.DefaultCurrencyUnits;
+import io.sphere.sdk.customergroups.CustomerGroup;
+import io.sphere.sdk.customergroups.CustomerGroupDraft;
+import io.sphere.sdk.customergroups.CustomerGroupDraftBuilder;
+import io.sphere.sdk.customergroups.commands.CustomerGroupCreateCommand;
+import io.sphere.sdk.customergroups.commands.CustomerGroupDeleteCommand;
+import io.sphere.sdk.customergroups.queries.CustomerGroupQuery;
 import io.sphere.sdk.models.LocalizedString;
 import io.sphere.sdk.models.ResourceIdentifier;
 import io.sphere.sdk.models.TextInputHint;
+import io.sphere.sdk.products.Price;
 import io.sphere.sdk.products.PriceDraft;
 import io.sphere.sdk.products.PriceDraftBuilder;
 import io.sphere.sdk.products.ProductDraft;
@@ -56,13 +67,14 @@ import io.sphere.sdk.types.Type;
 import io.sphere.sdk.types.TypeDraft;
 import io.sphere.sdk.types.TypeDraftBuilder;
 import io.sphere.sdk.types.commands.TypeCreateCommand;
-import io.sphere.sdk.utils.MoneyImpl;
 import java.math.BigDecimal;
 import java.time.Clock;
+import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import javax.money.CurrencyUnit;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -83,6 +95,10 @@ public class ProductSyncWithReferenceResolutionIT {
     syncerTestLogger.clearAll();
     cliRunnerTestLogger.clearAll();
     cleanUpProjects(createClient(CTP_SOURCE_CLIENT_CONFIG), createClient(CTP_TARGET_CLIENT_CONFIG));
+    queryAndExecute(
+        createClient(CTP_SOURCE_CLIENT_CONFIG),
+        CustomerGroupQuery.of(),
+        CustomerGroupDeleteCommand::of);
     setupSourceProjectData(createClient(CTP_SOURCE_CLIENT_CONFIG));
   }
 
@@ -154,10 +170,27 @@ public class ProductSyncWithReferenceResolutionIT {
             .toCompletableFuture()
             .join();
 
+    final CustomerGroupDraft customerGroupDraft =
+        CustomerGroupDraftBuilder.of("customerGroupName").key("customerGroupKey").build();
+
+    CustomerGroup customerGroup =
+        sourceProjectClient
+            .execute(CustomerGroupCreateCommand.of(customerGroupDraft))
+            .toCompletableFuture()
+            .join();
+
     final PriceDraft priceBuilder =
-        PriceDraftBuilder.of(MoneyImpl.of(BigDecimal.TEN, DefaultCurrencyUnits.EUR))
-            .customerGroup(ResourceIdentifier.ofId("customerGroupId"))
-            .custom(CustomFieldsDraft.ofTypeIdAndJson(type.getId(), new HashMap<>()))
+        PriceDraftBuilder.of(
+                getPriceDraft(
+                    BigDecimal.valueOf(222),
+                    EUR,
+                    DE,
+                    customerGroup.getId(),
+                    null,
+                    null,
+                    null,
+                    null))
+            .customerGroup(customerGroup)
             .build();
 
     final ProductVariantDraft variantDraft1 =
@@ -236,5 +269,26 @@ public class ProductSyncWithReferenceResolutionIT {
         .hasSize(1)
         .singleElement()
         .satisfies(taxCategory -> assertThat(taxCategory.getKey()).isEqualTo(RESOURCE_KEY));
+  }
+
+  @Nonnull
+  public static PriceDraft getPriceDraft(
+      @Nonnull final BigDecimal value,
+      @Nonnull final CurrencyUnit currencyUnits,
+      @Nullable final CountryCode countryCode,
+      @Nullable final String customerGroupId,
+      @Nullable final ZonedDateTime validFrom,
+      @Nullable final ZonedDateTime validUntil,
+      @Nullable final String channelId,
+      @Nullable final CustomFieldsDraft customFieldsDraft) {
+    return PriceDraftBuilder.of(Price.of(value, currencyUnits))
+        .country(countryCode)
+        .customerGroup(
+            ofNullable(customerGroupId).map(ResourceIdentifier::<CustomerGroup>ofId).orElse(null))
+        .validFrom(validFrom)
+        .validUntil(validUntil)
+        .channel(ofNullable(channelId).map(ResourceIdentifier::<Channel>ofId).orElse(null))
+        .custom(customFieldsDraft)
+        .build();
   }
 }

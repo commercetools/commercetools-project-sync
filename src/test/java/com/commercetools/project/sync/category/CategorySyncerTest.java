@@ -22,7 +22,6 @@ import io.sphere.sdk.client.SphereApiConfig;
 import io.sphere.sdk.client.SphereClient;
 import io.sphere.sdk.json.SphereJsonUtils;
 import io.sphere.sdk.queries.PagedQueryResult;
-import io.sphere.sdk.queries.QueryExecutionUtils;
 import java.time.Clock;
 import java.util.Collections;
 import java.util.HashMap;
@@ -52,8 +51,7 @@ class CategorySyncerTest {
         CategorySyncer.of(mock(SphereClient.class), mock(SphereClient.class), getMockedClock());
 
     // assertions
-    CategoryQuery expectedQuery =
-        CategoryQuery.of().withLimit(QueryExecutionUtils.DEFAULT_PAGE_SIZE);
+    CategoryQuery expectedQuery = CategoryQuery.of();
     assertThat(categorySyncer).isNotNull();
     assertThat(categorySyncer.getQuery()).isEqualTo(expectedQuery);
     assertThat(categorySyncer.getSync()).isExactlyInstanceOf(CategorySync.class);
@@ -113,8 +111,7 @@ class CategorySyncerTest {
     final CategoryQuery query = categorySyncer.getQuery();
 
     // assertion
-    CategoryQuery expectedQuery =
-        CategoryQuery.of().withLimit(QueryExecutionUtils.DEFAULT_PAGE_SIZE);
+    CategoryQuery expectedQuery = CategoryQuery.of();
     assertThat(query).isEqualTo(expectedQuery);
   }
 

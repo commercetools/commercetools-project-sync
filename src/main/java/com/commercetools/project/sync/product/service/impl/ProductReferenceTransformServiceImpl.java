@@ -223,8 +223,9 @@ public class ProductReferenceTransformServiceImpl extends BaseServiceImpl
                                 productVariant
                                     .getPrices()
                                     .stream()
-                                    .map(asset -> asset.getCustom().getType())
+                                    .map(asset -> asset.getCustom())
                                     .filter(Objects::nonNull)
+                                    .map(custom -> custom.getType())
                                     .map(Reference::getId)
                                     .collect(toList()))
                         .flatMap(Collection::stream)
