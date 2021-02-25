@@ -314,27 +314,6 @@ public class ProductReferenceTransformServiceImpl extends BaseServiceImpl
         products, customerGroupIds, GraphQlQueryResources.CUSTOMER_GROUPS);
   }
 
-  // TODO: This method along with "getNonCachedReferenceIds" and "cacheProductTypeKeys"
-  // can be kept in a generic class and reuse for all the resources.
-  private CompletionStage<List<Product>> fetchAndFillReferenceIdToKeyCache(
-      @Nonnull final List<Product> products,
-      final Set<String> ids,
-      final GraphQlQueryResources requestType) {
-    final Set<String> nonCachedReferenceIds = getNonCachedReferenceIds(ids);
-    if (nonCachedReferenceIds.isEmpty()) {
-      return CompletableFuture.completedFuture(products);
-    }
-
-    return getCtpClient()
-        .execute(new ResourceIdsGraphQlRequest(nonCachedReferenceIds, requestType))
-        .toCompletableFuture()
-        .thenApply(
-            results -> {
-              cacheProductTypeKeys(results.getResults());
-              return products;
-            });
-  }
-
   @Nonnull
   @Override
   public CompletionStage<Map<String, String>> getIdToKeys(
@@ -394,14 +373,6 @@ public class ProductReferenceTransformServiceImpl extends BaseServiceImpl
   }
 
   @Nonnull
-  private Set<String> getNonCachedReferenceIds(@Nonnull final Set<String> referenceIds) {
-    return referenceIds
-        .stream()
-        .filter(id -> null == referenceIdToKeyCache.getIfPresent(id))
-        .collect(toSet());
-  }
-
-  @Nonnull
   private CompletionStage<Map<String, String>> fetchCustomObjectKeys(
       @Nonnull final Set<String> nonCachedCustomObjectIds) {
 
@@ -440,17 +411,6 @@ public class ProductReferenceTransformServiceImpl extends BaseServiceImpl
           final String id = resourceKeyId.getId();
           if (!isBlank(key)) {
             allResourcesIdToKey.put(id, key);
-          }
-        });
-  }
-
-  private void cacheProductTypeKeys(final Set<ResourceKeyId> results) {
-    results.forEach(
-        resourceKeyId -> {
-          final String key = resourceKeyId.getKey();
-          final String id = resourceKeyId.getId();
-          if (!isBlank(key)) {
-            referenceIdToKeyCache.put(id, key);
           }
         });
   }

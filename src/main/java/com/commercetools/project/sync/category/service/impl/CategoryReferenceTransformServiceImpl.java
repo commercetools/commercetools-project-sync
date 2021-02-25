@@ -2,14 +2,11 @@ package com.commercetools.project.sync.category.service.impl;
 
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
-import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import com.commercetools.project.sync.category.service.CategoryReferenceTransformService;
-import com.commercetools.project.sync.model.ResourceIdsGraphQlRequest;
 import com.commercetools.project.sync.service.impl.BaseServiceImpl;
 import com.commercetools.project.sync.util.referenceresolution.CategoryReferenceResolutionUtils;
 import com.commercetools.sync.commons.models.GraphQlQueryResources;
-import com.commercetools.sync.commons.models.ResourceKeyId;
 import io.sphere.sdk.categories.Category;
 import io.sphere.sdk.categories.CategoryDraft;
 import io.sphere.sdk.client.SphereClient;
@@ -107,45 +104,5 @@ public class CategoryReferenceTransformServiceImpl extends BaseServiceImpl
             .collect(toSet());
 
     return fetchAndFillReferenceIdToKeyCache(categories, typeIds, GraphQlQueryResources.TYPES);
-  }
-
-  // TODO: This method along with "getNonCachedReferenceIds" and "cacheCategoryReferenceKeys"
-  // can be kept in a generic class and reuse for all the resources.
-  private CompletionStage<List<Category>> fetchAndFillReferenceIdToKeyCache(
-      @Nonnull final List<Category> categories,
-      final Set<String> ids,
-      final GraphQlQueryResources requestType) {
-    final Set<String> nonCachedReferenceIds = getNonCachedReferenceIds(ids);
-    if (nonCachedReferenceIds.isEmpty()) {
-      return CompletableFuture.completedFuture(categories);
-    }
-
-    return getCtpClient()
-        .execute(new ResourceIdsGraphQlRequest(nonCachedReferenceIds, requestType))
-        .toCompletableFuture()
-        .thenApply(
-            results -> {
-              cacheCategoryReferenceKeys(results.getResults());
-              return categories;
-            });
-  }
-
-  @Nonnull
-  private Set<String> getNonCachedReferenceIds(@Nonnull final Set<String> referenceIds) {
-    return referenceIds
-        .stream()
-        .filter(id -> null == referenceIdToKeyCache.getIfPresent(id))
-        .collect(Collectors.toSet());
-  }
-
-  private void cacheCategoryReferenceKeys(final Set<ResourceKeyId> results) {
-    results.forEach(
-        resourceKeyId -> {
-          final String key = resourceKeyId.getKey();
-          final String id = resourceKeyId.getId();
-          if (!isBlank(key)) {
-            referenceIdToKeyCache.put(id, key);
-          }
-        });
   }
 }
