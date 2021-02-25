@@ -131,8 +131,7 @@ public class ProductSyncWithReferenceResolutionIT {
             .fieldDefinitions(Arrays.asList(FIELD_DEFINITION_1))
             .build();
 
-    final Type type =
-        sourceProjectClient.execute(TypeCreateCommand.of(typeDraft)).toCompletableFuture().join();
+    sourceProjectClient.execute(TypeCreateCommand.of(typeDraft)).toCompletableFuture().join();
 
     final CategoryDraft categoryDraft =
         CategoryDraftBuilder.of(ofEnglish("t-shirts"), ofEnglish("t-shirts"))
