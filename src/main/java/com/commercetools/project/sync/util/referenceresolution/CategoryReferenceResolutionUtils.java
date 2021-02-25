@@ -17,7 +17,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 /**
- * Util class which provides utilities that can be used when syncing resources from a source
+ * Util class which provides utilities that can be used to resolve category reference when syncing resources from a source
  * commercetools project to a target one.
  */
 public final class CategoryReferenceResolutionUtils {
