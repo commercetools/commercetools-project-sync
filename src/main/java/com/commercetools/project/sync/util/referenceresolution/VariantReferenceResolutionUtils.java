@@ -100,10 +100,7 @@ public final class VariantReferenceResolutionUtils {
     return productVariants
         .stream()
         .filter(Objects::nonNull)
-        .map(
-            variants ->
-                VariantReferenceResolutionUtils.mapToProductVariantDraft(
-                    variants, referenceIdToKeyMap))
+        .map(variants -> mapToProductVariantDraft(variants, referenceIdToKeyMap))
         .collect(toList());
   }
 

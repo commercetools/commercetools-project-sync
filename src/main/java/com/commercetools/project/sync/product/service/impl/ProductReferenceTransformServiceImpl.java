@@ -1,5 +1,6 @@
 package com.commercetools.project.sync.product.service.impl;
 
+import static com.commercetools.project.sync.util.referenceresolution.ProductReferenceResolutionUtils.mapToProductDrafts;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -7,7 +8,6 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import com.commercetools.project.sync.model.ResourceIdsGraphQlRequest;
 import com.commercetools.project.sync.product.service.ProductReferenceTransformService;
 import com.commercetools.project.sync.service.impl.BaseServiceImpl;
-import com.commercetools.project.sync.util.referenceresolution.ProductReferenceResolutionUtils;
 import com.commercetools.sync.commons.models.GraphQlQueryResources;
 import com.commercetools.sync.commons.models.ResourceKeyId;
 import com.commercetools.sync.commons.utils.ChunkUtils;
@@ -78,10 +78,7 @@ public class ProductReferenceTransformServiceImpl extends BaseServiceImpl
 
     return CompletableFuture.allOf(
             transformReferencesToRunParallel.toArray(new CompletableFuture[0]))
-        .thenApply(
-            ignore ->
-                ProductReferenceResolutionUtils.mapToProductDrafts(
-                    products, referenceIdToKeyCache.asMap()));
+        .thenApply(ignore -> mapToProductDrafts(products, referenceIdToKeyCache.asMap()));
   }
 
   @Nonnull

@@ -63,7 +63,6 @@ import io.sphere.sdk.types.CustomFieldsDraft;
 import io.sphere.sdk.types.FieldDefinition;
 import io.sphere.sdk.types.ResourceTypeIdsSetBuilder;
 import io.sphere.sdk.types.StringFieldType;
-import io.sphere.sdk.types.Type;
 import io.sphere.sdk.types.TypeDraft;
 import io.sphere.sdk.types.TypeDraftBuilder;
 import io.sphere.sdk.types.commands.TypeCreateCommand;
