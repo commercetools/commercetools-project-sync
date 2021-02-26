@@ -15,12 +15,14 @@ import com.commercetools.sync.customobjects.helpers.CustomObjectCompositeIdentif
 import com.fasterxml.jackson.databind.JsonNode;
 import io.sphere.sdk.client.SphereClient;
 import io.sphere.sdk.customobjects.queries.CustomObjectQuery;
+import io.sphere.sdk.models.Asset;
 import io.sphere.sdk.models.Reference;
 import io.sphere.sdk.products.Price;
 import io.sphere.sdk.products.Product;
 import io.sphere.sdk.products.ProductDraft;
 import io.sphere.sdk.products.ProductLike;
 import io.sphere.sdk.products.ProductVariant;
+import io.sphere.sdk.types.CustomFields;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -30,7 +32,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 
@@ -53,28 +54,19 @@ public class ProductReferenceTransformServiceImpl extends BaseServiceImpl
   public CompletableFuture<List<ProductDraft>> transformProductReferences(
       @Nonnull final List<Product> products) {
 
-    final List<CompletableFuture<Void>> transformReferencesToRunParallel =
-        new ArrayList<>();
-    transformReferencesToRunParallel.add(
-        this.transformProductTypeReference(products));
-    transformReferencesToRunParallel.add(
-        this.transformTaxCategoryReference(products));
-    transformReferencesToRunParallel.add(
-        this.transformStateReference(products));
-    transformReferencesToRunParallel.add(
-        this.transformCategoryReference(products));
-    transformReferencesToRunParallel.add(
-        this.transformPricesChannelReference(products));
+    final List<CompletableFuture<Void>> transformReferencesToRunParallel = new ArrayList<>();
+    transformReferencesToRunParallel.add(this.transformProductTypeReference(products));
+    transformReferencesToRunParallel.add(this.transformTaxCategoryReference(products));
+    transformReferencesToRunParallel.add(this.transformStateReference(products));
+    transformReferencesToRunParallel.add(this.transformCategoryReference(products));
+    transformReferencesToRunParallel.add(this.transformPricesChannelReference(products));
     transformReferencesToRunParallel.add(
         this.transformMasterVariantPricesCustomTypeReference(products));
     transformReferencesToRunParallel.add(
         this.transformMasterVariantAssetsCustomTypeReference(products));
-    transformReferencesToRunParallel.add(
-        this.transformPricesCustomTypeReference(products));
-    transformReferencesToRunParallel.add(
-        this.transformAssetsCustomTypeReference(products));
-    transformReferencesToRunParallel.add(
-        this.transformPricesCustomerGroupReference(products));
+    transformReferencesToRunParallel.add(this.transformPricesCustomTypeReference(products));
+    transformReferencesToRunParallel.add(this.transformAssetsCustomTypeReference(products));
+    transformReferencesToRunParallel.add(this.transformPricesCustomerGroupReference(products));
 
     return CompletableFuture.allOf(
             transformReferencesToRunParallel.toArray(new CompletableFuture[0]))
@@ -107,8 +99,7 @@ public class ProductReferenceTransformServiceImpl extends BaseServiceImpl
   }
 
   @Nonnull
-  private CompletableFuture<Void> transformStateReference(
-      @Nonnull final List<Product> products) {
+  private CompletableFuture<Void> transformStateReference(@Nonnull final List<Product> products) {
 
     final Set<String> stateIds =
         products
@@ -166,7 +157,7 @@ public class ProductReferenceTransformServiceImpl extends BaseServiceImpl
             .flatMap(Collection::stream)
             .collect(toSet());
 
-    return fetchAndFillReferenceIdToKeyCache( channelIds, GraphQlQueryResources.CHANNELS);
+    return fetchAndFillReferenceIdToKeyCache(channelIds, GraphQlQueryResources.CHANNELS);
   }
 
   @Nonnull
@@ -187,8 +178,9 @@ public class ProductReferenceTransformServiceImpl extends BaseServiceImpl
                                 productVariant
                                     .getAssets()
                                     .stream()
-                                    .map(asset -> asset.getCustom().getType())
+                                    .map(Asset::getCustom)
                                     .filter(Objects::nonNull)
+                                    .map(CustomFields::getType)
                                     .map(Reference::getId)
                                     .collect(toList()))
                         .flatMap(Collection::stream)
@@ -196,7 +188,7 @@ public class ProductReferenceTransformServiceImpl extends BaseServiceImpl
             .flatMap(Collection::stream)
             .collect(toSet());
 
-    return fetchAndFillReferenceIdToKeyCache( typeIds, GraphQlQueryResources.TYPES);
+    return fetchAndFillReferenceIdToKeyCache(typeIds, GraphQlQueryResources.TYPES);
   }
 
   @Nonnull
@@ -227,7 +219,7 @@ public class ProductReferenceTransformServiceImpl extends BaseServiceImpl
             .flatMap(Collection::stream)
             .collect(toSet());
 
-    return fetchAndFillReferenceIdToKeyCache( typeIds, GraphQlQueryResources.TYPES);
+    return fetchAndFillReferenceIdToKeyCache(typeIds, GraphQlQueryResources.TYPES);
   }
 
   @Nonnull
@@ -245,14 +237,14 @@ public class ProductReferenceTransformServiceImpl extends BaseServiceImpl
                 prices ->
                     prices
                         .stream()
-                        .map(price -> price.getCustom())
+                        .map(Price::getCustom)
                         .filter(Objects::nonNull)
                         .map(customType -> customType.getType().getId())
                         .collect(Collectors.toList()))
             .flatMap(Collection::stream)
             .collect(toSet());
 
-    return fetchAndFillReferenceIdToKeyCache( typeIds, GraphQlQueryResources.TYPES);
+    return fetchAndFillReferenceIdToKeyCache(typeIds, GraphQlQueryResources.TYPES);
   }
 
   @Nonnull
@@ -265,19 +257,18 @@ public class ProductReferenceTransformServiceImpl extends BaseServiceImpl
             .map(product -> product.getMasterData().getStaged().getMasterVariant())
             .filter(Objects::nonNull)
             .map(ProductVariant::getAssets)
-            .filter(Objects::nonNull)
             .map(
                 prices ->
                     prices
                         .stream()
-                        .map(asset -> asset.getCustom())
+                        .map(Asset::getCustom)
                         .filter(Objects::nonNull)
                         .map(customType -> customType.getType().getId())
                         .collect(Collectors.toList()))
             .flatMap(Collection::stream)
             .collect(toSet());
 
-    return fetchAndFillReferenceIdToKeyCache( customTypeIds, GraphQlQueryResources.TYPES);
+    return fetchAndFillReferenceIdToKeyCache(customTypeIds, GraphQlQueryResources.TYPES);
   }
 
   @Nonnull
@@ -298,7 +289,7 @@ public class ProductReferenceTransformServiceImpl extends BaseServiceImpl
                                 productVariant
                                     .getPrices()
                                     .stream()
-                                    .map(price -> price.getCustomerGroup())
+                                    .map(Price::getCustomerGroup)
                                     .filter(Objects::nonNull)
                                     .map(Reference::getId)
                                     .collect(toList()))
@@ -307,7 +298,8 @@ public class ProductReferenceTransformServiceImpl extends BaseServiceImpl
             .flatMap(Collection::stream)
             .collect(toSet());
 
-    return fetchAndFillReferenceIdToKeyCache(customerGroupIds, GraphQlQueryResources.CUSTOMER_GROUPS);
+    return fetchAndFillReferenceIdToKeyCache(
+        customerGroupIds, GraphQlQueryResources.CUSTOMER_GROUPS);
   }
 
   @Nonnull
@@ -388,14 +380,12 @@ public class ProductReferenceTransformServiceImpl extends BaseServiceImpl
         .thenApply(ChunkUtils::flattenPagedQueryResults)
         .thenApply(
             customObjects -> {
-              customObjects
-                  .stream()
-                  .forEach(
-                      customObject -> {
-                        allResourcesIdToKey.put(
-                            customObject.getId(),
-                            CustomObjectCompositeIdentifier.of(customObject).toString());
-                      });
+              customObjects.forEach(
+                  customObject -> {
+                    allResourcesIdToKey.put(
+                        customObject.getId(),
+                        CustomObjectCompositeIdentifier.of(customObject).toString());
+                  });
               return allResourcesIdToKey;
             });
   }

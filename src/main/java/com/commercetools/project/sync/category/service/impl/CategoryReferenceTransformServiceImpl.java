@@ -19,7 +19,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 
@@ -35,12 +34,9 @@ public class CategoryReferenceTransformServiceImpl extends BaseServiceImpl
   public CompletableFuture<List<CategoryDraft>> transformCategoryReferences(
       @Nonnull final List<Category> categories) {
 
-    final List<CompletableFuture<Void>> transformReferencesToRunParallel =
-        new ArrayList<>();
-    transformReferencesToRunParallel.add(
-        this.transformParentCategoryReference(categories));
-    transformReferencesToRunParallel.add(
-        this.transformCustomTypeReference(categories));
+    final List<CompletableFuture<Void>> transformReferencesToRunParallel = new ArrayList<>();
+    transformReferencesToRunParallel.add(this.transformParentCategoryReference(categories));
+    transformReferencesToRunParallel.add(this.transformCustomTypeReference(categories));
 
     return CompletableFuture.allOf(
             transformReferencesToRunParallel.toArray(new CompletableFuture[0]))
@@ -78,21 +74,21 @@ public class CategoryReferenceTransformServiceImpl extends BaseServiceImpl
             .map(customFields -> customFields.getType().getId())
             .collect(Collectors.toSet()));
 
-   setOfTypeIds.addAll(
-            categories
-                    .stream()
-                    .map(Category::getAssets)
-                    .map(
-                            assets ->
-                                    assets
-                                            .stream()
-                                            .filter(Objects::nonNull)
-                                            .map(Asset::getCustom)
-                                            .filter(Objects::nonNull)
-                                            .map(customFields -> customFields.getType().getId())
-                                            .collect(toList()))
-                    .flatMap(Collection::stream)
-                    .collect(toSet()));
+    setOfTypeIds.addAll(
+        categories
+            .stream()
+            .map(Category::getAssets)
+            .map(
+                assets ->
+                    assets
+                        .stream()
+                        .filter(Objects::nonNull)
+                        .map(Asset::getCustom)
+                        .filter(Objects::nonNull)
+                        .map(customFields -> customFields.getType().getId())
+                        .collect(toList()))
+            .flatMap(Collection::stream)
+            .collect(toSet()));
 
     return fetchAndFillReferenceIdToKeyCache(setOfTypeIds, GraphQlQueryResources.TYPES);
   }

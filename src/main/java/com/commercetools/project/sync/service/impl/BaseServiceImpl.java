@@ -1,20 +1,19 @@
 package com.commercetools.project.sync.service.impl;
 
+import static java.util.stream.Collectors.toSet;
+import static org.apache.commons.lang3.StringUtils.isBlank;
+
 import com.commercetools.project.sync.model.ResourceIdsGraphQlRequest;
 import com.commercetools.sync.commons.models.GraphQlQueryResources;
 import com.commercetools.sync.commons.models.ResourceKeyId;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import io.sphere.sdk.client.SphereClient;
-
-import javax.annotation.Nonnull;
 import java.util.Collections;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-
-import static java.util.stream.Collectors.toSet;
-import static org.apache.commons.lang3.StringUtils.isBlank;
+import javax.annotation.Nonnull;
 
 public class BaseServiceImpl {
   private final SphereClient ctpClient;
@@ -35,8 +34,7 @@ public class BaseServiceImpl {
   }
 
   protected CompletableFuture<Void> fetchAndFillReferenceIdToKeyCache(
-      @Nonnull final Set<String> ids,
-      @Nonnull final GraphQlQueryResources requestType) {
+      @Nonnull final Set<String> ids, @Nonnull final GraphQlQueryResources requestType) {
     final Set<String> nonCachedReferenceIds = getNonCachedReferenceIds(ids);
     if (nonCachedReferenceIds.isEmpty()) {
       return CompletableFuture.completedFuture(null);
