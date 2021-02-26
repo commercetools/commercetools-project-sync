@@ -1,13 +1,7 @@
 package com.commercetools.project.sync.product.service;
 
-import io.sphere.sdk.categories.Category;
-import io.sphere.sdk.channels.Channel;
 import io.sphere.sdk.products.Product;
 import io.sphere.sdk.products.ProductDraft;
-import io.sphere.sdk.producttypes.ProductType;
-import io.sphere.sdk.states.State;
-import io.sphere.sdk.taxcategories.TaxCategory;
-import io.sphere.sdk.types.Type;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;

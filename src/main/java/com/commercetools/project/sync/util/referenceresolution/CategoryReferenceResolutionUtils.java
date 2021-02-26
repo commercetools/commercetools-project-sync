@@ -63,7 +63,6 @@ public final class CategoryReferenceResolutionUtils {
    * @return a {@link List} of {@link CategoryDraft} built from the supplied {@link List} of {@link
    *     Category}.
    */
-  // TODO: Update javadocs after implementing the new structure with cache.
   @Nonnull
   public static List<CategoryDraft> mapToCategoryDrafts(
       @Nonnull final List<Category> categories,

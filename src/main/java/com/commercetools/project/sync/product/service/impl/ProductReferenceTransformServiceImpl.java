@@ -43,6 +43,7 @@ public class ProductReferenceTransformServiceImpl extends BaseServiceImpl
   public CompletableFuture<List<ProductDraft>> transformProductReferences(
       @Nonnull final List<Product> products) {
 
+    // TODO (CTPI-432): would be part of the mapTo methods in java-sync later.
     final List<CompletableFuture<Void>> transformReferencesToRunParallel = new ArrayList<>();
     transformReferencesToRunParallel.add(this.transformProductTypeReference(products));
     transformReferencesToRunParallel.add(this.transformTaxCategoryReference(products));

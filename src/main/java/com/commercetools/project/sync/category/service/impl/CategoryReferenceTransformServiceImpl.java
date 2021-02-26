@@ -34,6 +34,7 @@ public class CategoryReferenceTransformServiceImpl extends BaseServiceImpl
   public CompletableFuture<List<CategoryDraft>> transformCategoryReferences(
       @Nonnull final List<Category> categories) {
 
+    // TODO (CTPI-432): would be part of the mapTo methods in java-sync later.
     final List<CompletableFuture<Void>> transformReferencesToRunParallel = new ArrayList<>();
     transformReferencesToRunParallel.add(this.transformParentCategoryReference(categories));
     transformReferencesToRunParallel.add(this.transformCustomTypeReference(categories));
@@ -59,7 +60,7 @@ public class CategoryReferenceTransformServiceImpl extends BaseServiceImpl
             .collect(Collectors.toSet());
 
     /*
-    TODO: Review comment:
+    TODO (CTPI-432): Review comment:
      https://github.com/commercetools/commercetools-project-sync/pull/240/files#r580147994
 
     I wonder if we could fill already-fetched category keys (as it's a native field of category)
