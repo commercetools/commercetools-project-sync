@@ -1,8 +1,5 @@
 package com.commercetools.project.sync.service.impl;
 
-import static java.util.stream.Collectors.toSet;
-import static org.apache.commons.lang3.StringUtils.isBlank;
-
 import com.commercetools.project.sync.model.ResourceIdsGraphQlRequest;
 import com.commercetools.sync.commons.models.GraphQlQueryResources;
 import com.commercetools.sync.commons.models.ResourceKeyId;
@@ -10,13 +7,16 @@ import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import io.sphere.sdk.client.SphereClient;
 import io.sphere.sdk.models.WithKey;
+
+import javax.annotation.Nonnull;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
-import javax.annotation.Nonnull;
+
+import static java.util.stream.Collectors.toSet;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 public class BaseServiceImpl {
   private final SphereClient ctpClient;
@@ -36,7 +36,7 @@ public class BaseServiceImpl {
     return Caffeine.newBuilder().maximumSize(cacheSize).executor(Runnable::run).build();
   }
 
-  protected <T extends WithKey> CompletionStage<List<T>> fetchAndFillReferenceIdToKeyCache(
+  protected <T extends WithKey> CompletableFuture<List<T>> fetchAndFillReferenceIdToKeyCache(
       @Nonnull final List<T> resourceList,
       @Nonnull final Set<String> ids,
       @Nonnull final GraphQlQueryResources requestType) {

@@ -56,25 +56,25 @@ public class ProductReferenceTransformServiceImpl extends BaseServiceImpl
     final List<CompletableFuture<List<Product>>> transformReferencesToRunParallel =
         new ArrayList<>();
     transformReferencesToRunParallel.add(
-        this.transformProductTypeReference(products).toCompletableFuture());
+        this.transformProductTypeReference(products));
     transformReferencesToRunParallel.add(
-        this.transformTaxCategoryReference(products).toCompletableFuture());
+        this.transformTaxCategoryReference(products));
     transformReferencesToRunParallel.add(
-        this.transformStateReference(products).toCompletableFuture());
+        this.transformStateReference(products));
     transformReferencesToRunParallel.add(
-        this.transformCategoryReference(products).toCompletableFuture());
+        this.transformCategoryReference(products));
     transformReferencesToRunParallel.add(
-        this.transformPricesChannelReference(products).toCompletableFuture());
+        this.transformPricesChannelReference(products));
     transformReferencesToRunParallel.add(
-        this.transformMasterVariantPricesCustomTypeReference(products).toCompletableFuture());
+        this.transformMasterVariantPricesCustomTypeReference(products));
     transformReferencesToRunParallel.add(
-        this.transformMasterVariantAssetsCustomTypeReference(products).toCompletableFuture());
+        this.transformMasterVariantAssetsCustomTypeReference(products));
     transformReferencesToRunParallel.add(
-        this.transformPricesCustomTypeReference(products).toCompletableFuture());
+        this.transformPricesCustomTypeReference(products));
     transformReferencesToRunParallel.add(
-        this.transformAssetsCustomTypeReference(products).toCompletableFuture());
+        this.transformAssetsCustomTypeReference(products));
     transformReferencesToRunParallel.add(
-        this.transformPricesCustomerGroupReference(products).toCompletableFuture());
+        this.transformPricesCustomerGroupReference(products));
 
     return CompletableFuture.allOf(
             transformReferencesToRunParallel.toArray(new CompletableFuture[0]))
@@ -82,7 +82,7 @@ public class ProductReferenceTransformServiceImpl extends BaseServiceImpl
   }
 
   @Nonnull
-  private CompletionStage<List<Product>> transformProductTypeReference(
+  private CompletableFuture<List<Product>> transformProductTypeReference(
       @Nonnull final List<Product> products) {
 
     final Set<String> productTypeIds =
@@ -93,7 +93,7 @@ public class ProductReferenceTransformServiceImpl extends BaseServiceImpl
   }
 
   @Nonnull
-  private CompletionStage<List<Product>> transformTaxCategoryReference(
+  private CompletableFuture<List<Product>> transformTaxCategoryReference(
       @Nonnull final List<Product> products) {
 
     final Set<String> taxCategoryIds =
@@ -109,7 +109,7 @@ public class ProductReferenceTransformServiceImpl extends BaseServiceImpl
   }
 
   @Nonnull
-  private CompletionStage<List<Product>> transformStateReference(
+  private CompletableFuture<List<Product>> transformStateReference(
       @Nonnull final List<Product> products) {
 
     final Set<String> stateIds =
@@ -124,7 +124,7 @@ public class ProductReferenceTransformServiceImpl extends BaseServiceImpl
   }
 
   @Nonnull
-  private CompletionStage<List<Product>> transformCategoryReference(
+  private CompletableFuture<List<Product>> transformCategoryReference(
       @Nonnull final List<Product> products) {
 
     final Set<String> categoryIds =
@@ -143,7 +143,7 @@ public class ProductReferenceTransformServiceImpl extends BaseServiceImpl
   }
 
   @Nonnull
-  private CompletionStage<List<Product>> transformPricesChannelReference(
+  private CompletableFuture<List<Product>> transformPricesChannelReference(
       @Nonnull final List<Product> products) {
 
     final Set<String> channelIds =
@@ -173,7 +173,7 @@ public class ProductReferenceTransformServiceImpl extends BaseServiceImpl
   }
 
   @Nonnull
-  private CompletionStage<List<Product>> transformAssetsCustomTypeReference(
+  private CompletableFuture<List<Product>> transformAssetsCustomTypeReference(
       @Nonnull final List<Product> products) {
 
     final Set<String> typeIds =
@@ -203,7 +203,7 @@ public class ProductReferenceTransformServiceImpl extends BaseServiceImpl
   }
 
   @Nonnull
-  private CompletionStage<List<Product>> transformPricesCustomTypeReference(
+  private CompletableFuture<List<Product>> transformPricesCustomTypeReference(
       @Nonnull final List<Product> products) {
 
     final Set<String> typeIds =
@@ -234,7 +234,7 @@ public class ProductReferenceTransformServiceImpl extends BaseServiceImpl
   }
 
   @Nonnull
-  private CompletionStage<List<Product>> transformMasterVariantPricesCustomTypeReference(
+  private CompletableFuture<List<Product>> transformMasterVariantPricesCustomTypeReference(
       @Nonnull final List<Product> products) {
 
     final Set<String> typeIds =
@@ -259,7 +259,7 @@ public class ProductReferenceTransformServiceImpl extends BaseServiceImpl
   }
 
   @Nonnull
-  private CompletionStage<List<Product>> transformMasterVariantAssetsCustomTypeReference(
+  private CompletableFuture<List<Product>> transformMasterVariantAssetsCustomTypeReference(
       @Nonnull final List<Product> products) {
 
     final Set<String> customTypeIds =
@@ -284,7 +284,7 @@ public class ProductReferenceTransformServiceImpl extends BaseServiceImpl
   }
 
   @Nonnull
-  private CompletionStage<List<Product>> transformPricesCustomerGroupReference(
+  private CompletableFuture<List<Product>> transformPricesCustomerGroupReference(
       @Nonnull final List<Product> products) {
 
     final Set<String> customerGroupIds =
@@ -316,7 +316,7 @@ public class ProductReferenceTransformServiceImpl extends BaseServiceImpl
 
   @Nonnull
   @Override
-  public CompletionStage<Map<String, String>> getIdToKeys(
+  public CompletableFuture<Map<String, String>> getIdToKeys(
       @Nonnull final Set<String> productIds,
       @Nonnull final Set<String> categoryIds,
       @Nonnull final Set<String> productTypeIds,
@@ -373,7 +373,7 @@ public class ProductReferenceTransformServiceImpl extends BaseServiceImpl
   }
 
   @Nonnull
-  private CompletionStage<Map<String, String>> fetchCustomObjectKeys(
+  private CompletableFuture<Map<String, String>> fetchCustomObjectKeys(
       @Nonnull final Set<String> nonCachedCustomObjectIds) {
 
     if (nonCachedCustomObjectIds.isEmpty()) {

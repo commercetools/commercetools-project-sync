@@ -125,7 +125,7 @@ public final class ProductSyncer
               }
               return products;
             })
-        .thenCompose(products -> this.referencesService.transformProductReferences(products));
+        .thenCompose(this.referencesService::transformProductReferences);
   }
 
   @Nonnull

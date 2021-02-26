@@ -37,11 +37,11 @@ public class CategoryReferenceTransformServiceImpl extends BaseServiceImpl
     final List<CompletableFuture<List<Category>>> transformReferencesToRunParallel =
         new ArrayList<>();
     transformReferencesToRunParallel.add(
-        this.transformParentCategoryReference(categories).toCompletableFuture());
+        this.transformParentCategoryReference(categories));
     transformReferencesToRunParallel.add(
-        this.transformCustomTypeReference(categories).toCompletableFuture());
+        this.transformCustomTypeReference(categories));
     transformReferencesToRunParallel.add(
-        this.transformAssetsCustomTypeReference(categories).toCompletableFuture());
+        this.transformAssetsCustomTypeReference(categories));
 
     return CompletableFuture.allOf(
             transformReferencesToRunParallel.toArray(new CompletableFuture[0]))
@@ -52,7 +52,7 @@ public class CategoryReferenceTransformServiceImpl extends BaseServiceImpl
   }
 
   @Nonnull
-  private CompletionStage<List<Category>> transformParentCategoryReference(
+  private CompletableFuture<List<Category>> transformParentCategoryReference(
       @Nonnull final List<Category> categories) {
 
     final Set<String> parentCategoryIds =
@@ -68,7 +68,7 @@ public class CategoryReferenceTransformServiceImpl extends BaseServiceImpl
   }
 
   @Nonnull
-  private CompletionStage<List<Category>> transformCustomTypeReference(
+  private CompletableFuture<List<Category>> transformCustomTypeReference(
       @Nonnull final List<Category> categories) {
 
     final Set<String> customTypeIds =
@@ -84,7 +84,7 @@ public class CategoryReferenceTransformServiceImpl extends BaseServiceImpl
   }
 
   @Nonnull
-  private CompletionStage<List<Category>> transformAssetsCustomTypeReference(
+  private CompletableFuture<List<Category>> transformAssetsCustomTypeReference(
       @Nonnull final List<Category> categories) {
 
     final Set<String> typeIds =
