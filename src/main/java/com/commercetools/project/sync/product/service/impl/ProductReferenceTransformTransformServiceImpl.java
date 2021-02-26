@@ -6,7 +6,7 @@ import static java.util.stream.Collectors.toSet;
 
 import com.commercetools.project.sync.model.ResourceIdsGraphQlRequest;
 import com.commercetools.project.sync.product.service.ProductReferenceTransformService;
-import com.commercetools.project.sync.service.impl.BaseServiceImpl;
+import com.commercetools.project.sync.service.impl.BaseTransformServiceImpl;
 import com.commercetools.sync.commons.models.GraphQlQueryResources;
 import com.commercetools.sync.commons.utils.ChunkUtils;
 import com.commercetools.sync.customobjects.helpers.CustomObjectCompositeIdentifier;
@@ -31,10 +31,10 @@ import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 
-public class ProductReferenceTransformServiceImpl extends BaseServiceImpl
+public class ProductReferenceTransformTransformServiceImpl extends BaseTransformServiceImpl
     implements ProductReferenceTransformService {
 
-  public ProductReferenceTransformServiceImpl(@Nonnull final SphereClient ctpClient) {
+  public ProductReferenceTransformTransformServiceImpl(@Nonnull final SphereClient ctpClient) {
     super(ctpClient);
   }
 

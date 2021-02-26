@@ -23,13 +23,13 @@ import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-public class CustomObjectServiceImpl extends BaseServiceImpl implements CustomObjectService {
+public class CustomObjectServiceImpl implements CustomObjectService {
 
   public static final String TIMESTAMP_GENERATOR_KEY = "timestampGenerator";
-  public static final String TIMESTAMP_GENERATOR_VALUE = "";
+  private final SphereClient sphereClient;
 
   public CustomObjectServiceImpl(@Nonnull final SphereClient sphereClient) {
-    super(sphereClient);
+    this.sphereClient = sphereClient;
   }
 
   /**
@@ -61,7 +61,7 @@ public class CustomObjectServiceImpl extends BaseServiceImpl implements CustomOb
   @Nonnull
   private <T> CompletionStage<CustomObject<T>> createCustomObject(
       @Nonnull final CustomObjectDraft<T> customObjectDraft) {
-    return getCtpClient().execute(CustomObjectUpsertCommand.of(customObjectDraft));
+    return this.sphereClient.execute(CustomObjectUpsertCommand.of(customObjectDraft));
   }
 
   /**
@@ -93,7 +93,7 @@ public class CustomObjectServiceImpl extends BaseServiceImpl implements CustomOb
                 "container=\"%s\" AND key=\"%s\"",
                 buildLastSyncTimestampContainerName(syncModuleName, runnerName), sourceProjectKey));
 
-    return getCtpClient()
+    return this.sphereClient
         .execute(CustomObjectQuery.of(LastSyncCustomObject.class).plusPredicates(queryPredicate))
         .thenApply(PagedQueryResult::getResults)
         .thenApply(Collection::stream)

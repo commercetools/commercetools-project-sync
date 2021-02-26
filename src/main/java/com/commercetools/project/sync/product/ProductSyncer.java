@@ -7,7 +7,7 @@ import static java.util.stream.Collectors.toSet;
 
 import com.commercetools.project.sync.Syncer;
 import com.commercetools.project.sync.product.service.ProductReferenceTransformService;
-import com.commercetools.project.sync.product.service.impl.ProductReferenceTransformServiceImpl;
+import com.commercetools.project.sync.product.service.impl.ProductReferenceTransformTransformServiceImpl;
 import com.commercetools.project.sync.service.CustomObjectService;
 import com.commercetools.project.sync.service.impl.CustomObjectServiceImpl;
 import com.commercetools.sync.commons.exceptions.SyncException;
@@ -103,7 +103,7 @@ public final class ProductSyncer
     final CustomObjectService customObjectService = new CustomObjectServiceImpl(targetClient);
 
     final ProductReferenceTransformService referencesService =
-        new ProductReferenceTransformServiceImpl(sourceClient);
+        new ProductReferenceTransformTransformServiceImpl(sourceClient);
 
     return new ProductSyncer(
         productSync, sourceClient, targetClient, customObjectService, referencesService, clock);
