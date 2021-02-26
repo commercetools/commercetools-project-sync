@@ -150,6 +150,7 @@ public final class ProductSyncer
   private CompletionStage<List<Product>> replaceAttributeReferenceIdsWithKeys(
       @Nonnull final List<Product> products) {
 
+    // TODO: Those calls below should be part of the transformProductReferences.
     final List<JsonNode> allAttributeReferences = getAllReferences(products);
 
     final List<JsonNode> allProductReferences =
