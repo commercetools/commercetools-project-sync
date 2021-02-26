@@ -48,7 +48,7 @@ public class BaseTransformServiceImpl {
 
     final Set<String> nonCachedReferenceIds = getNonCachedReferenceIds(ids);
     if (nonCachedReferenceIds.isEmpty()) {
-      return null;
+      return CompletableFuture.completedFuture(null);
     }
 
     final List<List<String>> chunkedIds = ChunkUtils.chunk(nonCachedReferenceIds, CHUNK_SIZE);
@@ -58,10 +58,10 @@ public class BaseTransformServiceImpl {
 
     return ChunkUtils.executeChunks(getCtpClient(), collectedRequests)
         .thenApply(ChunkUtils::flattenGraphQLBaseResults)
-        .thenApply(
+        .thenCompose(
             results -> {
               cacheResourceReferenceKeys(results);
-              return null;
+              return CompletableFuture.completedFuture(null);
             });
   }
 
