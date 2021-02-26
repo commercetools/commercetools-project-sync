@@ -58,6 +58,21 @@ public class CategoryReferenceTransformServiceImpl extends BaseServiceImpl
             .map(Reference::getId)
             .collect(Collectors.toSet());
 
+    /*
+    TODO: Review comment:
+     https://github.com/commercetools/commercetools-project-sync/pull/240/files#r580147994
+
+    I wonder if we could fill already-fetched category keys (as it's a native field of category)
+    it means we could fill the cache with category id to category key without an extra query (or
+    at least a minimum amount)... because a category could be a parent to another category or a
+    child of another parent category, this way we could optimize the query if the parent and
+    child are in the same batch/page (which is highly probable).
+
+    The downside of this using extra memory (hash map) for fast search O(1), to improve
+    the linear search on a category list 0(n). To not complex it, we could simply iterate and
+    fill all category keys with their ids, which means more keys stored in the cache, which might
+    not be an issue as the internal cache is fast and not putting much memory overhead.
+    */
     return fetchAndFillReferenceIdToKeyCache(parentCategoryIds, GraphQlQueryResources.CATEGORIES);
   }
 
