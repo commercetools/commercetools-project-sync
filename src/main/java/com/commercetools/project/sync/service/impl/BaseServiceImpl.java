@@ -6,11 +6,9 @@ import com.commercetools.sync.commons.models.ResourceKeyId;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import io.sphere.sdk.client.SphereClient;
-import io.sphere.sdk.models.WithKey;
 
 import javax.annotation.Nonnull;
 import java.util.Collections;
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -36,22 +34,21 @@ public class BaseServiceImpl {
     return Caffeine.newBuilder().maximumSize(cacheSize).executor(Runnable::run).build();
   }
 
-  protected <T extends WithKey> CompletableFuture<List<T>> fetchAndFillReferenceIdToKeyCache(
-      @Nonnull final List<T> resourceList,
+  protected CompletableFuture<Void> fetchAndFillReferenceIdToKeyCache(
       @Nonnull final Set<String> ids,
       @Nonnull final GraphQlQueryResources requestType) {
     final Set<String> nonCachedReferenceIds = getNonCachedReferenceIds(ids);
     if (nonCachedReferenceIds.isEmpty()) {
-      return CompletableFuture.completedFuture(resourceList);
+      return CompletableFuture.completedFuture(null);
     }
 
     return getCtpClient()
         .execute(new ResourceIdsGraphQlRequest(nonCachedReferenceIds, requestType))
         .toCompletableFuture()
-        .thenApply(
+        .thenCompose(
             results -> {
               cacheResourceReferenceKeys(results.getResults());
-              return resourceList;
+              return null;
             });
   }
 

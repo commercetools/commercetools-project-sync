@@ -35,7 +35,7 @@ public class CategoryReferenceTransformServiceImpl extends BaseServiceImpl
   public CompletableFuture<List<CategoryDraft>> transformCategoryReferences(
       @Nonnull final List<Category> categories) {
 
-    final List<CompletableFuture<List<Category>>> transformReferencesToRunParallel =
+    final List<CompletableFuture<Void>> transformReferencesToRunParallel =
         new ArrayList<>();
     transformReferencesToRunParallel.add(
         this.transformParentCategoryReference(categories));
@@ -51,7 +51,7 @@ public class CategoryReferenceTransformServiceImpl extends BaseServiceImpl
   }
 
   @Nonnull
-  private CompletableFuture<List<Category>> transformParentCategoryReference(
+  private CompletableFuture<Void> transformParentCategoryReference(
       @Nonnull final List<Category> categories) {
 
     final Set<String> parentCategoryIds =
@@ -62,12 +62,11 @@ public class CategoryReferenceTransformServiceImpl extends BaseServiceImpl
             .map(Reference::getId)
             .collect(Collectors.toSet());
 
-    return fetchAndFillReferenceIdToKeyCache(
-        categories, parentCategoryIds, GraphQlQueryResources.CATEGORIES);
+    return fetchAndFillReferenceIdToKeyCache(parentCategoryIds, GraphQlQueryResources.CATEGORIES);
   }
 
   @Nonnull
-  private CompletableFuture<List<Category>> transformCustomTypeReference(
+  private CompletableFuture<Void> transformCustomTypeReference(
       @Nonnull final List<Category> categories) {
 
     final Set<String> setOfTypeIds = new HashSet<>();
@@ -95,7 +94,6 @@ public class CategoryReferenceTransformServiceImpl extends BaseServiceImpl
                     .flatMap(Collection::stream)
                     .collect(toSet()));
 
-    return fetchAndFillReferenceIdToKeyCache(
-        categories, setOfTypeIds, GraphQlQueryResources.TYPES);
+    return fetchAndFillReferenceIdToKeyCache(setOfTypeIds, GraphQlQueryResources.TYPES);
   }
 }

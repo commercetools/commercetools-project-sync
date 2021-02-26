@@ -53,7 +53,7 @@ public class ProductReferenceTransformServiceImpl extends BaseServiceImpl
   public CompletableFuture<List<ProductDraft>> transformProductReferences(
       @Nonnull final List<Product> products) {
 
-    final List<CompletableFuture<List<Product>>> transformReferencesToRunParallel =
+    final List<CompletableFuture<Void>> transformReferencesToRunParallel =
         new ArrayList<>();
     transformReferencesToRunParallel.add(
         this.transformProductTypeReference(products));
@@ -82,18 +82,17 @@ public class ProductReferenceTransformServiceImpl extends BaseServiceImpl
   }
 
   @Nonnull
-  private CompletableFuture<List<Product>> transformProductTypeReference(
+  private CompletableFuture<Void> transformProductTypeReference(
       @Nonnull final List<Product> products) {
 
     final Set<String> productTypeIds =
         products.stream().map(ProductLike::getProductType).map(Reference::getId).collect(toSet());
 
-    return fetchAndFillReferenceIdToKeyCache(
-        products, productTypeIds, GraphQlQueryResources.PRODUCT_TYPES);
+    return fetchAndFillReferenceIdToKeyCache(productTypeIds, GraphQlQueryResources.PRODUCT_TYPES);
   }
 
   @Nonnull
-  private CompletableFuture<List<Product>> transformTaxCategoryReference(
+  private CompletableFuture<Void> transformTaxCategoryReference(
       @Nonnull final List<Product> products) {
 
     final Set<String> taxCategoryIds =
@@ -104,12 +103,11 @@ public class ProductReferenceTransformServiceImpl extends BaseServiceImpl
             .map(Reference::getId)
             .collect(toSet());
 
-    return fetchAndFillReferenceIdToKeyCache(
-        products, taxCategoryIds, GraphQlQueryResources.TAX_CATEGORIES);
+    return fetchAndFillReferenceIdToKeyCache(taxCategoryIds, GraphQlQueryResources.TAX_CATEGORIES);
   }
 
   @Nonnull
-  private CompletableFuture<List<Product>> transformStateReference(
+  private CompletableFuture<Void> transformStateReference(
       @Nonnull final List<Product> products) {
 
     final Set<String> stateIds =
@@ -120,11 +118,11 @@ public class ProductReferenceTransformServiceImpl extends BaseServiceImpl
             .map(Reference::getId)
             .collect(toSet());
 
-    return fetchAndFillReferenceIdToKeyCache(products, stateIds, GraphQlQueryResources.STATES);
+    return fetchAndFillReferenceIdToKeyCache(stateIds, GraphQlQueryResources.STATES);
   }
 
   @Nonnull
-  private CompletableFuture<List<Product>> transformCategoryReference(
+  private CompletableFuture<Void> transformCategoryReference(
       @Nonnull final List<Product> products) {
 
     final Set<String> categoryIds =
@@ -138,12 +136,11 @@ public class ProductReferenceTransformServiceImpl extends BaseServiceImpl
             .flatMap(Collection::stream)
             .collect(toSet());
 
-    return fetchAndFillReferenceIdToKeyCache(
-        products, categoryIds, GraphQlQueryResources.CATEGORIES);
+    return fetchAndFillReferenceIdToKeyCache(categoryIds, GraphQlQueryResources.CATEGORIES);
   }
 
   @Nonnull
-  private CompletableFuture<List<Product>> transformPricesChannelReference(
+  private CompletableFuture<Void> transformPricesChannelReference(
       @Nonnull final List<Product> products) {
 
     final Set<String> channelIds =
@@ -169,11 +166,11 @@ public class ProductReferenceTransformServiceImpl extends BaseServiceImpl
             .flatMap(Collection::stream)
             .collect(toSet());
 
-    return fetchAndFillReferenceIdToKeyCache(products, channelIds, GraphQlQueryResources.CHANNELS);
+    return fetchAndFillReferenceIdToKeyCache( channelIds, GraphQlQueryResources.CHANNELS);
   }
 
   @Nonnull
-  private CompletableFuture<List<Product>> transformAssetsCustomTypeReference(
+  private CompletableFuture<Void> transformAssetsCustomTypeReference(
       @Nonnull final List<Product> products) {
 
     final Set<String> typeIds =
@@ -199,11 +196,11 @@ public class ProductReferenceTransformServiceImpl extends BaseServiceImpl
             .flatMap(Collection::stream)
             .collect(toSet());
 
-    return fetchAndFillReferenceIdToKeyCache(products, typeIds, GraphQlQueryResources.TYPES);
+    return fetchAndFillReferenceIdToKeyCache( typeIds, GraphQlQueryResources.TYPES);
   }
 
   @Nonnull
-  private CompletableFuture<List<Product>> transformPricesCustomTypeReference(
+  private CompletableFuture<Void> transformPricesCustomTypeReference(
       @Nonnull final List<Product> products) {
 
     final Set<String> typeIds =
@@ -230,11 +227,11 @@ public class ProductReferenceTransformServiceImpl extends BaseServiceImpl
             .flatMap(Collection::stream)
             .collect(toSet());
 
-    return fetchAndFillReferenceIdToKeyCache(products, typeIds, GraphQlQueryResources.TYPES);
+    return fetchAndFillReferenceIdToKeyCache( typeIds, GraphQlQueryResources.TYPES);
   }
 
   @Nonnull
-  private CompletableFuture<List<Product>> transformMasterVariantPricesCustomTypeReference(
+  private CompletableFuture<Void> transformMasterVariantPricesCustomTypeReference(
       @Nonnull final List<Product> products) {
 
     final Set<String> typeIds =
@@ -255,11 +252,11 @@ public class ProductReferenceTransformServiceImpl extends BaseServiceImpl
             .flatMap(Collection::stream)
             .collect(toSet());
 
-    return fetchAndFillReferenceIdToKeyCache(products, typeIds, GraphQlQueryResources.TYPES);
+    return fetchAndFillReferenceIdToKeyCache( typeIds, GraphQlQueryResources.TYPES);
   }
 
   @Nonnull
-  private CompletableFuture<List<Product>> transformMasterVariantAssetsCustomTypeReference(
+  private CompletableFuture<Void> transformMasterVariantAssetsCustomTypeReference(
       @Nonnull final List<Product> products) {
 
     final Set<String> customTypeIds =
@@ -280,11 +277,11 @@ public class ProductReferenceTransformServiceImpl extends BaseServiceImpl
             .flatMap(Collection::stream)
             .collect(toSet());
 
-    return fetchAndFillReferenceIdToKeyCache(products, customTypeIds, GraphQlQueryResources.TYPES);
+    return fetchAndFillReferenceIdToKeyCache( customTypeIds, GraphQlQueryResources.TYPES);
   }
 
   @Nonnull
-  private CompletableFuture<List<Product>> transformPricesCustomerGroupReference(
+  private CompletableFuture<Void> transformPricesCustomerGroupReference(
       @Nonnull final List<Product> products) {
 
     final Set<String> customerGroupIds =
@@ -310,8 +307,7 @@ public class ProductReferenceTransformServiceImpl extends BaseServiceImpl
             .flatMap(Collection::stream)
             .collect(toSet());
 
-    return fetchAndFillReferenceIdToKeyCache(
-        products, customerGroupIds, GraphQlQueryResources.CUSTOMER_GROUPS);
+    return fetchAndFillReferenceIdToKeyCache(customerGroupIds, GraphQlQueryResources.CUSTOMER_GROUPS);
   }
 
   @Nonnull
