@@ -14,6 +14,7 @@ import io.sphere.sdk.models.Asset;
 import io.sphere.sdk.models.Reference;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -40,8 +41,6 @@ public class CategoryReferenceTransformServiceImpl extends BaseServiceImpl
         this.transformParentCategoryReference(categories));
     transformReferencesToRunParallel.add(
         this.transformCustomTypeReference(categories));
-    transformReferencesToRunParallel.add(
-        this.transformAssetsCustomTypeReference(categories));
 
     return CompletableFuture.allOf(
             transformReferencesToRunParallel.toArray(new CompletableFuture[0]))
@@ -71,38 +70,32 @@ public class CategoryReferenceTransformServiceImpl extends BaseServiceImpl
   private CompletableFuture<List<Category>> transformCustomTypeReference(
       @Nonnull final List<Category> categories) {
 
-    final Set<String> customTypeIds =
+    final Set<String> setOfTypeIds = new HashSet<>();
+    setOfTypeIds.addAll(
         categories
             .stream()
             .map(Category::getCustom)
             .filter(Objects::nonNull)
             .map(customFields -> customFields.getType().getId())
-            .collect(Collectors.toSet());
+            .collect(Collectors.toSet()));
+
+   setOfTypeIds.addAll(
+            categories
+                    .stream()
+                    .map(Category::getAssets)
+                    .map(
+                            assets ->
+                                    assets
+                                            .stream()
+                                            .filter(Objects::nonNull)
+                                            .map(Asset::getCustom)
+                                            .filter(Objects::nonNull)
+                                            .map(customFields -> customFields.getType().getId())
+                                            .collect(toList()))
+                    .flatMap(Collection::stream)
+                    .collect(toSet()));
 
     return fetchAndFillReferenceIdToKeyCache(
-        categories, customTypeIds, GraphQlQueryResources.TYPES);
-  }
-
-  @Nonnull
-  private CompletableFuture<List<Category>> transformAssetsCustomTypeReference(
-      @Nonnull final List<Category> categories) {
-
-    final Set<String> typeIds =
-        categories
-            .stream()
-            .map(category -> category.getAssets())
-            .map(
-                assets ->
-                    assets
-                        .stream()
-                        .filter(Objects::nonNull)
-                        .map(Asset::getCustom)
-                        .filter(Objects::nonNull)
-                        .map(customFields -> customFields.getType().getId())
-                        .collect(toList()))
-            .flatMap(Collection::stream)
-            .collect(toSet());
-
-    return fetchAndFillReferenceIdToKeyCache(categories, typeIds, GraphQlQueryResources.TYPES);
+        categories, setOfTypeIds, GraphQlQueryResources.TYPES);
   }
 }
