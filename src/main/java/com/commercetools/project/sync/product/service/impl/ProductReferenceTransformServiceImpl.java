@@ -3,13 +3,11 @@ package com.commercetools.project.sync.product.service.impl;
 import static com.commercetools.project.sync.util.referenceresolution.ProductReferenceResolutionUtils.mapToProductDrafts;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
-import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import com.commercetools.project.sync.model.ResourceIdsGraphQlRequest;
 import com.commercetools.project.sync.product.service.ProductReferenceTransformService;
 import com.commercetools.project.sync.service.impl.BaseServiceImpl;
 import com.commercetools.sync.commons.models.GraphQlQueryResources;
-import com.commercetools.sync.commons.models.ResourceKeyId;
 import com.commercetools.sync.commons.utils.ChunkUtils;
 import com.commercetools.sync.customobjects.helpers.CustomObjectCompositeIdentifier;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -24,7 +22,6 @@ import io.sphere.sdk.products.ProductLike;
 import io.sphere.sdk.types.CustomFields;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -36,7 +33,6 @@ import javax.annotation.Nonnull;
 
 public class ProductReferenceTransformServiceImpl extends BaseServiceImpl
     implements ProductReferenceTransformService {
-  private final Map<String, String> allResourcesIdToKey = new HashMap<>();
 
   public ProductReferenceTransformServiceImpl(@Nonnull final SphereClient ctpClient) {
     super(ctpClient);
@@ -248,10 +244,10 @@ public class ProductReferenceTransformServiceImpl extends BaseServiceImpl
       @Nonnull final Set<String> productTypeIds,
       @Nonnull final Set<String> customObjectIds) {
 
-    final Set<String> nonCachedProductIds = getNonCachedIds(productIds);
-    final Set<String> nonCachedCategoryIds = getNonCachedIds(categoryIds);
-    final Set<String> nonCachedProductTypeIds = getNonCachedIds(productTypeIds);
-    final Set<String> nonCachedCustomObjectIds = getNonCachedIds(customObjectIds);
+    final Set<String> nonCachedProductIds = getNonCachedReferenceIds(productIds);
+    final Set<String> nonCachedCategoryIds = getNonCachedReferenceIds(categoryIds);
+    final Set<String> nonCachedProductTypeIds = getNonCachedReferenceIds(productTypeIds);
+    final Set<String> nonCachedCustomObjectIds = getNonCachedReferenceIds(customObjectIds);
 
     if (nonCachedProductIds.isEmpty()
         && nonCachedCategoryIds.isEmpty()
@@ -272,20 +268,14 @@ public class ProductReferenceTransformServiceImpl extends BaseServiceImpl
     collectedRequests.addAll(
         createResourceIdsGraphQlRequests(productTypeIdsChunk, GraphQlQueryResources.PRODUCT_TYPES));
 
-    // TODO: Adapt to run grapqhl and rest call in parallel.
     return ChunkUtils.executeChunks(getCtpClient(), collectedRequests)
         .thenApply(ChunkUtils::flattenGraphQLBaseResults)
         .thenApply(
             results -> {
-              cacheKeys(results);
-              return allResourcesIdToKey;
+              cacheResourceReferenceKeys(results);
+              return referenceIdToKeyCache;
             })
         .thenCompose(ignored -> fetchCustomObjectKeys(nonCachedCustomObjectIds));
-  }
-
-  @Nonnull
-  private Set<String> getNonCachedIds(@Nonnull final Set<String> ids) {
-    return ids.stream().filter(id -> !allResourcesIdToKey.containsKey(id)).collect(toSet());
   }
 
   @Nonnull
@@ -293,7 +283,7 @@ public class ProductReferenceTransformServiceImpl extends BaseServiceImpl
       @Nonnull final Set<String> nonCachedCustomObjectIds) {
 
     if (nonCachedCustomObjectIds.isEmpty()) {
-      return CompletableFuture.completedFuture(allResourcesIdToKey);
+      return CompletableFuture.completedFuture(referenceIdToKeyCache.asMap());
     }
 
     final List<List<String>> chunkedIds = ChunkUtils.chunk(nonCachedCustomObjectIds, CHUNK_SIZE);
@@ -310,22 +300,11 @@ public class ProductReferenceTransformServiceImpl extends BaseServiceImpl
             customObjects -> {
               customObjects.forEach(
                   customObject -> {
-                    allResourcesIdToKey.put(
+                    referenceIdToKeyCache.put(
                         customObject.getId(),
                         CustomObjectCompositeIdentifier.of(customObject).toString());
                   });
-              return allResourcesIdToKey;
+              return referenceIdToKeyCache.asMap();
             });
-  }
-
-  private void cacheKeys(final Set<ResourceKeyId> results) {
-    results.forEach(
-        resourceKeyId -> {
-          final String key = resourceKeyId.getKey();
-          final String id = resourceKeyId.getId();
-          if (!isBlank(key)) {
-            allResourcesIdToKey.put(id, key);
-          }
-        });
   }
 }

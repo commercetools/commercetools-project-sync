@@ -26,9 +26,9 @@ public class BaseServiceImpl {
    * could return - Error 413 (Request Entity Too Large)
    */
   public static final int CHUNK_SIZE = 300;
-  private final SphereClient ctpClient;
-  private static long cacheSize = 10_000;
   protected static final Cache<String, String> referenceIdToKeyCache = initializeCache();
+
+  private final SphereClient ctpClient;
 
   protected BaseServiceImpl(@Nonnull final SphereClient ctpClient) {
     this.ctpClient = ctpClient;
@@ -40,7 +40,7 @@ public class BaseServiceImpl {
 
   @Nonnull
   private static Cache<String, String> initializeCache() {
-    return Caffeine.newBuilder().maximumSize(cacheSize).executor(Runnable::run).build();
+    return Caffeine.newBuilder().maximumSize(100_000).executor(Runnable::run).build();
   }
 
   protected CompletableFuture<Void> fetchAndFillReferenceIdToKeyCache(
@@ -76,14 +76,14 @@ public class BaseServiceImpl {
   }
 
   @Nonnull
-  private Set<String> getNonCachedReferenceIds(@Nonnull final Set<String> referenceIds) {
+  protected Set<String> getNonCachedReferenceIds(@Nonnull final Set<String> referenceIds) {
     return referenceIds
         .stream()
         .filter(id -> null == referenceIdToKeyCache.getIfPresent(id))
         .collect(toSet());
   }
 
-  private void cacheResourceReferenceKeys(final Set<ResourceKeyId> results) {
+  protected void cacheResourceReferenceKeys(final Set<ResourceKeyId> results) {
     Optional.ofNullable(results)
         .orElseGet(Collections::emptySet)
         .forEach(
