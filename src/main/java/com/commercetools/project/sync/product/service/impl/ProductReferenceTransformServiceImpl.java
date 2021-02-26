@@ -21,7 +21,6 @@ import io.sphere.sdk.products.Price;
 import io.sphere.sdk.products.Product;
 import io.sphere.sdk.products.ProductDraft;
 import io.sphere.sdk.products.ProductLike;
-import io.sphere.sdk.products.ProductVariant;
 import io.sphere.sdk.types.CustomFields;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -60,12 +59,7 @@ public class ProductReferenceTransformServiceImpl extends BaseServiceImpl
     transformReferencesToRunParallel.add(this.transformStateReference(products));
     transformReferencesToRunParallel.add(this.transformCategoryReference(products));
     transformReferencesToRunParallel.add(this.transformPricesChannelReference(products));
-    transformReferencesToRunParallel.add(
-        this.transformMasterVariantPricesCustomTypeReference(products));
-    transformReferencesToRunParallel.add(
-        this.transformMasterVariantAssetsCustomTypeReference(products));
-    transformReferencesToRunParallel.add(this.transformPricesCustomTypeReference(products));
-    transformReferencesToRunParallel.add(this.transformAssetsCustomTypeReference(products));
+    transformReferencesToRunParallel.add(this.transformCustomTypeReference(products));
     transformReferencesToRunParallel.add(this.transformPricesCustomerGroupReference(products));
 
     return CompletableFuture.allOf(
@@ -161,114 +155,64 @@ public class ProductReferenceTransformServiceImpl extends BaseServiceImpl
   }
 
   @Nonnull
-  private CompletableFuture<Void> transformAssetsCustomTypeReference(
+  private CompletableFuture<Void> transformCustomTypeReference(
       @Nonnull final List<Product> products) {
 
-    final Set<String> typeIds =
-        products
-            .stream()
-            .map(product -> product.getMasterData().getStaged().getAllVariants())
-            .map(
-                productVariants ->
-                    productVariants
-                        .stream()
-                        .filter(Objects::nonNull)
-                        .map(
-                            productVariant ->
-                                productVariant
-                                    .getAssets()
-                                    .stream()
-                                    .map(Asset::getCustom)
-                                    .filter(Objects::nonNull)
-                                    .map(CustomFields::getType)
-                                    .map(Reference::getId)
-                                    .collect(toList()))
-                        .flatMap(Collection::stream)
-                        .collect(toList()))
-            .flatMap(Collection::stream)
-            .collect(toSet());
+    final Set<String> setOfTypeIds = new HashSet<>();
+    setOfTypeIds.addAll(collectPriceCustomTypeIds(products));
+    setOfTypeIds.addAll(collectAssetCustomTypeIds(products));
 
-    return fetchAndFillReferenceIdToKeyCache(typeIds, GraphQlQueryResources.TYPES);
+    return fetchAndFillReferenceIdToKeyCache(setOfTypeIds, GraphQlQueryResources.TYPES);
   }
 
-  @Nonnull
-  private CompletableFuture<Void> transformPricesCustomTypeReference(
-      @Nonnull final List<Product> products) {
-
-    final Set<String> typeIds =
-        products
-            .stream()
-            .map(product -> product.getMasterData().getStaged().getAllVariants())
-            .map(
-                productVariants ->
-                    productVariants
-                        .stream()
-                        .filter(Objects::nonNull)
-                        .map(
-                            productVariant ->
-                                productVariant
-                                    .getPrices()
-                                    .stream()
-                                    .map(asset -> asset.getCustom())
-                                    .filter(Objects::nonNull)
-                                    .map(custom -> custom.getType())
-                                    .map(Reference::getId)
-                                    .collect(toList()))
-                        .flatMap(Collection::stream)
-                        .collect(toList()))
-            .flatMap(Collection::stream)
-            .collect(toSet());
-
-    return fetchAndFillReferenceIdToKeyCache(typeIds, GraphQlQueryResources.TYPES);
+  private Set<String> collectPriceCustomTypeIds(@Nonnull List<Product> products) {
+    return products
+        .stream()
+        .map(product -> product.getMasterData().getStaged().getAllVariants())
+        .map(
+            productVariants ->
+                productVariants
+                    .stream()
+                    .filter(Objects::nonNull)
+                    .map(
+                        productVariant ->
+                            productVariant
+                                .getPrices()
+                                .stream()
+                                .map(Price::getCustom)
+                                .filter(Objects::nonNull)
+                                .map(CustomFields::getType)
+                                .map(Reference::getId)
+                                .collect(toList()))
+                    .flatMap(Collection::stream)
+                    .collect(toList()))
+        .flatMap(Collection::stream)
+        .collect(toSet());
   }
 
-  @Nonnull
-  private CompletableFuture<Void> transformMasterVariantPricesCustomTypeReference(
-      @Nonnull final List<Product> products) {
-
-    final Set<String> typeIds =
-        products
-            .stream()
-            .map(product -> product.getMasterData().getStaged().getMasterVariant())
-            .filter(Objects::nonNull)
-            .map(ProductVariant::getPrices)
-            .filter(Objects::nonNull)
-            .map(
-                prices ->
-                    prices
-                        .stream()
-                        .map(Price::getCustom)
-                        .filter(Objects::nonNull)
-                        .map(customType -> customType.getType().getId())
-                        .collect(Collectors.toList()))
-            .flatMap(Collection::stream)
-            .collect(toSet());
-
-    return fetchAndFillReferenceIdToKeyCache(typeIds, GraphQlQueryResources.TYPES);
-  }
-
-  @Nonnull
-  private CompletableFuture<Void> transformMasterVariantAssetsCustomTypeReference(
-      @Nonnull final List<Product> products) {
-
-    final Set<String> customTypeIds =
-        products
-            .stream()
-            .map(product -> product.getMasterData().getStaged().getMasterVariant())
-            .filter(Objects::nonNull)
-            .map(ProductVariant::getAssets)
-            .map(
-                prices ->
-                    prices
-                        .stream()
-                        .map(Asset::getCustom)
-                        .filter(Objects::nonNull)
-                        .map(customType -> customType.getType().getId())
-                        .collect(Collectors.toList()))
-            .flatMap(Collection::stream)
-            .collect(toSet());
-
-    return fetchAndFillReferenceIdToKeyCache(customTypeIds, GraphQlQueryResources.TYPES);
+  private Set<String> collectAssetCustomTypeIds(@Nonnull List<Product> products) {
+    return products
+        .stream()
+        .map(product -> product.getMasterData().getStaged().getAllVariants())
+        .map(
+            productVariants ->
+                productVariants
+                    .stream()
+                    .filter(Objects::nonNull)
+                    .map(
+                        productVariant ->
+                            productVariant
+                                .getAssets()
+                                .stream()
+                                .map(Asset::getCustom)
+                                .filter(Objects::nonNull)
+                                .map(CustomFields::getType)
+                                .map(Reference::getId)
+                                .collect(toList()))
+                    .flatMap(Collection::stream)
+                    .collect(toList()))
+        .flatMap(Collection::stream)
+        .collect(toSet());
   }
 
   @Nonnull
