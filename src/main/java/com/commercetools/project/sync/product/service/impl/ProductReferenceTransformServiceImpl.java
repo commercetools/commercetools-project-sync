@@ -37,12 +37,6 @@ import javax.annotation.Nonnull;
 public class ProductReferenceTransformServiceImpl extends BaseServiceImpl
     implements ProductReferenceTransformService {
   private final Map<String, String> allResourcesIdToKey = new HashMap<>();
-  /*
-   * An id is a 36 characters long string. (i.e: 53c4a8b4-754f-4b95-b6f2-3e1e70e3d0c3) We
-   * chunk them in 300 ids, we will have a query around 11.000 characters. Above this size it
-   * could return - Error 413 (Request Entity Too Large)
-   */
-  public static final int CHUNK_SIZE = 300;
 
   public ProductReferenceTransformServiceImpl(@Nonnull final SphereClient ctpClient) {
     super(ctpClient);
@@ -287,16 +281,6 @@ public class ProductReferenceTransformServiceImpl extends BaseServiceImpl
               return allResourcesIdToKey;
             })
         .thenCompose(ignored -> fetchCustomObjectKeys(nonCachedCustomObjectIds));
-  }
-
-  @Nonnull
-  private List<ResourceIdsGraphQlRequest> createResourceIdsGraphQlRequests(
-      @Nonnull final List<List<String>> chunkedIds,
-      @Nonnull final GraphQlQueryResources resourceType) {
-    return chunkedIds
-        .stream()
-        .map(chunk -> new ResourceIdsGraphQlRequest(new HashSet<>(chunk), resourceType))
-        .collect(toList());
   }
 
   @Nonnull

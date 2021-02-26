@@ -1,21 +1,31 @@
 package com.commercetools.project.sync.service.impl;
 
+import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import com.commercetools.project.sync.model.ResourceIdsGraphQlRequest;
 import com.commercetools.sync.commons.models.GraphQlQueryResources;
 import com.commercetools.sync.commons.models.ResourceKeyId;
+import com.commercetools.sync.commons.utils.ChunkUtils;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import io.sphere.sdk.client.SphereClient;
 import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import javax.annotation.Nonnull;
 
 public class BaseServiceImpl {
+  /*
+   * An id is a 36 characters long string. (i.e: 53c4a8b4-754f-4b95-b6f2-3e1e70e3d0c3) We
+   * chunk them in 300 ids, we will have a query around 11.000 characters. Above this size it
+   * could return - Error 413 (Request Entity Too Large)
+   */
+  public static final int CHUNK_SIZE = 300;
   private final SphereClient ctpClient;
   private static long cacheSize = 10_000;
   protected static final Cache<String, String> referenceIdToKeyCache = initializeCache();
@@ -35,19 +45,34 @@ public class BaseServiceImpl {
 
   protected CompletableFuture<Void> fetchAndFillReferenceIdToKeyCache(
       @Nonnull final Set<String> ids, @Nonnull final GraphQlQueryResources requestType) {
+
     final Set<String> nonCachedReferenceIds = getNonCachedReferenceIds(ids);
     if (nonCachedReferenceIds.isEmpty()) {
       return null;
     }
 
-    return getCtpClient()
-        .execute(new ResourceIdsGraphQlRequest(nonCachedReferenceIds, requestType))
-        .toCompletableFuture()
-        .thenCompose(
+    final List<List<String>> chunkedIds = ChunkUtils.chunk(nonCachedReferenceIds, CHUNK_SIZE);
+
+    List<ResourceIdsGraphQlRequest> collectedRequests =
+        createResourceIdsGraphQlRequests(chunkedIds, requestType);
+
+    return ChunkUtils.executeChunks(getCtpClient(), collectedRequests)
+        .thenApply(ChunkUtils::flattenGraphQLBaseResults)
+        .thenApply(
             results -> {
-              cacheResourceReferenceKeys(results.getResults());
+              cacheResourceReferenceKeys(results);
               return null;
             });
+  }
+
+  @Nonnull
+  protected List<ResourceIdsGraphQlRequest> createResourceIdsGraphQlRequests(
+      @Nonnull final List<List<String>> chunkedIds,
+      @Nonnull final GraphQlQueryResources resourceType) {
+    return chunkedIds
+        .stream()
+        .map(chunk -> new ResourceIdsGraphQlRequest(new HashSet<>(chunk), resourceType))
+        .collect(toList());
   }
 
   @Nonnull
@@ -61,7 +86,6 @@ public class BaseServiceImpl {
   private void cacheResourceReferenceKeys(final Set<ResourceKeyId> results) {
     Optional.ofNullable(results)
         .orElseGet(Collections::emptySet)
-        .stream()
         .forEach(
             resourceKeyId -> {
               final String key = resourceKeyId.getKey();
