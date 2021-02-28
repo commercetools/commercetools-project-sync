@@ -1,5 +1,6 @@
 package com.commercetools.project.sync.util.referenceresolution;
 
+import static com.commercetools.project.sync.util.SyncUtils.getResourceIdentifierWithKey;
 import static com.commercetools.project.sync.util.referenceresolution.AssetReferenceResolutionUtils.mapToAssetDrafts;
 import static com.commercetools.project.sync.util.referenceresolution.CustomTypeReferenceResolutionUtils.mapToCustomFieldsDraft;
 
@@ -8,17 +9,15 @@ import io.sphere.sdk.categories.CategoryDraft;
 import io.sphere.sdk.categories.CategoryDraftBuilder;
 import io.sphere.sdk.models.Reference;
 import io.sphere.sdk.models.ResourceIdentifier;
-import io.sphere.sdk.models.WithKey;
 import io.sphere.sdk.types.Type;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 
 /**
- * Util class which provides utilities that can be used when syncing resources from a source
- * commercetools project to a target one.
+ * Util class which provides utilities that can be used to resolve category reference when syncing
+ * resources from a source commercetools project to a target one.
  */
 public final class CategoryReferenceResolutionUtils {
 
@@ -64,7 +63,6 @@ public final class CategoryReferenceResolutionUtils {
    * @return a {@link List} of {@link CategoryDraft} built from the supplied {@link List} of {@link
    *     Category}.
    */
-  // TODO: Update javadocs after implementing the new structure with cache.
   @Nonnull
   public static List<CategoryDraft> mapToCategoryDrafts(
       @Nonnull final List<Category> categories,
@@ -83,33 +81,5 @@ public final class CategoryReferenceResolutionUtils {
         .assets(mapToAssetDrafts(category.getAssets(), referenceIdToKeyMap))
         .parent(getResourceIdentifierWithKey(category.getParent(), referenceIdToKeyMap))
         .build();
-  }
-
-  /**
-   * Given a reference to a resource of type {@code T}, this method checks if the reference is in
-   * map(cache). If it is, then it return the resource identifier with key. Otherwise, it returns
-   * the resource identifier with id. Since, the reference could be {@code null}, this method could
-   * also return null if the reference was not in the map(cache).
-   *
-   * @param reference the reference of the resource to check if it's in the map(cache).
-   * @param <T> the type of the resource.
-   * @param referenceIdToKeyMap the cache contains reference Id to Keys.
-   * @return returns the resource identifier with key if the {@code reference} is in map(cache).
-   *     Otherwise, it returns the resource identifier with id.
-   */
-  @Nullable
-  static <T extends WithKey> ResourceIdentifier<T> getResourceIdentifierWithKey(
-      @Nullable final Reference<T> reference,
-      @Nonnull final Map<String, String> referenceIdToKeyMap) {
-
-    if (reference != null) {
-      final String id = reference.getId();
-      if (referenceIdToKeyMap.containsKey(id)) {
-        return ResourceIdentifier.ofKey(referenceIdToKeyMap.get(id));
-      }
-      return ResourceIdentifier.ofId(id);
-    }
-
-    return null;
   }
 }

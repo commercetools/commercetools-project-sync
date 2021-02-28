@@ -5,7 +5,7 @@ import static com.commercetools.project.sync.util.SyncUtils.logWarningCallback;
 
 import com.commercetools.project.sync.Syncer;
 import com.commercetools.project.sync.category.service.CategoryReferenceTransformService;
-import com.commercetools.project.sync.category.service.impl.CategoryReferenceTransformServiceImpl;
+import com.commercetools.project.sync.category.service.impl.CategoryReferenceTransformTransformServiceImpl;
 import com.commercetools.project.sync.service.CustomObjectService;
 import com.commercetools.project.sync.service.impl.CustomObjectServiceImpl;
 import com.commercetools.sync.categories.CategorySync;
@@ -81,7 +81,7 @@ public final class CategorySyncer
     final CustomObjectService customObjectService = new CustomObjectServiceImpl(targetClient);
 
     final CategoryReferenceTransformService referenceTransformService =
-        new CategoryReferenceTransformServiceImpl(sourceClient);
+        new CategoryReferenceTransformTransformServiceImpl(sourceClient);
 
     return new CategorySyncer(
         categorySync,

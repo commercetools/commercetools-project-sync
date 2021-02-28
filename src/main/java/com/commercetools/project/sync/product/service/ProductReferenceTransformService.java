@@ -1,13 +1,7 @@
 package com.commercetools.project.sync.product.service;
 
-import io.sphere.sdk.categories.Category;
-import io.sphere.sdk.channels.Channel;
 import io.sphere.sdk.products.Product;
 import io.sphere.sdk.products.ProductDraft;
-import io.sphere.sdk.producttypes.ProductType;
-import io.sphere.sdk.states.State;
-import io.sphere.sdk.taxcategories.TaxCategory;
-import io.sphere.sdk.types.Type;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -17,19 +11,6 @@ import javax.annotation.Nonnull;
 
 public interface ProductReferenceTransformService {
 
-  /**
-   * Given a {@link List} of products, this method will transform Products to ProductDrafts by
-   * resolving the References {@link ProductType},{@link TaxCategory},{@link State}, {@link
-   * Category}, {@link Type} and {@link Channel}. If there exists a mapping for all the ids in
-   * {@code referenceIdToKeyCache}, the method replaces id field with key. If there is at least one
-   * missing mapping, it attempts to make a GraphQL request to CTP to fetch all ids and keys of
-   * every missing productType, TaxCategory, State, Category and Channel. For each fetched key/id
-   * pair, the method will insert it into the {@code referenceIdToKeyCache} cache after the request
-   * is successful.
-   *
-   * @param products the products to find a key mapping for all the references and cache them.
-   * @return productDrafts with the references replaced Id with keys.
-   */
   @Nonnull
   CompletableFuture<List<ProductDraft>> transformProductReferences(@Nonnull List<Product> products);
 

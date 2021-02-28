@@ -8,7 +8,7 @@ import static java.util.stream.Collectors.toSet;
 import com.commercetools.project.sync.Syncer;
 import com.commercetools.project.sync.model.ProductSyncCustomRequest;
 import com.commercetools.project.sync.product.service.ProductReferenceTransformService;
-import com.commercetools.project.sync.product.service.impl.ProductReferenceTransformServiceImpl;
+import com.commercetools.project.sync.product.service.impl.ProductReferenceTransformTransformServiceImpl;
 import com.commercetools.project.sync.service.CustomObjectService;
 import com.commercetools.project.sync.service.impl.CustomObjectServiceImpl;
 import com.commercetools.sync.commons.exceptions.SyncException;
@@ -111,7 +111,7 @@ public final class ProductSyncer
     final CustomObjectService customObjectService = new CustomObjectServiceImpl(targetClient);
 
     final ProductReferenceTransformService referencesService =
-        new ProductReferenceTransformServiceImpl(sourceClient);
+        new ProductReferenceTransformTransformServiceImpl(sourceClient);
 
     return new ProductSyncer(
         productSync,
@@ -139,7 +139,7 @@ public final class ProductSyncer
               }
               return products;
             })
-        .thenCompose(products -> this.referencesService.transformProductReferences(products));
+        .thenCompose(this.referencesService::transformProductReferences);
   }
 
   @Nonnull
@@ -164,6 +164,7 @@ public final class ProductSyncer
   private CompletionStage<List<Product>> replaceAttributeReferenceIdsWithKeys(
       @Nonnull final List<Product> products) {
 
+    // TODO (CTPI-432): Those calls below should be part of the mapTo methods in java-sync later.
     final List<JsonNode> allAttributeReferences = getAllReferences(products);
 
     final List<JsonNode> allProductReferences =
