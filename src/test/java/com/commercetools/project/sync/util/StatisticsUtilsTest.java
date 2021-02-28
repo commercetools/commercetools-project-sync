@@ -69,6 +69,5 @@ class StatisticsUtilsTest {
     final String statisticsAsJSONString = StatisticsUtils.getStatisticsAsJSONString(syncStatistics);
     assertThat(statisticsAsJSONString).contains("\"created\":10");
     assertThat(statisticsAsJSONString).contains("\"processed\":30");
-    assertThat(statisticsAsJSONString).contains("\"categoryKeysWithMissingParents\":{}");
   }
 }

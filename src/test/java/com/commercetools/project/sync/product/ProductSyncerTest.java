@@ -69,24 +69,23 @@ class ProductSyncerTest {
         ProductSyncer.of(sourceClient, mock(SphereClient.class), getMockedClock(), null);
     final List<Product> productPage =
         asList(
-            readObjectFromResource("product-key-1.json", Product.class),
-            readObjectFromResource("product-key-2.json", Product.class));
+            readObjectFromResource("product-key-4.json", Product.class));
 
     String jsonStringProducts =
-        "{\"results\":[{\"id\":\"53c4a8b4-754f-4b95-b6f2-3e1e70e3d0c1\",\"key\":\"prod1\"},"
-            + "{\"id\":\"53c4a8b4-754f-4b95-b6f2-3e1e70e3d0c5\",\"key\":\"prod2\"}]}";
+        "{\"results\":[{\"id\":\"53c4a8b4-754f-4b95-b6f2-3e1e70e3d0d2\",\"key\":\"prod1\"},"
+            + "{\"id\":\"53c4a8b4-754f-4b95-b6f2-3e1e70e3d0d6\",\"key\":\"prod2\"}]}";
     final ResourceKeyIdGraphQlResult productsResult =
         SphereJsonUtils.readObject(jsonStringProducts, ResourceKeyIdGraphQlResult.class);
 
     String jsonStringProductTypes =
-        "{\"results\":[{\"id\":\"53c4a8b4-754f-4b95-b6f2-3e1e70e3d0c2\","
+        "{\"results\":[{\"id\":\"53c4a8b4-754f-4b95-b6f2-3e1e70e3d0d3\","
             + "\"key\":\"prodType1\"}]}";
     final ResourceKeyIdGraphQlResult productTypesResult =
         SphereJsonUtils.readObject(jsonStringProductTypes, ResourceKeyIdGraphQlResult.class);
 
     String jsonStringCategories =
-        "{\"results\":[{\"id\":\"53c4a8b4-754f-4b95-b6f2-3e1e70e3d0c3\",\"key\":\"cat1\"},"
-            + "{\"id\":\"53c4a8b4-754f-4b95-b6f2-3e1e70e3d0c4\",\"key\":\"cat2\"}]}";
+        "{\"results\":[{\"id\":\"53c4a8b4-754f-4b95-b6f2-3e1e70e3d0d4\",\"key\":\"cat1\"},"
+            + "{\"id\":\"53c4a8b4-754f-4b95-b6f2-3e1e70e3d0d5\",\"key\":\"cat2\"}]}";
     final ResourceKeyIdGraphQlResult categoriesResult =
         SphereJsonUtils.readObject(jsonStringCategories, ResourceKeyIdGraphQlResult.class);
 
@@ -104,7 +103,7 @@ class ProductSyncerTest {
     final Optional<ProductDraft> productDraftKey1 =
         draftsFromPageStage
             .stream()
-            .filter(productDraft -> "productKey1".equals(productDraft.getKey()))
+            .filter(productDraft -> "productKey4".equals(productDraft.getKey()))
             .findFirst();
 
     assertThat(productDraftKey1)
@@ -144,45 +143,6 @@ class ProductSyncerTest {
                         }));
 
     assertThat(productDraftKey1)
-        .hasValueSatisfying(
-            productDraft ->
-                assertThat(productDraft.getMasterVariant().getAttributes())
-                    .anySatisfy(
-                        attributeDraft -> {
-                          assertThat(attributeDraft.getName()).isEqualTo("productTypeReference");
-                          assertThat(attributeDraft.getValue().get("id").asText())
-                              .isEqualTo("prodType1");
-                        }));
-
-    final Optional<ProductDraft> productDraftKey2 =
-        draftsFromPageStage
-            .stream()
-            .filter(productDraft -> "productKey2".equals(productDraft.getKey()))
-            .findFirst();
-
-    assertThat(productDraftKey2)
-        .hasValueSatisfying(
-            productDraft ->
-                assertThat(productDraft.getMasterVariant().getAttributes())
-                    .anySatisfy(
-                        attributeDraft -> {
-                          assertThat(attributeDraft.getName()).isEqualTo("productReference");
-                          assertThat(attributeDraft.getValue().get("id").asText())
-                              .isEqualTo("prod1");
-                        }));
-
-    assertThat(productDraftKey2)
-        .hasValueSatisfying(
-            productDraft ->
-                assertThat(productDraft.getMasterVariant().getAttributes())
-                    .anySatisfy(
-                        attributeDraft -> {
-                          assertThat(attributeDraft.getName()).isEqualTo("categoryReference");
-                          assertThat(attributeDraft.getValue().get("id").asText())
-                              .isEqualTo("cat1");
-                        }));
-
-    assertThat(productDraftKey2)
         .hasValueSatisfying(
             productDraft ->
                 assertThat(productDraft.getMasterVariant().getAttributes())

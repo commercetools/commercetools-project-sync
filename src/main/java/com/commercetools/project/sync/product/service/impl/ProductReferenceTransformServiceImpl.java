@@ -31,10 +31,10 @@ import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 
-public class ProductReferenceTransformTransformServiceImpl extends BaseTransformServiceImpl
+public class ProductReferenceTransformServiceImpl extends BaseTransformServiceImpl
     implements ProductReferenceTransformService {
 
-  public ProductReferenceTransformTransformServiceImpl(@Nonnull final SphereClient ctpClient) {
+  public ProductReferenceTransformServiceImpl(@Nonnull final SphereClient ctpClient) {
     super(ctpClient);
   }
 

@@ -15,7 +15,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.commercetools.project.sync.model.ResourceIdsGraphQlRequest;
-import com.commercetools.project.sync.product.service.impl.ProductReferenceTransformTransformServiceImpl;
+import com.commercetools.project.sync.product.service.impl.ProductReferenceTransformServiceImpl;
+import com.commercetools.project.sync.service.impl.BaseTransformServiceImpl;
 import com.commercetools.sync.commons.models.ResourceKeyId;
 import com.commercetools.sync.commons.models.ResourceKeyIdGraphQlResult;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -37,14 +38,12 @@ class ReferencesServiceImplTest {
     // preparation
     final SphereClient ctpClient = mock(SphereClient.class);
     final ProductReferenceTransformService referencesService =
-        new ProductReferenceTransformTransformServiceImpl(ctpClient);
+        new ProductReferenceTransformServiceImpl(ctpClient);
 
     // test
-    final CompletionStage<Map<String, String>> idToKeysStage =
-        referencesService.getIdToKeys(emptySet(), emptySet(), emptySet(), emptySet());
+    referencesService.getIdToKeys(emptySet(), emptySet(), emptySet(), emptySet());
 
     // assertion
-    assertThat(idToKeysStage).isCompletedWithValue(emptyMap());
     verify(ctpClient, never()).execute(any());
   }
 
@@ -53,21 +52,23 @@ class ReferencesServiceImplTest {
     // preparation
     final SphereClient ctpClient = mock(SphereClient.class);
     ResourceKeyIdGraphQlResult mockResult = mock(ResourceKeyIdGraphQlResult.class);
-    ResourceKeyId resourceKeyId = new ResourceKeyId("productTypeKey", "productTypeId");
+    ResourceKeyId resourceKeyId = new ResourceKeyId("productTypeKey1", "productTypeId1");
     when(mockResult.getResults()).thenReturn(singleton(resourceKeyId));
     when(ctpClient.execute(any(ResourceIdsGraphQlRequest.class)))
         .thenReturn(CompletableFuture.completedFuture(mockResult));
     final ProductReferenceTransformService referencesService =
-        new ProductReferenceTransformTransformServiceImpl(ctpClient);
+        new ProductReferenceTransformServiceImpl(ctpClient);
 
     // test
     final CompletionStage<Map<String, String>> idToKeysStage =
-        referencesService.getIdToKeys(emptySet(), emptySet(), asSet("productTypeId"), emptySet());
+        referencesService.getIdToKeys(emptySet(), emptySet(), asSet("productTypeId1"), emptySet());
 
     // assertion
-    final HashMap<String, String> expectedCache = new HashMap<>();
-    expectedCache.put("productTypeId", "productTypeKey");
-    assertThat(idToKeysStage).isCompletedWithValue(expectedCache);
+    idToKeysStage.thenApply(map -> {
+      assertThat(map.containsKey("productTypeId1")).isTrue();
+      assertThat(map.containsValue("productTypeKey1")).isTrue();
+      return true;
+    });
     verify(ctpClient, times(1)).execute(any(ResourceIdsGraphQlRequest.class));
   }
 
@@ -77,13 +78,13 @@ class ReferencesServiceImplTest {
     // preparation
     final SphereClient ctpClient = mock(SphereClient.class);
     ResourceKeyIdGraphQlResult mockResultProducts = mock(ResourceKeyIdGraphQlResult.class);
-    ResourceKeyId productKeyId = new ResourceKeyId("productKey", "productId");
+    ResourceKeyId productKeyId = new ResourceKeyId("productKey1", "productId1");
     when(mockResultProducts.getResults()).thenReturn(singleton(productKeyId));
     ResourceKeyIdGraphQlResult mockResultCategories = mock(ResourceKeyIdGraphQlResult.class);
-    ResourceKeyId categoryKeyId = new ResourceKeyId("categoryKey", "categoryId");
+    ResourceKeyId categoryKeyId = new ResourceKeyId("categoryKey1", "categoryId1");
     when(mockResultCategories.getResults()).thenReturn(singleton(categoryKeyId));
     ResourceKeyIdGraphQlResult mockResultProductTypes = mock(ResourceKeyIdGraphQlResult.class);
-    ResourceKeyId productTypeKeyId = new ResourceKeyId("productTypeKey", "productTypeId");
+    ResourceKeyId productTypeKeyId = new ResourceKeyId("productTypeKey2", "productTypeId2");
     when(mockResultProductTypes.getResults()).thenReturn(singleton(productTypeKeyId));
 
     when(ctpClient.execute(any(ResourceIdsGraphQlRequest.class)))
@@ -92,8 +93,8 @@ class ReferencesServiceImplTest {
         .thenReturn(CompletableFuture.completedFuture(mockResultProductTypes));
 
     final CustomObject<JsonNode> mockCustomObject = mock(CustomObject.class);
-    when(mockCustomObject.getId()).thenReturn("customObjectId");
-    when(mockCustomObject.getKey()).thenReturn("customObjectKey");
+    when(mockCustomObject.getId()).thenReturn("customObjectId1");
+    when(mockCustomObject.getKey()).thenReturn("customObjectKey1");
     when(mockCustomObject.getContainer()).thenReturn("customObjectContainer");
     final PagedQueryResult<CustomObject<JsonNode>> result = mock(PagedQueryResult.class);
     when(result.getResults()).thenReturn(singletonList(mockCustomObject));
@@ -103,24 +104,25 @@ class ReferencesServiceImplTest {
         .thenReturn(CompletableFuture.completedFuture(result));
 
     final ProductReferenceTransformService referencesService =
-        new ProductReferenceTransformTransformServiceImpl(ctpClient);
+        new ProductReferenceTransformServiceImpl(ctpClient);
 
     // test
     final CompletionStage<Map<String, String>> idToKeysStage =
         referencesService.getIdToKeys(
-            asSet("productId"), asSet("categoryId"), asSet("productTypeId"), emptySet());
+            asSet("productId1"), asSet("categoryId1"), asSet("productTypeId2"), emptySet());
     // get again to test second fetch doesnt make request to ctp
     referencesService.getIdToKeys(
-        asSet("productId"), asSet("categoryId"), asSet("productTypeId"), asSet("customObjectId"));
+        asSet("productId1"), asSet("categoryId1"), asSet("productTypeId2"), asSet("customObjectId1"));
 
     // assertion
-    final HashMap<String, String> expectedCache = new HashMap<>();
-    expectedCache.put("productId", "productKey");
-    expectedCache.put("categoryId", "categoryKey");
-    expectedCache.put("productTypeId", "productTypeKey");
-    expectedCache.put("customObjectId", "customObjectContainer|customObjectKey");
+    idToKeysStage.thenApply(map -> {
+      assertThat(map.containsKey("productTypeId2")).isTrue();
+      assertThat(map.containsKey("productId1")).isTrue();
+      assertThat(map.containsKey("categoryId1")).isTrue();
+      assertThat(map.containsKey("customObjectId1")).isTrue();
+      return true;
+    });
 
-    assertThat(idToKeysStage).isCompletedWithValue(expectedCache);
     verify(ctpClient, times(3)).execute(any(ResourceIdsGraphQlRequest.class));
     verify(ctpClient, times(1)).execute(any(CustomObjectQuery.class));
   }
@@ -164,7 +166,7 @@ class ReferencesServiceImplTest {
         .thenReturn(CompletableFuture.completedFuture(result));
 
     final ProductReferenceTransformService referencesService =
-        new ProductReferenceTransformTransformServiceImpl(ctpClient);
+        new ProductReferenceTransformServiceImpl(ctpClient);
 
     // test
     final CompletionStage<Map<String, String>> idToKeysStage =
@@ -182,13 +184,14 @@ class ReferencesServiceImplTest {
         asSet("customObjectId", "customObjectId2"));
 
     // assertion
-    final HashMap<String, String> expectedCache = new HashMap<>();
-    expectedCache.put("productId", "productKey");
-    expectedCache.put("categoryId", "categoryKey");
-    expectedCache.put("productTypeId", "productTypeKey");
-    expectedCache.put("customObjectId", "customObjectContainer|customObjectKey");
-    expectedCache.put("customObjectId2", "customObjectContainer2|customObjectKey2");
-    assertThat(idToKeysStage).isCompletedWithValue(expectedCache);
+    idToKeysStage.thenApply(map -> {
+      assertThat(map.containsKey("productId")).isTrue();
+      assertThat(map.containsKey("categoryId")).isTrue();
+      assertThat(map.containsKey("productTypeId")).isTrue();
+      assertThat(map.containsKey("customObjectId")).isTrue();
+      assertThat(map.containsKey("customObjectId2")).isTrue();
+      return true;
+    });
 
     //  second fetch doesnt make request to ctp
     verify(ctpClient, times(4)).execute(any(ResourceIdsGraphQlRequest.class));
@@ -217,7 +220,7 @@ class ReferencesServiceImplTest {
         .thenReturn(CompletableFuture.completedFuture(mockResultCategories))
         .thenReturn(CompletableFuture.completedFuture(mockResultProductTypes));
     final ProductReferenceTransformService referencesService =
-        new ProductReferenceTransformTransformServiceImpl(ctpClient);
+        new ProductReferenceTransformServiceImpl(ctpClient);
 
     // test
     final CompletionStage<Map<String, String>> idToKeysStage =
@@ -228,9 +231,11 @@ class ReferencesServiceImplTest {
             emptySet());
 
     // assertion
-    final HashMap<String, String> expectedCache = new HashMap<>();
-    expectedCache.put("productId", "productKey");
-    assertThat(idToKeysStage).isCompletedWithValue(expectedCache);
+    idToKeysStage.thenApply(map -> {
+      assertThat(map.containsKey("productId")).isTrue();
+      assertThat(map.containsValue("productKey")).isTrue();
+      return true;
+    });
     verify(ctpClient, times(3)).execute(any(ResourceIdsGraphQlRequest.class));
   }
 }
