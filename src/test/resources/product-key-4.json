@@ -1,0 +1,164 @@
+{
+  "id": "ba81a6da-cf83-435b-a89e-2afab579846f",
+  "version": 10,
+  "key": "productKey4",
+  "productType": {
+    "typeId": "product-type",
+    "id": "cda0dbf7-b42e-40bf-8453-241d5b587f93"
+  },
+  "catalogs": [],
+  "masterData": {
+    "staged": {
+      "name": {
+        "en": "english name"
+      },
+      "description": {
+        "en": "english description."
+      },
+      "categories": [
+        {
+          "typeId": "category",
+          "id": "1dfc8bea-84f2-45bc-b3c2-cdc94bf96f1f"
+        },
+        {
+          "typeId": "category",
+          "id": "2dfc8bea-84f2-45bc-b3c2-cdc94bf96f1f"
+        },
+        {
+          "typeId": "category",
+          "id": "3dfc8bea-84f2-45bc-b3c2-cdc94bf96f1f"
+        },
+        {
+          "typeId": "category",
+          "id": "4dfc8bea-84f2-45bc-b3c2-cdc94bf96f1f"
+        }
+      ],
+      "categoryOrderHints": {
+        "1dfc8bea-84f2-45bc-b3c2-cdc94bf96f1f": "0.43",
+        "2dfc8bea-84f2-45bc-b3c2-cdc94bf96f1f": "0.53",
+        "3dfc8bea-84f2-45bc-b3c2-cdc94bf96f1f": "0.63",
+        "4dfc8bea-84f2-45bc-b3c2-cdc94bf96f1f": "0.73"
+      },
+      "slug": {
+        "en": "english-slug"
+      },
+      "masterVariant": {
+        "id": 1,
+        "key": "v1",
+        "sku": "3065833",
+        "images": [
+          {
+            "url": "https://53346cfbf3c7e017ed3d-6de74c3efa80f1c837c6a988b57abe66.ssl.cf3.rackcdn.com/old-image.png",
+            "dimensions": {
+              "w": 0,
+              "h": 0
+            }
+          }
+        ],
+        "attributes": [
+          {
+            "name": "priceInfo",
+            "value": "64,90/kg"
+          },
+          {
+            "name": "size",
+            "value": "ca. 1 x 1000 g"
+          },
+          {
+            "name": "rinderrasse",
+            "value": "Reh"
+          },
+          {
+            "name": "herkunft",
+            "value": "Deutschland"
+          },
+          {
+            "name": "fuetterung",
+            "value": "Gräser, Kräuter, Knospen, Eicheln, Beeren"
+          },
+          {
+            "name": "teilstueck",
+            "value": "Reh-Rücken"
+          },
+          {
+            "name": "reifung",
+            "value": "wet-aged, mindestens 2 Tage"
+          },
+          {
+            "name": "haltbarkeit",
+            "value": "bei < 7°C: 8 Tage ungeöffnet"
+          },
+          {
+            "name": "verpackung",
+            "value": "vakuumverpackt"
+          },
+          {
+            "name": "anlieferung",
+            "value": "frisch"
+          },
+          {
+            "name": "zubereitung",
+            "value": "Grill, Ofen, Niedertemperatur"
+          },
+          {
+            "name": "localisedText",
+            "value": {
+              "fr": "#FR An emergency call is placed automatically in the event of a severe accident",
+              "it": "#IT An emergency call is placed automatically in the event of a severe accident",
+              "de": "Audi connect verbindet Ihren Audi mit dem Internet und der Infrastruktur, um Sie unterwegs mit Informationen und Unterhaltung zu versorgen",
+              "en": "An emergency call is placed automatically in the event of a severe accident"
+            }
+          },
+          {
+            "name": "productReference",
+            "value": [
+              {
+                "id": "53c4a8b4-754f-4b95-b6f2-3e1e70e3d0d2",
+                "typeId": "product"
+              },
+              {
+                "id": "53c4a8b4-754f-4b95-b6f2-3e1e70e3d0d6",
+                "typeId": "product"
+              }
+            ]
+          },
+          {
+            "name": "productTypeReference",
+            "value": {
+              "id": "53c4a8b4-754f-4b95-b6f2-3e1e70e3d0d3",
+              "typeId": "product-type"
+            }
+          },
+          {
+            "name": "categoryReference",
+            "value": [
+              {
+                "id": "53c4a8b4-754f-4b95-b6f2-3e1e70e3d0d4",
+                "typeId": "category"
+              },
+              {
+                "id": "53c4a8b4-754f-4b95-b6f2-3e1e70e3d0d5",
+                "typeId": "category"
+              }
+            ]
+          }
+        ],
+        "assets": [],
+        "prices": []
+      },
+      "variants": [],
+      "searchKeywords": {}
+    },
+    "published": true,
+    "hasStagedChanges": true
+  },
+  "catalogData": {},
+  "taxCategory": {
+    "typeId": "tax-category",
+    "id": "ebbe95fb-2282-4f9a-8747-fbe440e02dc0"
+  },
+  "lastVariantId": 1,
+  "createdAt": "2016-11-21T09:32:41.261Z",
+  "lastModifiedAt": "2016-12-05T16:09:03.307Z",
+  "lastMessageSequenceNumber": 3
+}
