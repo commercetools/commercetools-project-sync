@@ -108,10 +108,13 @@ As of now, these are the supported resources:
                                         "shoppingLists" or "all".
        --syncProjectSyncCustomObjects   Sync custom objects that were created
                                         with project sync (this application).
-       --productSyncConfig              Sync Products with custom fetch limit and  
-                                        custom query. Please provide a valid fetch
-                                        limit (0 > fetchLimit) and valid custom query to 
-                                        fetch the products.                 
+       --productQueryParameters         Pass your customized product fetch limit
+                                        and a product predicate to filter product 
+                                        resources to sync in the JSON format. 
+                                        Example: {"limit": 100, "where": "masterData
+                                        (published=true)"} could be used to fetch 
+                                        only published products to sync and limit 
+                                        max 100 elements in one page.                
     -v,--version                        Print the version of the application.
    ```
 
@@ -171,15 +174,23 @@ the  `-s` option with `types productTypes` as below:
 -s types productTypes
 ```
 
-#### Running Product Sync with custom fetchLimit and customQuery
+#### Running ProductSync with custom product query parameters
 
-The application can sync products with the custom values provided as an argument. For example, to run `products` sync with custom values, 
-the  `-productSyncConfig` option should be used along with the `-s products` as below:
+You might pass your customized product fetch limit, and a product predicate to filter product resources to sync in the JSON format.
+
+For instance:
+
 ```bash
--s products -productSyncConfig {"fetchSize": 100, "customQuery": "masterData(published=true) AND masterData(staged(masterVariant(key= \"foo\")))"}
+-s products -productQueryParameters {"limit": 100, "where": "masterData(published=true) AND masterData(staged(masterVariant(attributes(name="attribute-name" and value="attribute-value"))))"}
 ```
 
-Note: The value for productSyncConfig argument should be in json format and as shown in above example, please use escape character \ for the nested double quote values.
+Predicates provide a way for complex filter expressions when querying resources. Refer commercetools docs for more details.
+
+Note: The value of the productQueryParameters argument should be in JSON format and as shown in the above example, please use escape character \ for the nested double quote values.
+Example: 
+```bash
+-s products -productQueryParameters {"limit": 100, "where": "masterData(published=true) AND masterData(staged(masterVariant(key= \"variantKey\")))"}
+```
 
 #### Running the Docker Image
 

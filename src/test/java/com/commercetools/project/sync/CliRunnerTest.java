@@ -267,7 +267,7 @@ class CliRunnerTest {
     final Long fetchSize = 100L;
     final String customQuery =
         "\"published=true AND masterData(masterVariant(attributes(name= \\\"abc\\\" AND value=123)))\"";
-    final String productSyncConfigValue =
+    final String productQueryParametersValue =
         "{\"fetchSize\": " + fetchSize + ", \"customQuery\": " + customQuery + "}";
 
     final SyncerFactory syncerFactory =
@@ -277,7 +277,7 @@ class CliRunnerTest {
     // test
     CliRunner.of()
         .run(
-            new String[] {"-s", "products", "-f", "-productSyncConfig", productSyncConfigValue},
+            new String[] {"-s", "products", "-f", "-productQueryParameters", productQueryParametersValue},
             syncerFactory);
 
     // assertions
@@ -285,7 +285,7 @@ class CliRunnerTest {
   }
 
   @Test
-  void run_WithWrongFormatProductSyncConfigArgument_ShouldThrowCLIException() {
+  void run_WithWrongFormatProductQueryParametersArgument_ShouldThrowCLIException() {
     // preparation
     final SphereClient sourceClient = mock(SphereClient.class);
     when(sourceClient.getConfig()).thenReturn(SphereClientConfig.of("foo", "foo", "foo"));
@@ -296,7 +296,7 @@ class CliRunnerTest {
     final Long fetchSize = 100L;
     final String customQuery =
         "\"published=true AND masterData(masterVariant(attributes(name= \"abc\\\" AND value=123)))\"";
-    final String productSyncConfigValue =
+    final String productQueryParametersValue =
         "{\"fetchSize\": " + fetchSize + ", \"customQuery\": " + customQuery + "}";
 
     final SyncerFactory syncerFactory =
@@ -305,7 +305,7 @@ class CliRunnerTest {
     // test
     CliRunner.of()
         .run(
-            new String[] {"-s", "products", "-f", "-productSyncConfig", productSyncConfigValue},
+            new String[] {"-s", "products", "-f", "-productQueryParameters", productQueryParametersValue},
             syncerFactory);
 
     // assertion
@@ -325,7 +325,7 @@ class CliRunnerTest {
   }
 
   @Test
-  void run_WithInvalidFetchSizeInProductSyncConfigArgument_ShouldThrowCLIException() {
+  void run_WithInvalidFetchSizeInProductQueryParametersArgument_ShouldThrowCLIException() {
     // preparation
     final SphereClient sourceClient = mock(SphereClient.class);
     when(sourceClient.getConfig()).thenReturn(SphereClientConfig.of("foo", "foo", "foo"));
@@ -336,7 +336,7 @@ class CliRunnerTest {
     final Long fetchSize = -100L;
     final String customQuery =
         "\"published=true AND masterData(masterVariant(attributes(name= \"abc\\\" AND value=123)))\"";
-    final String productSyncConfigValue =
+    final String productQueryParametersValue =
         "{\"fetchSize\": " + fetchSize + ", \"customQuery\": " + customQuery + "}";
 
     final SyncerFactory syncerFactory =
@@ -345,7 +345,7 @@ class CliRunnerTest {
     // test
     CliRunner.of()
         .run(
-            new String[] {"-s", "products", "-f", "-productSyncConfig", productSyncConfigValue},
+            new String[] {"-s", "products", "-f", "-productQueryParameters", productQueryParametersValue},
             syncerFactory);
 
     // assertion

@@ -31,7 +31,7 @@ final class CliRunner {
   static final String FULL_SYNC_OPTION_SHORT = "f";
   static final String HELP_OPTION_SHORT = "h";
   static final String VERSION_OPTION_SHORT = "v";
-  static final String PRODUCT_SYNC_CONFIG_OPTION = "productSyncConfig";
+  static final String PRODUCT_QUERY_PARAMETERS_OPTION = "productQueryParameters";
 
   static final String SYNC_MODULE_OPTION_LONG = "sync";
   static final String RUNNER_NAME_OPTION_LONG = "runnerName";
@@ -58,9 +58,10 @@ final class CliRunner {
   static final String VERSION_OPTION_DESCRIPTION = "Print the version of the application.";
   static final String SYNC_PROJECT_SYNC_CUSTOM_OBJECTS_OPTION_DESCRIPTION =
       "Sync custom objects that were created with project sync (this application).";
-  static final String PRODUCT_SYNC_CUSTOM_QUERY_AND_FETCH_SIZE_OPTION_DESCRIPTION =
-      "Sync Products with custom query and custom fetch size. Please provide a valid fetch limit (0 > limit) and valid "
-          + "custom query to fetch the products.";
+  static final String PRODUCT_QUERY_PARAMETERS_OPTION_DESCRIPTION =
+      "Pass your customized product fetch limit and a product predicate to filter product resources to sync in the JSON format. "
+          + "Example: {\"limit\": 100, \"where\": \"masterData(published=true)\"} could be used to fetch only published "
+          + "products to sync and limit max 100 elements in one page.";
 
   private static final Logger LOGGER = LoggerFactory.getLogger(CliRunner.class);
 
@@ -125,10 +126,10 @@ final class CliRunner {
             .desc(FULL_SYNC_OPTION_DESCRIPTION)
             .build();
 
-    final Option productSyncConfigOption =
+    final Option productQueryParametersOption =
         Option.builder()
-            .longOpt(PRODUCT_SYNC_CONFIG_OPTION)
-            .desc(PRODUCT_SYNC_CUSTOM_QUERY_AND_FETCH_SIZE_OPTION_DESCRIPTION)
+            .longOpt(PRODUCT_QUERY_PARAMETERS_OPTION)
+            .desc(PRODUCT_QUERY_PARAMETERS_OPTION_DESCRIPTION)
             .hasArg()
             .build();
 
@@ -156,7 +157,7 @@ final class CliRunner {
     options.addOption(helpOption);
     options.addOption(versionOption);
     options.addOption(syncProjectSyncCustomObjectsOption);
-    options.addOption(productSyncConfigOption);
+    options.addOption(productQueryParametersOption);
 
     return options;
   }
@@ -216,14 +217,14 @@ final class CliRunner {
     final boolean isFullSync = commandLine.hasOption(FULL_SYNC_OPTION_SHORT);
     final boolean isSyncProjectSyncCustomObjects =
         commandLine.hasOption(SYNC_PROJECT_SYNC_CUSTOM_OBJECTS_OPTION_LONG);
-    final boolean isProductSyncConfigOptionPresent =
-        commandLine.hasOption(PRODUCT_SYNC_CONFIG_OPTION);
+    final boolean isProductQueryParametersOptionPresent =
+        commandLine.hasOption(PRODUCT_QUERY_PARAMETERS_OPTION);
 
     final ProductSyncCustomRequest productSyncCustomRequest;
     try {
       productSyncCustomRequest =
-          isProductSyncConfigOptionPresent
-              ? parseProductSyncConfigOption(commandLine.getOptionValue(PRODUCT_SYNC_CONFIG_OPTION))
+          isProductQueryParametersOptionPresent
+              ? parseProductQueryParametersOption(commandLine.getOptionValue(PRODUCT_QUERY_PARAMETERS_OPTION))
               : null;
 
     } catch (CliException e) {
@@ -237,7 +238,7 @@ final class CliRunner {
         productSyncCustomRequest);
   }
 
-  public static ProductSyncCustomRequest parseProductSyncConfigOption(String customRequest) {
+  public static ProductSyncCustomRequest parseProductQueryParametersOption(String customRequest) {
 
     final ObjectMapper objectMapper = new ObjectMapper();
 

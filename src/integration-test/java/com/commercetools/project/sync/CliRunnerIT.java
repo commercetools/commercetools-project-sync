@@ -1074,7 +1074,7 @@ class CliRunnerIT {
         final Long fetchSize = 100L;
         final String customQuery =
             "\"masterData(published=true) AND masterData(staged(masterVariant(key= \\\"foo\\\")))\"";
-        final String productSyncConfigValue =
+        final String productQueryParametersValue =
             "{\"fetchSize\": " + fetchSize + ", \"customQuery\": " + customQuery + "}";
 
         // test
@@ -1086,8 +1086,8 @@ class CliRunnerIT {
                   "-r",
                   "runnerName",
                   "-f",
-                  "-productSyncConfig",
-                  productSyncConfigValue
+                  "-productQueryParameters",
+                  productQueryParametersValue
                 },
                 syncerFactory);
       }
