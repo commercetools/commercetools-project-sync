@@ -13,6 +13,8 @@ import static io.sphere.sdk.models.LocalizedString.ofEnglish;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
+import static java.util.Collections.emptyMap;
+import static java.util.Collections.singleton;
 import static java.util.Collections.singletonList;
 import static java.util.Optional.ofNullable;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -22,11 +24,18 @@ import io.sphere.sdk.categories.CategoryDraft;
 import io.sphere.sdk.categories.CategoryDraftBuilder;
 import io.sphere.sdk.categories.commands.CategoryCreateCommand;
 import io.sphere.sdk.channels.Channel;
+import io.sphere.sdk.channels.ChannelDraft;
+import io.sphere.sdk.channels.ChannelDraftBuilder;
+import io.sphere.sdk.channels.ChannelRole;
+import io.sphere.sdk.channels.commands.ChannelCreateCommand;
 import io.sphere.sdk.client.SphereClient;
 import io.sphere.sdk.customergroups.CustomerGroup;
 import io.sphere.sdk.customergroups.CustomerGroupDraft;
 import io.sphere.sdk.customergroups.CustomerGroupDraftBuilder;
 import io.sphere.sdk.customergroups.commands.CustomerGroupCreateCommand;
+import io.sphere.sdk.models.AssetDraft;
+import io.sphere.sdk.models.AssetDraftBuilder;
+import io.sphere.sdk.models.AssetSourceBuilder;
 import io.sphere.sdk.models.LocalizedString;
 import io.sphere.sdk.models.ResourceIdentifier;
 import io.sphere.sdk.models.TextInputHint;
@@ -60,6 +69,7 @@ import io.sphere.sdk.types.CustomFieldsDraft;
 import io.sphere.sdk.types.FieldDefinition;
 import io.sphere.sdk.types.ResourceTypeIdsSetBuilder;
 import io.sphere.sdk.types.StringFieldType;
+import io.sphere.sdk.types.Type;
 import io.sphere.sdk.types.TypeDraft;
 import io.sphere.sdk.types.TypeDraftBuilder;
 import io.sphere.sdk.types.commands.TypeCreateCommand;
@@ -123,7 +133,8 @@ public class ProductSyncWithReferenceResolutionIT {
             .fieldDefinitions(Arrays.asList(FIELD_DEFINITION_1))
             .build();
 
-    sourceProjectClient.execute(TypeCreateCommand.of(typeDraft)).toCompletableFuture().join();
+    final Type type =
+        sourceProjectClient.execute(TypeCreateCommand.of(typeDraft)).toCompletableFuture().join();
 
     final CategoryDraft categoryDraft =
         CategoryDraftBuilder.of(ofEnglish("t-shirts"), ofEnglish("t-shirts"))
@@ -170,10 +181,20 @@ public class ProductSyncWithReferenceResolutionIT {
             .toCompletableFuture()
             .join();
 
-    createClient(CTP_TARGET_CLIENT_CONFIG)
+    SphereClient targetProjectClient = createClient(CTP_TARGET_CLIENT_CONFIG);
+
+    targetProjectClient
         .execute(CustomerGroupCreateCommand.of(customerGroupDraft))
         .toCompletableFuture()
         .join();
+
+    CustomFieldsDraft customFieldsDraft =
+        CustomFieldsDraft.ofTypeKeyAndJson(type.getKey(), emptyMap());
+
+    final ChannelDraft draft =
+        ChannelDraftBuilder.of("channelKey").roles(singleton(ChannelRole.INVENTORY_SUPPLY)).build();
+    sourceProjectClient.execute(ChannelCreateCommand.of(draft)).toCompletableFuture().join();
+    targetProjectClient.execute(ChannelCreateCommand.of(draft)).toCompletableFuture().join();
 
     final PriceDraft priceBuilder =
         PriceDraftBuilder.of(
@@ -187,10 +208,24 @@ public class ProductSyncWithReferenceResolutionIT {
                     null,
                     null))
             .customerGroup(customerGroup)
+            .custom(customFieldsDraft)
+            .channel(ResourceIdentifier.ofKey("channelKey"))
+            .build();
+
+    final AssetDraft assetDraft =
+        AssetDraftBuilder.of(emptyList(), LocalizedString.ofEnglish("assetName"))
+            .key("assetKey")
+            .sources(singletonList(AssetSourceBuilder.ofUri("sourceUri").build()))
+            .custom(customFieldsDraft)
             .build();
 
     final ProductVariantDraft variantDraft1 =
-        ProductVariantDraftBuilder.of().key("variantKey").sku("sku1").prices(priceBuilder).build();
+        ProductVariantDraftBuilder.of()
+            .key("variantKey")
+            .sku("sku1")
+            .prices(priceBuilder)
+            .assets(asList(assetDraft))
+            .build();
 
     final ProductDraft productDraft =
         ProductDraftBuilder.of(

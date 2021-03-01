@@ -15,6 +15,8 @@ import io.sphere.sdk.cartdiscounts.queries.CartDiscountQuery;
 import io.sphere.sdk.categories.Category;
 import io.sphere.sdk.categories.commands.CategoryDeleteCommand;
 import io.sphere.sdk.categories.queries.CategoryQuery;
+import io.sphere.sdk.channels.commands.ChannelDeleteCommand;
+import io.sphere.sdk.channels.queries.ChannelQuery;
 import io.sphere.sdk.client.ConcurrentModificationException;
 import io.sphere.sdk.client.SphereClient;
 import io.sphere.sdk.client.SphereRequest;
@@ -181,13 +183,16 @@ public final class IntegrationTestUtils {
         queryAndExecute(client, CustomerQuery.of(), CustomerDeleteCommand::of);
     final CompletableFuture<Void> deleteCustomerGroup =
         queryAndExecute(client, CustomerGroupQuery.of(), CustomerGroupDeleteCommand::of);
+    final CompletableFuture<Void> deleteChannel =
+        queryAndExecute(client, ChannelQuery.of(), ChannelDeleteCommand::of);
 
     CompletableFuture.allOf(
             deleteType,
             deleteShippingMethod,
             deleteTaxCategory,
             deleteCustomer,
-            deleteCustomerGroup)
+            deleteCustomerGroup,
+            deleteChannel)
         .join();
     deleteProductTypes(client);
   }
