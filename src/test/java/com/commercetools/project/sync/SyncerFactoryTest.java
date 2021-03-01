@@ -355,11 +355,11 @@ class SyncerFactoryTest {
     when(targetClient.getConfig()).thenReturn(SphereClientConfig.of("bar", "bar", "bar"));
 
     final Product product1 =
-        SphereJsonUtils.readObjectFromResource("product-key-7.json", Product.class);
+        SphereJsonUtils.readObjectFromResource("product-key-1.json", Product.class);
     final Product product2 =
-        SphereJsonUtils.readObjectFromResource("product-key-8.json", Product.class);
+        SphereJsonUtils.readObjectFromResource("product-key-2.json", Product.class);
     final Product product3 =
-        SphereJsonUtils.readObjectFromResource("product-key-9.json", Product.class);
+        SphereJsonUtils.readObjectFromResource("product-key-3.json", Product.class);
 
     final List<Product> fullPageOfProducts =
         IntStream.range(0, 500).mapToObj(o -> product1).collect(Collectors.toList());

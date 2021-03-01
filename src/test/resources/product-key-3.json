@@ -4,7 +4,7 @@
   "key": "productKey3",
   "productType": {
     "typeId": "product-type",
-    "id": "cda0dbf7-b42e-40bf-8453-241d5b587f93"
+    "id": "cda0dbf7-b53e-40bf-8453-241d5b587f93"
   },
   "catalogs": [],
   "masterData": {
@@ -18,19 +18,19 @@
       "categories": [
         {
           "typeId": "category",
-          "id": "1dfc8bea-84f2-45bc-b3c2-cdc94bf96f3f"
+          "id": "1dfc8bea-95f2-45bc-b3c2-cdc94bf96f3f"
         },
         {
           "typeId": "category",
-          "id": "2dfc8bea-84f2-45bc-b3c2-cdc94bf96f3f"
+          "id": "2dfc8bea-95f2-45bc-b3c2-cdc94bf96f3f"
         },
         {
           "typeId": "category",
-          "id": "3dfc8bea-84f2-45bc-b3c2-cdc94bf96f3f"
+          "id": "3dfc8bea-95f2-45bc-b3c2-cdc94bf96f3f"
         },
         {
           "typeId": "category",
-          "id": "4dfc8bea-84f2-45bc-b3c2-cdc94bf96f3f"
+          "id": "4dfc8bea-95f2-45bc-b3c2-cdc94bf96f3f"
         }
       ],
       "categoryOrderHints": {
@@ -122,7 +122,7 @@
   "catalogData": {},
   "taxCategory": {
     "typeId": "tax-category",
-    "id": "ebbe95fb-2282-4f9a-8747-fbe440e02dc0"
+    "id": "ebbe95fb-3392-4f9a-8747-fbe440e02dc0"
   },
   "lastVariantId": 1,
   "createdAt": "2016-11-21T09:32:41.261Z",
