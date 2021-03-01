@@ -65,8 +65,7 @@ class ProductSyncerTest {
     final ProductSyncer productSyncer =
         ProductSyncer.of(sourceClient, mock(SphereClient.class), getMockedClock());
     final List<Product> productPage =
-        asList(
-            readObjectFromResource("product-key-4.json", Product.class));
+        asList(readObjectFromResource("product-key-4.json", Product.class));
 
     String jsonStringProducts =
         "{\"results\":[{\"id\":\"53c4a8b4-754f-4b95-b6f2-3e1e70e3d0d2\",\"key\":\"prod1\"},"

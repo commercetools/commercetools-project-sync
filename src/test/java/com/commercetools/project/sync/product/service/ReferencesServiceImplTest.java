@@ -2,7 +2,6 @@ package com.commercetools.project.sync.product.service;
 
 import static io.sphere.sdk.utils.SphereInternalUtils.asSet;
 import static java.util.Arrays.asList;
-import static java.util.Collections.emptyMap;
 import static java.util.Collections.emptySet;
 import static java.util.Collections.singleton;
 import static java.util.Collections.singletonList;
@@ -16,7 +15,6 @@ import static org.mockito.Mockito.when;
 
 import com.commercetools.project.sync.model.ResourceIdsGraphQlRequest;
 import com.commercetools.project.sync.product.service.impl.ProductReferenceTransformServiceImpl;
-import com.commercetools.project.sync.service.impl.BaseTransformServiceImpl;
 import com.commercetools.sync.commons.models.ResourceKeyId;
 import com.commercetools.sync.commons.models.ResourceKeyIdGraphQlResult;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -25,7 +23,6 @@ import io.sphere.sdk.client.SphereClient;
 import io.sphere.sdk.customobjects.CustomObject;
 import io.sphere.sdk.customobjects.queries.CustomObjectQuery;
 import io.sphere.sdk.queries.PagedQueryResult;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
@@ -64,11 +61,12 @@ class ReferencesServiceImplTest {
         referencesService.getIdToKeys(emptySet(), emptySet(), asSet("productTypeId1"), emptySet());
 
     // assertion
-    idToKeysStage.thenApply(map -> {
-      assertThat(map.containsKey("productTypeId1")).isTrue();
-      assertThat(map.containsValue("productTypeKey1")).isTrue();
-      return true;
-    });
+    idToKeysStage.thenApply(
+        map -> {
+          assertThat(map.containsKey("productTypeId1")).isTrue();
+          assertThat(map.containsValue("productTypeKey1")).isTrue();
+          return true;
+        });
     verify(ctpClient, times(1)).execute(any(ResourceIdsGraphQlRequest.class));
   }
 
@@ -112,16 +110,20 @@ class ReferencesServiceImplTest {
             asSet("productId1"), asSet("categoryId1"), asSet("productTypeId2"), emptySet());
     // get again to test second fetch doesnt make request to ctp
     referencesService.getIdToKeys(
-        asSet("productId1"), asSet("categoryId1"), asSet("productTypeId2"), asSet("customObjectId1"));
+        asSet("productId1"),
+        asSet("categoryId1"),
+        asSet("productTypeId2"),
+        asSet("customObjectId1"));
 
     // assertion
-    idToKeysStage.thenApply(map -> {
-      assertThat(map.containsKey("productTypeId2")).isTrue();
-      assertThat(map.containsKey("productId1")).isTrue();
-      assertThat(map.containsKey("categoryId1")).isTrue();
-      assertThat(map.containsKey("customObjectId1")).isTrue();
-      return true;
-    });
+    idToKeysStage.thenApply(
+        map -> {
+          assertThat(map.containsKey("productTypeId2")).isTrue();
+          assertThat(map.containsKey("productId1")).isTrue();
+          assertThat(map.containsKey("categoryId1")).isTrue();
+          assertThat(map.containsKey("customObjectId1")).isTrue();
+          return true;
+        });
 
     verify(ctpClient, times(3)).execute(any(ResourceIdsGraphQlRequest.class));
     verify(ctpClient, times(1)).execute(any(CustomObjectQuery.class));
@@ -184,14 +186,15 @@ class ReferencesServiceImplTest {
         asSet("customObjectId", "customObjectId2"));
 
     // assertion
-    idToKeysStage.thenApply(map -> {
-      assertThat(map.containsKey("productId")).isTrue();
-      assertThat(map.containsKey("categoryId")).isTrue();
-      assertThat(map.containsKey("productTypeId")).isTrue();
-      assertThat(map.containsKey("customObjectId")).isTrue();
-      assertThat(map.containsKey("customObjectId2")).isTrue();
-      return true;
-    });
+    idToKeysStage.thenApply(
+        map -> {
+          assertThat(map.containsKey("productId")).isTrue();
+          assertThat(map.containsKey("categoryId")).isTrue();
+          assertThat(map.containsKey("productTypeId")).isTrue();
+          assertThat(map.containsKey("customObjectId")).isTrue();
+          assertThat(map.containsKey("customObjectId2")).isTrue();
+          return true;
+        });
 
     //  second fetch doesnt make request to ctp
     verify(ctpClient, times(4)).execute(any(ResourceIdsGraphQlRequest.class));
@@ -231,11 +234,12 @@ class ReferencesServiceImplTest {
             emptySet());
 
     // assertion
-    idToKeysStage.thenApply(map -> {
-      assertThat(map.containsKey("productId")).isTrue();
-      assertThat(map.containsValue("productKey")).isTrue();
-      return true;
-    });
+    idToKeysStage.thenApply(
+        map -> {
+          assertThat(map.containsKey("productId")).isTrue();
+          assertThat(map.containsValue("productKey")).isTrue();
+          return true;
+        });
     verify(ctpClient, times(3)).execute(any(ResourceIdsGraphQlRequest.class));
   }
 }
