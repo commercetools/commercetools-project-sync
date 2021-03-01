@@ -113,7 +113,7 @@
             "name": "productReference",
             "value": [
               {
-                "id": "53c4a8b4-754f-4b95-b6f2-3e1e70e3d0c2",
+                "id": "53c4a8b4-854f-5b95-b6f2-3e1e70e3d0c2",
                 "typeId": "product"
               },
               {
@@ -125,7 +125,7 @@
           {
             "name": "productTypeReference",
             "value": {
-              "id": "53c4a8b4-754f-4b95-b6f2-3e1e70e3d0c3",
+              "id": "53c4a8b4-854f-5b95-b6f2-3e1e70e3d0c3",
               "typeId": "product-type"
             }
           },
