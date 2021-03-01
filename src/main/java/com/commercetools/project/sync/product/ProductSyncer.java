@@ -296,20 +296,18 @@ public final class ProductSyncer
   @Override
   protected ProductQuery getQuery() {
     ProductSyncCustomRequest customRequest = this.productSyncCustomRequest;
-    if (null != customRequest) {
-      if (null != customRequest.getLimit() && null == customRequest.getWhere()) {
-        return ProductQuery.of().withLimit(this.productSyncCustomRequest.getLimit());
-      } else if (null != customRequest.getWhere() && null == customRequest.getLimit()) {
-        return ProductQuery.of()
-            .withPredicates(QueryPredicate.of(this.productSyncCustomRequest.getWhere()));
-      } else {
-        return ProductQuery.of()
-            .withLimit(this.productSyncCustomRequest.getLimit())
-            .withPredicates(QueryPredicate.of(this.productSyncCustomRequest.getWhere()));
-      }
-    } else {
-      return ProductQuery.of();
+    ProductQuery productQuery = ProductQuery.of();
+    if (customRequest == null) {
+      return productQuery;
     }
+    if (null != customRequest.getLimit()) {
+      productQuery = productQuery.withLimit(customRequest.getLimit());
+    }
+    if (null != customRequest.getWhere()) {
+      productQuery = productQuery.withPredicates(QueryPredicate.of(customRequest.getWhere()));
+    }
+
+    return productQuery;
   }
 
   /**
