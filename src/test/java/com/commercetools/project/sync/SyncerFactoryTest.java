@@ -355,11 +355,11 @@ class SyncerFactoryTest {
     when(targetClient.getConfig()).thenReturn(SphereClientConfig.of("bar", "bar", "bar"));
 
     final Product product1 =
-        SphereJsonUtils.readObjectFromResource("product-key-1.json", Product.class);
+        SphereJsonUtils.readObjectFromResource("product-key-7.json", Product.class);
     final Product product2 =
-        SphereJsonUtils.readObjectFromResource("product-key-2.json", Product.class);
+        SphereJsonUtils.readObjectFromResource("product-key-8.json", Product.class);
     final Product product3 =
-        SphereJsonUtils.readObjectFromResource("product-key-3.json", Product.class);
+        SphereJsonUtils.readObjectFromResource("product-key-9.json", Product.class);
 
     final List<Product> fullPageOfProducts =
         IntStream.range(0, 500).mapToObj(o -> product1).collect(Collectors.toList());
@@ -387,17 +387,17 @@ class SyncerFactoryTest {
         .thenReturn(CompletableFuture.completedFuture(product2));
 
     String jsonAsString =
-        "{\"results\":[{\"id\":\"53c4a8b4-754f-4b95-b6f2-3e1e70e3d0c1\",\"key\":\"productKey3\"}]}";
+        "{\"results\":[{\"id\":\"53c4a8b4-865f-4b95-b6f2-3e1e70e3d0c1\",\"key\":\"productKey3\"}]}";
     final ResourceKeyIdGraphQlResult productsResult =
         SphereJsonUtils.readObject(jsonAsString, ResourceKeyIdGraphQlResult.class);
 
     String jsonStringProductTypes =
-        "{\"results\":[{\"id\":\"53c4a8b4-754f-4b95-b6f2-3e1e70e3d0c2\",\"key\":\"prodType1\"}]}";
+        "{\"results\":[{\"id\":\"53c4a8b4-865f-4b95-b6f2-3e1e70e3d0c2\",\"key\":\"prodType1\"}]}";
     final ResourceKeyIdGraphQlResult productTypesResult =
         SphereJsonUtils.readObject(jsonStringProductTypes, ResourceKeyIdGraphQlResult.class);
 
     String jsonStringCategories =
-        "{\"results\":[{\"id\":\"53c4a8b4-754f-4b95-b6f2-3e1e70e3d0c3\",\"key\":\"cat1\"}]}";
+        "{\"results\":[{\"id\":\"53c4a8b4-865f-4b95-b6f2-3e1e70e3d0c3\",\"key\":\"cat1\"}]}";
     final ResourceKeyIdGraphQlResult categoriesResult =
         SphereJsonUtils.readObject(jsonStringCategories, ResourceKeyIdGraphQlResult.class);
 
@@ -414,7 +414,7 @@ class SyncerFactoryTest {
         mock(ResourceKeyIdGraphQlResult.class);
     when(resourceKeyIdGraphQlResult.getResults())
         .thenReturn(
-            singleton(new ResourceKeyId("productKey3", "53c4a8b4-754f-4b95-b6f2-3e1e70e3d0c1")));
+            singleton(new ResourceKeyId("productKey3", "53c4a8b4-865f-4b95-b6f2-3e1e70e3d0c1")));
     when(targetClient.execute(any(ResourceKeyIdGraphQlRequest.class)))
         .thenReturn(CompletableFuture.completedFuture(resourceKeyIdGraphQlResult));
 
@@ -459,8 +459,8 @@ class SyncerFactoryTest {
                 "The product with id "
                     + "'ba81a6da-cf83-435b-a89e-2afab579846f' on the source project ('foo') will not be synced because it "
                     + "has the following reference attribute(s): \n"
-                    + "[{\"id\":\"53c4a8b4-754f-4b95-b6f2-3e1e70e3d0c5\",\"typeId\":\"product\"}, "
-                    + "{\"id\":\"53c4a8b4-754f-4b95-b6f2-3e1e70e3d0c4\",\"typeId\":\"category\"}].\n"
+                    + "[{\"id\":\"53c4a8b4-865f-4b95-b6f2-3e1e70e3d0c5\",\"typeId\":\"product\"}, "
+                    + "{\"id\":\"53c4a8b4-865f-4b95-b6f2-3e1e70e3d0c4\",\"typeId\":\"category\"}].\n"
                     + "These references are either pointing to a non-existent resource or to an existing one but with a "
                     + "blank key. Please make sure these referenced resources are existing and have non-blank (i.e. "
                     + "non-null and non-empty) keys."),
