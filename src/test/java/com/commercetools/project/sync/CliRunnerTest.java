@@ -277,7 +277,9 @@ class CliRunnerTest {
     // test
     CliRunner.of()
         .run(
-            new String[] {"-s", "products", "-f", "-productQueryParameters", productQueryParametersValue},
+            new String[] {
+              "-s", "products", "-f", "-productQueryParameters", productQueryParametersValue
+            },
             syncerFactory);
 
     // assertions
@@ -305,7 +307,9 @@ class CliRunnerTest {
     // test
     CliRunner.of()
         .run(
-            new String[] {"-s", "products", "-f", "-productQueryParameters", productQueryParametersValue},
+            new String[] {
+              "-s", "products", "-f", "-productQueryParameters", productQueryParametersValue
+            },
             syncerFactory);
 
     // assertion
@@ -345,7 +349,9 @@ class CliRunnerTest {
     // test
     CliRunner.of()
         .run(
-            new String[] {"-s", "products", "-f", "-productQueryParameters", productQueryParametersValue},
+            new String[] {
+              "-s", "products", "-f", "-productQueryParameters", productQueryParametersValue
+            },
             syncerFactory);
 
     // assertion

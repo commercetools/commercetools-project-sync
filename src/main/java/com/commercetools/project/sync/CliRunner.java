@@ -1,5 +1,6 @@
 package com.commercetools.project.sync;
 
+import static com.commercetools.project.sync.model.ProductSyncCustomRequest.parseProductQueryParametersOption;
 import static com.commercetools.project.sync.util.SyncUtils.getApplicationName;
 import static com.commercetools.project.sync.util.SyncUtils.getApplicationVersion;
 import static io.sphere.sdk.utils.CompletableFutureUtils.exceptionallyCompletedFuture;
@@ -7,9 +8,7 @@ import static java.lang.String.format;
 
 import com.commercetools.project.sync.exception.CliException;
 import com.commercetools.project.sync.model.ProductSyncCustomRequest;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
@@ -224,7 +223,8 @@ final class CliRunner {
     try {
       productSyncCustomRequest =
           isProductQueryParametersOptionPresent
-              ? parseProductQueryParametersOption(commandLine.getOptionValue(PRODUCT_QUERY_PARAMETERS_OPTION))
+              ? parseProductQueryParametersOption(
+                  commandLine.getOptionValue(PRODUCT_QUERY_PARAMETERS_OPTION))
               : null;
 
     } catch (CliException e) {
@@ -236,21 +236,6 @@ final class CliRunner {
         isFullSync,
         isSyncProjectSyncCustomObjects,
         productSyncCustomRequest);
-  }
-
-  public static ProductSyncCustomRequest parseProductQueryParametersOption(String customRequest) {
-
-    final ObjectMapper objectMapper = new ObjectMapper();
-
-    final ProductSyncCustomRequest productSyncCustomRequest;
-    try {
-      productSyncCustomRequest =
-          objectMapper.readValue(customRequest, ProductSyncCustomRequest.class);
-    } catch (IOException | IllegalArgumentException e) {
-      throw new CliException(e.getMessage());
-    }
-
-    return productSyncCustomRequest;
   }
 
   private static void printHelpToStdOut(@Nonnull final Options cliOptions) {
