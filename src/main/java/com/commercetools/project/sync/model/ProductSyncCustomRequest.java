@@ -8,27 +8,27 @@ import java.io.IOException;
 
 public final class ProductSyncCustomRequest {
 
-  private Long fetchSize;
-  private String customQuery;
+  private Long limit;
+  private String where;
 
-  public Long getFetchSize() {
-    return fetchSize;
+  public Long getLimit() {
+    return limit;
   }
 
-  public String getCustomQuery() {
-    return customQuery;
+  public String getWhere() {
+    return where;
   }
 
-  public void setFetchSize(Long fetchSize) {
-    if (fetchSize > 0) {
-      this.fetchSize = fetchSize;
+  public void setLimit(Long limit) {
+    if (limit > 0) {
+      this.limit = limit;
     } else {
-      throw new IllegalArgumentException(format("fetchSize %s cannot be less than 1.", fetchSize));
+      throw new IllegalArgumentException(format("limit %s cannot be less than 1.", limit));
     }
   }
 
-  public void setCustomQuery(String customQuery) {
-    this.customQuery = customQuery;
+  public void setWhere(String where) {
+    this.where = where;
   }
 
   public static ProductSyncCustomRequest parseProductQueryParametersOption(String customRequest) {

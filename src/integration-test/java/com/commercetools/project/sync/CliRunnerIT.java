@@ -1063,7 +1063,7 @@ class CliRunnerIT {
 
   @Test
   void
-      run_WithSyncAsArgumentWithAllArgAsFullSyncAndWithCustomQueryAndFetchSizeForProducts_ShouldExecuteAllSyncers() {
+      run_WithSyncAsArgumentWithAllArgAsFullSyncAndWithCustomQueryAndLimitForProducts_ShouldExecuteAllSyncers() {
     // preparation
     try (final SphereClient targetClient = createClient(CTP_TARGET_CLIENT_CONFIG)) {
       try (final SphereClient sourceClient = createClient(CTP_SOURCE_CLIENT_CONFIG)) {
@@ -1071,11 +1071,11 @@ class CliRunnerIT {
         final SyncerFactory syncerFactory =
             SyncerFactory.of(() -> sourceClient, () -> targetClient, Clock.systemDefaultZone());
 
-        final Long fetchSize = 100L;
+        final Long limit = 100L;
         final String customQuery =
             "\"masterData(published=true) AND masterData(staged(masterVariant(key= \\\"foo\\\")))\"";
         final String productQueryParametersValue =
-            "{\"fetchSize\": " + fetchSize + ", \"customQuery\": " + customQuery + "}";
+            "{\"limit\": " + limit + ", \"where\": " + customQuery + "}";
 
         // test
         CliRunner.of()

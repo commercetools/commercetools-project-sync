@@ -290,15 +290,15 @@ class ProductSyncerTest {
   }
 
   @Test
-  void getQuery_ShouldBuildProductQueryWithCustomQueryAndFetchSize() {
+  void getQuery_ShouldBuildProductQueryWithCustomQueryAndLimitSize() {
     // preparation
-    final Long fetchSize = 100L;
+    final Long limit = 100L;
     final String customQuery =
         "published=true AND masterData(masterVariant(attributes(name= \"abc\" AND value=123)))";
 
     final ProductSyncCustomRequest productSyncCustomRequest = new ProductSyncCustomRequest();
-    productSyncCustomRequest.setCustomQuery(customQuery);
-    productSyncCustomRequest.setFetchSize(fetchSize);
+    productSyncCustomRequest.setWhere(customQuery);
+    productSyncCustomRequest.setLimit(limit);
 
     final ProductSyncer productSyncer =
         ProductSyncer.of(

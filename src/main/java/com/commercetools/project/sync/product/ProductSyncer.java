@@ -297,8 +297,8 @@ public final class ProductSyncer
   protected ProductQuery getQuery() {
     if (null != this.productSyncCustomRequest) {
       return ProductQuery.of()
-          .withLimit(this.productSyncCustomRequest.getFetchSize())
-          .withPredicates(QueryPredicate.of(this.productSyncCustomRequest.getCustomQuery()));
+          .withLimit(this.productSyncCustomRequest.getLimit())
+          .withPredicates(QueryPredicate.of(this.productSyncCustomRequest.getWhere()));
     } else {
       return ProductQuery.of();
     }

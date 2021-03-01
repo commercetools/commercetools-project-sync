@@ -253,7 +253,7 @@ class CliRunnerTest {
 
   @Test
   void
-      run_AsProductSyncWithCustomProductQueriesAndFetchSizeLimit_ShouldBuildSyncerAndExecuteQuerySuccessfully() {
+      run_AsProductSyncWithCustomProductQueriesAndLimit_ShouldBuildSyncerAndExecuteQuerySuccessfully() {
     // preparation
     final SphereClient sourceClient = mock(SphereClient.class);
     when(sourceClient.getConfig()).thenReturn(SphereClientConfig.of("foo", "foo", "foo"));
@@ -264,11 +264,11 @@ class CliRunnerTest {
     when(sourceClient.execute(any(ProductQuery.class)))
         .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
 
-    final Long fetchSize = 100L;
+    final Long limit = 100L;
     final String customQuery =
         "\"published=true AND masterData(masterVariant(attributes(name= \\\"abc\\\" AND value=123)))\"";
     final String productQueryParametersValue =
-        "{\"fetchSize\": " + fetchSize + ", \"customQuery\": " + customQuery + "}";
+        "{\"limit\": " + limit + ", \"where\": " + customQuery + "}";
 
     final SyncerFactory syncerFactory =
         spy(SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock()));
@@ -295,11 +295,11 @@ class CliRunnerTest {
     final SphereClient targetClient = mock(SphereClient.class);
     when(targetClient.getConfig()).thenReturn(SphereClientConfig.of("bar", "bar", "bar"));
 
-    final Long fetchSize = 100L;
+    final Long limit = 100L;
     final String customQuery =
         "\"published=true AND masterData(masterVariant(attributes(name= \"abc\\\" AND value=123)))\"";
     final String productQueryParametersValue =
-        "{\"fetchSize\": " + fetchSize + ", \"customQuery\": " + customQuery + "}";
+        "{\"limit\": " + limit + ", \"where\": " + customQuery + "}";
 
     final SyncerFactory syncerFactory =
         spy(SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock()));
@@ -329,7 +329,7 @@ class CliRunnerTest {
   }
 
   @Test
-  void run_WithInvalidFetchSizeInProductQueryParametersArgument_ShouldThrowCLIException() {
+  void run_WithInvalidLimitInProductQueryParametersArgument_ShouldThrowCLIException() {
     // preparation
     final SphereClient sourceClient = mock(SphereClient.class);
     when(sourceClient.getConfig()).thenReturn(SphereClientConfig.of("foo", "foo", "foo"));
@@ -337,11 +337,11 @@ class CliRunnerTest {
     final SphereClient targetClient = mock(SphereClient.class);
     when(targetClient.getConfig()).thenReturn(SphereClientConfig.of("bar", "bar", "bar"));
 
-    final Long fetchSize = -100L;
+    final Long limit = -100L;
     final String customQuery =
         "\"published=true AND masterData(masterVariant(attributes(name= \"abc\\\" AND value=123)))\"";
     final String productQueryParametersValue =
-        "{\"fetchSize\": " + fetchSize + ", \"customQuery\": " + customQuery + "}";
+        "{\"limit\": " + limit + ", \"where\": " + customQuery + "}";
 
     final SyncerFactory syncerFactory =
         spy(SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock()));
@@ -368,7 +368,7 @@ class CliRunnerTest {
               final Throwable actualThrowable = actualThrowableOpt.get();
               assertThat(actualThrowable).isExactlyInstanceOf(CliException.class);
               assertThat(actualThrowable.getMessage())
-                  .contains("fetchSize -100 cannot be less than 1.");
+                  .contains("limit -100 cannot be less than 1.");
             });
   }
 
