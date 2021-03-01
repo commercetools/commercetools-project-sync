@@ -18,19 +18,19 @@
       "categories": [
         {
           "typeId": "category",
-          "id": "1dfc8bea-84f2-45bc-b3c2-cdc94bf96f1f"
+          "id": "1dfc8bea-84f2-45bc-b3c2-cdc94bf96f1g"
         },
         {
           "typeId": "category",
-          "id": "2dfc8bea-84f2-45bc-b3c2-cdc94bf96f1f"
+          "id": "2dfc8bea-84f2-45bc-b3c2-cdc94bf96f1g"
         },
         {
           "typeId": "category",
-          "id": "3dfc8bea-84f2-45bc-b3c2-cdc94bf96f1f"
+          "id": "3dfc8bea-84f2-45bc-b3c2-cdc94bf96f1g"
         },
         {
           "typeId": "category",
-          "id": "4dfc8bea-84f2-45bc-b3c2-cdc94bf96f1f"
+          "id": "4dfc8bea-84f2-45bc-b3c2-cdc94bf96f1g"
         }
       ],
       "categoryOrderHints": {
@@ -113,11 +113,11 @@
             "name": "productReference",
             "value": [
               {
-                "id": "53c4a8b4-754f-4b95-b6f2-3e1e70e3d0c1",
+                "id": "53c4a8b4-754f-4b95-b6f2-3e1e70e3d0c2",
                 "typeId": "product"
               },
               {
-                "id": "53c4a8b4-754f-4b95-b6f2-3e1e70e3d0c5",
+                "id": "53c4a8b4-754f-4b95-b6f2-3e1e70e3d0c6",
                 "typeId": "product"
               }
             ]
@@ -125,7 +125,7 @@
           {
             "name": "productTypeReference",
             "value": {
-              "id": "53c4a8b4-754f-4b95-b6f2-3e1e70e3d0c2",
+              "id": "53c4a8b4-754f-4b95-b6f2-3e1e70e3d0c3",
               "typeId": "product-type"
             }
           },
@@ -133,11 +133,11 @@
             "name": "categoryReference",
             "value": [
               {
-                "id": "53c4a8b4-754f-4b95-b6f2-3e1e70e3d0c3",
+                "id": "53c4a8b4-754f-4b95-b6f2-3e1e70e3d0c4",
                 "typeId": "category"
               },
               {
-                "id": "53c4a8b4-754f-4b95-b6f2-3e1e70e3d0c4",
+                "id": "53c4a8b4-754f-4b95-b6f2-3e1e70e3d0c5",
                 "typeId": "category"
               }
             ]
