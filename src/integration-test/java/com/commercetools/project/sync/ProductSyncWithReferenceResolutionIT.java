@@ -5,7 +5,6 @@ import static com.commercetools.project.sync.util.IntegrationTestUtils.assertCat
 import static com.commercetools.project.sync.util.IntegrationTestUtils.assertProductExists;
 import static com.commercetools.project.sync.util.IntegrationTestUtils.assertProductTypeExists;
 import static com.commercetools.project.sync.util.IntegrationTestUtils.cleanUpProjects;
-import static com.commercetools.project.sync.util.QueryUtils.queryAndExecute;
 import static com.commercetools.project.sync.util.SphereClientUtils.CTP_SOURCE_CLIENT_CONFIG;
 import static com.commercetools.project.sync.util.SphereClientUtils.CTP_TARGET_CLIENT_CONFIG;
 import static com.neovisionaries.i18n.CountryCode.DE;
@@ -28,8 +27,6 @@ import io.sphere.sdk.customergroups.CustomerGroup;
 import io.sphere.sdk.customergroups.CustomerGroupDraft;
 import io.sphere.sdk.customergroups.CustomerGroupDraftBuilder;
 import io.sphere.sdk.customergroups.commands.CustomerGroupCreateCommand;
-import io.sphere.sdk.customergroups.commands.CustomerGroupDeleteCommand;
-import io.sphere.sdk.customergroups.queries.CustomerGroupQuery;
 import io.sphere.sdk.models.LocalizedString;
 import io.sphere.sdk.models.ResourceIdentifier;
 import io.sphere.sdk.models.TextInputHint;
@@ -94,10 +91,6 @@ public class ProductSyncWithReferenceResolutionIT {
     syncerTestLogger.clearAll();
     cliRunnerTestLogger.clearAll();
     cleanUpProjects(createClient(CTP_SOURCE_CLIENT_CONFIG), createClient(CTP_TARGET_CLIENT_CONFIG));
-    queryAndExecute(
-        createClient(CTP_SOURCE_CLIENT_CONFIG),
-        CustomerGroupQuery.of(),
-        CustomerGroupDeleteCommand::of);
     setupSourceProjectData(createClient(CTP_SOURCE_CLIENT_CONFIG));
   }
 
@@ -176,6 +169,11 @@ public class ProductSyncWithReferenceResolutionIT {
             .execute(CustomerGroupCreateCommand.of(customerGroupDraft))
             .toCompletableFuture()
             .join();
+
+    createClient(CTP_TARGET_CLIENT_CONFIG)
+        .execute(CustomerGroupCreateCommand.of(customerGroupDraft))
+        .toCompletableFuture()
+        .join();
 
     final PriceDraft priceBuilder =
         PriceDraftBuilder.of(
