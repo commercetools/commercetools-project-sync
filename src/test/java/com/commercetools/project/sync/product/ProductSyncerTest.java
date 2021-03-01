@@ -9,6 +9,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import com.commercetools.project.sync.model.ProductSyncCustomRequest;
 import com.commercetools.project.sync.model.ResourceIdsGraphQlRequest;
 import com.commercetools.sync.commons.models.ResourceKeyIdGraphQlResult;
 import com.commercetools.sync.products.ProductSync;
@@ -17,7 +18,6 @@ import io.sphere.sdk.client.BadGatewayException;
 import io.sphere.sdk.client.SphereApiConfig;
 import io.sphere.sdk.client.SphereClient;
 import io.sphere.sdk.commands.UpdateAction;
-import io.sphere.sdk.expansion.ExpansionPath;
 import io.sphere.sdk.json.SphereJsonUtils;
 import io.sphere.sdk.products.Product;
 import io.sphere.sdk.products.ProductCatalogData;
@@ -26,6 +26,7 @@ import io.sphere.sdk.products.commands.updateactions.ChangeName;
 import io.sphere.sdk.products.commands.updateactions.Publish;
 import io.sphere.sdk.products.commands.updateactions.Unpublish;
 import io.sphere.sdk.products.queries.ProductQuery;
+import io.sphere.sdk.queries.QueryPredicate;
 import io.sphere.sdk.utils.CompletableFutureUtils;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -51,7 +52,8 @@ class ProductSyncerTest {
   void of_ShouldCreateProductSyncerInstance() {
     // test
     final ProductSyncer productSyncer =
-        ProductSyncer.of(mock(SphereClient.class), mock(SphereClient.class), getMockedClock());
+        ProductSyncer.of(
+            mock(SphereClient.class), mock(SphereClient.class), getMockedClock(), null);
 
     // assertions
     assertThat(productSyncer).isNotNull();
@@ -64,27 +66,25 @@ class ProductSyncerTest {
     // preparation
     final SphereClient sourceClient = mock(SphereClient.class);
     final ProductSyncer productSyncer =
-        ProductSyncer.of(sourceClient, mock(SphereClient.class), getMockedClock());
+        ProductSyncer.of(sourceClient, mock(SphereClient.class), getMockedClock(), null);
     final List<Product> productPage =
-        asList(
-            readObjectFromResource("product-key-1.json", Product.class),
-            readObjectFromResource("product-key-2.json", Product.class));
+        asList(readObjectFromResource("product-key-4.json", Product.class));
 
     String jsonStringProducts =
-        "{\"results\":[{\"id\":\"53c4a8b4-754f-4b95-b6f2-3e1e70e3d0c1\",\"key\":\"prod1\"},"
-            + "{\"id\":\"53c4a8b4-754f-4b95-b6f2-3e1e70e3d0c5\",\"key\":\"prod2\"}]}";
+        "{\"results\":[{\"id\":\"53c4a8b4-754f-4b95-b6f2-3e1e70e3d0d2\",\"key\":\"prod1\"},"
+            + "{\"id\":\"53c4a8b4-754f-4b95-b6f2-3e1e70e3d0d6\",\"key\":\"prod2\"}]}";
     final ResourceKeyIdGraphQlResult productsResult =
         SphereJsonUtils.readObject(jsonStringProducts, ResourceKeyIdGraphQlResult.class);
 
     String jsonStringProductTypes =
-        "{\"results\":[{\"id\":\"53c4a8b4-754f-4b95-b6f2-3e1e70e3d0c2\","
+        "{\"results\":[{\"id\":\"53c4a8b4-754f-4b95-b6f2-3e1e70e3d0d3\","
             + "\"key\":\"prodType1\"}]}";
     final ResourceKeyIdGraphQlResult productTypesResult =
         SphereJsonUtils.readObject(jsonStringProductTypes, ResourceKeyIdGraphQlResult.class);
 
     String jsonStringCategories =
-        "{\"results\":[{\"id\":\"53c4a8b4-754f-4b95-b6f2-3e1e70e3d0c3\",\"key\":\"cat1\"},"
-            + "{\"id\":\"53c4a8b4-754f-4b95-b6f2-3e1e70e3d0c4\",\"key\":\"cat2\"}]}";
+        "{\"results\":[{\"id\":\"53c4a8b4-754f-4b95-b6f2-3e1e70e3d0d4\",\"key\":\"cat1\"},"
+            + "{\"id\":\"53c4a8b4-754f-4b95-b6f2-3e1e70e3d0d5\",\"key\":\"cat2\"}]}";
     final ResourceKeyIdGraphQlResult categoriesResult =
         SphereJsonUtils.readObject(jsonStringCategories, ResourceKeyIdGraphQlResult.class);
 
@@ -102,7 +102,7 @@ class ProductSyncerTest {
     final Optional<ProductDraft> productDraftKey1 =
         draftsFromPageStage
             .stream()
-            .filter(productDraft -> "productKey1".equals(productDraft.getKey()))
+            .filter(productDraft -> "productKey4".equals(productDraft.getKey()))
             .findFirst();
 
     assertThat(productDraftKey1)
@@ -152,45 +152,6 @@ class ProductSyncerTest {
                               .isEqualTo("prodType1");
                         }));
 
-    final Optional<ProductDraft> productDraftKey2 =
-        draftsFromPageStage
-            .stream()
-            .filter(productDraft -> "productKey2".equals(productDraft.getKey()))
-            .findFirst();
-
-    assertThat(productDraftKey2)
-        .hasValueSatisfying(
-            productDraft ->
-                assertThat(productDraft.getMasterVariant().getAttributes())
-                    .anySatisfy(
-                        attributeDraft -> {
-                          assertThat(attributeDraft.getName()).isEqualTo("productReference");
-                          assertThat(attributeDraft.getValue().get("id").asText())
-                              .isEqualTo("prod1");
-                        }));
-
-    assertThat(productDraftKey2)
-        .hasValueSatisfying(
-            productDraft ->
-                assertThat(productDraft.getMasterVariant().getAttributes())
-                    .anySatisfy(
-                        attributeDraft -> {
-                          assertThat(attributeDraft.getName()).isEqualTo("categoryReference");
-                          assertThat(attributeDraft.getValue().get("id").asText())
-                              .isEqualTo("cat1");
-                        }));
-
-    assertThat(productDraftKey2)
-        .hasValueSatisfying(
-            productDraft ->
-                assertThat(productDraft.getMasterVariant().getAttributes())
-                    .anySatisfy(
-                        attributeDraft -> {
-                          assertThat(attributeDraft.getName()).isEqualTo("productTypeReference");
-                          assertThat(attributeDraft.getValue().get("id").asText())
-                              .isEqualTo("prodType1");
-                        }));
-
     assertThat(testLogger.getAllLoggingEvents()).isEmpty();
   }
 
@@ -201,7 +162,7 @@ class ProductSyncerTest {
     final SphereClient sourceClient = mock(SphereClient.class);
     when(sourceClient.getConfig()).thenReturn(SphereApiConfig.of("test-project"));
     final ProductSyncer productSyncer =
-        ProductSyncer.of(sourceClient, mock(SphereClient.class), getMockedClock());
+        ProductSyncer.of(sourceClient, mock(SphereClient.class), getMockedClock(), null);
     final List<Product> productPage =
         asList(
             readObjectFromResource("product-key-1.json", Product.class),
@@ -285,7 +246,7 @@ class ProductSyncerTest {
     // preparation
     final SphereClient sourceClient = mock(SphereClient.class);
     final ProductSyncer productSyncer =
-        ProductSyncer.of(sourceClient, mock(SphereClient.class), getMockedClock());
+        ProductSyncer.of(sourceClient, mock(SphereClient.class), getMockedClock(), null);
     final List<Product> productPage =
         asList(
             readObjectFromResource("product-key-1.json", Product.class),
@@ -315,27 +276,43 @@ class ProductSyncerTest {
   }
 
   @Test
-  void getQuery_ShouldBuildProductQuery() {
+  void getQuery_ShouldBuildProductQueryWithoutAnyExpansionPaths() {
     // preparation
     final ProductSyncer productSyncer =
-        ProductSyncer.of(mock(SphereClient.class), mock(SphereClient.class), getMockedClock());
+        ProductSyncer.of(
+            mock(SphereClient.class), mock(SphereClient.class), getMockedClock(), null);
 
     // test
     final ProductQuery query = productSyncer.getQuery();
 
     // assertion
-    assertThat(query.expansionPaths())
-        .containsExactly(
-            ExpansionPath.of("productType"),
-            ExpansionPath.of("taxCategory"),
-            ExpansionPath.of("state"),
-            ExpansionPath.of("masterData.staged.categories[*]"),
-            ExpansionPath.of("masterData.staged.masterVariant.prices[*].channel"),
-            ExpansionPath.of("masterData.staged.variants[*].prices[*].channel"),
-            ExpansionPath.of("masterData.staged.masterVariant.prices[*].custom.type"),
-            ExpansionPath.of("masterData.staged.variants[*].prices[*].custom.type"),
-            ExpansionPath.of("masterData.staged.masterVariant.assets[*].custom.type"),
-            ExpansionPath.of("masterData.staged.variants[*].assets[*].custom.type"));
+    assertThat(query.expansionPaths()).isEmpty();
+  }
+
+  @Test
+  void getQuery_ShouldBuildProductQueryWithCustomQueryAndLimitSize() {
+    // preparation
+    final Long limit = 100L;
+    final String customQuery =
+        "published=true AND masterData(masterVariant(attributes(name= \"abc\" AND value=123)))";
+
+    final ProductSyncCustomRequest productSyncCustomRequest = new ProductSyncCustomRequest();
+    productSyncCustomRequest.setWhere(customQuery);
+    productSyncCustomRequest.setLimit(limit);
+
+    final ProductSyncer productSyncer =
+        ProductSyncer.of(
+            mock(SphereClient.class),
+            mock(SphereClient.class),
+            getMockedClock(),
+            productSyncCustomRequest);
+
+    // test
+    final ProductQuery query = productSyncer.getQuery();
+
+    // assertion
+    assertThat(query.limit()).isEqualTo(100);
+    assertThat(query.predicates()).contains(QueryPredicate.of(customQuery));
   }
 
   @Test

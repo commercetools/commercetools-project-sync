@@ -2,10 +2,10 @@ package com.commercetools.project.sync.category;
 
 import static com.commercetools.project.sync.util.SyncUtils.logErrorCallback;
 import static com.commercetools.project.sync.util.SyncUtils.logWarningCallback;
-import static com.commercetools.sync.categories.utils.CategoryReferenceResolutionUtils.buildCategoryQuery;
-import static com.commercetools.sync.categories.utils.CategoryReferenceResolutionUtils.mapToCategoryDrafts;
 
 import com.commercetools.project.sync.Syncer;
+import com.commercetools.project.sync.category.service.CategoryReferenceTransformService;
+import com.commercetools.project.sync.category.service.impl.CategoryReferenceTransformTransformServiceImpl;
 import com.commercetools.project.sync.service.CustomObjectService;
 import com.commercetools.project.sync.service.impl.CustomObjectServiceImpl;
 import com.commercetools.sync.categories.CategorySync;
@@ -23,7 +23,6 @@ import io.sphere.sdk.commands.UpdateAction;
 import java.time.Clock;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import javax.annotation.Nonnull;
 import org.slf4j.Logger;
@@ -40,16 +39,18 @@ public final class CategorySyncer
 
   private static final Logger LOGGER = LoggerFactory.getLogger(CategorySyncer.class);
 
+  private final CategoryReferenceTransformService referencesService;
+
   /** Instantiates a {@link Syncer} instance. */
   private CategorySyncer(
       @Nonnull final CategorySync categorySync,
       @Nonnull final SphereClient sourceClient,
       @Nonnull final SphereClient targetClient,
       @Nonnull final CustomObjectService customObjectService,
+      @Nonnull final CategoryReferenceTransformService referencesService,
       @Nonnull final Clock clock) {
     super(categorySync, sourceClient, targetClient, customObjectService, clock);
-    // TODO: Instead of reference expansion, we could cache all keys and replace references
-    // manually.
+    this.referencesService = referencesService;
   }
 
   @Nonnull
@@ -79,18 +80,27 @@ public final class CategorySyncer
 
     final CustomObjectService customObjectService = new CustomObjectServiceImpl(targetClient);
 
-    return new CategorySyncer(categorySync, sourceClient, targetClient, customObjectService, clock);
+    final CategoryReferenceTransformService referenceTransformService =
+        new CategoryReferenceTransformTransformServiceImpl(sourceClient);
+
+    return new CategorySyncer(
+        categorySync,
+        sourceClient,
+        targetClient,
+        customObjectService,
+        referenceTransformService,
+        clock);
   }
 
   @Override
   @Nonnull
   protected CompletionStage<List<CategoryDraft>> transform(@Nonnull final List<Category> page) {
-    return CompletableFuture.completedFuture(mapToCategoryDrafts(page));
+    return this.referencesService.transformCategoryReferences(page);
   }
 
   @Nonnull
   @Override
   protected CategoryQuery getQuery() {
-    return buildCategoryQuery();
+    return CategoryQuery.of();
   }
 }

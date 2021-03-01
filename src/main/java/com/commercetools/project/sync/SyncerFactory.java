@@ -14,6 +14,7 @@ import com.commercetools.project.sync.customer.CustomerSyncer;
 import com.commercetools.project.sync.customobject.CustomObjectSyncer;
 import com.commercetools.project.sync.exception.CliException;
 import com.commercetools.project.sync.inventoryentry.InventoryEntrySyncer;
+import com.commercetools.project.sync.model.ProductSyncCustomRequest;
 import com.commercetools.project.sync.product.ProductSyncer;
 import com.commercetools.project.sync.producttype.ProductTypeSyncer;
 import com.commercetools.project.sync.shoppinglist.ShoppingListSyncer;
@@ -70,7 +71,8 @@ final class SyncerFactory {
       @Nonnull final String[] syncOptionValues,
       @Nullable final String runnerNameOptionValue,
       final boolean isFullSync,
-      final boolean isSyncProjectSyncCustomObjects) {
+      final boolean isSyncProjectSyncCustomObjects,
+      @Nullable final ProductSyncCustomRequest productSyncCustomRequest) {
 
     final List<SyncModuleOption> syncModuleOptions;
     try {
@@ -92,7 +94,8 @@ final class SyncerFactory {
                       runnerNameOptionValue,
                       isFullSync,
                       isSyncProjectSyncCustomObjects,
-                      syncOptions));
+                      syncOptions,
+                      productSyncCustomRequest));
     }
 
     return stagedSyncersToRunSequentially.whenComplete((syncResult, throwable) -> closeClients());
@@ -103,7 +106,8 @@ final class SyncerFactory {
       @Nullable final String runnerNameOptionValue,
       final boolean isFullSync,
       final boolean isSyncProjectSyncCustomObjects,
-      final List<SyncModuleOption> syncOptions) {
+      final List<SyncModuleOption> syncOptions,
+      @Nullable final ProductSyncCustomRequest productSyncCustomRequest) {
     final List<CompletableFuture<Void>> syncersToRunParallel = new ArrayList<>();
 
     for (SyncModuleOption syncOptionValue : syncOptions) {
@@ -115,7 +119,11 @@ final class SyncerFactory {
               ? extends QueryDsl<?, ?>,
               ? extends BaseSync<?, ?, ?>>
           syncer =
-              buildSyncer(syncOptionValue, runnerNameOptionValue, isSyncProjectSyncCustomObjects);
+              buildSyncer(
+                  syncOptionValue,
+                  runnerNameOptionValue,
+                  isSyncProjectSyncCustomObjects,
+                  productSyncCustomRequest);
       syncersToRunParallel.add(
           syncer.sync(runnerNameOptionValue, isFullSync).toCompletableFuture());
     }
@@ -271,7 +279,8 @@ final class SyncerFactory {
       buildSyncer(
           @Nonnull final SyncModuleOption syncModuleOption,
           @Nonnull final String runnerNameOptionValue,
-          final boolean syncProjectSyncCustomObjects) {
+          final boolean syncProjectSyncCustomObjects,
+          @Nullable final ProductSyncCustomRequest productSyncCustomRequest) {
 
     Syncer<
             ? extends ResourceView,
@@ -295,7 +304,12 @@ final class SyncerFactory {
         syncer = CategorySyncer.of(sourceClientSupplier.get(), targetClientSupplier.get(), clock);
         break;
       case PRODUCT_SYNC:
-        syncer = ProductSyncer.of(sourceClientSupplier.get(), targetClientSupplier.get(), clock);
+        syncer =
+            ProductSyncer.of(
+                sourceClientSupplier.get(),
+                targetClientSupplier.get(),
+                clock,
+                productSyncCustomRequest);
         break;
       case INVENTORY_ENTRY_SYNC:
         syncer =

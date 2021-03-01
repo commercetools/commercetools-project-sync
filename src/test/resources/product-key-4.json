@@ -1,7 +1,7 @@
 {
   "id": "ba81a6da-cf83-435b-a89e-2afab579846f",
   "version": 10,
-  "key": "productKey3",
+  "key": "productKey4",
   "productType": {
     "typeId": "product-type",
     "id": "cda0dbf7-b42e-40bf-8453-241d5b587f93"
@@ -18,19 +18,19 @@
       "categories": [
         {
           "typeId": "category",
-          "id": "1dfc8bea-84f2-45bc-b3c2-cdc94bf96f3f"
+          "id": "1dfc8bea-84f2-45bc-b3c2-cdc94bf96f1f"
         },
         {
           "typeId": "category",
-          "id": "2dfc8bea-84f2-45bc-b3c2-cdc94bf96f3f"
+          "id": "2dfc8bea-84f2-45bc-b3c2-cdc94bf96f1f"
         },
         {
           "typeId": "category",
-          "id": "3dfc8bea-84f2-45bc-b3c2-cdc94bf96f3f"
+          "id": "3dfc8bea-84f2-45bc-b3c2-cdc94bf96f1f"
         },
         {
           "typeId": "category",
-          "id": "4dfc8bea-84f2-45bc-b3c2-cdc94bf96f3f"
+          "id": "4dfc8bea-84f2-45bc-b3c2-cdc94bf96f1f"
         }
       ],
       "categoryOrderHints": {
@@ -108,6 +108,39 @@
               "de": "Audi connect verbindet Ihren Audi mit dem Internet und der Infrastruktur, um Sie unterwegs mit Informationen und Unterhaltung zu versorgen",
               "en": "An emergency call is placed automatically in the event of a severe accident"
             }
+          },
+          {
+            "name": "productReference",
+            "value": [
+              {
+                "id": "53c4a8b4-754f-4b95-b6f2-3e1e70e3d0d2",
+                "typeId": "product"
+              },
+              {
+                "id": "53c4a8b4-754f-4b95-b6f2-3e1e70e3d0d6",
+                "typeId": "product"
+              }
+            ]
+          },
+          {
+            "name": "productTypeReference",
+            "value": {
+              "id": "53c4a8b4-754f-4b95-b6f2-3e1e70e3d0d3",
+              "typeId": "product-type"
+            }
+          },
+          {
+            "name": "categoryReference",
+            "value": [
+              {
+                "id": "53c4a8b4-754f-4b95-b6f2-3e1e70e3d0d4",
+                "typeId": "category"
+              },
+              {
+                "id": "53c4a8b4-754f-4b95-b6f2-3e1e70e3d0d5",
+                "typeId": "category"
+              }
+            ]
           }
         ],
         "assets": [],

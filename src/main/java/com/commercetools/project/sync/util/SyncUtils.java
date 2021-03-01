@@ -8,9 +8,12 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import com.commercetools.sync.commons.BaseSync;
 import com.commercetools.sync.commons.exceptions.SyncException;
 import io.sphere.sdk.commands.UpdateAction;
+import io.sphere.sdk.models.Reference;
+import io.sphere.sdk.models.ResourceIdentifier;
 import io.sphere.sdk.models.ResourceView;
 import io.sphere.sdk.models.WithKey;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
@@ -128,6 +131,33 @@ public final class SyncUtils {
   @Nonnull
   private static String getRunnerNameValue(@Nullable final String runnerName) {
     return ofNullable(runnerName).filter(StringUtils::isNotBlank).orElse(DEFAULT_RUNNER_NAME);
+  }
+
+  /**
+   * Given a reference to a resource of type {@code T}, this method checks if the reference is found
+   * in cache. If it is, then it return the resource identifier with key. Otherwise, it returns the
+   * resource identifier with id. Since, the reference could be {@code null}, this method could also
+   * return null if the reference was not expanded and cached.
+   *
+   * @param reference the reference of the resource to check if it's expanded.
+   * @param <T> the type of the resource.
+   * @param referenceIdToKeyMap the map containing the cached id to key values.
+   * @return returns the resource identifier with key if the {@code reference} was found in cache.
+   *     Otherwise, it returns the resource identifier with id.
+   */
+  @Nullable
+  public static <T extends WithKey> ResourceIdentifier<T> getResourceIdentifierWithKey(
+      @Nullable final Reference<T> reference, Map<String, String> referenceIdToKeyMap) {
+
+    if (reference != null) {
+      final String id = reference.getId();
+      if (referenceIdToKeyMap.containsKey(id)) {
+        return ResourceIdentifier.ofKey(referenceIdToKeyMap.get(id));
+      }
+      return ResourceIdentifier.ofId(id);
+    }
+
+    return null;
   }
 
   private SyncUtils() {}
