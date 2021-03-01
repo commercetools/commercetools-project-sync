@@ -287,6 +287,71 @@ class CliRunnerTest {
   }
 
   @Test
+  void
+      run_AsProductSyncWithProductQueryParametersAndOnlyLimit_ShouldBuildSyncerAndExecuteQuerySuccessfully() {
+    // preparation
+    final SphereClient sourceClient = mock(SphereClient.class);
+    when(sourceClient.getConfig()).thenReturn(SphereClientConfig.of("foo", "foo", "foo"));
+
+    final SphereClient targetClient = mock(SphereClient.class);
+    when(targetClient.getConfig()).thenReturn(SphereClientConfig.of("bar", "bar", "bar"));
+
+    when(sourceClient.execute(any(ProductQuery.class)))
+        .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
+
+    final Long limit = 100L;
+    final String productQueryParametersValue = "{\"limit\": " + limit + "}";
+
+    final SyncerFactory syncerFactory =
+        spy(SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock()));
+
+    stubClientsCustomObjectService(targetClient, ZonedDateTime.now());
+    // test
+    CliRunner.of()
+        .run(
+            new String[] {
+              "-s", "products", "-f", "-productQueryParameters", productQueryParametersValue
+            },
+            syncerFactory);
+
+    // assertions
+    verify(sourceClient, times(1)).execute(any(ProductQuery.class));
+  }
+
+  @Test
+  void
+      run_AsProductSyncWithProductQueryParametersAndOnlyWhere_ShouldBuildSyncerAndExecuteQuerySuccessfully() {
+    // preparation
+    final SphereClient sourceClient = mock(SphereClient.class);
+    when(sourceClient.getConfig()).thenReturn(SphereClientConfig.of("foo", "foo", "foo"));
+
+    final SphereClient targetClient = mock(SphereClient.class);
+    when(targetClient.getConfig()).thenReturn(SphereClientConfig.of("bar", "bar", "bar"));
+
+    when(sourceClient.execute(any(ProductQuery.class)))
+        .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
+
+    final String customQuery =
+        "\"published=true AND masterData(masterVariant(attributes(name= \\\"abc\\\" AND value=123)))\"";
+    final String productQueryParametersValue = "{\"where\": " + customQuery + "}";
+
+    final SyncerFactory syncerFactory =
+        spy(SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock()));
+
+    stubClientsCustomObjectService(targetClient, ZonedDateTime.now());
+    // test
+    CliRunner.of()
+        .run(
+            new String[] {
+              "-s", "products", "-f", "-productQueryParameters", productQueryParametersValue
+            },
+            syncerFactory);
+
+    // assertions
+    verify(sourceClient, times(1)).execute(any(ProductQuery.class));
+  }
+
+  @Test
   void run_WithWrongFormatProductQueryParametersArgument_ShouldThrowCLIException() {
     // preparation
     final SphereClient sourceClient = mock(SphereClient.class);
