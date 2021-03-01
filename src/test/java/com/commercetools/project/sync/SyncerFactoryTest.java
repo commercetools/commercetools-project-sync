@@ -282,12 +282,12 @@ class SyncerFactoryTest {
     final SphereClient targetClient = mock(SphereClient.class);
     when(targetClient.getConfig()).thenReturn(SphereClientConfig.of("bar", "bar", "bar"));
 
-    final Product product1 =
-        SphereJsonUtils.readObjectFromResource("product-key-1.json", Product.class);
-    final Product product2 =
-        SphereJsonUtils.readObjectFromResource("product-key-2.json", Product.class);
+    final Product product5 =
+        SphereJsonUtils.readObjectFromResource("product-key-5.json", Product.class);
+    final Product product6 =
+        SphereJsonUtils.readObjectFromResource("product-key-6.json", Product.class);
     final PagedQueryResult<Product> twoProductResult =
-        MockPagedQueryResult.of(asList(product1, product2));
+        MockPagedQueryResult.of(asList(product5, product6));
 
     when(sourceClient.execute(any(ProductQuery.class)))
         .thenReturn(CompletableFuture.completedFuture(twoProductResult));
