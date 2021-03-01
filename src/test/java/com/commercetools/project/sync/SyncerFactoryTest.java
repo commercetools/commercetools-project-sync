@@ -106,7 +106,7 @@ class SyncerFactoryTest {
                     () -> mock(SphereClient.class),
                     () -> mock(SphereClient.class),
                     getMockedClock())
-                .sync(new String[] {null}, "myRunnerName", false, false))
+                .sync(new String[] {null}, "myRunnerName", false, false, null))
         .failsWithin(1, TimeUnit.SECONDS)
         .withThrowableOfType(ExecutionException.class)
         .withCauseExactlyInstanceOf(CliException.class)
@@ -123,7 +123,7 @@ class SyncerFactoryTest {
                     () -> mock(SphereClient.class),
                     () -> mock(SphereClient.class),
                     getMockedClock())
-                .sync(new String[] {""}, "myRunnerName", false, false))
+                .sync(new String[] {""}, "myRunnerName", false, false, null))
         .failsWithin(1, TimeUnit.SECONDS)
         .withThrowableOfType(ExecutionException.class)
         .withCauseExactlyInstanceOf(CliException.class)
@@ -142,7 +142,7 @@ class SyncerFactoryTest {
                     () -> mock(SphereClient.class),
                     () -> mock(SphereClient.class),
                     getMockedClock())
-                .sync(unknownOptionValue, "myRunnerName", false, false))
+                .sync(unknownOptionValue, "myRunnerName", false, false, null))
         .failsWithin(1, TimeUnit.SECONDS)
         .withThrowableOfType(ExecutionException.class)
         .withCauseExactlyInstanceOf(CliException.class)
@@ -172,7 +172,7 @@ class SyncerFactoryTest {
     stubClientsCustomObjectService(targetClient, currentCtpTimestamp);
 
     // test
-    syncerFactory.sync(new String[] {"products"}, "myRunnerName", false, false);
+    syncerFactory.sync(new String[] {"products"}, "myRunnerName", false, false, null);
 
     // assertions
     verify(sourceClient, times(1)).execute(any(ProductQuery.class));
@@ -235,7 +235,7 @@ class SyncerFactoryTest {
     stubClientsCustomObjectService(targetClient, currentCtpTimestamp);
 
     // test
-    syncerFactory.sync(new String[] {"products"}, "myRunnerName", true, false);
+    syncerFactory.sync(new String[] {"products"}, "myRunnerName", true, false, null);
 
     // assertions
     verify(sourceClient, times(1)).execute(any(ProductQuery.class));
@@ -303,7 +303,7 @@ class SyncerFactoryTest {
         SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock());
 
     // test
-    syncerFactory.sync(new String[] {"products"}, "myRunnerName", true, false);
+    syncerFactory.sync(new String[] {"products"}, "myRunnerName", true, false, null);
 
     // assertions
     verify(sourceClient, times(1)).execute(any(ProductQuery.class));
@@ -422,7 +422,7 @@ class SyncerFactoryTest {
         SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock());
 
     // test
-    syncerFactory.sync(new String[] {"products"}, "myRunnerName", true, false);
+    syncerFactory.sync(new String[] {"products"}, "myRunnerName", true, false, null);
 
     // assertions
     verify(sourceClient, times(2)).execute(any(ProductQuery.class));
@@ -569,7 +569,7 @@ class SyncerFactoryTest {
     stubClientsCustomObjectService(targetClient, currentCtpTimestamp);
 
     // test
-    syncerFactory.sync(new String[] {"categories"}, null, false, false);
+    syncerFactory.sync(new String[] {"categories"}, null, false, false, null);
 
     // assertions
     verify(sourceClient, times(1)).execute(any(CategoryQuery.class));
@@ -632,7 +632,7 @@ class SyncerFactoryTest {
     stubClientsCustomObjectService(targetClient, currentCtpTimestamp);
 
     // test
-    syncerFactory.sync(new String[] {"productTypes"}, "", false, false);
+    syncerFactory.sync(new String[] {"productTypes"}, "", false, false, null);
 
     // assertions
     verify(sourceClient, times(1)).execute(any(ProductTypeQuery.class));
@@ -696,7 +696,7 @@ class SyncerFactoryTest {
         SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock());
 
     // test
-    syncerFactory.sync(new String[] {"types"}, "foo", false, false);
+    syncerFactory.sync(new String[] {"types"}, "foo", false, false, null);
 
     // assertions
     verify(sourceClient, times(1)).execute(any(TypeQuery.class));
@@ -758,7 +758,7 @@ class SyncerFactoryTest {
         SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock());
 
     // test
-    syncerFactory.sync(new String[] {"inventoryEntries"}, null, false, false);
+    syncerFactory.sync(new String[] {"inventoryEntries"}, null, false, false, null);
 
     // assertions
     verify(sourceClient, times(1)).execute(any(InventoryEntryQuery.class));
@@ -822,7 +822,7 @@ class SyncerFactoryTest {
 
     // test
     final CompletionStage<Void> result =
-        syncerFactory.sync(new String[] {"inventoryEntries"}, null, false, false);
+        syncerFactory.sync(new String[] {"inventoryEntries"}, null, false, false, null);
 
     // assertions
     verifyTimestampGeneratorCustomObjectUpsertIsCalled(
@@ -855,7 +855,7 @@ class SyncerFactoryTest {
 
     // test
     final CompletionStage<Void> result =
-        syncerFactory.sync(new String[] {"inventoryEntries"}, "", false, false);
+        syncerFactory.sync(new String[] {"inventoryEntries"}, "", false, false, null);
 
     // assertions
     verifyTimestampGeneratorCustomObjectUpsertIsCalled(
@@ -893,7 +893,7 @@ class SyncerFactoryTest {
 
     // test
     final CompletionStage<Void> result =
-        syncerFactory.sync(new String[] {"inventoryEntries"}, "bar", false, false);
+        syncerFactory.sync(new String[] {"inventoryEntries"}, "bar", false, false, null);
 
     // assertions
     verifyTimestampGeneratorCustomObjectUpsertIsCalled(targetClient, "InventorySync", "bar");
@@ -946,7 +946,7 @@ class SyncerFactoryTest {
         SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock());
 
     // test
-    syncerFactory.sync(new String[] {"all"}, null, false, false).join();
+    syncerFactory.sync(new String[] {"all"}, null, false, false, null).join();
 
     // assertions
     verifyTimestampGeneratorCustomObjectUpsertIsCalled(
@@ -1028,7 +1028,7 @@ class SyncerFactoryTest {
 
     // test
     String[] syncModuleOptions = {"productTypes", "products", "customers", "shoppingLists"};
-    syncerFactory.sync(syncModuleOptions, null, false, false).join();
+    syncerFactory.sync(syncModuleOptions, null, false, false, null).join();
 
     // assertions
     verifyTimestampGeneratorCustomObjectUpsertIsCalled(
@@ -1093,7 +1093,7 @@ class SyncerFactoryTest {
 
     // test
     String[] syncModuleOptions = {"states", "inventoryEntries", "customObjects"};
-    syncerFactory.sync(syncModuleOptions, null, false, false).join();
+    syncerFactory.sync(syncModuleOptions, null, false, false, null).join();
 
     // assertions
     verifyTimestampGeneratorCustomObjectUpsertIsCalled(
@@ -1141,7 +1141,7 @@ class SyncerFactoryTest {
 
     // test
     String[] syncModuleOptions = {"types", "categories"};
-    syncerFactory.sync(syncModuleOptions, null, false, false).join();
+    syncerFactory.sync(syncModuleOptions, null, false, false, null).join();
 
     // assertions
     verifyTimestampGeneratorCustomObjectUpsertIsCalled(
@@ -1186,7 +1186,7 @@ class SyncerFactoryTest {
 
     // test
     String[] syncModuleOptions = {"products", "shoppingLists"};
-    syncerFactory.sync(syncModuleOptions, null, false, false).join();
+    syncerFactory.sync(syncModuleOptions, null, false, false, null).join();
 
     // assertions
     verifyTimestampGeneratorCustomObjectUpsertIsCalled(
@@ -1247,7 +1247,7 @@ class SyncerFactoryTest {
 
     // test
     String[] syncResources = {"productTypes", "unknown", "shoppingLists"};
-    CompletionStage<Void> result = syncerFactory.sync(syncResources, null, false, false);
+    CompletionStage<Void> result = syncerFactory.sync(syncResources, null, false, false, null);
 
     String errorMessage =
         format(
@@ -1274,7 +1274,7 @@ class SyncerFactoryTest {
 
     // test
     String[] syncResources = {"productTypes", "all", "shoppingLists"};
-    CompletionStage<Void> result = syncerFactory.sync(syncResources, null, false, false);
+    CompletionStage<Void> result = syncerFactory.sync(syncResources, null, false, false, null);
 
     String errorMessage =
         format(

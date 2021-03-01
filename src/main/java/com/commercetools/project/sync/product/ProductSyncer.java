@@ -6,6 +6,7 @@ import static java.lang.String.format;
 import static java.util.stream.Collectors.toSet;
 
 import com.commercetools.project.sync.Syncer;
+import com.commercetools.project.sync.model.ProductSyncCustomRequest;
 import com.commercetools.project.sync.product.service.ProductReferenceTransformService;
 import com.commercetools.project.sync.product.service.impl.ProductReferenceTransformServiceImpl;
 import com.commercetools.project.sync.service.CustomObjectService;
@@ -32,6 +33,7 @@ import io.sphere.sdk.products.commands.updateactions.Publish;
 import io.sphere.sdk.products.commands.updateactions.Unpublish;
 import io.sphere.sdk.products.queries.ProductQuery;
 import io.sphere.sdk.producttypes.ProductType;
+import io.sphere.sdk.queries.QueryPredicate;
 import java.time.Clock;
 import java.util.Collection;
 import java.util.Collections;
@@ -43,6 +45,7 @@ import java.util.concurrent.CompletionException;
 import java.util.concurrent.CompletionStage;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -65,6 +68,8 @@ public final class ProductSyncer
           + "Please make sure these referenced resources are existing and have non-blank (i.e. non-null and non-empty) keys.";
   private final ProductReferenceTransformService referencesService;
 
+  private final ProductSyncCustomRequest productSyncCustomRequest;
+
   /** Instantiates a {@link Syncer} instance. */
   private ProductSyncer(
       @Nonnull final ProductSync productSync,
@@ -72,16 +77,19 @@ public final class ProductSyncer
       @Nonnull final SphereClient targetClient,
       @Nonnull final CustomObjectService customObjectService,
       @Nonnull final ProductReferenceTransformService referencesService,
-      @Nonnull final Clock clock) {
+      @Nonnull final Clock clock,
+      @Nullable final ProductSyncCustomRequest productSyncCustomRequest) {
     super(productSync, sourceClient, targetClient, customObjectService, clock);
     this.referencesService = referencesService;
+    this.productSyncCustomRequest = productSyncCustomRequest;
   }
 
   @Nonnull
   public static ProductSyncer of(
       @Nonnull final SphereClient sourceClient,
       @Nonnull final SphereClient targetClient,
-      @Nonnull final Clock clock) {
+      @Nonnull final Clock clock,
+      @Nullable final ProductSyncCustomRequest productSyncCustomRequest) {
 
     final QuadConsumer<
             SyncException, Optional<ProductDraft>, Optional<Product>, List<UpdateAction<Product>>>
@@ -106,7 +114,13 @@ public final class ProductSyncer
         new ProductReferenceTransformServiceImpl(sourceClient);
 
     return new ProductSyncer(
-        productSync, sourceClient, targetClient, customObjectService, referencesService, clock);
+        productSync,
+        sourceClient,
+        targetClient,
+        customObjectService,
+        referencesService,
+        clock,
+        productSyncCustomRequest);
   }
 
   @Override
@@ -281,7 +295,19 @@ public final class ProductSyncer
   @Nonnull
   @Override
   protected ProductQuery getQuery() {
-    return ProductQuery.of();
+    ProductSyncCustomRequest customRequest = this.productSyncCustomRequest;
+    ProductQuery productQuery = ProductQuery.of();
+    if (customRequest == null) {
+      return productQuery;
+    }
+    if (null != customRequest.getLimit()) {
+      productQuery = productQuery.withLimit(customRequest.getLimit());
+    }
+    if (null != customRequest.getWhere()) {
+      productQuery = productQuery.withPredicates(QueryPredicate.of(customRequest.getWhere()));
+    }
+
+    return productQuery;
   }
 
   /**

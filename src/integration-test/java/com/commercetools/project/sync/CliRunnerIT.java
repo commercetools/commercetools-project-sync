@@ -1061,6 +1061,51 @@ class CliRunnerIT {
     }
   }
 
+  @Test
+  void
+      run_WithSyncAsArgumentWithAllArgAsFullSyncAndWithCustomQueryAndLimitForProducts_ShouldExecuteAllSyncers() {
+    // preparation
+    try (final SphereClient targetClient = createClient(CTP_TARGET_CLIENT_CONFIG)) {
+      try (final SphereClient sourceClient = createClient(CTP_SOURCE_CLIENT_CONFIG)) {
+
+        final SyncerFactory syncerFactory =
+            SyncerFactory.of(() -> sourceClient, () -> targetClient, Clock.systemDefaultZone());
+
+        final Long limit = 100L;
+        final String customQuery =
+            "\"masterData(published=true) AND masterData(staged(masterVariant(key= \\\"foo\\\")))\"";
+        final String productQueryParametersValue =
+            "{\"limit\": " + limit + ", \"where\": " + customQuery + "}";
+
+        // test
+        CliRunner.of()
+            .run(
+                new String[] {
+                  "-s",
+                  "all",
+                  "-r",
+                  "runnerName",
+                  "-f",
+                  "-productQueryParameters",
+                  productQueryParametersValue
+                },
+                syncerFactory);
+      }
+    }
+
+    // create clients again (for assertions and cleanup), since the run method closes the clients
+    // after execution is done.
+    try (final SphereClient postTargetClient = createClient(CTP_TARGET_CLIENT_CONFIG)) {
+      // assertions
+      assertAllSyncersLoggingEvents(syncerTestLogger, cliRunnerTestLogger, 1);
+
+      assertAllResourcesAreSyncedToTarget(postTargetClient);
+      assertCurrentCtpTimestampGeneratorDoesntExist(
+          postTargetClient, "runnerName", "ProductTypeSync");
+      assertNoProjectSyncCustomObjectExists(postTargetClient);
+    }
+  }
+
   private void assertNoProjectSyncCustomObjectExists(@Nonnull final SphereClient targetClient) {
     final CustomObjectQuery<LastSyncCustomObject> lastSyncQuery =
         CustomObjectQuery.of(LastSyncCustomObject.class)

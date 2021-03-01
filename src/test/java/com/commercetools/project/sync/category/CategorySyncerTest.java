@@ -27,6 +27,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.stream.Collectors;
@@ -169,6 +170,7 @@ class CategorySyncerTest {
     when(targetPagedQueryResult.getResults()).thenReturn(targetCategories);
     when(targetClient.execute(any(CategoryQuery.class)))
         .thenReturn(CompletableFuture.completedFuture(targetPagedQueryResult));
+    when(targetPagedQueryResult.head()).thenReturn(Optional.of(targetCategories.get(0)));
 
     final ResourceKeyIdGraphQlResult resourceKeyIdGraphQlResult =
         mock(ResourceKeyIdGraphQlResult.class);

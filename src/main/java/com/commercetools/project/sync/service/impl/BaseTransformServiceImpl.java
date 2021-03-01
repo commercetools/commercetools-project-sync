@@ -10,6 +10,7 @@ import com.commercetools.sync.commons.models.ResourceKeyId;
 import com.commercetools.sync.commons.utils.ChunkUtils;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.sphere.sdk.client.SphereClient;
 import java.util.Collections;
 import java.util.HashSet;
@@ -43,6 +44,8 @@ public class BaseTransformServiceImpl {
     return Caffeine.newBuilder().maximumSize(100_000).executor(Runnable::run).build();
   }
 
+  @SuppressFBWarnings(
+      "NP_NONNULL_PARAM_VIOLATION") // https://github.com/findbugsproject/findbugs/issues/79
   protected CompletableFuture<Void> fetchAndFillReferenceIdToKeyCache(
       @Nonnull final Set<String> ids, @Nonnull final GraphQlQueryResources requestType) {
 

@@ -108,6 +108,13 @@ As of now, these are the supported resources:
                                         "shoppingLists" or "all".
        --syncProjectSyncCustomObjects   Sync custom objects that were created
                                         with project sync (this application).
+       --productQueryParameters         Pass your customized product fetch limit
+                                        and a product predicate to filter product 
+                                        resources to sync in the JSON format. 
+                                        Example: "{\"limit\": 100, \"where\": \"masterData
+                                        (published=true)\"}" could be used to fetch 
+                                        only published products to sync and limit 
+                                        max 100 elements in one page.                
     -v,--version                        Print the version of the application.
    ```
 
@@ -165,6 +172,24 @@ The application can sync multiple resources. For example, to run `type` and `pro
 the  `-s` option with `types productTypes` as below:
 ```bash
 -s types productTypes
+```
+
+#### Running ProductSync with custom product query parameters
+
+You might pass your customized product fetch limit, and a product predicate to filter product resources to sync in the JSON format.
+
+For instance:
+
+```bash
+-s products -productQueryParameters "{\"limit\": 100, \"where\": \"masterData(published=true) AND masterData(staged(masterVariant(attributes(name=\\\"attribute-name\\\" and value=\\\"attribute-value\\\"))))\"}"
+```
+
+Predicates provide a way for complex filter expressions when querying resources. Refer commercetools docs for more details.
+
+Note: The value of the productQueryParameters argument should be in JSON format and as shown in the above example, please use escape character \ for the nested double quote values.
+Example: 
+```bash
+-s products -productQueryParameters "{\"limit\": 100, \"where\": \"masterData(published=true) AND masterData(staged(masterVariant(key= \\\"variantKey\\\")))\"}"
 ```
 
 #### Running the Docker Image

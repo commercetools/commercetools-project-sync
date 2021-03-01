@@ -1,11 +1,13 @@
 package com.commercetools.project.sync;
 
+import static com.commercetools.project.sync.model.ProductSyncCustomRequest.parseProductQueryParametersOption;
 import static com.commercetools.project.sync.util.SyncUtils.getApplicationName;
 import static com.commercetools.project.sync.util.SyncUtils.getApplicationVersion;
 import static io.sphere.sdk.utils.CompletableFutureUtils.exceptionallyCompletedFuture;
 import static java.lang.String.format;
 
 import com.commercetools.project.sync.exception.CliException;
+import com.commercetools.project.sync.model.ProductSyncCustomRequest;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.util.Arrays;
 import java.util.concurrent.CompletableFuture;
@@ -28,6 +30,7 @@ final class CliRunner {
   static final String FULL_SYNC_OPTION_SHORT = "f";
   static final String HELP_OPTION_SHORT = "h";
   static final String VERSION_OPTION_SHORT = "v";
+  static final String PRODUCT_QUERY_PARAMETERS_OPTION = "productQueryParameters";
 
   static final String SYNC_MODULE_OPTION_LONG = "sync";
   static final String RUNNER_NAME_OPTION_LONG = "runnerName";
@@ -54,6 +57,10 @@ final class CliRunner {
   static final String VERSION_OPTION_DESCRIPTION = "Print the version of the application.";
   static final String SYNC_PROJECT_SYNC_CUSTOM_OBJECTS_OPTION_DESCRIPTION =
       "Sync custom objects that were created with project sync (this application).";
+  static final String PRODUCT_QUERY_PARAMETERS_OPTION_DESCRIPTION =
+      "Pass your customized product fetch limit and a product predicate to filter product resources to sync in the JSON format. "
+          + "Example: {\"limit\": 100, \"where\": \"masterData(published=true)\"} could be used to fetch only published "
+          + "products to sync and limit max 100 elements in one page.";
 
   private static final Logger LOGGER = LoggerFactory.getLogger(CliRunner.class);
 
@@ -118,6 +125,13 @@ final class CliRunner {
             .desc(FULL_SYNC_OPTION_DESCRIPTION)
             .build();
 
+    final Option productQueryParametersOption =
+        Option.builder()
+            .longOpt(PRODUCT_QUERY_PARAMETERS_OPTION)
+            .desc(PRODUCT_QUERY_PARAMETERS_OPTION_DESCRIPTION)
+            .hasArg()
+            .build();
+
     final Option helpOption =
         Option.builder(HELP_OPTION_SHORT)
             .longOpt(HELP_OPTION_LONG)
@@ -142,6 +156,7 @@ final class CliRunner {
     options.addOption(helpOption);
     options.addOption(versionOption);
     options.addOption(syncProjectSyncCustomObjectsOption);
+    options.addOption(productQueryParametersOption);
 
     return options;
   }
@@ -201,9 +216,26 @@ final class CliRunner {
     final boolean isFullSync = commandLine.hasOption(FULL_SYNC_OPTION_SHORT);
     final boolean isSyncProjectSyncCustomObjects =
         commandLine.hasOption(SYNC_PROJECT_SYNC_CUSTOM_OBJECTS_OPTION_LONG);
+    final boolean isProductQueryParametersOptionPresent =
+        commandLine.hasOption(PRODUCT_QUERY_PARAMETERS_OPTION);
 
+    final ProductSyncCustomRequest productSyncCustomRequest;
+    try {
+      productSyncCustomRequest =
+          isProductQueryParametersOptionPresent
+              ? parseProductQueryParametersOption(
+                  commandLine.getOptionValue(PRODUCT_QUERY_PARAMETERS_OPTION))
+              : null;
+
+    } catch (CliException e) {
+      return exceptionallyCompletedFuture(e);
+    }
     return syncerFactory.sync(
-        syncOptionValues, runnerNameValue, isFullSync, isSyncProjectSyncCustomObjects);
+        syncOptionValues,
+        runnerNameValue,
+        isFullSync,
+        isSyncProjectSyncCustomObjects,
+        productSyncCustomRequest);
   }
 
   private static void printHelpToStdOut(@Nonnull final Options cliOptions) {
