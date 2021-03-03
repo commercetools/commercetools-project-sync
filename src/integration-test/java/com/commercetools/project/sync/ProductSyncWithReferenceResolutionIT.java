@@ -1,96 +1,97 @@
-//package com.commercetools.project.sync;
+// package com.commercetools.project.sync;
 //
-//import static com.commercetools.project.sync.util.ClientConfigurationUtils.createClient;
-//import static com.commercetools.project.sync.util.IntegrationTestUtils.assertCategoryExists;
-//import static com.commercetools.project.sync.util.IntegrationTestUtils.assertProductExists;
-//import static com.commercetools.project.sync.util.IntegrationTestUtils.assertProductTypeExists;
-//import static com.commercetools.project.sync.util.IntegrationTestUtils.cleanUpProjects;
-//import static com.commercetools.project.sync.util.SphereClientUtils.CTP_SOURCE_CLIENT_CONFIG;
-//import static com.commercetools.project.sync.util.SphereClientUtils.CTP_TARGET_CLIENT_CONFIG;
-//import static com.neovisionaries.i18n.CountryCode.DE;
-//import static io.sphere.sdk.models.DefaultCurrencyUnits.EUR;
-//import static io.sphere.sdk.models.LocalizedString.ofEnglish;
-//import static java.lang.String.format;
-//import static java.util.Arrays.asList;
-//import static java.util.Collections.emptyList;
-//import static java.util.Collections.emptyMap;
-//import static java.util.Collections.singleton;
-//import static java.util.Collections.singletonList;
-//import static java.util.Optional.ofNullable;
-//import static org.assertj.core.api.Assertions.assertThat;
+// import static com.commercetools.project.sync.util.ClientConfigurationUtils.createClient;
+// import static com.commercetools.project.sync.util.IntegrationTestUtils.assertCategoryExists;
+// import static com.commercetools.project.sync.util.IntegrationTestUtils.assertProductExists;
+// import static com.commercetools.project.sync.util.IntegrationTestUtils.assertProductTypeExists;
+// import static com.commercetools.project.sync.util.IntegrationTestUtils.cleanUpProjects;
+// import static com.commercetools.project.sync.util.SphereClientUtils.CTP_SOURCE_CLIENT_CONFIG;
+// import static com.commercetools.project.sync.util.SphereClientUtils.CTP_TARGET_CLIENT_CONFIG;
+// import static com.neovisionaries.i18n.CountryCode.DE;
+// import static io.sphere.sdk.models.DefaultCurrencyUnits.EUR;
+// import static io.sphere.sdk.models.LocalizedString.ofEnglish;
+// import static java.lang.String.format;
+// import static java.util.Arrays.asList;
+// import static java.util.Collections.emptyList;
+// import static java.util.Collections.emptyMap;
+// import static java.util.Collections.singleton;
+// import static java.util.Collections.singletonList;
+// import static java.util.Optional.ofNullable;
+// import static org.assertj.core.api.Assertions.assertThat;
 //
-//import com.neovisionaries.i18n.CountryCode;
-//import io.sphere.sdk.categories.CategoryDraft;
-//import io.sphere.sdk.categories.CategoryDraftBuilder;
-//import io.sphere.sdk.categories.commands.CategoryCreateCommand;
-//import io.sphere.sdk.channels.Channel;
-//import io.sphere.sdk.channels.ChannelDraft;
-//import io.sphere.sdk.channels.ChannelDraftBuilder;
-//import io.sphere.sdk.channels.ChannelRole;
-//import io.sphere.sdk.channels.commands.ChannelCreateCommand;
-//import io.sphere.sdk.client.SphereClient;
-//import io.sphere.sdk.customergroups.CustomerGroup;
-//import io.sphere.sdk.customergroups.CustomerGroupDraft;
-//import io.sphere.sdk.customergroups.CustomerGroupDraftBuilder;
-//import io.sphere.sdk.customergroups.commands.CustomerGroupCreateCommand;
-//import io.sphere.sdk.models.AssetDraft;
-//import io.sphere.sdk.models.AssetDraftBuilder;
-//import io.sphere.sdk.models.AssetSourceBuilder;
-//import io.sphere.sdk.models.LocalizedString;
-//import io.sphere.sdk.models.ResourceIdentifier;
-//import io.sphere.sdk.models.TextInputHint;
-//import io.sphere.sdk.products.Price;
-//import io.sphere.sdk.products.PriceDraft;
-//import io.sphere.sdk.products.PriceDraftBuilder;
-//import io.sphere.sdk.products.ProductDraft;
-//import io.sphere.sdk.products.ProductDraftBuilder;
-//import io.sphere.sdk.products.ProductVariantDraft;
-//import io.sphere.sdk.products.ProductVariantDraftBuilder;
-//import io.sphere.sdk.products.commands.ProductCreateCommand;
-//import io.sphere.sdk.producttypes.ProductType;
-//import io.sphere.sdk.producttypes.ProductTypeDraft;
-//import io.sphere.sdk.producttypes.ProductTypeDraftBuilder;
-//import io.sphere.sdk.producttypes.commands.ProductTypeCreateCommand;
-//import io.sphere.sdk.queries.PagedQueryResult;
-//import io.sphere.sdk.queries.QueryPredicate;
-//import io.sphere.sdk.states.State;
-//import io.sphere.sdk.states.StateDraft;
-//import io.sphere.sdk.states.StateDraftBuilder;
-//import io.sphere.sdk.states.StateType;
-//import io.sphere.sdk.states.commands.StateCreateCommand;
-//import io.sphere.sdk.taxcategories.TaxCategory;
-//import io.sphere.sdk.taxcategories.TaxCategoryDraft;
-//import io.sphere.sdk.taxcategories.TaxCategoryDraftBuilder;
-//import io.sphere.sdk.taxcategories.TaxRateDraft;
-//import io.sphere.sdk.taxcategories.TaxRateDraftBuilder;
-//import io.sphere.sdk.taxcategories.commands.TaxCategoryCreateCommand;
-//import io.sphere.sdk.taxcategories.queries.TaxCategoryQuery;
-//import io.sphere.sdk.types.CustomFieldsDraft;
-//import io.sphere.sdk.types.FieldDefinition;
-//import io.sphere.sdk.types.ResourceTypeIdsSetBuilder;
-//import io.sphere.sdk.types.StringFieldType;
-//import io.sphere.sdk.types.Type;
-//import io.sphere.sdk.types.TypeDraft;
-//import io.sphere.sdk.types.TypeDraftBuilder;
-//import io.sphere.sdk.types.commands.TypeCreateCommand;
-//import java.math.BigDecimal;
-//import java.time.Clock;
-//import java.time.ZonedDateTime;
-//import java.util.Arrays;
-//import java.util.Collections;
-//import javax.annotation.Nonnull;
-//import javax.annotation.Nullable;
-//import javax.money.CurrencyUnit;
-//import org.junit.jupiter.api.AfterAll;
-//import org.junit.jupiter.api.BeforeEach;
-//import org.junit.jupiter.api.Test;
-//import uk.org.lidalia.slf4jext.Level;
-//import uk.org.lidalia.slf4jtest.TestLogger;
-//import uk.org.lidalia.slf4jtest.TestLoggerFactory;
+// import com.neovisionaries.i18n.CountryCode;
+// import io.sphere.sdk.categories.CategoryDraft;
+// import io.sphere.sdk.categories.CategoryDraftBuilder;
+// import io.sphere.sdk.categories.commands.CategoryCreateCommand;
+// import io.sphere.sdk.channels.Channel;
+// import io.sphere.sdk.channels.ChannelDraft;
+// import io.sphere.sdk.channels.ChannelDraftBuilder;
+// import io.sphere.sdk.channels.ChannelRole;
+// import io.sphere.sdk.channels.commands.ChannelCreateCommand;
+// import io.sphere.sdk.client.SphereClient;
+// import io.sphere.sdk.customergroups.CustomerGroup;
+// import io.sphere.sdk.customergroups.CustomerGroupDraft;
+// import io.sphere.sdk.customergroups.CustomerGroupDraftBuilder;
+// import io.sphere.sdk.customergroups.commands.CustomerGroupCreateCommand;
+// import io.sphere.sdk.models.AssetDraft;
+// import io.sphere.sdk.models.AssetDraftBuilder;
+// import io.sphere.sdk.models.AssetSourceBuilder;
+// import io.sphere.sdk.models.LocalizedString;
+// import io.sphere.sdk.models.ResourceIdentifier;
+// import io.sphere.sdk.models.TextInputHint;
+// import io.sphere.sdk.products.Price;
+// import io.sphere.sdk.products.PriceDraft;
+// import io.sphere.sdk.products.PriceDraftBuilder;
+// import io.sphere.sdk.products.ProductDraft;
+// import io.sphere.sdk.products.ProductDraftBuilder;
+// import io.sphere.sdk.products.ProductVariantDraft;
+// import io.sphere.sdk.products.ProductVariantDraftBuilder;
+// import io.sphere.sdk.products.commands.ProductCreateCommand;
+// import io.sphere.sdk.producttypes.ProductType;
+// import io.sphere.sdk.producttypes.ProductTypeDraft;
+// import io.sphere.sdk.producttypes.ProductTypeDraftBuilder;
+// import io.sphere.sdk.producttypes.commands.ProductTypeCreateCommand;
+// import io.sphere.sdk.queries.PagedQueryResult;
+// import io.sphere.sdk.queries.QueryPredicate;
+// import io.sphere.sdk.states.State;
+// import io.sphere.sdk.states.StateDraft;
+// import io.sphere.sdk.states.StateDraftBuilder;
+// import io.sphere.sdk.states.StateType;
+// import io.sphere.sdk.states.commands.StateCreateCommand;
+// import io.sphere.sdk.taxcategories.TaxCategory;
+// import io.sphere.sdk.taxcategories.TaxCategoryDraft;
+// import io.sphere.sdk.taxcategories.TaxCategoryDraftBuilder;
+// import io.sphere.sdk.taxcategories.TaxRateDraft;
+// import io.sphere.sdk.taxcategories.TaxRateDraftBuilder;
+// import io.sphere.sdk.taxcategories.commands.TaxCategoryCreateCommand;
+// import io.sphere.sdk.taxcategories.queries.TaxCategoryQuery;
+// import io.sphere.sdk.types.CustomFieldsDraft;
+// import io.sphere.sdk.types.FieldDefinition;
+// import io.sphere.sdk.types.ResourceTypeIdsSetBuilder;
+// import io.sphere.sdk.types.StringFieldType;
+// import io.sphere.sdk.types.Type;
+// import io.sphere.sdk.types.TypeDraft;
+// import io.sphere.sdk.types.TypeDraftBuilder;
+// import io.sphere.sdk.types.commands.TypeCreateCommand;
+// import java.math.BigDecimal;
+// import java.time.Clock;
+// import java.time.ZonedDateTime;
+// import java.util.Arrays;
+// import java.util.Collections;
+// import javax.annotation.Nonnull;
+// import javax.annotation.Nullable;
+// import javax.money.CurrencyUnit;
+// import org.junit.jupiter.api.AfterAll;
+// import org.junit.jupiter.api.BeforeEach;
+// import org.junit.jupiter.api.Test;
+// import uk.org.lidalia.slf4jext.Level;
+// import uk.org.lidalia.slf4jtest.TestLogger;
+// import uk.org.lidalia.slf4jtest.TestLoggerFactory;
 //
-//public class ProductSyncWithReferenceResolutionIT {
+// public class ProductSyncWithReferenceResolutionIT {
 //
-//  private static final TestLogger syncerTestLogger = TestLoggerFactory.getTestLogger(Syncer.class);
+//  private static final TestLogger syncerTestLogger =
+// TestLoggerFactory.getTestLogger(Syncer.class);
 //  private static final TestLogger cliRunnerTestLogger =
 //      TestLoggerFactory.getTestLogger(CliRunner.class);
 //  private static final String RESOURCE_KEY = "foo";
@@ -100,7 +101,8 @@
 //  void setup() {
 //    syncerTestLogger.clearAll();
 //    cliRunnerTestLogger.clearAll();
-//    cleanUpProjects(createClient(CTP_SOURCE_CLIENT_CONFIG), createClient(CTP_TARGET_CLIENT_CONFIG));
+//    cleanUpProjects(createClient(CTP_SOURCE_CLIENT_CONFIG),
+// createClient(CTP_TARGET_CLIENT_CONFIG));
 //    setupSourceProjectData(createClient(CTP_SOURCE_CLIENT_CONFIG));
 //  }
 //
@@ -155,7 +157,8 @@
 //            .transitions(Collections.emptySet())
 //            .build();
 //    final State state =
-//        sourceProjectClient.execute(StateCreateCommand.of(stateDraft)).toCompletableFuture().join();
+//
+// sourceProjectClient.execute(StateCreateCommand.of(stateDraft)).toCompletableFuture().join();
 //
 //    final TaxRateDraft taxRateDraft =
 //        TaxRateDraftBuilder.of("Tax-Rate-Name-1", 0.3, false, CountryCode.DE).build();
@@ -192,7 +195,8 @@
 //        CustomFieldsDraft.ofTypeKeyAndJson(type.getKey(), emptyMap());
 //
 //    final ChannelDraft draft =
-//        ChannelDraftBuilder.of("channelKey").roles(singleton(ChannelRole.INVENTORY_SUPPLY)).build();
+//
+// ChannelDraftBuilder.of("channelKey").roles(singleton(ChannelRole.INVENTORY_SUPPLY)).build();
 //    sourceProjectClient.execute(ChannelCreateCommand.of(draft)).toCompletableFuture().join();
 //    targetProjectClient.execute(ChannelCreateCommand.of(draft)).toCompletableFuture().join();
 //
@@ -241,12 +245,14 @@
 //            .publish(true)
 //            .build();
 //
-//    sourceProjectClient.execute(ProductCreateCommand.of(productDraft)).toCompletableFuture().join();
+//
+// sourceProjectClient.execute(ProductCreateCommand.of(productDraft)).toCompletableFuture().join();
 //  }
 //
 //  @AfterAll
 //  static void tearDownSuite() {
-//    cleanUpProjects(createClient(CTP_SOURCE_CLIENT_CONFIG), createClient(CTP_TARGET_CLIENT_CONFIG));
+//    cleanUpProjects(createClient(CTP_SOURCE_CLIENT_CONFIG),
+// createClient(CTP_TARGET_CLIENT_CONFIG));
 //  }
 //
 //  @Test
@@ -322,4 +328,4 @@
 //        .custom(customFieldsDraft)
 //        .build();
 //  }
-//}
+// }
