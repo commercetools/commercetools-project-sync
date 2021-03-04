@@ -36,7 +36,7 @@ ext {
     pmdVersion = '5.6.1'
     jacocoVersion = '0.7.9'
     findbugsVersion = '3.0.1'
-    commercetoolsSyncJava='3.2.0'
+    commercetoolsSyncJava='4.0.0'
     apacheCliVersion = '1.4'
     jupiterApiVersion = '5.7.1'
     caffeineVersion = '2.8.5'
@@ -71,6 +71,11 @@ dependencies {
     implementation "com.commercetools.sdk.jvm.core:commercetools-java-client:${commercetoolsJvmSdkVersion}"
     implementation "com.commercetools:commercetools-sync-java:${commercetoolsSyncJava}"
     implementation "com.commercetools.sdk.jvm.core:commercetools-convenience:${commercetoolsJvmSdkVersion}"
+
+    implementation('org.asynchttpclient:async-http-client:2.0.38') {
+        force = true
+    }
+
     implementation "commons-cli:commons-cli:${apacheCliVersion}"
     implementation "org.slf4j:slf4j-api:${slf4jVersion}"
     implementation "org.slf4j:slf4j-simple:${slf4jVersion}"
