@@ -1,10 +1,10 @@
 package com.commercetools.project.sync;
 
-import static com.commercetools.project.sync.util.ClientConfigurationUtils.createClient;
 import static com.commercetools.project.sync.util.IntegrationTestUtils.assertCategoryExists;
 import static com.commercetools.project.sync.util.IntegrationTestUtils.cleanUpProjects;
-import static com.commercetools.project.sync.util.SphereClientUtils.CTP_SOURCE_CLIENT_CONFIG;
-import static com.commercetools.project.sync.util.SphereClientUtils.CTP_TARGET_CLIENT_CONFIG;
+import static com.commercetools.project.sync.util.IntegrationTestUtils.createITSyncerFactory;
+import static com.commercetools.project.sync.util.SphereClientUtils.CTP_SOURCE_CLIENT;
+import static com.commercetools.project.sync.util.SphereClientUtils.CTP_TARGET_CLIENT;
 import static io.sphere.sdk.models.LocalizedString.ofEnglish;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
@@ -29,7 +29,6 @@ import io.sphere.sdk.types.Type;
 import io.sphere.sdk.types.TypeDraft;
 import io.sphere.sdk.types.TypeDraftBuilder;
 import io.sphere.sdk.types.commands.TypeCreateCommand;
-import java.time.Clock;
 import java.util.Arrays;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -50,8 +49,8 @@ public class CategorySyncWithReferenceResolutionIT {
   void setup() {
     syncerTestLogger.clearAll();
     cliRunnerTestLogger.clearAll();
-    cleanUpProjects(createClient(CTP_SOURCE_CLIENT_CONFIG), createClient(CTP_TARGET_CLIENT_CONFIG));
-    setupSourceProjectData(createClient(CTP_SOURCE_CLIENT_CONFIG));
+    cleanUpProjects(CTP_SOURCE_CLIENT, CTP_TARGET_CLIENT);
+    setupSourceProjectData(CTP_SOURCE_CLIENT);
   }
 
   private void setupSourceProjectData(SphereClient sourceProjectClient) {
@@ -76,8 +75,7 @@ public class CategorySyncWithReferenceResolutionIT {
     final Type type =
         sourceProjectClient.execute(TypeCreateCommand.of(typeDraft)).toCompletableFuture().join();
 
-    final SphereClient targetClient = createClient(CTP_TARGET_CLIENT_CONFIG);
-    targetClient.execute(TypeCreateCommand.of(typeDraft)).toCompletableFuture().join();
+    CTP_TARGET_CLIENT.execute(TypeCreateCommand.of(typeDraft)).toCompletableFuture().join();
 
     CustomFieldsDraft customFieldsDraft =
         CustomFieldsDraft.ofTypeKeyAndJson(type.getKey(), emptyMap());
@@ -103,40 +101,24 @@ public class CategorySyncWithReferenceResolutionIT {
 
   @AfterAll
   static void tearDownSuite() {
-    cleanUpProjects(createClient(CTP_SOURCE_CLIENT_CONFIG), createClient(CTP_TARGET_CLIENT_CONFIG));
+    cleanUpProjects(CTP_SOURCE_CLIENT, CTP_TARGET_CLIENT);
   }
 
   @Test
   void
       run_WithSyncAsArgumentWithTypesAndCategories_ShouldResolveReferencesAndExecuteCategorySyncer() {
-    // preparation
-    try (final SphereClient targetClient = createClient(CTP_TARGET_CLIENT_CONFIG)) {
-      try (final SphereClient sourceClient = createClient(CTP_SOURCE_CLIENT_CONFIG)) {
+    // test
+    CliRunner.of().run(new String[] {"-s", "categories"}, createITSyncerFactory());
 
-        final SyncerFactory syncerFactory =
-            SyncerFactory.of(() -> sourceClient, () -> targetClient, Clock.systemDefaultZone());
+    // assertions
+    assertThat(cliRunnerTestLogger.getAllLoggingEvents())
+        .allMatch(loggingEvent -> !Level.ERROR.equals(loggingEvent.getLevel()));
 
-        // test
-        CliRunner.of().run(new String[] {"-s", "categories"}, syncerFactory);
-      }
-    }
+    assertThat(syncerTestLogger.getAllLoggingEvents())
+        .allMatch(loggingEvent -> !Level.ERROR.equals(loggingEvent.getLevel()));
 
-    // create clients again (for assertions and cleanup), since the run method closes the clients
-    // after execution is done.
-    try (final SphereClient postSourceClient = createClient(CTP_SOURCE_CLIENT_CONFIG)) {
-      try (final SphereClient postTargetClient = createClient(CTP_TARGET_CLIENT_CONFIG)) {
-
-        // assertions
-        assertThat(cliRunnerTestLogger.getAllLoggingEvents())
-            .allMatch(loggingEvent -> !Level.ERROR.equals(loggingEvent.getLevel()));
-
-        assertThat(syncerTestLogger.getAllLoggingEvents())
-            .allMatch(loggingEvent -> !Level.ERROR.equals(loggingEvent.getLevel()));
-
-        // Every sync module is expected to have 2 logs (start and stats summary)
-        assertThat(syncerTestLogger.getAllLoggingEvents()).hasSize(2);
-        assertCategoryExists(postTargetClient, RESOURCE_KEY);
-      }
-    }
+    // Every sync module is expected to have 2 logs (start and stats summary)
+    assertThat(syncerTestLogger.getAllLoggingEvents()).hasSize(2);
+    assertCategoryExists(CTP_TARGET_CLIENT, RESOURCE_KEY);
   }
 }

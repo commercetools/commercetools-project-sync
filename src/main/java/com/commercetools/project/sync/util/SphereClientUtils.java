@@ -2,6 +2,7 @@ package com.commercetools.project.sync.util;
 
 import static java.lang.String.format;
 
+import com.commercetools.sync.commons.utils.ClientConfigurationUtils;
 import io.sphere.sdk.client.SphereClient;
 import io.sphere.sdk.client.SphereClientConfig;
 import java.io.InputStream;

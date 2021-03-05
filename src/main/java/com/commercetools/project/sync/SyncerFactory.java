@@ -42,18 +42,21 @@ import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-final class SyncerFactory {
-  private Supplier<SphereClient> targetClientSupplier;
-  private Supplier<SphereClient> sourceClientSupplier;
-  private Clock clock;
+public final class SyncerFactory {
+  private final Supplier<SphereClient> targetClientSupplier;
+  private final Supplier<SphereClient> sourceClientSupplier;
+  private final Clock clock;
+  private final boolean shouldCloseClients;
 
   private SyncerFactory(
       @Nonnull final Supplier<SphereClient> sourceClient,
       @Nonnull final Supplier<SphereClient> targetClient,
-      @Nonnull final Clock clock) {
+      @Nonnull final Clock clock,
+      final boolean closeClients) {
     this.targetClientSupplier = targetClient;
     this.sourceClientSupplier = sourceClient;
     this.clock = clock;
+    this.shouldCloseClients = closeClients;
   }
 
   @Nonnull
@@ -61,7 +64,16 @@ final class SyncerFactory {
       @Nonnull final Supplier<SphereClient> sourceClient,
       @Nonnull final Supplier<SphereClient> targetClient,
       @Nonnull final Clock clock) {
-    return new SyncerFactory(sourceClient, targetClient, clock);
+    return new SyncerFactory(sourceClient, targetClient, clock, true);
+  }
+
+  @Nonnull
+  public static SyncerFactory of(
+      @Nonnull final Supplier<SphereClient> sourceClient,
+      @Nonnull final Supplier<SphereClient> targetClient,
+      @Nonnull final Clock clock,
+      final boolean closeClients) {
+    return new SyncerFactory(sourceClient, targetClient, clock, closeClients);
   }
 
   @SuppressFBWarnings(
@@ -98,7 +110,12 @@ final class SyncerFactory {
                       productSyncCustomRequest));
     }
 
-    return stagedSyncersToRunSequentially.whenComplete((syncResult, throwable) -> closeClients());
+    return stagedSyncersToRunSequentially.whenComplete(
+        (syncResult, throwable) -> {
+          if (shouldCloseClients) {
+            closeClients();
+          }
+        });
   }
 
   @Nonnull

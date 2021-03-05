@@ -1,12 +1,11 @@
 package com.commercetools.project.sync;
 
-import static com.commercetools.project.sync.util.ClientConfigurationUtils.createClient;
 import static com.commercetools.project.sync.util.IntegrationTestUtils.assertProductTypeExists;
 import static com.commercetools.project.sync.util.IntegrationTestUtils.cleanUpProjects;
+import static com.commercetools.project.sync.util.IntegrationTestUtils.createITSyncerFactory;
 import static com.commercetools.project.sync.util.IntegrationTestUtils.createReferenceObject;
 import static com.commercetools.project.sync.util.SphereClientUtils.CTP_SOURCE_CLIENT;
-import static com.commercetools.project.sync.util.SphereClientUtils.CTP_SOURCE_CLIENT_CONFIG;
-import static com.commercetools.project.sync.util.SphereClientUtils.CTP_TARGET_CLIENT_CONFIG;
+import static com.commercetools.project.sync.util.SphereClientUtils.CTP_TARGET_CLIENT;
 import static com.commercetools.project.sync.util.TestUtils.assertCartDiscountSyncerLoggingEvents;
 import static com.commercetools.project.sync.util.TestUtils.assertCategorySyncerLoggingEvents;
 import static com.commercetools.project.sync.util.TestUtils.assertCustomObjectSyncerLoggingEvents;
@@ -25,6 +24,7 @@ import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.commercetools.sync.commons.models.WaitingToBeResolved;
+import com.commercetools.sync.commons.utils.CtpQueryUtils;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -49,12 +49,11 @@ import io.sphere.sdk.producttypes.ProductTypeDraft;
 import io.sphere.sdk.producttypes.ProductTypeDraftBuilder;
 import io.sphere.sdk.producttypes.commands.ProductTypeCreateCommand;
 import io.sphere.sdk.queries.PagedQueryResult;
-import io.sphere.sdk.queries.QueryExecutionUtils;
-import java.time.Clock;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import javax.annotation.Nonnull;
@@ -79,8 +78,8 @@ class ProductSyncWithReferencesIT {
   void setup() {
     syncerTestLogger.clearAll();
     cliRunnerTestLogger.clearAll();
-    cleanUpProjects(createClient(CTP_SOURCE_CLIENT_CONFIG), createClient(CTP_TARGET_CLIENT_CONFIG));
-    setupSourceProjectData(createClient(CTP_SOURCE_CLIENT_CONFIG));
+    cleanUpProjects(CTP_SOURCE_CLIENT, CTP_TARGET_CLIENT);
+    setupSourceProjectData(CTP_SOURCE_CLIENT);
   }
 
   static void setupSourceProjectData(@Nonnull final SphereClient sourceProjectClient) {
@@ -168,52 +167,39 @@ class ProductSyncWithReferencesIT {
 
   @AfterAll
   static void tearDownSuite() {
-    cleanUpProjects(createClient(CTP_SOURCE_CLIENT_CONFIG), createClient(CTP_TARGET_CLIENT_CONFIG));
+    cleanUpProjects(CTP_SOURCE_CLIENT, CTP_TARGET_CLIENT);
   }
 
   @Test
   void run_WithAProductWith500DistinctReferences_ShouldSyncCorrectly() {
-    // preparation
-    try (final SphereClient targetClient = createClient(CTP_TARGET_CLIENT_CONFIG)) {
-      try (final SphereClient sourceClient = createClient(CTP_SOURCE_CLIENT_CONFIG)) {
+    // test
+    CliRunner.of()
+        .run(new String[] {"-s", "all", "-r", "runnerName", "-f"}, createITSyncerFactory());
 
-        final SyncerFactory syncerFactory =
-            SyncerFactory.of(() -> sourceClient, () -> targetClient, Clock.systemDefaultZone());
+    // assertions
+    assertThat(cliRunnerTestLogger.getAllLoggingEvents())
+        .allMatch(loggingEvent -> !Level.ERROR.equals(loggingEvent.getLevel()));
 
-        // test
-        CliRunner.of().run(new String[] {"-s", "all", "-r", "runnerName", "-f"}, syncerFactory);
-      }
-    }
+    assertThat(syncerTestLogger.getAllLoggingEvents())
+        .allMatch(loggingEvent -> !Level.ERROR.equals(loggingEvent.getLevel()));
 
-    // create clients again (for assertions and cleanup), since the run method closes the clients
-    // after execution is done.
-    try (final SphereClient postTargetClient = createClient(CTP_TARGET_CLIENT_CONFIG)) {
+    assertTypeSyncerLoggingEvents(syncerTestLogger, 0);
+    assertProductTypeSyncerLoggingEvents(syncerTestLogger, 1);
+    assertTaxCategorySyncerLoggingEvents(syncerTestLogger, 0);
+    assertCategorySyncerLoggingEvents(syncerTestLogger, 0);
+    assertProductSyncerLoggingEvents(syncerTestLogger, 501);
+    assertInventoryEntrySyncerLoggingEvents(syncerTestLogger, 0);
+    assertCartDiscountSyncerLoggingEvents(syncerTestLogger, 0);
+    assertCustomerSyncerLoggingEvents(syncerTestLogger, 0);
+    assertShoppingListSyncerLoggingEvents(syncerTestLogger, 0);
+    assertStateSyncerLoggingEvents(
+        syncerTestLogger, 1); // 1 state is built-in and it cant be deleted
+    assertCustomObjectSyncerLoggingEvents(syncerTestLogger, 0);
 
-      // assertions
-      assertThat(cliRunnerTestLogger.getAllLoggingEvents())
-          .allMatch(loggingEvent -> !Level.ERROR.equals(loggingEvent.getLevel()));
+    // Every sync module is expected to have 2 logs (start and stats summary)
+    assertThat(syncerTestLogger.getAllLoggingEvents()).hasSize(22);
 
-      assertThat(syncerTestLogger.getAllLoggingEvents())
-          .allMatch(loggingEvent -> !Level.ERROR.equals(loggingEvent.getLevel()));
-
-      assertTypeSyncerLoggingEvents(syncerTestLogger, 0);
-      assertProductTypeSyncerLoggingEvents(syncerTestLogger, 1);
-      assertTaxCategorySyncerLoggingEvents(syncerTestLogger, 0);
-      assertCategorySyncerLoggingEvents(syncerTestLogger, 0);
-      assertProductSyncerLoggingEvents(syncerTestLogger, 501);
-      assertInventoryEntrySyncerLoggingEvents(syncerTestLogger, 0);
-      assertCartDiscountSyncerLoggingEvents(syncerTestLogger, 0);
-      assertCustomerSyncerLoggingEvents(syncerTestLogger, 0);
-      assertShoppingListSyncerLoggingEvents(syncerTestLogger, 0);
-      assertStateSyncerLoggingEvents(
-          syncerTestLogger, 1); // 1 state is built-in and it cant be deleted
-      assertCustomObjectSyncerLoggingEvents(syncerTestLogger, 0);
-
-      // Every sync module is expected to have 2 logs (start and stats summary)
-      assertThat(syncerTestLogger.getAllLoggingEvents()).hasSize(22);
-
-      assertAllResourcesAreSyncedToTarget(postTargetClient);
-    }
+    assertAllResourcesAreSyncedToTarget(CTP_TARGET_CLIENT);
   }
 
   private static void assertAllResourcesAreSyncedToTarget(
@@ -222,7 +208,12 @@ class ProductSyncWithReferencesIT {
     assertProductTypeExists(targetClient, MAIN_PRODUCT_TYPE_KEY);
 
     final List<Product> products =
-        QueryExecutionUtils.queryAll(targetClient, ProductQuery.of()).toCompletableFuture().join();
+        CtpQueryUtils.queryAll(targetClient, ProductQuery.of(), Function.identity())
+            .thenApply(
+                fetchedProducts ->
+                    fetchedProducts.stream().flatMap(List::stream).collect(Collectors.toList()))
+            .toCompletableFuture()
+            .join();
     assertThat(products).hasSize(501);
 
     final CustomObjectQuery<WaitingToBeResolved> customObjectQuery =

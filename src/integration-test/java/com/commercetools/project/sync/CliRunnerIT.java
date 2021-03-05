@@ -1,14 +1,14 @@
 package com.commercetools.project.sync;
 
 import static com.commercetools.project.sync.service.impl.CustomObjectServiceImpl.TIMESTAMP_GENERATOR_KEY;
-import static com.commercetools.project.sync.util.ClientConfigurationUtils.createClient;
 import static com.commercetools.project.sync.util.IntegrationTestUtils.assertCategoryExists;
 import static com.commercetools.project.sync.util.IntegrationTestUtils.assertProductExists;
 import static com.commercetools.project.sync.util.IntegrationTestUtils.assertProductTypeExists;
 import static com.commercetools.project.sync.util.IntegrationTestUtils.cleanUpProjects;
+import static com.commercetools.project.sync.util.IntegrationTestUtils.createITSyncerFactory;
 import static com.commercetools.project.sync.util.QueryUtils.queryAndExecute;
-import static com.commercetools.project.sync.util.SphereClientUtils.CTP_SOURCE_CLIENT_CONFIG;
-import static com.commercetools.project.sync.util.SphereClientUtils.CTP_TARGET_CLIENT_CONFIG;
+import static com.commercetools.project.sync.util.SphereClientUtils.CTP_SOURCE_CLIENT;
+import static com.commercetools.project.sync.util.SphereClientUtils.CTP_TARGET_CLIENT;
 import static com.commercetools.project.sync.util.SyncUtils.APPLICATION_DEFAULT_NAME;
 import static com.commercetools.project.sync.util.SyncUtils.DEFAULT_RUNNER_NAME;
 import static com.commercetools.project.sync.util.TestUtils.assertAllSyncersLoggingEvents;
@@ -108,7 +108,6 @@ import io.sphere.sdk.types.TypeDraft;
 import io.sphere.sdk.types.TypeDraftBuilder;
 import io.sphere.sdk.types.commands.TypeCreateCommand;
 import io.sphere.sdk.types.queries.TypeQuery;
-import java.time.Clock;
 import java.time.ZonedDateTime;
 import java.util.Collections;
 import java.util.concurrent.CompletableFuture;
@@ -134,8 +133,8 @@ class CliRunnerIT {
   void setup() throws ExecutionException, InterruptedException {
     syncerTestLogger.clearAll();
     cliRunnerTestLogger.clearAll();
-    cleanUpProjects(createClient(CTP_SOURCE_CLIENT_CONFIG), createClient(CTP_TARGET_CLIENT_CONFIG));
-    setupSourceProjectData(createClient(CTP_SOURCE_CLIENT_CONFIG));
+    cleanUpProjects(CTP_SOURCE_CLIENT, CTP_TARGET_CLIENT);
+    setupSourceProjectData(CTP_SOURCE_CLIENT);
   }
 
   static void setupSourceProjectData(@Nonnull final SphereClient sourceProjectClient)
@@ -285,341 +284,217 @@ class CliRunnerIT {
 
   @AfterAll
   static void tearDownSuite() {
-    cleanUpProjects(createClient(CTP_SOURCE_CLIENT_CONFIG), createClient(CTP_TARGET_CLIENT_CONFIG));
+    cleanUpProjects(CTP_SOURCE_CLIENT, CTP_TARGET_CLIENT);
   }
 
   @Test
   void run_WithSyncAsArgumentWithAllArg_ShouldExecuteAllSyncers() {
-    // preparation
-    try (final SphereClient targetClient = createClient(CTP_TARGET_CLIENT_CONFIG)) {
-      try (final SphereClient sourceClient = createClient(CTP_SOURCE_CLIENT_CONFIG)) {
+    // test
+    CliRunner.of().run(new String[] {"-s", "all"}, createITSyncerFactory());
 
-        final SyncerFactory syncerFactory =
-            SyncerFactory.of(() -> sourceClient, () -> targetClient, Clock.systemDefaultZone());
+    // assertions
+    assertAllSyncersLoggingEvents(syncerTestLogger, cliRunnerTestLogger, 1);
 
-        // test
-        CliRunner.of().run(new String[] {"-s", "all"}, syncerFactory);
-      }
-    }
-
-    // create clients again (for assertions and cleanup), since the run method closes the clients
-    // after execution is done.
-    try (final SphereClient postSourceClient = createClient(CTP_SOURCE_CLIENT_CONFIG)) {
-      try (final SphereClient postTargetClient = createClient(CTP_TARGET_CLIENT_CONFIG)) {
-        // assertions
-        assertAllSyncersLoggingEvents(syncerTestLogger, cliRunnerTestLogger, 1);
-
-        assertAllResourcesAreSyncedToTarget(postTargetClient);
-      }
-    }
+    assertAllResourcesAreSyncedToTarget(CTP_TARGET_CLIENT);
   }
 
   @Test
   void run_WithSyncAsArgumentWhenAllArgumentsPassed_ShouldExecuteAllSyncers() {
-    // preparation
-    try (final SphereClient targetClient = createClient(CTP_TARGET_CLIENT_CONFIG)) {
-      try (final SphereClient sourceClient = createClient(CTP_SOURCE_CLIENT_CONFIG)) {
+    // test
+    CliRunner.of()
+        .run(
+            new String[] {
+              "-s",
+              "types",
+              "productTypes",
+              "customers",
+              "customObjects",
+              "taxCategories",
+              "categories",
+              "inventoryEntries",
+              "cartDiscounts",
+              "states",
+              "products",
+              "shoppingLists"
+            },
+            createITSyncerFactory());
 
-        final SyncerFactory syncerFactory =
-            SyncerFactory.of(() -> sourceClient, () -> targetClient, Clock.systemDefaultZone());
+    // assertions
+    assertAllSyncersLoggingEvents(syncerTestLogger, cliRunnerTestLogger, 1);
 
-        // test
-        CliRunner.of()
-            .run(
-                new String[] {
-                  "-s",
-                  "types",
-                  "productTypes",
-                  "customers",
-                  "customObjects",
-                  "taxCategories",
-                  "categories",
-                  "inventoryEntries",
-                  "cartDiscounts",
-                  "states",
-                  "products",
-                  "shoppingLists"
-                },
-                syncerFactory);
-      }
-    }
-
-    // create clients again (for assertions and cleanup), since the run method closes the clients
-    // after execution is done.
-    try (final SphereClient postSourceClient = createClient(CTP_SOURCE_CLIENT_CONFIG)) {
-      try (final SphereClient postTargetClient = createClient(CTP_TARGET_CLIENT_CONFIG)) {
-        // assertions
-        assertAllSyncersLoggingEvents(syncerTestLogger, cliRunnerTestLogger, 1);
-
-        assertAllResourcesAreSyncedToTarget(postTargetClient);
-      }
-    }
+    assertAllResourcesAreSyncedToTarget(CTP_TARGET_CLIENT);
   }
 
   @Test
   void run_WithSyncAsArgumentWithCustomersAndShoppingLists_ShouldExecuteGivenSyncers() {
-    // preparation
-    try (final SphereClient targetClient = createClient(CTP_TARGET_CLIENT_CONFIG)) {
-      try (final SphereClient sourceClient = createClient(CTP_SOURCE_CLIENT_CONFIG)) {
+    prepareDataForShoppingListSync(CTP_SOURCE_CLIENT);
 
-        prepareDataForShoppingListSync(sourceClient);
-        final SyncerFactory syncerFactory =
-            SyncerFactory.of(() -> sourceClient, () -> targetClient, Clock.systemDefaultZone());
+    // test
+    CliRunner.of().run(new String[] {"-s", "customers", "shoppingLists"}, createITSyncerFactory());
 
-        // test
-        CliRunner.of().run(new String[] {"-s", "customers", "shoppingLists"}, syncerFactory);
-      }
-    }
+    // assertions
+    assertThat(syncerTestLogger.getAllLoggingEvents()).hasSize(4);
 
-    // create clients again (for assertions and cleanup), since the run method closes the clients
-    // after execution is done.
-    try (final SphereClient postSourceClient = createClient(CTP_SOURCE_CLIENT_CONFIG)) {
-      try (final SphereClient postTargetClient = createClient(CTP_TARGET_CLIENT_CONFIG)) {
-        // assertions
-        assertThat(syncerTestLogger.getAllLoggingEvents()).hasSize(4);
+    assertCustomerSyncerLoggingEvents(syncerTestLogger, 1);
+    assertShoppingListSyncerLoggingEvents(syncerTestLogger, 1);
 
-        assertCustomerSyncerLoggingEvents(syncerTestLogger, 1);
-        assertShoppingListSyncerLoggingEvents(syncerTestLogger, 1);
+    assertCustomersAreSyncedCorrectly(CTP_TARGET_CLIENT);
+    assertShoppingListsAreSyncedCorrectly(CTP_TARGET_CLIENT);
 
-        assertCustomersAreSyncedCorrectly(postTargetClient);
-        assertShoppingListsAreSyncedCorrectly(postTargetClient);
+    final String sourceProjectKey = CTP_SOURCE_CLIENT.getConfig().getProjectKey();
 
-        final String sourceProjectKey = postSourceClient.getConfig().getProjectKey();
-
-        assertLastSyncCustomObjectExists(
-            postTargetClient, sourceProjectKey, "customerSync", "runnerName");
-        assertLastSyncCustomObjectExists(
-            postTargetClient, sourceProjectKey, "shoppingListSync", "runnerName");
-      }
-    }
+    assertLastSyncCustomObjectExists(
+        CTP_TARGET_CLIENT, sourceProjectKey, "customerSync", "runnerName");
+    assertLastSyncCustomObjectExists(
+        CTP_TARGET_CLIENT, sourceProjectKey, "shoppingListSync", "runnerName");
   }
 
   @Test
   void
       run_WithSyncAsArgumentWithCategoriesTaxCategoriesAndCartDiscounts_ShouldExecuteGivenSyncers() {
-    // preparation
-    try (final SphereClient targetClient = createClient(CTP_TARGET_CLIENT_CONFIG)) {
-      try (final SphereClient sourceClient = createClient(CTP_SOURCE_CLIENT_CONFIG)) {
+    // test
+    CliRunner.of()
+        .run(
+            new String[] {"-s", "taxCategories", "categories", "cartDiscounts"},
+            createITSyncerFactory());
+    // assertions
+    assertThat(syncerTestLogger.getAllLoggingEvents()).hasSize(6);
 
-        final SyncerFactory syncerFactory =
-            SyncerFactory.of(() -> sourceClient, () -> targetClient, Clock.systemDefaultZone());
+    assertCategorySyncerLoggingEvents(syncerTestLogger, 1);
+    assertTaxCategorySyncerLoggingEvents(syncerTestLogger, 1);
+    assertCartDiscountSyncerLoggingEvents(syncerTestLogger, 1);
 
-        // test
-        CliRunner.of()
-            .run(
-                new String[] {"-s", "taxCategories", "categories", "cartDiscounts"}, syncerFactory);
-      }
-    }
+    assertCategoriesAreSyncedCorrectly(CTP_TARGET_CLIENT);
+    assertTaxCategoriesAreSyncedCorrectly(CTP_TARGET_CLIENT);
+    assertCartDiscountsAreSyncedCorrectly(CTP_TARGET_CLIENT);
 
-    // create clients again (for assertions and cleanup), since the run method closes the clients
-    // after execution is done.
-    try (final SphereClient postSourceClient = createClient(CTP_SOURCE_CLIENT_CONFIG)) {
-      try (final SphereClient postTargetClient = createClient(CTP_TARGET_CLIENT_CONFIG)) {
-        // assertions
-        assertThat(syncerTestLogger.getAllLoggingEvents()).hasSize(6);
+    final String sourceProjectKey = CTP_SOURCE_CLIENT.getConfig().getProjectKey();
 
-        assertCategorySyncerLoggingEvents(syncerTestLogger, 1);
-        assertTaxCategorySyncerLoggingEvents(syncerTestLogger, 1);
-        assertCartDiscountSyncerLoggingEvents(syncerTestLogger, 1);
-
-        assertCategoriesAreSyncedCorrectly(postTargetClient);
-        assertTaxCategoriesAreSyncedCorrectly(postTargetClient);
-        assertCartDiscountsAreSyncedCorrectly(postTargetClient);
-
-        final String sourceProjectKey = postSourceClient.getConfig().getProjectKey();
-
-        assertLastSyncCustomObjectExists(
-            postTargetClient, sourceProjectKey, "categorySync", "runnerName");
-        assertLastSyncCustomObjectExists(
-            postTargetClient, sourceProjectKey, "taxCategorySync", "runnerName");
-        assertLastSyncCustomObjectExists(
-            postTargetClient, sourceProjectKey, "cartDiscountSync", "runnerName");
-      }
-    }
+    assertLastSyncCustomObjectExists(
+        CTP_TARGET_CLIENT, sourceProjectKey, "categorySync", "runnerName");
+    assertLastSyncCustomObjectExists(
+        CTP_TARGET_CLIENT, sourceProjectKey, "taxCategorySync", "runnerName");
+    assertLastSyncCustomObjectExists(
+        CTP_TARGET_CLIENT, sourceProjectKey, "cartDiscountSync", "runnerName");
   }
 
   @Test
   void
       run_WithSyncAsArgumentWithProductTypesCategoriesAndShoppingLists_ShouldExecuteGivenSyncers() {
     // preparation
-    try (final SphereClient targetClient = createClient(CTP_TARGET_CLIENT_CONFIG)) {
-      try (final SphereClient sourceClient = createClient(CTP_SOURCE_CLIENT_CONFIG)) {
+    prepareDataForShoppingListSync(CTP_SOURCE_CLIENT);
 
-        prepareDataForShoppingListSync(sourceClient);
-        final SyncerFactory syncerFactory =
-            SyncerFactory.of(() -> sourceClient, () -> targetClient, Clock.systemDefaultZone());
+    // test
+    CliRunner.of()
+        .run(
+            new String[] {"-s", "productTypes", "categories", "shoppingLists"},
+            createITSyncerFactory());
+    // assertions
+    assertThat(syncerTestLogger.getAllLoggingEvents()).hasSize(6);
 
-        // test
-        CliRunner.of()
-            .run(new String[] {"-s", "productTypes", "categories", "shoppingLists"}, syncerFactory);
-      }
-    }
+    assertProductTypeSyncerLoggingEvents(syncerTestLogger, 1);
+    assertCategorySyncerLoggingEvents(syncerTestLogger, 1);
+    assertShoppingListSyncerLoggingEvents(syncerTestLogger, 1);
 
-    // create clients again (for assertions and cleanup), since the run method closes the clients
-    // after execution is done.
-    try (final SphereClient postSourceClient = createClient(CTP_SOURCE_CLIENT_CONFIG)) {
-      try (final SphereClient postTargetClient = createClient(CTP_TARGET_CLIENT_CONFIG)) {
-        // assertions
-        assertThat(syncerTestLogger.getAllLoggingEvents()).hasSize(6);
+    assertProductTypesAreSyncedCorrectly(CTP_TARGET_CLIENT);
+    assertCategoriesAreSyncedCorrectly(CTP_TARGET_CLIENT);
+    assertShoppingListsAreSyncedCorrectly(CTP_TARGET_CLIENT);
 
-        assertProductTypeSyncerLoggingEvents(syncerTestLogger, 1);
-        assertCategorySyncerLoggingEvents(syncerTestLogger, 1);
-        assertShoppingListSyncerLoggingEvents(syncerTestLogger, 1);
+    final String sourceProjectKey = CTP_SOURCE_CLIENT.getConfig().getProjectKey();
 
-        assertProductTypesAreSyncedCorrectly(postTargetClient);
-        assertCategoriesAreSyncedCorrectly(postTargetClient);
-        assertShoppingListsAreSyncedCorrectly(postTargetClient);
-
-        final String sourceProjectKey = postSourceClient.getConfig().getProjectKey();
-
-        assertLastSyncCustomObjectExists(
-            postTargetClient, sourceProjectKey, "categorySync", "runnerName");
-        assertLastSyncCustomObjectExists(
-            postTargetClient, sourceProjectKey, "productTypeSync", "runnerName");
-        assertLastSyncCustomObjectExists(
-            postTargetClient, sourceProjectKey, "shoppingListSync", "runnerName");
-      }
-    }
+    assertLastSyncCustomObjectExists(
+        CTP_TARGET_CLIENT, sourceProjectKey, "categorySync", "runnerName");
+    assertLastSyncCustomObjectExists(
+        CTP_TARGET_CLIENT, sourceProjectKey, "productTypeSync", "runnerName");
+    assertLastSyncCustomObjectExists(
+        CTP_TARGET_CLIENT, sourceProjectKey, "shoppingListSync", "runnerName");
   }
 
   @Test
   void
       run_WithSyncAsArgumentWithProductsAndShoppingListsAlongWithTheirReferencedResources_ShouldExecuteGivenSyncers() {
-    // preparation
-    try (final SphereClient targetClient = createClient(CTP_TARGET_CLIENT_CONFIG)) {
-      try (final SphereClient sourceClient = createClient(CTP_SOURCE_CLIENT_CONFIG)) {
+    // test
+    CliRunner.of()
+        .run(
+            new String[] {
+              "-s",
+              "types",
+              "productTypes",
+              "states",
+              "taxCategories",
+              "products",
+              "customers",
+              "shoppingLists"
+            },
+            createITSyncerFactory());
+    // assertions
+    assertThat(syncerTestLogger.getAllLoggingEvents()).hasSize(14);
 
-        final SyncerFactory syncerFactory =
-            SyncerFactory.of(() -> sourceClient, () -> targetClient, Clock.systemDefaultZone());
+    assertProductSyncerLoggingEvents(syncerTestLogger, 1);
 
-        // test
-        CliRunner.of()
-            .run(
-                new String[] {
-                  "-s",
-                  "types",
-                  "productTypes",
-                  "states",
-                  "taxCategories",
-                  "products",
-                  "customers",
-                  "shoppingLists"
-                },
-                syncerFactory);
-      }
-    }
+    assertTypesAreSyncedCorrectly(CTP_TARGET_CLIENT);
+    assertProductsAreSyncedCorrectly(CTP_TARGET_CLIENT);
+    assertProductTypesAreSyncedCorrectly(CTP_TARGET_CLIENT);
+    assertStatesAreSyncedCorrectly(CTP_TARGET_CLIENT);
+    assertTaxCategoriesAreSyncedCorrectly(CTP_TARGET_CLIENT);
+    assertCustomersAreSyncedCorrectly(CTP_TARGET_CLIENT);
+    assertShoppingListsAreSyncedCorrectly(CTP_TARGET_CLIENT);
 
-    // create clients again (for assertions and cleanup), since the run method closes the clients
-    // after execution is done.
-    try (final SphereClient postSourceClient = createClient(CTP_SOURCE_CLIENT_CONFIG)) {
-      try (final SphereClient postTargetClient = createClient(CTP_TARGET_CLIENT_CONFIG)) {
-        // assertions
-        assertThat(syncerTestLogger.getAllLoggingEvents()).hasSize(14);
+    final String sourceProjectKey = CTP_SOURCE_CLIENT.getConfig().getProjectKey();
 
-        assertProductSyncerLoggingEvents(syncerTestLogger, 1);
-
-        assertTypesAreSyncedCorrectly(postTargetClient);
-        assertProductsAreSyncedCorrectly(postTargetClient);
-        assertProductTypesAreSyncedCorrectly(postTargetClient);
-        assertStatesAreSyncedCorrectly(postTargetClient);
-        assertTaxCategoriesAreSyncedCorrectly(postTargetClient);
-        assertCustomersAreSyncedCorrectly(postTargetClient);
-        assertShoppingListsAreSyncedCorrectly(postTargetClient);
-
-        final String sourceProjectKey = postSourceClient.getConfig().getProjectKey();
-
-        assertLastSyncCustomObjectExists(
-            postTargetClient, sourceProjectKey, "typeSync", "runnerName");
-        assertLastSyncCustomObjectExists(
-            postTargetClient, sourceProjectKey, "productSync", "runnerName");
-        assertLastSyncCustomObjectExists(
-            postTargetClient, sourceProjectKey, "productTypeSync", "runnerName");
-        assertLastSyncCustomObjectExists(
-            postTargetClient, sourceProjectKey, "stateSync", "runnerName");
-        assertLastSyncCustomObjectExists(
-            postTargetClient, sourceProjectKey, "taxCategorySync", "runnerName");
-        assertLastSyncCustomObjectExists(
-            postTargetClient, sourceProjectKey, "customerSync", "runnerName");
-        assertLastSyncCustomObjectExists(
-            postTargetClient, sourceProjectKey, "shoppingListSync", "runnerName");
-      }
-    }
+    assertLastSyncCustomObjectExists(CTP_TARGET_CLIENT, sourceProjectKey, "typeSync", "runnerName");
+    assertLastSyncCustomObjectExists(
+        CTP_TARGET_CLIENT, sourceProjectKey, "productSync", "runnerName");
+    assertLastSyncCustomObjectExists(
+        CTP_TARGET_CLIENT, sourceProjectKey, "productTypeSync", "runnerName");
+    assertLastSyncCustomObjectExists(
+        CTP_TARGET_CLIENT, sourceProjectKey, "stateSync", "runnerName");
+    assertLastSyncCustomObjectExists(
+        CTP_TARGET_CLIENT, sourceProjectKey, "taxCategorySync", "runnerName");
+    assertLastSyncCustomObjectExists(
+        CTP_TARGET_CLIENT, sourceProjectKey, "customerSync", "runnerName");
+    assertLastSyncCustomObjectExists(
+        CTP_TARGET_CLIENT, sourceProjectKey, "shoppingListSync", "runnerName");
   }
 
   @Test
   void
       run_WithCustomerSyncAsArgument_ShouldSyncCustomersAndStoreLastSyncTimestampsAsCustomObject() {
-    // preparation
-    try (final SphereClient targetClient = createClient(CTP_TARGET_CLIENT_CONFIG)) {
-      try (final SphereClient sourceClient = createClient(CTP_SOURCE_CLIENT_CONFIG)) {
+    // test
+    CliRunner.of().run(new String[] {"-s", "customers"}, createITSyncerFactory());
+    // assertions
+    assertThat(syncerTestLogger.getAllLoggingEvents()).hasSize(2);
 
-        final SyncerFactory syncerFactory =
-            SyncerFactory.of(() -> sourceClient, () -> targetClient, Clock.systemDefaultZone());
+    assertCustomerSyncerLoggingEvents(syncerTestLogger, 1);
 
-        // test
-        CliRunner.of().run(new String[] {"-s", "customers"}, syncerFactory);
-      }
-    }
+    assertCustomersAreSyncedCorrectly(CTP_TARGET_CLIENT);
 
-    // create clients again (for assertions and cleanup), since the run method closes the clients
-    // after execution is done.
-    try (final SphereClient postSourceClient = createClient(CTP_SOURCE_CLIENT_CONFIG)) {
-      try (final SphereClient postTargetClient = createClient(CTP_TARGET_CLIENT_CONFIG)) {
-        // assertions
-        assertThat(syncerTestLogger.getAllLoggingEvents()).hasSize(2);
+    final String sourceProjectKey = CTP_SOURCE_CLIENT.getConfig().getProjectKey();
 
-        assertCustomerSyncerLoggingEvents(syncerTestLogger, 1);
-
-        assertCustomersAreSyncedCorrectly(postTargetClient);
-
-        final String sourceProjectKey = postSourceClient.getConfig().getProjectKey();
-
-        assertLastSyncCustomObjectExists(
-            postTargetClient, sourceProjectKey, "customerSync", "runnerName");
-      }
-    }
+    assertLastSyncCustomObjectExists(
+        CTP_TARGET_CLIENT, sourceProjectKey, "customerSync", "runnerName");
   }
 
   @Test
   void run_WithUpdatedCustomer_ShouldSyncCustomersAndStoreLastSyncTimestampsAsCustomObject() {
     ZonedDateTime lastModifiedTime = null;
     // preparation
-    try (final SphereClient targetClient = createClient(CTP_TARGET_CLIENT_CONFIG)) {
-      try (final SphereClient sourceClient = createClient(CTP_SOURCE_CLIENT_CONFIG)) {
+    final SyncerFactory syncerFactory = createITSyncerFactory();
 
-        final SyncerFactory syncerFactory =
-            SyncerFactory.of(() -> sourceClient, () -> targetClient, Clock.systemDefaultZone());
+    // test
+    CliRunner.of().run(new String[] {"-s", "customers"}, syncerFactory);
 
-        // test
-        CliRunner.of().run(new String[] {"-s", "customers"}, syncerFactory);
-      }
-    }
+    lastModifiedTime =
+        getCustomObjectLastModifiedTime(CTP_TARGET_CLIENT, "customerSync", "runnerName");
+    updateCustomerSourceObject(CTP_SOURCE_CLIENT);
 
-    // Update the Customer in sourceClient and run again
-    try (final SphereClient targetClient = createClient(CTP_TARGET_CLIENT_CONFIG)) {
-      try (final SphereClient sourceClient = createClient(CTP_SOURCE_CLIENT_CONFIG)) {
-        lastModifiedTime =
-            getCustomObjectLastModifiedTime(targetClient, "customerSync", "runnerName");
-        updateCustomerSourceObject(sourceClient);
+    // test
+    CliRunner.of().run(new String[] {"-s", "customers"}, syncerFactory);
 
-        final SyncerFactory syncerFactory =
-            SyncerFactory.of(() -> sourceClient, () -> targetClient, Clock.systemDefaultZone());
+    assertUpdatedCustomersAreSyncedCorrectly(CTP_SOURCE_CLIENT, CTP_TARGET_CLIENT);
 
-        // test
-        CliRunner.of().run(new String[] {"-s", "customers"}, syncerFactory);
-      }
-    }
-
-    // create clients again (for assertions), since the run method closes the clients
-    // after execution is done.
-    try (final SphereClient postSourceClient = createClient(CTP_SOURCE_CLIENT_CONFIG)) {
-      try (final SphereClient postTargetClient = createClient(CTP_TARGET_CLIENT_CONFIG)) {
-        assertUpdatedCustomersAreSyncedCorrectly(postSourceClient, postTargetClient);
-
-        assertUpdatedCustomObjectTimestampAfterSync(
-            postTargetClient, "customerSync", "runnerName", lastModifiedTime);
-      }
-    }
+    assertUpdatedCustomObjectTimestampAfterSync(
+        CTP_TARGET_CLIENT, "customerSync", "runnerName", lastModifiedTime);
   }
 
   private void assertUpdatedCustomObjectTimestampAfterSync(
@@ -690,38 +565,26 @@ class CliRunnerIT {
   void
       run_WithShoppingListSyncAsArgument_ShouldSyncShoppingListsAndStoreLastSyncTimestampsAsCustomObject() {
     // preparation
-    try (final SphereClient targetClient = createClient(CTP_TARGET_CLIENT_CONFIG)) {
-      try (final SphereClient sourceClient = createClient(CTP_SOURCE_CLIENT_CONFIG)) {
+    // Shopping List contains Product, Customer and Type references. So, here it is recreating
+    // ShoppingList without any references.
+    prepareDataForShoppingListSync(CTP_SOURCE_CLIENT);
 
-        // Shopping List contains Product, Customer and Type references. So, here it is recreating
-        // ShoppingList without any references.
-        prepareDataForShoppingListSync(sourceClient);
-
-        final SyncerFactory syncerFactory =
-            SyncerFactory.of(() -> sourceClient, () -> targetClient, Clock.systemDefaultZone());
-
-        // test
-        CliRunner.of().run(new String[] {"-s", "shoppingLists"}, syncerFactory);
-      }
-    }
+    // test
+    CliRunner.of().run(new String[] {"-s", "shoppingLists"}, createITSyncerFactory());
 
     // create clients again (for assertions and cleanup), since the run method closes the clients
     // after execution is done.
-    try (final SphereClient postSourceClient = createClient(CTP_SOURCE_CLIENT_CONFIG)) {
-      try (final SphereClient postTargetClient = createClient(CTP_TARGET_CLIENT_CONFIG)) {
-        // assertions
-        assertThat(syncerTestLogger.getAllLoggingEvents()).hasSize(2);
+    // assertions
+    assertThat(syncerTestLogger.getAllLoggingEvents()).hasSize(2);
 
-        assertShoppingListSyncerLoggingEvents(syncerTestLogger, 1);
+    assertShoppingListSyncerLoggingEvents(syncerTestLogger, 1);
 
-        assertShoppingListsAreSyncedCorrectly(postTargetClient);
+    assertShoppingListsAreSyncedCorrectly(CTP_TARGET_CLIENT);
 
-        final String sourceProjectKey = postSourceClient.getConfig().getProjectKey();
+    final String sourceProjectKey = CTP_SOURCE_CLIENT.getConfig().getProjectKey();
 
-        assertLastSyncCustomObjectExists(
-            postTargetClient, sourceProjectKey, "shoppingListSync", "runnerName");
-      }
-    }
+    assertLastSyncCustomObjectExists(
+        CTP_TARGET_CLIENT, sourceProjectKey, "shoppingListSync", "runnerName");
   }
 
   private void prepareDataForShoppingListSync(SphereClient sourceClient) {
@@ -738,29 +601,13 @@ class CliRunnerIT {
   @Test
   void
       run_WithCustomObjectSyncAsArgument_ShouldSyncCustomObjectsWithoutProjectSyncGeneratedCustomObjects() {
-    // preparation
-    try (final SphereClient targetClient = createClient(CTP_TARGET_CLIENT_CONFIG)) {
-      try (final SphereClient sourceClient = createClient(CTP_SOURCE_CLIENT_CONFIG)) {
+    // test
+    CliRunner.of().run(new String[] {"-s", "customObjects"}, createITSyncerFactory());
+    // assertions
+    // assertions
+    assertThat(syncerTestLogger.getAllLoggingEvents()).hasSize(2);
 
-        final SyncerFactory syncerFactory =
-            SyncerFactory.of(() -> sourceClient, () -> targetClient, Clock.systemDefaultZone());
-
-        // test
-        CliRunner.of().run(new String[] {"-s", "customObjects"}, syncerFactory);
-      }
-    }
-
-    // create clients again (for assertions and cleanup), since the run method closes the clients
-    // after execution is done.
-    try (final SphereClient postSourceClient = createClient(CTP_SOURCE_CLIENT_CONFIG)) {
-      try (final SphereClient postTargetClient = createClient(CTP_TARGET_CLIENT_CONFIG)) {
-        // assertions
-        // assertions
-        assertThat(syncerTestLogger.getAllLoggingEvents()).hasSize(2);
-
-        assertCustomObjectSyncerLoggingEvents(syncerTestLogger, 1);
-      }
-    }
+    assertCustomObjectSyncerLoggingEvents(syncerTestLogger, 1);
   }
 
   @Disabled(
@@ -768,49 +615,32 @@ class CliRunnerIT {
   @Test
   void
       run_WithProductTypeSyncAsArgument_ShouldExecuteProductTypeSyncerAndStoreLastSyncTimestampsAsCustomObject() {
-    // preparation
-    try (final SphereClient targetClient = createClient(CTP_TARGET_CLIENT_CONFIG)) {
-      try (final SphereClient sourceClient = createClient(CTP_SOURCE_CLIENT_CONFIG)) {
+    // test
+    CliRunner.of().run(new String[] {"-s", "productTypes"}, createITSyncerFactory());
+    // assertions
+    assertThat(syncerTestLogger.getAllLoggingEvents()).hasSize(2);
 
-        final SyncerFactory syncerFactory =
-            SyncerFactory.of(() -> sourceClient, () -> targetClient, Clock.systemDefaultZone());
+    assertSyncerLoggingEvents(
+        syncerTestLogger,
+        "ProductTypeSync",
+        "Summary: 1 product types were processed in total (1 created, 0 updated "
+            + "and 0 failed to sync).");
 
-        // test
-        CliRunner.of().run(new String[] {"-s", "productTypes"}, syncerFactory);
-      }
-    }
+    assertProductTypesAreSyncedCorrectly(CTP_TARGET_CLIENT);
 
-    // create clients again (for assertions and cleanup), since the run method closes the clients
-    // after execution is done.
-    try (final SphereClient postSourceClient = createClient(CTP_SOURCE_CLIENT_CONFIG)) {
-      try (final SphereClient postTargetClient = createClient(CTP_TARGET_CLIENT_CONFIG)) {
+    final ZonedDateTime lastSyncTimestamp =
+        assertCurrentCtpTimestampGeneratorAndGetLastModifiedAt(
+            CTP_TARGET_CLIENT, DEFAULT_RUNNER_NAME, "ProductTypeSync");
 
-        // assertions
-        assertThat(syncerTestLogger.getAllLoggingEvents()).hasSize(2);
+    final String sourceProjectKey = CTP_SOURCE_CLIENT.getConfig().getProjectKey();
 
-        assertSyncerLoggingEvents(
-            syncerTestLogger,
-            "ProductTypeSync",
-            "Summary: 1 product types were processed in total (1 created, 0 updated "
-                + "and 0 failed to sync).");
-
-        assertProductTypesAreSyncedCorrectly(postTargetClient);
-
-        final ZonedDateTime lastSyncTimestamp =
-            assertCurrentCtpTimestampGeneratorAndGetLastModifiedAt(
-                postTargetClient, DEFAULT_RUNNER_NAME, "ProductTypeSync");
-
-        final String sourceProjectKey = postSourceClient.getConfig().getProjectKey();
-
-        assertLastSyncCustomObjectIsCorrect(
-            postTargetClient,
-            sourceProjectKey,
-            "productTypeSync",
-            DEFAULT_RUNNER_NAME,
-            ProductSyncStatistics.class,
-            lastSyncTimestamp);
-      }
-    }
+    assertLastSyncCustomObjectIsCorrect(
+        CTP_TARGET_CLIENT,
+        sourceProjectKey,
+        "productTypeSync",
+        DEFAULT_RUNNER_NAME,
+        ProductSyncStatistics.class,
+        lastSyncTimestamp);
   }
 
   private static void assertTypesAreSyncedCorrectly(@Nonnull final SphereClient ctpClient) {
@@ -976,134 +806,89 @@ class CliRunnerIT {
   @Test
   void
       run_WithSyncAsArgumentWithAllArgAsDeltaSync_ShouldExecuteAllSyncersAndStoreLastSyncTimestampsAsCustomObjects() {
-    // preparation
-    try (final SphereClient targetClient = createClient(CTP_TARGET_CLIENT_CONFIG)) {
-      try (final SphereClient sourceClient = createClient(CTP_SOURCE_CLIENT_CONFIG)) {
+    // test
+    CliRunner.of().run(new String[] {"-s", "all", "-r", "runnerName"}, createITSyncerFactory());
+    assertAllSyncersLoggingEvents(syncerTestLogger, cliRunnerTestLogger, 1);
 
-        final SyncerFactory syncerFactory =
-            SyncerFactory.of(() -> sourceClient, () -> targetClient, Clock.systemDefaultZone());
+    assertAllResourcesAreSyncedToTarget(CTP_TARGET_CLIENT);
+    assertCurrentCtpTimestampGeneratorAndGetLastModifiedAt(
+        CTP_TARGET_CLIENT, "runnerName", "ProductTypeSync");
 
-        // test
-        CliRunner.of().run(new String[] {"-s", "all", "-r", "runnerName"}, syncerFactory);
-      }
-    }
+    final String sourceProjectKey = CTP_SOURCE_CLIENT.getConfig().getProjectKey();
 
-    // create clients again (for assertions and cleanup), since the run method closes the clients
-    // after execution is done.
-    try (final SphereClient postSourceClient = createClient(CTP_SOURCE_CLIENT_CONFIG)) {
-      try (final SphereClient postTargetClient = createClient(CTP_TARGET_CLIENT_CONFIG)) {
-        // assertions
-        assertAllSyncersLoggingEvents(syncerTestLogger, cliRunnerTestLogger, 1);
+    assertLastSyncCustomObjectExists(
+        CTP_TARGET_CLIENT, sourceProjectKey, "productSync", "runnerName");
 
-        assertAllResourcesAreSyncedToTarget(postTargetClient);
-        assertCurrentCtpTimestampGeneratorAndGetLastModifiedAt(
-            postTargetClient, "runnerName", "ProductTypeSync");
+    assertLastSyncCustomObjectExists(
+        CTP_TARGET_CLIENT, sourceProjectKey, "categorySync", "runnerName");
 
-        final String sourceProjectKey = postSourceClient.getConfig().getProjectKey();
+    assertLastSyncCustomObjectExists(
+        CTP_TARGET_CLIENT, sourceProjectKey, "productTypeSync", "runnerName");
 
-        assertLastSyncCustomObjectExists(
-            postTargetClient, sourceProjectKey, "productSync", "runnerName");
+    assertLastSyncCustomObjectExists(CTP_TARGET_CLIENT, sourceProjectKey, "typeSync", "runnerName");
 
-        assertLastSyncCustomObjectExists(
-            postTargetClient, sourceProjectKey, "categorySync", "runnerName");
+    assertLastSyncCustomObjectExists(
+        CTP_TARGET_CLIENT, sourceProjectKey, "inventorySync", "runnerName");
 
-        assertLastSyncCustomObjectExists(
-            postTargetClient, sourceProjectKey, "productTypeSync", "runnerName");
+    assertLastSyncCustomObjectExists(
+        CTP_TARGET_CLIENT, sourceProjectKey, "cartDiscountSync", "runnerName");
 
-        assertLastSyncCustomObjectExists(
-            postTargetClient, sourceProjectKey, "typeSync", "runnerName");
+    assertLastSyncCustomObjectExists(
+        CTP_TARGET_CLIENT, sourceProjectKey, "stateSync", "runnerName");
 
-        assertLastSyncCustomObjectExists(
-            postTargetClient, sourceProjectKey, "inventorySync", "runnerName");
+    assertLastSyncCustomObjectExists(
+        CTP_TARGET_CLIENT, sourceProjectKey, "taxCategorySync", "runnerName");
 
-        assertLastSyncCustomObjectExists(
-            postTargetClient, sourceProjectKey, "cartDiscountSync", "runnerName");
+    assertLastSyncCustomObjectExists(
+        CTP_TARGET_CLIENT, sourceProjectKey, "customObjectSync", "runnerName");
 
-        assertLastSyncCustomObjectExists(
-            postTargetClient, sourceProjectKey, "stateSync", "runnerName");
-
-        assertLastSyncCustomObjectExists(
-            postTargetClient, sourceProjectKey, "taxCategorySync", "runnerName");
-
-        assertLastSyncCustomObjectExists(
-            postTargetClient, sourceProjectKey, "customObjectSync", "runnerName");
-
-        assertLastSyncCustomObjectExists(
-            postTargetClient, sourceProjectKey, "customerSync", "runnerName");
-      }
-    }
+    assertLastSyncCustomObjectExists(
+        CTP_TARGET_CLIENT, sourceProjectKey, "customerSync", "runnerName");
   }
 
   @Test
   void run_WithSyncAsArgumentWithAllArgAsFullSync_ShouldExecuteAllSyncers() {
-    // preparation
-    try (final SphereClient targetClient = createClient(CTP_TARGET_CLIENT_CONFIG)) {
-      try (final SphereClient sourceClient = createClient(CTP_SOURCE_CLIENT_CONFIG)) {
+    // test
+    CliRunner.of()
+        .run(new String[] {"-s", "all", "-r", "runnerName", "-f"}, createITSyncerFactory());
+    // assertions
+    assertAllSyncersLoggingEvents(syncerTestLogger, cliRunnerTestLogger, 1);
 
-        final SyncerFactory syncerFactory =
-            SyncerFactory.of(() -> sourceClient, () -> targetClient, Clock.systemDefaultZone());
-
-        // test
-        CliRunner.of().run(new String[] {"-s", "all", "-r", "runnerName", "-f"}, syncerFactory);
-      }
-    }
-
-    // create clients again (for assertions and cleanup), since the run method closes the clients
-    // after execution is done.
-    try (final SphereClient postTargetClient = createClient(CTP_TARGET_CLIENT_CONFIG)) {
-      // assertions
-      assertAllSyncersLoggingEvents(syncerTestLogger, cliRunnerTestLogger, 1);
-
-      assertAllResourcesAreSyncedToTarget(postTargetClient);
-      assertCurrentCtpTimestampGeneratorDoesntExist(
-          postTargetClient, "runnerName", "ProductTypeSync");
-      assertNoProjectSyncCustomObjectExists(postTargetClient);
-    }
+    assertAllResourcesAreSyncedToTarget(CTP_TARGET_CLIENT);
+    assertCurrentCtpTimestampGeneratorDoesntExist(
+        CTP_TARGET_CLIENT, "runnerName", "ProductTypeSync");
+    assertNoProjectSyncCustomObjectExists(CTP_TARGET_CLIENT);
   }
 
   @Test
   void
       run_WithSyncAsArgumentWithAllArgAsFullSyncAndWithCustomQueryAndLimitForProducts_ShouldExecuteAllSyncers() {
-    // preparation
-    try (final SphereClient targetClient = createClient(CTP_TARGET_CLIENT_CONFIG)) {
-      try (final SphereClient sourceClient = createClient(CTP_SOURCE_CLIENT_CONFIG)) {
+    final Long limit = 100L;
+    final String customQuery =
+        "\"masterData(published=true) AND masterData(staged(masterVariant(key= \\\"foo\\\")))\"";
+    final String productQueryParametersValue =
+        "{\"limit\": " + limit + ", \"where\": " + customQuery + "}";
 
-        final SyncerFactory syncerFactory =
-            SyncerFactory.of(() -> sourceClient, () -> targetClient, Clock.systemDefaultZone());
+    // test
+    CliRunner.of()
+        .run(
+            new String[] {
+              "-s",
+              "all",
+              "-r",
+              "runnerName",
+              "-f",
+              "-productQueryParameters",
+              productQueryParametersValue
+            },
+            createITSyncerFactory());
+    // assertions
+    assertAllSyncersLoggingEvents(syncerTestLogger, cliRunnerTestLogger, 1);
 
-        final Long limit = 100L;
-        final String customQuery =
-            "\"masterData(published=true) AND masterData(staged(masterVariant(key= \\\"foo\\\")))\"";
-        final String productQueryParametersValue =
-            "{\"limit\": " + limit + ", \"where\": " + customQuery + "}";
-
-        // test
-        CliRunner.of()
-            .run(
-                new String[] {
-                  "-s",
-                  "all",
-                  "-r",
-                  "runnerName",
-                  "-f",
-                  "-productQueryParameters",
-                  productQueryParametersValue
-                },
-                syncerFactory);
-      }
-    }
-
-    // create clients again (for assertions and cleanup), since the run method closes the clients
-    // after execution is done.
-    try (final SphereClient postTargetClient = createClient(CTP_TARGET_CLIENT_CONFIG)) {
-      // assertions
-      assertAllSyncersLoggingEvents(syncerTestLogger, cliRunnerTestLogger, 1);
-
-      assertAllResourcesAreSyncedToTarget(postTargetClient);
-      assertCurrentCtpTimestampGeneratorDoesntExist(
-          postTargetClient, "runnerName", "ProductTypeSync");
-      assertNoProjectSyncCustomObjectExists(postTargetClient);
-    }
+    assertAllResourcesAreSyncedToTarget(CTP_TARGET_CLIENT);
+    assertCurrentCtpTimestampGeneratorDoesntExist(
+        CTP_TARGET_CLIENT, "runnerName", "ProductTypeSync");
+    assertNoProjectSyncCustomObjectExists(CTP_TARGET_CLIENT);
   }
 
   private void assertNoProjectSyncCustomObjectExists(@Nonnull final SphereClient targetClient) {
