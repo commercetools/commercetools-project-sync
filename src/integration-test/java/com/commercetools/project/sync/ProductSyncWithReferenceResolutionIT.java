@@ -1,12 +1,12 @@
 package com.commercetools.project.sync;
 
-import static com.commercetools.project.sync.util.ClientConfigurationUtils.createClient;
 import static com.commercetools.project.sync.util.IntegrationTestUtils.assertCategoryExists;
 import static com.commercetools.project.sync.util.IntegrationTestUtils.assertProductExists;
 import static com.commercetools.project.sync.util.IntegrationTestUtils.assertProductTypeExists;
 import static com.commercetools.project.sync.util.IntegrationTestUtils.cleanUpProjects;
-import static com.commercetools.project.sync.util.SphereClientUtils.CTP_SOURCE_CLIENT_CONFIG;
-import static com.commercetools.project.sync.util.SphereClientUtils.CTP_TARGET_CLIENT_CONFIG;
+import static com.commercetools.project.sync.util.IntegrationTestUtils.createITSyncerFactory;
+import static com.commercetools.project.sync.util.SphereClientUtils.CTP_SOURCE_CLIENT;
+import static com.commercetools.project.sync.util.SphereClientUtils.CTP_TARGET_CLIENT;
 import static com.neovisionaries.i18n.CountryCode.DE;
 import static io.sphere.sdk.models.DefaultCurrencyUnits.EUR;
 import static io.sphere.sdk.models.LocalizedString.ofEnglish;
@@ -74,7 +74,6 @@ import io.sphere.sdk.types.TypeDraft;
 import io.sphere.sdk.types.TypeDraftBuilder;
 import io.sphere.sdk.types.commands.TypeCreateCommand;
 import java.math.BigDecimal;
-import java.time.Clock;
 import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.Collections;
@@ -100,8 +99,8 @@ public class ProductSyncWithReferenceResolutionIT {
   void setup() {
     syncerTestLogger.clearAll();
     cliRunnerTestLogger.clearAll();
-    cleanUpProjects(createClient(CTP_SOURCE_CLIENT_CONFIG), createClient(CTP_TARGET_CLIENT_CONFIG));
-    setupSourceProjectData(createClient(CTP_SOURCE_CLIENT_CONFIG));
+    cleanUpProjects(CTP_SOURCE_CLIENT, CTP_TARGET_CLIENT);
+    setupSourceProjectData(CTP_SOURCE_CLIENT);
   }
 
   private void setupSourceProjectData(SphereClient sourceProjectClient) {
@@ -181,9 +180,7 @@ public class ProductSyncWithReferenceResolutionIT {
             .toCompletableFuture()
             .join();
 
-    SphereClient targetProjectClient = createClient(CTP_TARGET_CLIENT_CONFIG);
-
-    targetProjectClient
+    CTP_TARGET_CLIENT
         .execute(CustomerGroupCreateCommand.of(customerGroupDraft))
         .toCompletableFuture()
         .join();
@@ -194,7 +191,7 @@ public class ProductSyncWithReferenceResolutionIT {
     final ChannelDraft draft =
         ChannelDraftBuilder.of("channelKey").roles(singleton(ChannelRole.INVENTORY_SUPPLY)).build();
     sourceProjectClient.execute(ChannelCreateCommand.of(draft)).toCompletableFuture().join();
-    targetProjectClient.execute(ChannelCreateCommand.of(draft)).toCompletableFuture().join();
+    CTP_TARGET_CLIENT.execute(ChannelCreateCommand.of(draft)).toCompletableFuture().join();
 
     final PriceDraft priceBuilder =
         PriceDraftBuilder.of(
@@ -246,40 +243,23 @@ public class ProductSyncWithReferenceResolutionIT {
 
   @AfterAll
   static void tearDownSuite() {
-    cleanUpProjects(createClient(CTP_SOURCE_CLIENT_CONFIG), createClient(CTP_TARGET_CLIENT_CONFIG));
+    cleanUpProjects(CTP_SOURCE_CLIENT, CTP_TARGET_CLIENT);
   }
 
   @Test
   void run_WithSyncAsArgumentWithAllArgAsFullSync_ShouldResolveReferencesAndExecuteSyncers() {
-    // preparation
-    try (final SphereClient targetClient = createClient(CTP_TARGET_CLIENT_CONFIG)) {
-      try (final SphereClient sourceClient = createClient(CTP_SOURCE_CLIENT_CONFIG)) {
+    // test
+    CliRunner.of().run(new String[] {"-s", "all", "-f"}, createITSyncerFactory());
+    // assertions
+    assertThat(cliRunnerTestLogger.getAllLoggingEvents())
+        .allMatch(loggingEvent -> !Level.ERROR.equals(loggingEvent.getLevel()));
 
-        final SyncerFactory syncerFactory =
-            SyncerFactory.of(() -> sourceClient, () -> targetClient, Clock.systemDefaultZone());
+    assertThat(syncerTestLogger.getAllLoggingEvents())
+        .allMatch(loggingEvent -> !Level.ERROR.equals(loggingEvent.getLevel()));
 
-        // test
-        CliRunner.of().run(new String[] {"-s", "all", "-f"}, syncerFactory);
-      }
-    }
-
-    // create clients again (for assertions and cleanup), since the run method closes the clients
-    // after execution is done.
-    try (final SphereClient postSourceClient = createClient(CTP_SOURCE_CLIENT_CONFIG)) {
-      try (final SphereClient postTargetClient = createClient(CTP_TARGET_CLIENT_CONFIG)) {
-
-        // assertions
-        assertThat(cliRunnerTestLogger.getAllLoggingEvents())
-            .allMatch(loggingEvent -> !Level.ERROR.equals(loggingEvent.getLevel()));
-
-        assertThat(syncerTestLogger.getAllLoggingEvents())
-            .allMatch(loggingEvent -> !Level.ERROR.equals(loggingEvent.getLevel()));
-
-        // Every sync module is expected to have 2 logs (start and stats summary)
-        assertThat(syncerTestLogger.getAllLoggingEvents()).hasSize(22);
-        assertAllResourcesAreSyncedToTarget(postTargetClient);
-      }
-    }
+    // Every sync module is expected to have 2 logs (start and stats summary)
+    assertThat(syncerTestLogger.getAllLoggingEvents()).hasSize(22);
+    assertAllResourcesAreSyncedToTarget(CTP_TARGET_CLIENT);
   }
 
   private static void assertAllResourcesAreSyncedToTarget(

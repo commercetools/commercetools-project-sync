@@ -2,9 +2,12 @@ package com.commercetools.project.sync.util;
 
 import static com.commercetools.project.sync.service.impl.CustomObjectServiceImpl.TIMESTAMP_GENERATOR_KEY;
 import static com.commercetools.project.sync.util.QueryUtils.queryAndExecute;
+import static com.commercetools.project.sync.util.SphereClientUtils.CTP_SOURCE_CLIENT;
+import static com.commercetools.project.sync.util.SphereClientUtils.CTP_TARGET_CLIENT;
 import static java.lang.String.format;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.commercetools.project.sync.SyncerFactory;
 import com.commercetools.project.sync.model.response.LastSyncCustomObject;
 import com.commercetools.sync.commons.utils.CtpQueryUtils;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -54,6 +57,7 @@ import io.sphere.sdk.taxcategories.commands.TaxCategoryDeleteCommand;
 import io.sphere.sdk.taxcategories.queries.TaxCategoryQuery;
 import io.sphere.sdk.types.commands.TypeDeleteCommand;
 import io.sphere.sdk.types.queries.TypeQuery;
+import java.time.Clock;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -66,6 +70,11 @@ import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 
 public final class IntegrationTestUtils {
+
+  public static SyncerFactory createITSyncerFactory() {
+    return SyncerFactory.of(
+        () -> CTP_SOURCE_CLIENT, () -> CTP_TARGET_CLIENT, Clock.systemDefaultZone(), false);
+  }
 
   /**
    * Since this method is expected to be used only by tests, it only works on projects with equal or
