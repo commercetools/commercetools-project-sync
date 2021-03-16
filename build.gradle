@@ -79,6 +79,14 @@ dependencies {
     implementation "org.slf4j:slf4j-simple:${slf4jVersion}"
     implementation "com.google.code.findbugs:annotations:${findbugsVersion}"
     implementation "com.github.ben-manes.caffeine:caffeine:${caffeineVersion}"
+    constraints {
+        implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-cbor:2.11.4") {
+            because "previous versions are vulnerable to DoS"
+        }
+        implementation("io.netty:netty-codec-http:4.1.59.Final") {
+            because "previous versions are vulnerable to Information Disclosure"
+        }
+    }
     testImplementation "uk.org.lidalia:slf4j-test:${slf4jTestVersion}"
     testImplementation "org.mockito:mockito-core:${mockitoVersion}"
     testImplementation "org.junit.jupiter:junit-jupiter-api:${jupiterApiVersion}"
