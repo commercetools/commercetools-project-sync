@@ -292,7 +292,9 @@ public class ProductReferenceTransformServiceImpl extends BaseTransformServiceIm
     final List<CustomObjectQuery<JsonNode>> chunkedRequests =
         chunkedIds
             .stream()
-            .map(ids -> CustomObjectQuery.ofJsonNode().plusPredicates(p -> p.id().isIn(ids)))
+            .map(ids -> CustomObjectQuery.ofJsonNode().plusPredicates(p -> p.id().isIn(ids))
+                    .withFetchTotal(false)
+                    .withLimit(CHUNK_SIZE))
             .collect(toList());
 
     return ChunkUtils.executeChunks(getCtpClient(), chunkedRequests)
