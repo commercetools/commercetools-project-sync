@@ -83,7 +83,7 @@ dependencies {
         implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-cbor:2.12.2") {
             because "previous versions are vulnerable to DoS"
         }
-        implementation("io.netty:netty-codec-http:4.1.59.Final") {
+        implementation("io.netty:netty-codec-http:4.1.60.Final") {
             because "previous versions are vulnerable to Information Disclosure"
         }
     }
