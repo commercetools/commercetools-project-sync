@@ -40,7 +40,7 @@ ext {
     apacheCliVersion = '1.4'
     jupiterApiVersion = '5.7.1'
     caffeineVersion = '2.8.5'
-    asyncHttpClientVersion = '2.12.2'
+    asyncHttpClientVersion = '2.12.3'
 }
 
 
