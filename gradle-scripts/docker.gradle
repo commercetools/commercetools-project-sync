@@ -1,6 +1,6 @@
 docker {
     javaApplication {
-        baseImage = 'java:openjdk-8-jre-alpine'
+        baseImage = 'adoptopenjdk/openjdk11:jre-11.0.9.1_1-alpine'
         maintainer = 'PS Team Munich [ps-dev@commercetools.com]'
         images = ['commercetools/commercetools-project-sync:' + version]
         ports = []
