@@ -34,7 +34,7 @@ ext {
     slf4jTestVersion = '1.2.0'
     assertjVersion = '3.19.0'
     pmdVersion = '5.6.1'
-    jacocoVersion = '0.7.9'
+    jacocoVersion = '0.8.6'
     findbugsVersion = '3.0.1'
     commercetoolsSyncJava='4.0.1'
     apacheCliVersion = '1.4'
