@@ -1,0 +1,47 @@
+<configuration>
+    <appender name="JSON-STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <target>System.out</target>
+        <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
+            <providers>
+                <message/>
+                <arguments/>
+                <logstashMarkers/>
+                <!-- Some fields are mapped to camel-case for consistency -->
+                <timestamp>
+                    <!-- Map default "@timestamp" to "timestamp" -->
+                    <fieldName>timestamp</fieldName>
+                </timestamp>
+                <loggerName>
+                    <!-- Map default "logger_name" to "loggerName" -->
+                    <fieldName>loggerName</fieldName>
+                </loggerName>
+                <logLevel>
+                    <!-- Map default "logLevel" to "severity" for cloud platforms such as GCP Stackdriver -->
+                    <fieldName>severity</fieldName>
+                </logLevel>
+                <stackHash>
+                    <!-- Map default "stack_hash" to "stackHash" -->
+                    <fieldName>stackHash</fieldName>
+                </stackHash>
+                <stackTrace>
+                    <!-- Map default "stack_trace" to "stackTrace" -->
+                    <fieldName>stackTrace</fieldName>
+                    <throwableConverter class="net.logstash.logback.stacktrace.ShortenedThrowableConverter">
+                        <maxDepthPerThrowable>30</maxDepthPerThrowable>
+                        <maxLength>2048</maxLength>
+                        <shortenedClassNameLength>20</shortenedClassNameLength>
+                        <rootCauseFirst>true</rootCauseFirst>
+                    </throwableConverter>
+                </stackTrace>
+            </providers>
+        </encoder>
+    </appender>
+
+    <appender name="ASYNCSTDOUT" class="ch.qos.logback.classic.AsyncAppender">
+        <appender-ref ref="JSON-STDOUT"/>
+    </appender>
+
+    <root level="INFO">
+        <appender-ref ref="ASYNCSTDOUT"/>
+    </root>
+</configuration>
