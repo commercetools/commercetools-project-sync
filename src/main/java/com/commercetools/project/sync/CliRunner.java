@@ -69,7 +69,6 @@ final class CliRunner {
     return new CliRunner();
   }
 
-  @Nonnull
   void run(@Nonnull final String[] arguments, @Nonnull final SyncerFactory syncerFactory) {
 
     final Options cliOptions = buildCliOptions();
@@ -94,7 +93,7 @@ final class CliRunner {
     try {
       commandLine = parser.parse(cliOptions, arguments);
     } catch (final ParseException | IllegalArgumentException exception) {
-      return exceptionallyCompletedFuture(exception);
+      return exceptionallyCompletedFuture(new CliException(exception.getMessage()));
     }
 
     return processCliArguments(commandLine, cliOptions, syncerFactory);

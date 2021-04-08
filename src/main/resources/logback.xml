@@ -37,11 +37,7 @@
         </encoder>
     </appender>
 
-    <appender name="ASYNCSTDOUT" class="ch.qos.logback.classic.AsyncAppender">
-        <appender-ref ref="JSON-STDOUT"/>
-    </appender>
-
     <root level="INFO">
-        <appender-ref ref="ASYNCSTDOUT"/>
+        <appender-ref ref="JSON-STDOUT"/>
     </root>
 </configuration>
