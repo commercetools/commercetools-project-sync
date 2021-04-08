@@ -42,7 +42,7 @@ As of now, these are the supported resources:
 
 ### Prerequisites
 
- - Make sure you have installed docker container to run the docker image.
+ - Make sure you have installed docker to run the docker image.
  - The following fields are **required** to be set on the following resources (and sub-resources), if they will be
   synced:
 
