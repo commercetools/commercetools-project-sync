@@ -3,22 +3,20 @@
         <target>System.out</target>
         <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
             <providers>
-                <message/>
-                <arguments/>
-                <logstashMarkers/>
                 <!-- Some fields are mapped to camel-case for consistency -->
                 <timestamp>
                     <!-- Map default "@timestamp" to "timestamp" -->
                     <fieldName>timestamp</fieldName>
                 </timestamp>
-                <loggerName>
-                    <!-- Map default "logger_name" to "loggerName" -->
-                    <fieldName>loggerName</fieldName>
-                </loggerName>
                 <logLevel>
                     <!-- Map default "logLevel" to "severity" for cloud platforms such as GCP Stackdriver -->
                     <fieldName>severity</fieldName>
                 </logLevel>
+                <loggerName>
+                    <!-- Map default "logger_name" to "loggerName" -->
+                    <fieldName>loggerName</fieldName>
+                </loggerName>
+                <message/>
                 <stackHash>
                     <!-- Map default "stack_hash" to "stackHash" -->
                     <fieldName>stackHash</fieldName>
@@ -33,6 +31,8 @@
                         <rootCauseFirst>true</rootCauseFirst>
                     </throwableConverter>
                 </stackTrace>
+                <arguments/>
+                <logstashMarkers/>
             </providers>
         </encoder>
     </appender>
