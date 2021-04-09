@@ -1,0 +1,43 @@
+<configuration>
+    <appender name="JSON-STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <target>System.out</target>
+        <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
+            <providers>
+                <!-- Some fields are mapped to camel-case for consistency -->
+                <timestamp>
+                    <!-- Map default "@timestamp" to "timestamp" -->
+                    <fieldName>timestamp</fieldName>
+                </timestamp>
+                <logLevel>
+                    <!-- Map default "logLevel" to "severity" for cloud platforms such as GCP Stackdriver -->
+                    <fieldName>severity</fieldName>
+                </logLevel>
+                <loggerName>
+                    <!-- Map default "logger_name" to "loggerName" -->
+                    <fieldName>loggerName</fieldName>
+                </loggerName>
+                <message/>
+                <stackHash>
+                    <!-- Map default "stack_hash" to "stackHash" -->
+                    <fieldName>stackHash</fieldName>
+                </stackHash>
+                <stackTrace>
+                    <!-- Map default "stack_trace" to "stackTrace" -->
+                    <fieldName>stackTrace</fieldName>
+                    <throwableConverter class="net.logstash.logback.stacktrace.ShortenedThrowableConverter">
+                        <maxDepthPerThrowable>30</maxDepthPerThrowable>
+                        <maxLength>2048</maxLength>
+                        <shortenedClassNameLength>20</shortenedClassNameLength>
+                        <rootCauseFirst>true</rootCauseFirst>
+                    </throwableConverter>
+                </stackTrace>
+                <arguments/>
+                <logstashMarkers/>
+            </providers>
+        </encoder>
+    </appender>
+
+    <root level="INFO">
+        <appender-ref ref="JSON-STDOUT"/>
+    </root>
+</configuration>

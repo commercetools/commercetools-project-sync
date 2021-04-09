@@ -48,7 +48,6 @@ import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
 import java.time.ZonedDateTime;
 import java.util.concurrent.CompletableFuture;
-import org.apache.commons.cli.MissingArgumentException;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -196,7 +195,7 @@ class CliRunnerTest {
               assertThat(actualThrowableOpt).isNotNull();
               assertThat(actualThrowableOpt.isPresent()).isTrue();
               final Throwable actualThrowable = actualThrowableOpt.get();
-              assertThat(actualThrowable).isExactlyInstanceOf(MissingArgumentException.class);
+              assertThat(actualThrowable).isExactlyInstanceOf(CliException.class);
               assertThat(actualThrowable.getMessage()).contains("Missing argument for option: s");
             });
   }

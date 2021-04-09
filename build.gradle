@@ -41,6 +41,8 @@ ext {
     jupiterApiVersion = '5.7.1'
     caffeineVersion = '2.8.5'
     asyncHttpClientVersion = '2.12.3'
+    logbackVersion = '1.2.3'
+    logstashLogbackEncoderVersion= '6.6'
 }
 
 
@@ -75,8 +77,10 @@ dependencies {
     implementation "org.asynchttpclient:async-http-client:${asyncHttpClientVersion}"
 
     implementation "commons-cli:commons-cli:${apacheCliVersion}"
-    implementation "org.slf4j:slf4j-api:${slf4jVersion}"
-    implementation "org.slf4j:slf4j-simple:${slf4jVersion}"
+    implementation "ch.qos.logback:logback-classic:${logbackVersion}"
+    implementation "ch.qos.logback:logback-core:${logbackVersion}"
+    implementation "net.logstash.logback:logstash-logback-encoder:${logstashLogbackEncoderVersion}"
+
     implementation "com.google.code.findbugs:annotations:${findbugsVersion}"
     implementation "com.github.ben-manes.caffeine:caffeine:${caffeineVersion}"
     constraints {
