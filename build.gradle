@@ -84,7 +84,7 @@ dependencies {
     implementation "com.google.code.findbugs:annotations:${findbugsVersion}"
     implementation "com.github.ben-manes.caffeine:caffeine:${caffeineVersion}"
     constraints {
-        implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-cbor:2.12.2") {
+        implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-cbor:2.12.3") {
             because "previous versions are vulnerable to DoS"
         }
         implementation("io.netty:netty-codec-http:4.1.63.Final") {
