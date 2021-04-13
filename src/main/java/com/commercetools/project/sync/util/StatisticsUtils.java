@@ -20,7 +20,7 @@ public final class StatisticsUtils {
       @Nonnull final BaseSyncStatistics statistics, @Nonnull final Logger logger) {
     try {
       final String statisticsAsJSONString = getStatisticsAsJSONString(statistics);
-      logger.info(statisticsAsJSONString);
+
     } catch (final JsonProcessingException exception) {
       logger.error("Invalid statistics JSON string..", exception);
     }

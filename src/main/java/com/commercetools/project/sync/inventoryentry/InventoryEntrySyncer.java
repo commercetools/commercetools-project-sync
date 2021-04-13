@@ -103,4 +103,10 @@ public final class InventoryEntrySyncer
   protected InventoryEntryQuery getQuery() {
     return buildInventoryQuery();
   }
+
+  @Nonnull
+  @Override
+  protected Logger getLogger() {
+    return LOGGER;
+  }
 }

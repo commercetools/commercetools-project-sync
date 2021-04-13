@@ -78,4 +78,10 @@ public final class StateSyncer
   protected StateQuery getQuery() {
     return buildStateQuery();
   }
+
+  @Nonnull
+  @Override
+  protected Logger getLogger() {
+    return LOGGER;
+  }
 }

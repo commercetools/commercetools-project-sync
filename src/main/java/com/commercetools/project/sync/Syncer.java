@@ -1,9 +1,9 @@
 package com.commercetools.project.sync;
 
-import static com.commercetools.project.sync.util.StatisticsUtils.logStatistics;
 import static com.commercetools.project.sync.util.SyncUtils.getSyncModuleName;
 import static com.commercetools.sync.commons.utils.CtpQueryUtils.queryAll;
 import static java.lang.String.format;
+import static net.logstash.logback.argument.StructuredArguments.value;
 
 import com.commercetools.project.sync.model.response.LastSyncCustomObject;
 import com.commercetools.project.sync.service.CustomObjectService;
@@ -23,7 +23,6 @@ import java.util.concurrent.CompletionStage;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Base class of the syncer that handles syncing a resource from a source CTP project to a target
@@ -53,8 +52,6 @@ public abstract class Syncer<
     V extends BaseSyncOptions<T, S>,
     C extends QueryDsl<T, C>,
     B extends BaseSync<S, U, V>> {
-
-  private static final Logger LOGGER = LoggerFactory.getLogger(Syncer.class);
 
   private final B sync;
   private final SphereClient sourceClient;
@@ -110,12 +107,13 @@ public abstract class Syncer<
 
     final String sourceProjectKey = sourceClient.getConfig().getProjectKey();
     final String syncModuleName = getSyncModuleName(sync.getClass());
-    if (LOGGER.isInfoEnabled()) {
+    if (getLogger().isInfoEnabled()) {
       final String targetProjectKey = targetClient.getConfig().getProjectKey();
-      LOGGER.info(
-          format(
-              "Starting %s from CTP project with key '%s' to project with key '%s'",
-              syncModuleName, sourceProjectKey, targetProjectKey));
+      getLogger()
+          .info(
+              format(
+                  "Starting %s from CTP project with key '%s' to project with key '%s'",
+                  syncModuleName, sourceProjectKey, targetProjectKey));
     }
 
     final CompletionStage<Void> syncStage;
@@ -133,8 +131,8 @@ public abstract class Syncer<
 
     return syncStage.thenAccept(
         ignoredResult -> {
-          if (LOGGER.isInfoEnabled()) {
-            logStatistics(sync.getStatistics(), LOGGER);
+          if (getLogger().isInfoEnabled()) {
+            getLogger().info("Stats {}", value("statistics", sync.getStatistics()));
           }
         });
   }
@@ -256,6 +254,9 @@ public abstract class Syncer<
   public B getSync() {
     return sync;
   }
+
+  @Nonnull
+  protected abstract Logger getLogger();
 
   @Nonnull
   public SphereClient getSourceClient() {

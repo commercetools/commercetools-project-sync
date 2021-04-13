@@ -89,4 +89,10 @@ public final class CustomerSyncer
   protected CustomerQuery getQuery() {
     return CustomerReferenceResolutionUtils.buildCustomerQuery();
   }
+
+  @Nonnull
+  @Override
+  protected Logger getLogger() {
+    return LOGGER;
+  }
 }

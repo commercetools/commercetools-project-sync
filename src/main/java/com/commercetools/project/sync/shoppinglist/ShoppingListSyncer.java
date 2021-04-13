@@ -103,4 +103,10 @@ public final class ShoppingListSyncer
   protected ShoppingListQuery getQuery() {
     return buildShoppingListQuery();
   }
+
+  @Nonnull
+  @Override
+  protected Logger getLogger() {
+    return LOGGER;
+  }
 }

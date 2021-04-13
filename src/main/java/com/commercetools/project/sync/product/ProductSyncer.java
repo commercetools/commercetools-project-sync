@@ -310,6 +310,12 @@ public final class ProductSyncer
     return productQuery;
   }
 
+  @Nonnull
+  @Override
+  protected Logger getLogger() {
+    return LOGGER;
+  }
+
   /**
    * Used for the beforeUpdateCallback of the sync. When an {@code targetProduct} is updated, this
    * method will add a {@link Publish} update action to the list of update actions, only if the
