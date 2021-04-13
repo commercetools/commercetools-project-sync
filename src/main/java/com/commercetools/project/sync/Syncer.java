@@ -3,7 +3,6 @@ package com.commercetools.project.sync;
 import static com.commercetools.project.sync.util.SyncUtils.getSyncModuleName;
 import static com.commercetools.sync.commons.utils.CtpQueryUtils.queryAll;
 import static java.lang.String.format;
-import static net.logstash.logback.argument.StructuredArguments.value;
 
 import com.commercetools.project.sync.model.response.LastSyncCustomObject;
 import com.commercetools.project.sync.service.CustomObjectService;
@@ -22,6 +21,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import net.logstash.logback.marker.Markers;
 import org.slf4j.Logger;
 
 /**
@@ -107,9 +107,9 @@ public abstract class Syncer<
 
     final String sourceProjectKey = sourceClient.getConfig().getProjectKey();
     final String syncModuleName = getSyncModuleName(sync.getClass());
-    if (getLogger().isInfoEnabled()) {
+    if (getLoggerInstance().isInfoEnabled()) {
       final String targetProjectKey = targetClient.getConfig().getProjectKey();
-      getLogger()
+      getLoggerInstance()
           .info(
               format(
                   "Starting %s from CTP project with key '%s' to project with key '%s'",
@@ -131,8 +131,11 @@ public abstract class Syncer<
 
     return syncStage.thenAccept(
         ignoredResult -> {
-          if (getLogger().isInfoEnabled()) {
-            getLogger().info("Stats {}", value("statistics", sync.getStatistics()));
+          if (getLoggerInstance().isInfoEnabled()) {
+            getLoggerInstance()
+                .info(
+                    Markers.append("statistics", sync.getStatistics()),
+                    sync.getStatistics().getReportMessage());
           }
         });
   }
@@ -256,7 +259,7 @@ public abstract class Syncer<
   }
 
   @Nonnull
-  protected abstract Logger getLogger();
+  protected abstract Logger getLoggerInstance();
 
   @Nonnull
   public SphereClient getSourceClient() {

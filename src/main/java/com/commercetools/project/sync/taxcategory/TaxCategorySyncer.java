@@ -119,7 +119,7 @@ public final class TaxCategorySyncer
 
   @Nonnull
   @Override
-  protected Logger getLogger() {
+  protected Logger getLoggerInstance() {
     return LOGGER;
   }
 }

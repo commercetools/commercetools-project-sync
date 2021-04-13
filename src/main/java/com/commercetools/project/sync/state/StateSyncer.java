@@ -81,7 +81,7 @@ public final class StateSyncer
 
   @Nonnull
   @Override
-  protected Logger getLogger() {
+  protected Logger getLoggerInstance() {
     return LOGGER;
   }
 }

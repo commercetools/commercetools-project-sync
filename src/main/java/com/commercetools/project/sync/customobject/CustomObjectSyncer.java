@@ -112,7 +112,7 @@ public final class CustomObjectSyncer
 
   @Nonnull
   @Override
-  protected Logger getLogger() {
+  protected Logger getLoggerInstance() {
     return LOGGER;
   }
 
