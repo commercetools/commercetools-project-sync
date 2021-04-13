@@ -31,10 +31,20 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.commercetools.project.sync.cartdiscount.CartDiscountSyncer;
+import com.commercetools.project.sync.category.CategorySyncer;
+import com.commercetools.project.sync.customer.CustomerSyncer;
+import com.commercetools.project.sync.customobject.CustomObjectSyncer;
 import com.commercetools.project.sync.exception.CliException;
+import com.commercetools.project.sync.inventoryentry.InventoryEntrySyncer;
 import com.commercetools.project.sync.model.ResourceIdsGraphQlRequest;
 import com.commercetools.project.sync.model.response.LastSyncCustomObject;
 import com.commercetools.project.sync.product.ProductSyncer;
+import com.commercetools.project.sync.producttype.ProductTypeSyncer;
+import com.commercetools.project.sync.shoppinglist.ShoppingListSyncer;
+import com.commercetools.project.sync.state.StateSyncer;
+import com.commercetools.project.sync.taxcategory.TaxCategorySyncer;
+import com.commercetools.project.sync.type.TypeSyncer;
 import com.commercetools.project.sync.util.MockPagedQueryResult;
 import com.commercetools.sync.commons.helpers.ResourceKeyIdGraphQlRequest;
 import com.commercetools.sync.commons.models.ResourceKeyId;
@@ -86,17 +96,45 @@ import uk.org.lidalia.slf4jtest.TestLogger;
 import uk.org.lidalia.slf4jtest.TestLoggerFactory;
 
 class SyncerFactoryTest {
-  private static final TestLogger syncerTestLogger = TestLoggerFactory.getTestLogger(Syncer.class);
   private static final TestLogger productSyncerTestLogger =
       TestLoggerFactory.getTestLogger(ProductSyncer.class);
   private static final TestLogger cliRunnerTestLogger =
       TestLoggerFactory.getTestLogger(CliRunner.class);
+  private static final TestLogger productTypeSyncerTestLogger =
+      TestLoggerFactory.getTestLogger(ProductTypeSyncer.class);
+  private static final TestLogger customerSyncerTestLogger =
+      TestLoggerFactory.getTestLogger(CustomerSyncer.class);
+  private static final TestLogger shoppingListSyncerTestLogger =
+      TestLoggerFactory.getTestLogger(ShoppingListSyncer.class);
+  private static final TestLogger stateSyncerTestLogger =
+      TestLoggerFactory.getTestLogger(StateSyncer.class);
+  private static final TestLogger inventoryEntrySyncerTestLogger =
+      TestLoggerFactory.getTestLogger(InventoryEntrySyncer.class);
+  private static final TestLogger customObjectSyncerTestLogger =
+      TestLoggerFactory.getTestLogger(CustomObjectSyncer.class);
+  private static final TestLogger typeSyncerTestLogger =
+      TestLoggerFactory.getTestLogger(TypeSyncer.class);
+  private static final TestLogger categorySyncerTestLogger =
+      TestLoggerFactory.getTestLogger(CategorySyncer.class);
+  private static final TestLogger cartDiscountSyncerTestLogger =
+      TestLoggerFactory.getTestLogger(CartDiscountSyncer.class);
+  private static final TestLogger taxCategorySyncerTestLogger =
+      TestLoggerFactory.getTestLogger(TaxCategorySyncer.class);
 
   @BeforeEach
   void tearDownTest() {
-    syncerTestLogger.clearAll();
     cliRunnerTestLogger.clearAll();
     productSyncerTestLogger.clearAll();
+    productTypeSyncerTestLogger.clearAll();
+    customerSyncerTestLogger.clearAll();
+    shoppingListSyncerTestLogger.clearAll();
+    stateSyncerTestLogger.clearAll();
+    inventoryEntrySyncerTestLogger.clearAll();
+    customObjectSyncerTestLogger.clearAll();
+    typeSyncerTestLogger.clearAll();
+    categorySyncerTestLogger.clearAll();
+    cartDiscountSyncerTestLogger.clearAll();
+    taxCategorySyncerTestLogger.clearAll();
   }
 
   @Test
@@ -209,7 +247,7 @@ class SyncerFactoryTest {
                                 + "0 failed to sync and 0 product(s) with missing reference(s))."),
             "statistics log");
 
-    assertThat(syncerTestLogger.getAllLoggingEvents())
+    assertThat(productSyncerTestLogger.getAllLoggingEvents())
         .hasSize(2)
         .haveExactly(1, startLog)
         .haveExactly(1, statisticsLog);
@@ -264,7 +302,7 @@ class SyncerFactoryTest {
                                 + "0 failed to sync and 0 product(s) with missing reference(s))."),
             "statistics log");
 
-    assertThat(syncerTestLogger.getAllLoggingEvents())
+    assertThat(productSyncerTestLogger.getAllLoggingEvents())
         .hasSize(2)
         .haveExactly(1, startLog)
         .haveExactly(1, statisticsLog);
@@ -328,13 +366,13 @@ class SyncerFactoryTest {
                                 + "0 failed to sync and 0 product(s) with missing reference(s))."),
             "statistics log");
 
-    assertThat(syncerTestLogger.getAllLoggingEvents())
-        .hasSize(2)
+    assertThat(productSyncerTestLogger.getAllLoggingEvents())
+        .hasSize(3)
         .haveExactly(1, startLog)
         .haveExactly(1, statisticsLog);
 
     assertThat(productSyncerTestLogger.getAllLoggingEvents())
-        .containsExactly(
+        .contains(
             LoggingEvent.warn(
                 badGatewayException,
                 "Failed to replace referenced resource ids with keys on the attributes of the products in "
@@ -447,14 +485,14 @@ class SyncerFactoryTest {
                                 + "0 failed to sync and 0 product(s) with missing reference(s))."),
             "statistics log");
 
-    assertThat(syncerTestLogger.getAllLoggingEvents())
-        .hasSize(2)
+    assertThat(productSyncerTestLogger.getAllLoggingEvents())
+        .hasSize(4)
         .haveExactly(1, startLog)
         .haveExactly(1, statisticsLog);
 
     assertThat(productSyncerTestLogger.getAllLoggingEvents())
-        .hasSize(2)
-        .containsOnly(
+        .hasSize(4)
+        .contains(
             LoggingEvent.warn(
                 "The product with id "
                     + "'ba81a6da-cf83-435b-a89e-2afab579846f' on the source project ('foo') will not be synced because it "
@@ -606,7 +644,7 @@ class SyncerFactoryTest {
                                 + "0 failed to sync and 0 categories with a missing parent)."),
             "statistics log");
 
-    assertThat(syncerTestLogger.getAllLoggingEvents())
+    assertThat(categorySyncerTestLogger.getAllLoggingEvents())
         .hasSize(2)
         .haveExactly(1, startLog)
         .haveExactly(1, statisticsLog);
@@ -670,7 +708,7 @@ class SyncerFactoryTest {
                                 + " definition(s) referencing a missing product type)."),
             "statistics log");
 
-    assertThat(syncerTestLogger.getAllLoggingEvents())
+    assertThat(productTypeSyncerTestLogger.getAllLoggingEvents())
         .hasSize(2)
         .haveExactly(1, startLog)
         .haveExactly(1, statisticsLog);
@@ -732,7 +770,7 @@ class SyncerFactoryTest {
                                 + "and 0 failed to sync)."),
             "statistics log");
 
-    assertThat(syncerTestLogger.getAllLoggingEvents())
+    assertThat(typeSyncerTestLogger.getAllLoggingEvents())
         .hasSize(2)
         .haveExactly(1, startLog)
         .haveExactly(1, statisticsLog);
@@ -795,7 +833,7 @@ class SyncerFactoryTest {
                                 + "and 0 failed to sync)."),
             "statistics log");
 
-    assertThat(syncerTestLogger.getAllLoggingEvents())
+    assertThat(inventoryEntrySyncerTestLogger.getAllLoggingEvents())
         .hasSize(2)
         .haveExactly(1, startLog)
         .haveExactly(1, statisticsLog);
@@ -998,7 +1036,38 @@ class SyncerFactoryTest {
     verify(sourceClient, times(1)).execute(any(CustomerQuery.class));
     verify(sourceClient, times(1)).execute(any(ShoppingListQuery.class));
     verifyInteractionsWithClientAfterSync(sourceClient, 11);
-    assertAllSyncersLoggingEvents(syncerTestLogger, cliRunnerTestLogger, 0);
+
+    assertThat(cliRunnerTestLogger.getAllLoggingEvents())
+        .allMatch(loggingEvent -> !Level.ERROR.equals(loggingEvent.getLevel()));
+
+    assertThat(productSyncerTestLogger.getAllLoggingEvents())
+        .allMatch(loggingEvent -> !Level.ERROR.equals(loggingEvent.getLevel()));
+
+    assertTypeSyncerLoggingEvents(typeSyncerTestLogger, 0);
+    assertProductTypeSyncerLoggingEvents(productTypeSyncerTestLogger, 0);
+    assertCategorySyncerLoggingEvents(categorySyncerTestLogger, 0);
+    assertProductSyncerLoggingEvents(productSyncerTestLogger, 0);
+    assertInventoryEntrySyncerLoggingEvents(inventoryEntrySyncerTestLogger, 0);
+    assertCartDiscountSyncerLoggingEvents(cartDiscountSyncerTestLogger, 0);
+    // +1 state is a built-in state and it cant be deleted
+    assertStateSyncerLoggingEvents(stateSyncerTestLogger, 0);
+    assertTaxCategorySyncerLoggingEvents(taxCategorySyncerTestLogger, 0);
+    assertCustomObjectSyncerLoggingEvents(customObjectSyncerTestLogger, 0);
+    assertCustomerSyncerLoggingEvents(customerSyncerTestLogger, 0);
+    assertShoppingListSyncerLoggingEvents(shoppingListSyncerTestLogger, 0);
+
+    // Every sync module is expected to have 2 logs (start and stats summary)
+    assertThat(typeSyncerTestLogger.getAllLoggingEvents()).hasSize(2);
+    assertThat(productTypeSyncerTestLogger.getAllLoggingEvents()).hasSize(2);
+    assertThat(categorySyncerTestLogger.getAllLoggingEvents()).hasSize(2);
+    assertThat(productSyncerTestLogger.getAllLoggingEvents()).hasSize(2);
+    assertThat(inventoryEntrySyncerTestLogger.getAllLoggingEvents()).hasSize(2);
+    assertThat(cartDiscountSyncerTestLogger.getAllLoggingEvents()).hasSize(2);
+    assertThat(stateSyncerTestLogger.getAllLoggingEvents()).hasSize(2);
+    assertThat(taxCategorySyncerTestLogger.getAllLoggingEvents()).hasSize(2);
+    assertThat(customObjectSyncerTestLogger.getAllLoggingEvents()).hasSize(2);
+    assertThat(customerSyncerTestLogger.getAllLoggingEvents()).hasSize(2);
+    assertThat(shoppingListSyncerTestLogger.getAllLoggingEvents()).hasSize(2);
   }
 
   @Test
@@ -1061,11 +1130,10 @@ class SyncerFactoryTest {
     inOrder.verify(sourceClient, times(1)).execute(any(ShoppingListQuery.class));
     verifyInteractionsWithClientAfterSync(sourceClient, 4);
 
-    assertThat(syncerTestLogger.getAllLoggingEvents()).hasSize(8);
-    assertProductTypeSyncerLoggingEvents(syncerTestLogger, 0);
-    assertProductSyncerLoggingEvents(syncerTestLogger, 0);
-    assertCustomerSyncerLoggingEvents(syncerTestLogger, 0);
-    assertShoppingListSyncerLoggingEvents(syncerTestLogger, 0);
+    assertProductTypeSyncerLoggingEvents(productTypeSyncerTestLogger, 0);
+    assertProductSyncerLoggingEvents(productSyncerTestLogger, 0);
+    assertCustomerSyncerLoggingEvents(customerSyncerTestLogger, 0);
+    assertShoppingListSyncerLoggingEvents(shoppingListSyncerTestLogger, 0);
   }
 
   @Test
@@ -1112,10 +1180,9 @@ class SyncerFactoryTest {
     verify(sourceClient, times(1)).execute(any(CustomObjectQuery.class));
     verifyInteractionsWithClientAfterSync(sourceClient, 3);
 
-    assertThat(syncerTestLogger.getAllLoggingEvents()).hasSize(6);
-    assertStateSyncerLoggingEvents(syncerTestLogger, 0);
-    assertInventoryEntrySyncerLoggingEvents(syncerTestLogger, 0);
-    assertCustomObjectSyncerLoggingEvents(syncerTestLogger, 0);
+    assertStateSyncerLoggingEvents(stateSyncerTestLogger, 0);
+    assertInventoryEntrySyncerLoggingEvents(inventoryEntrySyncerTestLogger, 0);
+    assertCustomObjectSyncerLoggingEvents(customObjectSyncerTestLogger, 0);
   }
 
   @Test
@@ -1158,9 +1225,10 @@ class SyncerFactoryTest {
     inOrder.verify(sourceClient, times(1)).execute(any(CategoryQuery.class));
     verifyInteractionsWithClientAfterSync(sourceClient, 2);
 
-    assertThat(syncerTestLogger.getAllLoggingEvents()).hasSize(4);
-    assertTypeSyncerLoggingEvents(syncerTestLogger, 0);
-    assertCategorySyncerLoggingEvents(syncerTestLogger, 0);
+    assertTypeSyncerLoggingEvents(typeSyncerTestLogger, 0);
+    assertCategorySyncerLoggingEvents(categorySyncerTestLogger, 0);
+    assertThat(typeSyncerTestLogger.getAllLoggingEvents()).hasSize(2);
+    assertThat(categorySyncerTestLogger.getAllLoggingEvents()).hasSize(2);
   }
 
   @Test
@@ -1201,37 +1269,10 @@ class SyncerFactoryTest {
     verify(sourceClient, times(1)).execute(any(ShoppingListQuery.class));
     verifyInteractionsWithClientAfterSync(sourceClient, 2);
 
-    assertThat(syncerTestLogger.getAllLoggingEvents()).hasSize(4);
-    assertProductSyncerLoggingEvents(syncerTestLogger, 0);
-    assertShoppingListSyncerLoggingEvents(syncerTestLogger, 0);
-  }
-
-  public static void assertAllSyncersLoggingEvents(
-      @Nonnull final TestLogger syncerTestLogger,
-      @Nonnull final TestLogger cliRunnerTestLogger,
-      final int numberOfResources) {
-
-    assertThat(cliRunnerTestLogger.getAllLoggingEvents())
-        .allMatch(loggingEvent -> !Level.ERROR.equals(loggingEvent.getLevel()));
-
-    assertThat(syncerTestLogger.getAllLoggingEvents())
-        .allMatch(loggingEvent -> !Level.ERROR.equals(loggingEvent.getLevel()));
-
-    assertTypeSyncerLoggingEvents(syncerTestLogger, numberOfResources);
-    assertProductTypeSyncerLoggingEvents(syncerTestLogger, numberOfResources);
-    assertCategorySyncerLoggingEvents(syncerTestLogger, numberOfResources);
-    assertProductSyncerLoggingEvents(syncerTestLogger, numberOfResources);
-    assertInventoryEntrySyncerLoggingEvents(syncerTestLogger, numberOfResources);
-    assertCartDiscountSyncerLoggingEvents(syncerTestLogger, numberOfResources);
-    // +1 state is a built-in state and it cant be deleted
-    assertStateSyncerLoggingEvents(syncerTestLogger, numberOfResources);
-    assertTaxCategorySyncerLoggingEvents(syncerTestLogger, numberOfResources);
-    assertCustomObjectSyncerLoggingEvents(syncerTestLogger, numberOfResources);
-    assertCustomerSyncerLoggingEvents(syncerTestLogger, numberOfResources);
-    assertShoppingListSyncerLoggingEvents(syncerTestLogger, numberOfResources);
-
-    // Every sync module is expected to have 2 logs (start and stats summary)
-    assertThat(syncerTestLogger.getAllLoggingEvents()).hasSize(22);
+    assertProductSyncerLoggingEvents(productSyncerTestLogger, 0);
+    assertShoppingListSyncerLoggingEvents(shoppingListSyncerTestLogger, 0);
+    assertThat(productSyncerTestLogger.getAllLoggingEvents()).hasSize(2);
+    assertThat(shoppingListSyncerTestLogger.getAllLoggingEvents()).hasSize(2);
   }
 
   @Test
