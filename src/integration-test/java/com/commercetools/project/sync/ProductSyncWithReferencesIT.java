@@ -77,7 +77,6 @@ import uk.org.lidalia.slf4jtest.TestLoggerFactory;
 
 class ProductSyncWithReferencesIT {
 
-  private static final TestLogger syncerTestLogger = TestLoggerFactory.getTestLogger(Syncer.class);
   private static final TestLogger productSyncerTestLogger =
       TestLoggerFactory.getTestLogger(ProductSyncer.class);
   private static final TestLogger cliRunnerTestLogger =
@@ -109,7 +108,6 @@ class ProductSyncWithReferencesIT {
 
   @BeforeEach
   void setup() {
-    syncerTestLogger.clearAll();
     cliRunnerTestLogger.clearAll();
     productSyncerTestLogger.clearAll();
     productTypeSyncerTestLogger.clearAll();

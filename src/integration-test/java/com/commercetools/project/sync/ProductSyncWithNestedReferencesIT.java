@@ -78,7 +78,6 @@ import uk.org.lidalia.slf4jtest.TestLoggerFactory;
 
 class ProductSyncWithNestedReferencesIT {
 
-  private static final TestLogger syncerTestLogger = TestLoggerFactory.getTestLogger(Syncer.class);
   private static final TestLogger cliRunnerTestLogger =
       TestLoggerFactory.getTestLogger(CliRunner.class);
   private static final TestLogger productSyncerTestLogger =
@@ -113,7 +112,6 @@ class ProductSyncWithNestedReferencesIT {
 
   @BeforeEach
   void setup() {
-    syncerTestLogger.clearAll();
     cliRunnerTestLogger.clearAll();
     productSyncerTestLogger.clearAll();
     productTypeSyncerTestLogger.clearAll();
@@ -307,9 +305,6 @@ class ProductSyncWithNestedReferencesIT {
         .run(new String[] {"-s", "all", "-r", "runnerName", "-f"}, createITSyncerFactory());
 
     assertThat(cliRunnerTestLogger.getAllLoggingEvents())
-        .allMatch(loggingEvent -> !Level.ERROR.equals(loggingEvent.getLevel()));
-
-    assertThat(syncerTestLogger.getAllLoggingEvents())
         .allMatch(loggingEvent -> !Level.ERROR.equals(loggingEvent.getLevel()));
 
     assertTypeSyncerLoggingEvents(typeSyncerTestLogger, 0);

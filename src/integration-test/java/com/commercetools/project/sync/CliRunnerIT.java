@@ -136,7 +136,6 @@ import uk.org.lidalia.slf4jtest.TestLoggerFactory;
 
 class CliRunnerIT {
 
-  private static final TestLogger syncerTestLogger = TestLoggerFactory.getTestLogger(Syncer.class);
   private static final TestLogger productSyncerTestLogger =
       TestLoggerFactory.getTestLogger(ProductSyncer.class);
   private static final TestLogger cliRunnerTestLogger =
@@ -168,7 +167,6 @@ class CliRunnerIT {
 
   @BeforeEach
   void setup() throws ExecutionException, InterruptedException {
-    syncerTestLogger.clearAll();
     cliRunnerTestLogger.clearAll();
     productSyncerTestLogger.clearAll();
     productTypeSyncerTestLogger.clearAll();
@@ -658,10 +656,10 @@ class CliRunnerIT {
     // test
     CliRunner.of().run(new String[] {"-s", "productTypes"}, createITSyncerFactory());
     // assertions
-    assertThat(syncerTestLogger.getAllLoggingEvents()).hasSize(2);
+    assertThat(productTypeSyncerTestLogger.getAllLoggingEvents()).hasSize(2);
 
     assertSyncerLoggingEvents(
-        syncerTestLogger,
+        productTypeSyncerTestLogger,
         "ProductTypeSync",
         "Summary: 1 product types were processed in total (1 created, 0 updated "
             + "and 0 failed to sync).");

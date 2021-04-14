@@ -90,7 +90,6 @@ import uk.org.lidalia.slf4jtest.TestLoggerFactory;
 
 public class ProductSyncWithReferenceResolutionIT {
 
-  private static final TestLogger syncerTestLogger = TestLoggerFactory.getTestLogger(Syncer.class);
   private static final TestLogger cliRunnerTestLogger =
       TestLoggerFactory.getTestLogger(CliRunner.class);
   private static final TestLogger productSyncerTestLogger =
@@ -100,7 +99,6 @@ public class ProductSyncWithReferenceResolutionIT {
 
   @BeforeEach
   void setup() {
-    syncerTestLogger.clearAll();
     cliRunnerTestLogger.clearAll();
     productSyncerTestLogger.clearAll();
     cleanUpProjects(CTP_SOURCE_CLIENT, CTP_TARGET_CLIENT);
