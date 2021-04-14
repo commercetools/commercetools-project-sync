@@ -32,6 +32,7 @@ import org.slf4j.LoggerFactory;
 public final class CustomerSyncer
     extends Syncer<
         Customer,
+        Customer,
         CustomerDraft,
         CustomerSyncStatistics,
         CustomerSyncOptions,

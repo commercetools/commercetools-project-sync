@@ -32,6 +32,7 @@ import org.slf4j.LoggerFactory;
 public final class CategorySyncer
     extends Syncer<
         Category,
+        Category,
         CategoryDraft,
         CategorySyncStatistics,
         CategorySyncOptions,

@@ -30,7 +30,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public final class TypeSyncer
-    extends Syncer<Type, TypeDraft, TypeSyncStatistics, TypeSyncOptions, TypeQuery, TypeSync> {
+    extends Syncer<
+        Type, Type, TypeDraft, TypeSyncStatistics, TypeSyncOptions, TypeQuery, TypeSync> {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(TypeSyncer.class);
 

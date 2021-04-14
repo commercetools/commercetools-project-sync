@@ -34,6 +34,7 @@ import org.slf4j.LoggerFactory;
 public final class ShoppingListSyncer
     extends Syncer<
         ShoppingList,
+        ShoppingList,
         ShoppingListDraft,
         ShoppingListSyncStatistics,
         ShoppingListSyncOptions,

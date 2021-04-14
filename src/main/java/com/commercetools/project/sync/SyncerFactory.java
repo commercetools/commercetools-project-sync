@@ -130,6 +130,7 @@ public final class SyncerFactory {
     for (SyncModuleOption syncOptionValue : syncOptions) {
       Syncer<
               ? extends ResourceView,
+              ? extends ResourceView<?, ?>,
               ?,
               ? extends BaseSyncStatistics,
               ? extends BaseSyncOptions<?, ?, ?>,
@@ -288,6 +289,7 @@ public final class SyncerFactory {
    */
   private Syncer<
           ? extends ResourceView,
+          ? extends ResourceView<?, ?>,
           ?,
           ? extends BaseSyncStatistics,
           ? extends BaseSyncOptions<?, ?, ?>,
@@ -301,6 +303,7 @@ public final class SyncerFactory {
 
     Syncer<
             ? extends ResourceView,
+            ? extends ResourceView<?, ?>,
             ?,
             ? extends BaseSyncStatistics,
             ? extends BaseSyncOptions<?, ?, ?>,

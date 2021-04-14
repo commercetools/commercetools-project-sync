@@ -22,9 +22,12 @@ import io.sphere.sdk.json.SphereJsonUtils;
 import io.sphere.sdk.products.Product;
 import io.sphere.sdk.products.ProductCatalogData;
 import io.sphere.sdk.products.ProductDraft;
+import io.sphere.sdk.products.ProductProjection;
+import io.sphere.sdk.products.ProductProjectionType;
 import io.sphere.sdk.products.commands.updateactions.ChangeName;
 import io.sphere.sdk.products.commands.updateactions.Publish;
 import io.sphere.sdk.products.commands.updateactions.Unpublish;
+import io.sphere.sdk.products.queries.ProductProjectionQuery;
 import io.sphere.sdk.products.queries.ProductQuery;
 import io.sphere.sdk.queries.QueryPredicate;
 import io.sphere.sdk.utils.CompletableFutureUtils;
@@ -57,7 +60,7 @@ class ProductSyncerTest {
 
     // assertions
     assertThat(productSyncer).isNotNull();
-    assertThat(productSyncer.getQuery()).isInstanceOf(ProductQuery.class);
+    assertThat(productSyncer.getQuery()).isInstanceOf(ProductProjectionQuery.class);
     assertThat(productSyncer.getSync()).isExactlyInstanceOf(ProductSync.class);
   }
 
@@ -67,8 +70,10 @@ class ProductSyncerTest {
     final SphereClient sourceClient = mock(SphereClient.class);
     final ProductSyncer productSyncer =
         ProductSyncer.of(sourceClient, mock(SphereClient.class), getMockedClock(), null);
-    final List<Product> productPage =
-        asList(readObjectFromResource("product-key-4.json", Product.class));
+    final List<ProductProjection> productPage =
+        Collections.singletonList(
+            readObjectFromResource("product-key-4.json", Product.class)
+                .toProjection(ProductProjectionType.STAGED));
 
     String jsonStringProducts =
         "{\"results\":[{\"id\":\"53c4a8b4-754f-4b95-b6f2-3e1e70e3d0d2\",\"key\":\"prod1\"},"
@@ -163,10 +168,12 @@ class ProductSyncerTest {
     when(sourceClient.getConfig()).thenReturn(SphereApiConfig.of("test-project"));
     final ProductSyncer productSyncer =
         ProductSyncer.of(sourceClient, mock(SphereClient.class), getMockedClock(), null);
-    final List<Product> productPage =
+    final List<ProductProjection> productPage =
         asList(
-            readObjectFromResource("product-key-1.json", Product.class),
-            readObjectFromResource("product-key-2.json", Product.class));
+            readObjectFromResource("product-key-1.json", Product.class)
+                .toProjection(ProductProjectionType.STAGED),
+            readObjectFromResource("product-key-2.json", Product.class)
+                .toProjection(ProductProjectionType.STAGED));
 
     String jsonStringProducts =
         "{\"results\":[{\"id\":\"53c4a8b4-754f-4b95-b6f2-3e1e70e3d0c1\"," + "\"key\":\"prod1\"}]}";
@@ -247,10 +254,12 @@ class ProductSyncerTest {
     final SphereClient sourceClient = mock(SphereClient.class);
     final ProductSyncer productSyncer =
         ProductSyncer.of(sourceClient, mock(SphereClient.class), getMockedClock(), null);
-    final List<Product> productPage =
+    final List<ProductProjection> productPage =
         asList(
-            readObjectFromResource("product-key-1.json", Product.class),
-            readObjectFromResource("product-key-2.json", Product.class));
+            readObjectFromResource("product-key-1.json", Product.class)
+                .toProjection(ProductProjectionType.STAGED),
+            readObjectFromResource("product-key-2.json", Product.class)
+                .toProjection(ProductProjectionType.STAGED));
 
     final BadGatewayException badGatewayException =
         new BadGatewayException("Failed Graphql request");
@@ -283,7 +292,7 @@ class ProductSyncerTest {
             mock(SphereClient.class), mock(SphereClient.class), getMockedClock(), null);
 
     // test
-    final ProductQuery query = productSyncer.getQuery();
+    final ProductProjectionQuery query = productSyncer.getQuery();
 
     // assertion
     assertThat(query.expansionPaths()).isEmpty();
@@ -308,7 +317,7 @@ class ProductSyncerTest {
             productSyncCustomRequest);
 
     // test
-    final ProductQuery query = productSyncer.getQuery();
+    final ProductProjectionQuery query = productSyncer.getQuery();
 
     // assertion
     assertThat(query.limit()).isEqualTo(100);

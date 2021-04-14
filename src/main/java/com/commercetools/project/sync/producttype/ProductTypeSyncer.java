@@ -32,6 +32,7 @@ import org.slf4j.LoggerFactory;
 public final class ProductTypeSyncer
     extends Syncer<
         ProductType,
+        ProductType,
         ProductTypeDraft,
         ProductTypeSyncStatistics,
         ProductTypeSyncOptions,

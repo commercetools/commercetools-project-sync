@@ -33,6 +33,7 @@ import org.slf4j.LoggerFactory;
 public final class InventoryEntrySyncer
     extends Syncer<
         InventoryEntry,
+        InventoryEntry,
         InventoryEntryDraft,
         InventorySyncStatistics,
         InventorySyncOptions,

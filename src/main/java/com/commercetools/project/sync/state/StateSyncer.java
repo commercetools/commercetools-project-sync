@@ -31,7 +31,7 @@ import org.slf4j.LoggerFactory;
 
 public final class StateSyncer
     extends Syncer<
-        State, StateDraft, StateSyncStatistics, StateSyncOptions, StateQuery, StateSync> {
+        State, State, StateDraft, StateSyncStatistics, StateSyncOptions, StateQuery, StateSync> {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(StateSyncer.class);
 

@@ -1,18 +1,14 @@
 package com.commercetools.project.sync.product;
 
-import static com.commercetools.project.sync.util.SyncUtils.logErrorCallback;
 import static com.commercetools.project.sync.util.SyncUtils.logWarningCallback;
 import static com.commercetools.sync.products.utils.ProductTransformUtils.toProductDrafts;
 
 import com.commercetools.project.sync.Syncer;
 import com.commercetools.project.sync.model.ProductSyncCustomRequest;
-import com.commercetools.project.sync.product.service.ProductReferenceTransformService;
-import com.commercetools.project.sync.product.service.impl.ProductReferenceTransformServiceImpl;
 import com.commercetools.project.sync.service.CustomObjectService;
 import com.commercetools.project.sync.service.impl.CustomObjectServiceImpl;
 import com.commercetools.sync.commons.exceptions.SyncException;
 import com.commercetools.sync.commons.utils.CaffeineReferenceIdToKeyCacheImpl;
-import com.commercetools.sync.commons.utils.QuadConsumer;
 import com.commercetools.sync.commons.utils.ReferenceIdToKeyCache;
 import com.commercetools.sync.commons.utils.TriConsumer;
 import com.commercetools.sync.products.ProductSync;
@@ -26,7 +22,7 @@ import io.sphere.sdk.products.ProductDraft;
 import io.sphere.sdk.products.ProductProjection;
 import io.sphere.sdk.products.commands.updateactions.Publish;
 import io.sphere.sdk.products.commands.updateactions.Unpublish;
-import io.sphere.sdk.products.queries.ProductQuery;
+import io.sphere.sdk.products.queries.ProductProjectionQuery;
 import io.sphere.sdk.queries.QueryPredicate;
 import java.time.Clock;
 import java.util.List;
@@ -39,22 +35,15 @@ import org.slf4j.LoggerFactory;
 
 public final class ProductSyncer
     extends Syncer<
+        ProductProjection,
         Product,
         ProductDraft,
         ProductSyncStatistics,
         ProductSyncOptions,
-        ProductQuery,
+        ProductProjectionQuery,
         ProductSync> {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(ProductSyncer.class);
-  private static final String REFERENCE_TYPE_ID_FIELD = "typeId";
-  private static final String REFERENCE_ID_FIELD = "id";
-  private static final String WITH_IRRESOLVABLE_REFS_ERROR_MSG =
-      "The product with id '%s' on the source project ('%s') will "
-          + "not be synced because it has the following reference attribute(s): \n"
-          + "%s.\nThese references are either pointing to a non-existent resource or to an existing one but with a blank key. "
-          + "Please make sure these referenced resources are existing and have non-blank (i.e. non-null and non-empty) keys.";
-  private final ProductReferenceTransformService referencesService;
 
   private final ProductSyncCustomRequest productSyncCustomRequest;
 
@@ -64,11 +53,9 @@ public final class ProductSyncer
       @Nonnull final SphereClient sourceClient,
       @Nonnull final SphereClient targetClient,
       @Nonnull final CustomObjectService customObjectService,
-      @Nonnull final ProductReferenceTransformService referencesService,
       @Nonnull final Clock clock,
       @Nullable final ProductSyncCustomRequest productSyncCustomRequest) {
     super(productSync, sourceClient, targetClient, customObjectService, clock);
-    this.referencesService = referencesService;
     this.productSyncCustomRequest = productSyncCustomRequest;
   }
 
@@ -79,51 +66,54 @@ public final class ProductSyncer
       @Nonnull final Clock clock,
       @Nullable final ProductSyncCustomRequest productSyncCustomRequest) {
 
-    final QuadConsumer<
-            SyncException, Optional<ProductDraft>, Optional<Product>, List<UpdateAction<Product>>>
-        logErrorCallback =
-            (exception, newResourceDraft, oldResource, updateActions) ->
-                logErrorCallback(LOGGER, "product", exception, oldResource, updateActions);
+    // TODO: (ProductProjection) does not implement WithKey interface so logErrorCallback needs to
+    // be adjusted.
+    // Simply find an alternative.
+    //    final QuadConsumer<
+    //            SyncException,
+    //            Optional<ProductDraft>,
+    //            Optional<ProductProjection>,
+    //            List<UpdateAction<Product>>>
+    //        logErrorCallback =
+    //            (exception, newResourceDraft, oldResource, updateActions) ->
+    //                logErrorCallback(LOGGER, "product", exception, oldResource, updateActions);
     final TriConsumer<SyncException, Optional<ProductDraft>, Optional<ProductProjection>>
         logWarningCallback =
             (exception, newResourceDraft, oldResource) ->
                 logWarningCallback(LOGGER, "product", exception, oldResource);
     final ProductSyncOptions syncOptions =
         ProductSyncOptionsBuilder.of(targetClient)
-            .errorCallback(logErrorCallback)
+            //            .errorCallback(logErrorCallback)
             .warningCallback(logWarningCallback)
-            .beforeUpdateCallback(ProductSyncer::appendPublishIfPublished)
+            //            .beforeUpdateCallback(ProductSyncer::appendPublishIfPublished)
             .build();
 
     final ProductSync productSync = new ProductSync(syncOptions);
 
     final CustomObjectService customObjectService = new CustomObjectServiceImpl(targetClient);
 
-    final ProductReferenceTransformService referencesService =
-        new ProductReferenceTransformServiceImpl(sourceClient);
-
     return new ProductSyncer(
         productSync,
         sourceClient,
         targetClient,
         customObjectService,
-        referencesService,
         clock,
         productSyncCustomRequest);
   }
 
-  @Override
   @Nonnull
-  protected CompletionStage<List<ProductDraft>> transform(@Nonnull final List<Product> page) {
+  @Override
+  protected CompletionStage<List<ProductDraft>> transform(@Nonnull List<ProductProjection> page) {
     final ReferenceIdToKeyCache referenceIdToKeyCache = new CaffeineReferenceIdToKeyCacheImpl();
     return toProductDrafts(this.getSourceClient(), referenceIdToKeyCache, page);
   }
 
   @Nonnull
   @Override
-  protected ProductQuery getQuery() {
+  protected ProductProjectionQuery getQuery() {
+    // TODO (ahmetoz) adapt queries to projection.
     ProductSyncCustomRequest customRequest = this.productSyncCustomRequest;
-    ProductQuery productQuery = ProductQuery.of();
+    ProductProjectionQuery productQuery = ProductProjectionQuery.ofStaged();
     if (customRequest == null) {
       return productQuery;
     }
@@ -155,8 +145,11 @@ public final class ProductSyncer
   static List<UpdateAction<Product>> appendPublishIfPublished(
       @Nonnull final List<UpdateAction<Product>> updateActions,
       @Nonnull final ProductDraft srcProductDraft,
-      @Nonnull final Product targetProduct) {
+      @Nonnull final Product targetProduct) { // Change it to ProductProjection..
 
+    // TODO: (ahmetoz) adapt queries.
+    // Also not sure about this action, it might be already added to java-sync, please check this:
+    // https://github.com/commercetools/commercetools-sync-java/blob/master/docs/RELEASE_NOTES.md#191----aug-5-2020
     if (!updateActions.isEmpty()
         && targetProduct.getMasterData().isPublished()
         && doesNotContainPublishOrUnPublishActions(updateActions)) {

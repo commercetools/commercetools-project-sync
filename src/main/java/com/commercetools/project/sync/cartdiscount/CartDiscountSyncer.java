@@ -32,6 +32,7 @@ import org.slf4j.LoggerFactory;
 public final class CartDiscountSyncer
     extends Syncer<
         CartDiscount,
+        CartDiscount,
         CartDiscountDraft,
         CartDiscountSyncStatistics,
         CartDiscountSyncOptions,

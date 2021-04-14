@@ -35,6 +35,7 @@ import org.slf4j.LoggerFactory;
 public final class TaxCategorySyncer
     extends Syncer<
         TaxCategory,
+        TaxCategory,
         TaxCategoryDraft,
         TaxCategorySyncStatistics,
         TaxCategorySyncOptions,
