@@ -2,19 +2,20 @@ package com.commercetools.project.sync.state;
 
 import static com.commercetools.project.sync.util.SyncUtils.logErrorCallback;
 import static com.commercetools.project.sync.util.SyncUtils.logWarningCallback;
-import static com.commercetools.sync.states.utils.StateReferenceResolutionUtils.buildStateQuery;
+import static com.commercetools.sync.states.utils.StateTransformUtils.toStateDrafts;
 
 import com.commercetools.project.sync.Syncer;
 import com.commercetools.project.sync.service.CustomObjectService;
 import com.commercetools.project.sync.service.impl.CustomObjectServiceImpl;
 import com.commercetools.sync.commons.exceptions.SyncException;
+import com.commercetools.sync.commons.utils.CaffeineReferenceIdToKeyCacheImpl;
 import com.commercetools.sync.commons.utils.QuadConsumer;
+import com.commercetools.sync.commons.utils.ReferenceIdToKeyCache;
 import com.commercetools.sync.commons.utils.TriConsumer;
 import com.commercetools.sync.states.StateSync;
 import com.commercetools.sync.states.StateSyncOptions;
 import com.commercetools.sync.states.StateSyncOptionsBuilder;
 import com.commercetools.sync.states.helpers.StateSyncStatistics;
-import com.commercetools.sync.states.utils.StateReferenceResolutionUtils;
 import io.sphere.sdk.client.SphereClient;
 import io.sphere.sdk.commands.UpdateAction;
 import io.sphere.sdk.states.State;
@@ -23,7 +24,6 @@ import io.sphere.sdk.states.queries.StateQuery;
 import java.time.Clock;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import javax.annotation.Nonnull;
 import org.slf4j.Logger;
@@ -69,13 +69,13 @@ public final class StateSyncer
   @Nonnull
   @Override
   protected CompletionStage<List<StateDraft>> transform(@Nonnull List<State> states) {
-    return CompletableFuture.completedFuture(
-        StateReferenceResolutionUtils.mapToStateDrafts(states));
+    final ReferenceIdToKeyCache referenceIdToKeyCache = new CaffeineReferenceIdToKeyCacheImpl();
+    return toStateDrafts(this.getSourceClient(), referenceIdToKeyCache, states);
   }
 
   @Nonnull
   @Override
   protected StateQuery getQuery() {
-    return buildStateQuery();
+    return StateQuery.of();
   }
 }

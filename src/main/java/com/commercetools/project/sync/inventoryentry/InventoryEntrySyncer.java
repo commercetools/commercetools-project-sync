@@ -3,14 +3,15 @@ package com.commercetools.project.sync.inventoryentry;
 import static com.commercetools.project.sync.util.SyncUtils.IDENTIFIER_NOT_PRESENT;
 import static com.commercetools.project.sync.util.SyncUtils.logErrorCallback;
 import static com.commercetools.project.sync.util.SyncUtils.logWarningCallback;
-import static com.commercetools.sync.inventories.utils.InventoryReferenceResolutionUtils.buildInventoryQuery;
-import static com.commercetools.sync.inventories.utils.InventoryReferenceResolutionUtils.mapToInventoryEntryDrafts;
+import static com.commercetools.sync.inventories.utils.InventoryTransformUtils.toInventoryEntryDrafts;
 
 import com.commercetools.project.sync.Syncer;
 import com.commercetools.project.sync.service.CustomObjectService;
 import com.commercetools.project.sync.service.impl.CustomObjectServiceImpl;
 import com.commercetools.sync.commons.exceptions.SyncException;
+import com.commercetools.sync.commons.utils.CaffeineReferenceIdToKeyCacheImpl;
 import com.commercetools.sync.commons.utils.QuadConsumer;
+import com.commercetools.sync.commons.utils.ReferenceIdToKeyCache;
 import com.commercetools.sync.commons.utils.TriConsumer;
 import com.commercetools.sync.inventories.InventorySync;
 import com.commercetools.sync.inventories.InventorySyncOptions;
@@ -24,7 +25,6 @@ import io.sphere.sdk.inventory.queries.InventoryEntryQuery;
 import java.time.Clock;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import javax.annotation.Nonnull;
 import org.slf4j.Logger;
@@ -95,12 +95,13 @@ public final class InventoryEntrySyncer
   @Override
   protected CompletionStage<List<InventoryEntryDraft>> transform(
       @Nonnull final List<InventoryEntry> page) {
-    return CompletableFuture.completedFuture(mapToInventoryEntryDrafts(page));
+    final ReferenceIdToKeyCache referenceIdToKeyCache = new CaffeineReferenceIdToKeyCacheImpl();
+    return toInventoryEntryDrafts(this.getSourceClient(), referenceIdToKeyCache, page);
   }
 
   @Nonnull
   @Override
   protected InventoryEntryQuery getQuery() {
-    return buildInventoryQuery();
+    return InventoryEntryQuery.of();
   }
 }

@@ -7,13 +7,15 @@ import com.commercetools.project.sync.Syncer;
 import com.commercetools.project.sync.service.CustomObjectService;
 import com.commercetools.project.sync.service.impl.CustomObjectServiceImpl;
 import com.commercetools.sync.commons.exceptions.SyncException;
+import com.commercetools.sync.commons.utils.CaffeineReferenceIdToKeyCacheImpl;
 import com.commercetools.sync.commons.utils.QuadConsumer;
+import com.commercetools.sync.commons.utils.ReferenceIdToKeyCache;
 import com.commercetools.sync.commons.utils.TriConsumer;
 import com.commercetools.sync.producttypes.ProductTypeSync;
 import com.commercetools.sync.producttypes.ProductTypeSyncOptions;
 import com.commercetools.sync.producttypes.ProductTypeSyncOptionsBuilder;
 import com.commercetools.sync.producttypes.helpers.ProductTypeSyncStatistics;
-import com.commercetools.sync.producttypes.utils.ProductTypeReferenceResolutionUtils;
+import com.commercetools.sync.producttypes.utils.ProductTypeTransformUtils;
 import io.sphere.sdk.client.SphereClient;
 import io.sphere.sdk.commands.UpdateAction;
 import io.sphere.sdk.producttypes.ProductType;
@@ -22,7 +24,6 @@ import io.sphere.sdk.producttypes.queries.ProductTypeQuery;
 import java.time.Clock;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import javax.annotation.Nonnull;
 import org.slf4j.Logger;
@@ -85,15 +86,14 @@ public final class ProductTypeSyncer
   @Override
   protected CompletionStage<List<ProductTypeDraft>> transform(
       @Nonnull final List<ProductType> page) {
-    return CompletableFuture.completedFuture(
-        ProductTypeReferenceResolutionUtils.mapToProductTypeDrafts(page));
+    final ReferenceIdToKeyCache referenceIdToKeyCache = new CaffeineReferenceIdToKeyCacheImpl();
+    return ProductTypeTransformUtils.toProductTypeDrafts(
+        this.getSourceClient(), referenceIdToKeyCache, page);
   }
 
   @Nonnull
   @Override
   protected ProductTypeQuery getQuery() {
-    // TODO: Set depth need to be configurable.
-    // https://github.com/commercetools/commercetools-project-sync/issues/44
-    return ProductTypeReferenceResolutionUtils.buildProductTypeQuery(1);
+    return ProductTypeQuery.of();
   }
 }

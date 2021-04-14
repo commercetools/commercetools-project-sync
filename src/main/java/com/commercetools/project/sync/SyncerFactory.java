@@ -132,7 +132,7 @@ public final class SyncerFactory {
               ? extends ResourceView,
               ?,
               ? extends BaseSyncStatistics,
-              ? extends BaseSyncOptions<?, ?>,
+              ? extends BaseSyncOptions<?, ?, ?>,
               ? extends QueryDsl<?, ?>,
               ? extends BaseSync<?, ?, ?>>
           syncer =
@@ -290,7 +290,7 @@ public final class SyncerFactory {
           ? extends ResourceView,
           ?,
           ? extends BaseSyncStatistics,
-          ? extends BaseSyncOptions<?, ?>,
+          ? extends BaseSyncOptions<?, ?, ?>,
           ? extends QueryDsl<?, ?>,
           ? extends BaseSync<?, ?, ?>>
       buildSyncer(
@@ -303,7 +303,7 @@ public final class SyncerFactory {
             ? extends ResourceView,
             ?,
             ? extends BaseSyncStatistics,
-            ? extends BaseSyncOptions<?, ?>,
+            ? extends BaseSyncOptions<?, ?, ?>,
             ? extends QueryDsl<?, ?>,
             ? extends BaseSync<?, ?, ?>>
         syncer = null;

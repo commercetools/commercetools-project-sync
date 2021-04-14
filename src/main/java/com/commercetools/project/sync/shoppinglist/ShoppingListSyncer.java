@@ -4,13 +4,15 @@ import static com.commercetools.project.sync.util.SyncUtils.IDENTIFIER_NOT_PRESE
 import static com.commercetools.project.sync.util.SyncUtils.logErrorCallback;
 import static com.commercetools.project.sync.util.SyncUtils.logWarningCallback;
 import static com.commercetools.sync.shoppinglists.utils.ShoppingListReferenceResolutionUtils.buildShoppingListQuery;
-import static com.commercetools.sync.shoppinglists.utils.ShoppingListReferenceResolutionUtils.mapToShoppingListDrafts;
+import static com.commercetools.sync.shoppinglists.utils.ShoppingListTransformUtils.toShoppingListDrafts;
 
 import com.commercetools.project.sync.Syncer;
 import com.commercetools.project.sync.service.CustomObjectService;
 import com.commercetools.project.sync.service.impl.CustomObjectServiceImpl;
 import com.commercetools.sync.commons.exceptions.SyncException;
+import com.commercetools.sync.commons.utils.CaffeineReferenceIdToKeyCacheImpl;
 import com.commercetools.sync.commons.utils.QuadConsumer;
+import com.commercetools.sync.commons.utils.ReferenceIdToKeyCache;
 import com.commercetools.sync.commons.utils.TriConsumer;
 import com.commercetools.sync.shoppinglists.ShoppingListSync;
 import com.commercetools.sync.shoppinglists.ShoppingListSyncOptions;
@@ -24,7 +26,6 @@ import io.sphere.sdk.shoppinglists.queries.ShoppingListQuery;
 import java.time.Clock;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import javax.annotation.Nonnull;
 import org.slf4j.Logger;
@@ -95,7 +96,8 @@ public final class ShoppingListSyncer
   @Nonnull
   @Override
   protected CompletionStage<List<ShoppingListDraft>> transform(@Nonnull List<ShoppingList> page) {
-    return CompletableFuture.completedFuture(mapToShoppingListDrafts(page));
+    final ReferenceIdToKeyCache referenceIdToKeyCache = new CaffeineReferenceIdToKeyCacheImpl();
+    return toShoppingListDrafts(this.getSourceClient(), referenceIdToKeyCache, page);
   }
 
   @Nonnull

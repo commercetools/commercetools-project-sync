@@ -2,18 +2,20 @@ package com.commercetools.project.sync.customer;
 
 import static com.commercetools.project.sync.util.SyncUtils.logErrorCallback;
 import static com.commercetools.project.sync.util.SyncUtils.logWarningCallback;
+import static com.commercetools.sync.customers.utils.CustomerTransformUtils.toCustomerDrafts;
 
 import com.commercetools.project.sync.Syncer;
 import com.commercetools.project.sync.service.CustomObjectService;
 import com.commercetools.project.sync.service.impl.CustomObjectServiceImpl;
 import com.commercetools.sync.commons.exceptions.SyncException;
+import com.commercetools.sync.commons.utils.CaffeineReferenceIdToKeyCacheImpl;
 import com.commercetools.sync.commons.utils.QuadConsumer;
+import com.commercetools.sync.commons.utils.ReferenceIdToKeyCache;
 import com.commercetools.sync.commons.utils.TriConsumer;
 import com.commercetools.sync.customers.CustomerSync;
 import com.commercetools.sync.customers.CustomerSyncOptions;
 import com.commercetools.sync.customers.CustomerSyncOptionsBuilder;
 import com.commercetools.sync.customers.helpers.CustomerSyncStatistics;
-import com.commercetools.sync.customers.utils.CustomerReferenceResolutionUtils;
 import io.sphere.sdk.client.SphereClient;
 import io.sphere.sdk.commands.UpdateAction;
 import io.sphere.sdk.customers.Customer;
@@ -22,7 +24,6 @@ import io.sphere.sdk.customers.queries.CustomerQuery;
 import java.time.Clock;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import javax.annotation.Nonnull;
 import org.slf4j.Logger;
@@ -80,13 +81,13 @@ public final class CustomerSyncer
   @Nonnull
   @Override
   protected CompletionStage<List<CustomerDraft>> transform(@Nonnull final List<Customer> page) {
-    return CompletableFuture.completedFuture(
-        CustomerReferenceResolutionUtils.mapToCustomerDrafts(page));
+    final ReferenceIdToKeyCache referenceIdToKeyCache = new CaffeineReferenceIdToKeyCacheImpl();
+    return toCustomerDrafts(this.getSourceClient(), referenceIdToKeyCache, page);
   }
 
   @Nonnull
   @Override
   protected CustomerQuery getQuery() {
-    return CustomerReferenceResolutionUtils.buildCustomerQuery();
+    return CustomerQuery.of();
   }
 }
