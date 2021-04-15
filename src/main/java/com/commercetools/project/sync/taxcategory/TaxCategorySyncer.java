@@ -106,6 +106,7 @@ public final class TaxCategorySyncer
   @Nonnull
   private static List<TaxRateDraft> convertTaxRateToTaxRateDraft(
       @Nonnull final List<TaxRate> taxRates) {
+
     return taxRates
         .stream()
         .map(taxRate -> TaxRateDraftBuilder.of(taxRate).build())

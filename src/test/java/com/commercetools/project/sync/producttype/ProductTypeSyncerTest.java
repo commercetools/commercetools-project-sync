@@ -82,8 +82,7 @@ class ProductTypeSyncerTest {
     final ProductTypeQuery query = productTypeSyncer.getQuery();
 
     // assertion
-    // TODO: (ahmetoz) adapt changes
-    //    assertThat(query).isEqualTo(ProductTypeReferenceResolutionUtils.buildProductTypeQuery(1));
+    assertThat(query).isEqualTo(ProductTypeQuery.of());
   }
 
   @Test

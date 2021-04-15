@@ -28,7 +28,6 @@ import io.sphere.sdk.products.commands.updateactions.ChangeName;
 import io.sphere.sdk.products.commands.updateactions.Publish;
 import io.sphere.sdk.products.commands.updateactions.Unpublish;
 import io.sphere.sdk.products.queries.ProductProjectionQuery;
-import io.sphere.sdk.products.queries.ProductQuery;
 import io.sphere.sdk.queries.QueryPredicate;
 import io.sphere.sdk.utils.CompletableFutureUtils;
 import java.util.ArrayList;
@@ -329,8 +328,8 @@ class ProductSyncerTest {
     final ProductCatalogData masterData = mock(ProductCatalogData.class);
     when(masterData.isPublished()).thenReturn(true);
 
-    final Product product = mock(Product.class);
-    when(product.getMasterData()).thenReturn(masterData);
+    final ProductProjection product =
+        mock(Product.class).toProjection(ProductProjectionType.STAGED);
 
     final List<UpdateAction<Product>> newUpdateActions =
         ProductSyncer.appendPublishIfPublished(
@@ -344,8 +343,8 @@ class ProductSyncerTest {
     final ProductCatalogData masterData = mock(ProductCatalogData.class);
     when(masterData.isPublished()).thenReturn(true);
 
-    final Product product = mock(Product.class);
-    when(product.getMasterData()).thenReturn(masterData);
+    final ProductProjection product =
+        mock(Product.class).toProjection(ProductProjectionType.STAGED);
 
     final ArrayList<UpdateAction<Product>> updateActions = new ArrayList<>();
     updateActions.add(ChangeName.of(ofEnglish("foo")));
@@ -362,8 +361,8 @@ class ProductSyncerTest {
     final ProductCatalogData masterData = mock(ProductCatalogData.class);
     when(masterData.isPublished()).thenReturn(false);
 
-    final Product product = mock(Product.class);
-    when(product.getMasterData()).thenReturn(masterData);
+    final ProductProjection product =
+        mock(Product.class).toProjection(ProductProjectionType.STAGED);
 
     final List<UpdateAction<Product>> newUpdateActions =
         ProductSyncer.appendPublishIfPublished(
@@ -377,8 +376,8 @@ class ProductSyncerTest {
     final ProductCatalogData masterData = mock(ProductCatalogData.class);
     when(masterData.isPublished()).thenReturn(false);
 
-    final Product product = mock(Product.class);
-    when(product.getMasterData()).thenReturn(masterData);
+    final ProductProjection product =
+        mock(Product.class).toProjection(ProductProjectionType.STAGED);
 
     final ArrayList<UpdateAction<Product>> updateActions = new ArrayList<>();
     updateActions.add(ChangeName.of(ofEnglish("foo")));
@@ -395,8 +394,8 @@ class ProductSyncerTest {
     final ProductCatalogData masterData = mock(ProductCatalogData.class);
     when(masterData.isPublished()).thenReturn(true);
 
-    final Product product = mock(Product.class);
-    when(product.getMasterData()).thenReturn(masterData);
+    final ProductProjection product =
+        mock(Product.class).toProjection(ProductProjectionType.STAGED);
 
     final ArrayList<UpdateAction<Product>> updateActions = new ArrayList<>();
     updateActions.add(Publish.of());
@@ -413,8 +412,8 @@ class ProductSyncerTest {
     final ProductCatalogData masterData = mock(ProductCatalogData.class);
     when(masterData.isPublished()).thenReturn(false);
 
-    final Product product = mock(Product.class);
-    when(product.getMasterData()).thenReturn(masterData);
+    final ProductProjection product =
+        mock(Product.class).toProjection(ProductProjectionType.STAGED);
 
     final ArrayList<UpdateAction<Product>> updateActions = new ArrayList<>();
     updateActions.add(Publish.of());
@@ -431,8 +430,8 @@ class ProductSyncerTest {
     final ProductCatalogData masterData = mock(ProductCatalogData.class);
     when(masterData.isPublished()).thenReturn(true);
 
-    final Product product = mock(Product.class);
-    when(product.getMasterData()).thenReturn(masterData);
+    final ProductProjection product =
+        mock(Product.class).toProjection(ProductProjectionType.STAGED);
 
     final ArrayList<UpdateAction<Product>> updateActions = new ArrayList<>();
     updateActions.add(Unpublish.of());

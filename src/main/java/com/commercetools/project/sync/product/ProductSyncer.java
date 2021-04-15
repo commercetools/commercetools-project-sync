@@ -1,5 +1,7 @@
 package com.commercetools.project.sync.product;
 
+import static com.commercetools.project.sync.util.SyncUtils.IDENTIFIER_NOT_PRESENT;
+import static com.commercetools.project.sync.util.SyncUtils.logErrorCallback;
 import static com.commercetools.project.sync.util.SyncUtils.logWarningCallback;
 import static com.commercetools.sync.products.utils.ProductTransformUtils.toProductDrafts;
 
@@ -9,6 +11,7 @@ import com.commercetools.project.sync.service.CustomObjectService;
 import com.commercetools.project.sync.service.impl.CustomObjectServiceImpl;
 import com.commercetools.sync.commons.exceptions.SyncException;
 import com.commercetools.sync.commons.utils.CaffeineReferenceIdToKeyCacheImpl;
+import com.commercetools.sync.commons.utils.QuadConsumer;
 import com.commercetools.sync.commons.utils.ReferenceIdToKeyCache;
 import com.commercetools.sync.commons.utils.TriConsumer;
 import com.commercetools.sync.products.ProductSync;
@@ -17,6 +20,7 @@ import com.commercetools.sync.products.ProductSyncOptionsBuilder;
 import com.commercetools.sync.products.helpers.ProductSyncStatistics;
 import io.sphere.sdk.client.SphereClient;
 import io.sphere.sdk.commands.UpdateAction;
+import io.sphere.sdk.models.WithKey;
 import io.sphere.sdk.products.Product;
 import io.sphere.sdk.products.ProductDraft;
 import io.sphere.sdk.products.ProductProjection;
@@ -66,26 +70,27 @@ public final class ProductSyncer
       @Nonnull final Clock clock,
       @Nullable final ProductSyncCustomRequest productSyncCustomRequest) {
 
-    // TODO: (ProductProjection) does not implement WithKey interface so logErrorCallback needs to
-    // be adjusted.
-    // Simply find an alternative.
-    //    final QuadConsumer<
-    //            SyncException,
-    //            Optional<ProductDraft>,
-    //            Optional<ProductProjection>,
-    //            List<UpdateAction<Product>>>
-    //        logErrorCallback =
-    //            (exception, newResourceDraft, oldResource, updateActions) ->
-    //                logErrorCallback(LOGGER, "product", exception, oldResource, updateActions);
+    final QuadConsumer<
+            SyncException,
+            Optional<ProductDraft>,
+            Optional<ProductProjection>,
+            List<UpdateAction<Product>>>
+        logErrorCallback =
+            (exception, newResourceDraft, oldResource, updateActions) -> {
+              final String resourceKey =
+                  oldResource.map(WithKey::getKey).orElse(IDENTIFIER_NOT_PRESENT);
+              logErrorCallback(LOGGER, "product", exception, resourceKey, updateActions);
+            };
+
     final TriConsumer<SyncException, Optional<ProductDraft>, Optional<ProductProjection>>
         logWarningCallback =
             (exception, newResourceDraft, oldResource) ->
                 logWarningCallback(LOGGER, "product", exception, oldResource);
     final ProductSyncOptions syncOptions =
         ProductSyncOptionsBuilder.of(targetClient)
-            //            .errorCallback(logErrorCallback)
+            .errorCallback(logErrorCallback)
             .warningCallback(logWarningCallback)
-            //            .beforeUpdateCallback(ProductSyncer::appendPublishIfPublished)
+            .beforeUpdateCallback(ProductSyncer::appendPublishIfPublished)
             .build();
 
     final ProductSync productSync = new ProductSync(syncOptions);
@@ -145,13 +150,13 @@ public final class ProductSyncer
   static List<UpdateAction<Product>> appendPublishIfPublished(
       @Nonnull final List<UpdateAction<Product>> updateActions,
       @Nonnull final ProductDraft srcProductDraft,
-      @Nonnull final Product targetProduct) { // Change it to ProductProjection..
+      @Nonnull final ProductProjection targetProduct) {
 
     // TODO: (ahmetoz) adapt queries.
     // Also not sure about this action, it might be already added to java-sync, please check this:
     // https://github.com/commercetools/commercetools-sync-java/blob/master/docs/RELEASE_NOTES.md#191----aug-5-2020
     if (!updateActions.isEmpty()
-        && targetProduct.getMasterData().isPublished()
+        && targetProduct.isPublished()
         && doesNotContainPublishOrUnPublishActions(updateActions)) {
 
       updateActions.add(Publish.of());

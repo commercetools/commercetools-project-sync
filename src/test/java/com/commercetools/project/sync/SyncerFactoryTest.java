@@ -19,6 +19,7 @@ import static com.commercetools.project.sync.util.TestUtils.getMockedClock;
 import static com.commercetools.project.sync.util.TestUtils.mockLastSyncCustomObject;
 import static com.commercetools.project.sync.util.TestUtils.stubClientsCustomObjectService;
 import static com.commercetools.project.sync.util.TestUtils.verifyInteractionsWithClientAfterSync;
+import static io.sphere.sdk.products.ProductProjectionType.STAGED;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
@@ -55,7 +56,9 @@ import io.sphere.sdk.customobjects.queries.CustomObjectQuery;
 import io.sphere.sdk.inventory.queries.InventoryEntryQuery;
 import io.sphere.sdk.json.SphereJsonUtils;
 import io.sphere.sdk.products.Product;
+import io.sphere.sdk.products.ProductProjection;
 import io.sphere.sdk.products.commands.ProductCreateCommand;
+import io.sphere.sdk.products.queries.ProductProjectionQuery;
 import io.sphere.sdk.products.queries.ProductQuery;
 import io.sphere.sdk.producttypes.queries.ProductTypeQuery;
 import io.sphere.sdk.queries.PagedQueryResult;
@@ -162,7 +165,7 @@ class SyncerFactoryTest {
     final SphereClient targetClient = mock(SphereClient.class);
     when(targetClient.getConfig()).thenReturn(SphereClientConfig.of("bar", "bar", "bar"));
 
-    when(sourceClient.execute(any(ProductQuery.class)))
+    when(sourceClient.execute(any(ProductProjectionQuery.class)))
         .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
 
     final SyncerFactory syncerFactory =
@@ -175,7 +178,7 @@ class SyncerFactoryTest {
     syncerFactory.sync(new String[] {"products"}, "myRunnerName", false, false, null);
 
     // assertions
-    verify(sourceClient, times(1)).execute(any(ProductQuery.class));
+    verify(sourceClient, times(1)).execute(any(ProductProjectionQuery.class));
 
     verifyTimestampGeneratorCustomObjectUpsertIsCalled(targetClient, "ProductSync", "myRunnerName");
     verifyLastSyncCustomObjectQuery(targetClient, "productSync", "myRunnerName", "foo", 1);
@@ -225,7 +228,7 @@ class SyncerFactoryTest {
     final SphereClient targetClient = mock(SphereClient.class);
     when(targetClient.getConfig()).thenReturn(SphereClientConfig.of("bar", "bar", "bar"));
 
-    when(sourceClient.execute(any(ProductQuery.class)))
+    when(sourceClient.execute(any(ProductProjectionQuery.class)))
         .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
 
     final SyncerFactory syncerFactory =
@@ -238,7 +241,7 @@ class SyncerFactoryTest {
     syncerFactory.sync(new String[] {"products"}, "myRunnerName", true, false, null);
 
     // assertions
-    verify(sourceClient, times(1)).execute(any(ProductQuery.class));
+    verify(sourceClient, times(1)).execute(any(ProductProjectionQuery.class));
 
     verifyTimestampGeneratorCustomObjectUpsertIsNotCalled(
         targetClient, "ProductSync", "myRunnerName");
@@ -282,14 +285,16 @@ class SyncerFactoryTest {
     final SphereClient targetClient = mock(SphereClient.class);
     when(targetClient.getConfig()).thenReturn(SphereClientConfig.of("bar", "bar", "bar"));
 
-    final Product product5 =
-        SphereJsonUtils.readObjectFromResource("product-key-5.json", Product.class);
-    final Product product6 =
-        SphereJsonUtils.readObjectFromResource("product-key-6.json", Product.class);
-    final PagedQueryResult<Product> twoProductResult =
+    final ProductProjection product5 =
+        SphereJsonUtils.readObjectFromResource("product-key-5.json", Product.class)
+            .toProjection(STAGED);
+    final ProductProjection product6 =
+        SphereJsonUtils.readObjectFromResource("product-key-6.json", Product.class)
+            .toProjection(STAGED);
+    final PagedQueryResult<ProductProjection> twoProductResult =
         MockPagedQueryResult.of(asList(product5, product6));
 
-    when(sourceClient.execute(any(ProductQuery.class)))
+    when(sourceClient.execute(any(ProductProjectionQuery.class)))
         .thenReturn(CompletableFuture.completedFuture(twoProductResult));
 
     when(targetClient.execute(any())).thenReturn(CompletableFuture.completedFuture(null));
@@ -306,8 +311,8 @@ class SyncerFactoryTest {
     syncerFactory.sync(new String[] {"products"}, "myRunnerName", true, false, null);
 
     // assertions
-    verify(sourceClient, times(1)).execute(any(ProductQuery.class));
-    verify(sourceClient, times(3)).execute(any(ResourceIdsGraphQlRequest.class));
+    verify(sourceClient, times(1)).execute(any(ProductProjectionQuery.class));
+    verify(sourceClient, times(0)).execute(any(ResourceIdsGraphQlRequest.class));
     verifyInteractionsWithClientAfterSync(sourceClient, 1);
 
     final Condition<LoggingEvent> startLog =
@@ -928,7 +933,7 @@ class SyncerFactoryTest {
         .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
     when(sourceClient.execute(any(InventoryEntryQuery.class)))
         .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
-    when(sourceClient.execute(any(ProductQuery.class)))
+    when(sourceClient.execute(any(ProductProjectionQuery.class)))
         .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
     when(sourceClient.execute(any(CartDiscountQuery.class)))
         .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
@@ -989,7 +994,7 @@ class SyncerFactoryTest {
     verify(sourceClient, times(1)).execute(any(ProductTypeQuery.class));
     verify(sourceClient, times(1)).execute(any(TypeQuery.class));
     verify(sourceClient, times(1)).execute(any(CategoryQuery.class));
-    verify(sourceClient, times(1)).execute(any(ProductQuery.class));
+    verify(sourceClient, times(1)).execute(any(ProductProjectionQuery.class));
     verify(sourceClient, times(1)).execute(any(InventoryEntryQuery.class));
     verify(sourceClient, times(1)).execute(any(CartDiscountQuery.class));
     verify(sourceClient, times(1)).execute(any(StateQuery.class));
@@ -1013,7 +1018,7 @@ class SyncerFactoryTest {
 
     when(sourceClient.execute(any(ProductTypeQuery.class)))
         .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
-    when(sourceClient.execute(any(ProductQuery.class)))
+    when(sourceClient.execute(any(ProductProjectionQuery.class)))
         .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
     when(sourceClient.execute(any(CustomerQuery.class)))
         .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
@@ -1056,7 +1061,7 @@ class SyncerFactoryTest {
     inOrder.verify(sourceClient, times(1)).execute(any(ProductTypeQuery.class));
     verify(sourceClient, times(1)).execute(any(CustomerQuery.class));
 
-    inOrder.verify(sourceClient, times(1)).execute(any(ProductQuery.class));
+    inOrder.verify(sourceClient, times(1)).execute(any(ProductProjectionQuery.class));
 
     inOrder.verify(sourceClient, times(1)).execute(any(ShoppingListQuery.class));
     verifyInteractionsWithClientAfterSync(sourceClient, 4);
@@ -1173,7 +1178,7 @@ class SyncerFactoryTest {
     final SphereClient targetClient = mock(SphereClient.class);
     when(targetClient.getConfig()).thenReturn(SphereClientConfig.of("bar", "bar", "bar"));
 
-    when(sourceClient.execute(any(ProductQuery.class)))
+    when(sourceClient.execute(any(ProductProjectionQuery.class)))
         .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
     when(sourceClient.execute(any(ShoppingListQuery.class)))
         .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
@@ -1197,7 +1202,7 @@ class SyncerFactoryTest {
     verifyLastSyncCustomObjectQuery(targetClient, "productSync", DEFAULT_RUNNER_NAME, "foo", 1);
     verifyLastSyncCustomObjectQuery(
         targetClient, "shoppingListSync", DEFAULT_RUNNER_NAME, "foo", 1);
-    verify(sourceClient, times(1)).execute(any(ProductQuery.class));
+    verify(sourceClient, times(1)).execute(any(ProductProjectionQuery.class));
     verify(sourceClient, times(1)).execute(any(ShoppingListQuery.class));
     verifyInteractionsWithClientAfterSync(sourceClient, 2);
 

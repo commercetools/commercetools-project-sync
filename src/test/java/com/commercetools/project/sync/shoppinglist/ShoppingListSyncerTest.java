@@ -6,10 +6,16 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import com.commercetools.sync.commons.models.ResourceIdsGraphQlRequest;
+import com.commercetools.sync.commons.models.ResourceKeyIdGraphQlResult;
+import com.commercetools.sync.commons.utils.CaffeineReferenceIdToKeyCacheImpl;
+import com.commercetools.sync.commons.utils.ReferenceIdToKeyCache;
 import com.commercetools.sync.shoppinglists.ShoppingListSync;
+import com.commercetools.sync.shoppinglists.utils.ShoppingListTransformUtils;
 import io.sphere.sdk.client.SphereApiConfig;
 import io.sphere.sdk.client.SphereClient;
 import io.sphere.sdk.expansion.ExpansionPath;
+import io.sphere.sdk.json.SphereJsonUtils;
 import io.sphere.sdk.queries.PagedQueryResult;
 import io.sphere.sdk.shoppinglists.ShoppingList;
 import io.sphere.sdk.shoppinglists.ShoppingListDraft;
@@ -28,6 +34,8 @@ import uk.org.lidalia.slf4jtest.TestLoggerFactory;
 class ShoppingListSyncerTest {
   private final TestLogger syncerTestLogger =
       TestLoggerFactory.getTestLogger(ShoppingListSyncer.class);
+  private final ReferenceIdToKeyCache referenceIdToKeyCache =
+      new CaffeineReferenceIdToKeyCacheImpl();
 
   @BeforeEach
   void setup() {
@@ -49,21 +57,35 @@ class ShoppingListSyncerTest {
   @Test
   void transform_ShouldReplaceShoppingListReferenceIdsWithKeys() {
     // preparation
+    final SphereClient sourceClient = mock(SphereClient.class);
     final ShoppingListSyncer shoppingListSyncer =
-        ShoppingListSyncer.of(
-            mock(SphereClient.class), mock(SphereClient.class), mock(Clock.class));
+        ShoppingListSyncer.of(sourceClient, mock(SphereClient.class), mock(Clock.class));
     final List<ShoppingList> shoppingList =
         Collections.singletonList(readObjectFromResource("shopping-list.json", ShoppingList.class));
+
+    mockSourceClient(sourceClient);
 
     // test
     final CompletionStage<List<ShoppingListDraft>> draftsFromPageStage =
         shoppingListSyncer.transform(shoppingList);
 
     // assertion
-    // TODO: (ahmetoz) adapt changes
-    //    assertThat(draftsFromPageStage)
-    //        .isCompletedWithValue(
-    //            ShoppingListReferenceResolutionUtils.mapToShoppingListDrafts(shoppingList));
+    assertThat(draftsFromPageStage)
+        .isCompletedWithValue(
+            ShoppingListTransformUtils.toShoppingListDrafts(
+                    sourceClient, referenceIdToKeyCache, shoppingList)
+                .join());
+  }
+
+  private void mockSourceClient(SphereClient sourceClient) {
+    final String jsonStringCustomTypes =
+        "{\"results\":[{\"id\":\"5ebfa80e-f4aa-4c0b-be64-e348e09a855a\","
+            + "\"key\":\"customTypeKey\"} ]}";
+    final ResourceKeyIdGraphQlResult customTypesResult =
+        SphereJsonUtils.readObject(jsonStringCustomTypes, ResourceKeyIdGraphQlResult.class);
+
+    when(sourceClient.execute(any(ResourceIdsGraphQlRequest.class)))
+        .thenReturn(CompletableFuture.completedFuture(customTypesResult));
   }
 
   @Test
@@ -74,13 +96,7 @@ class ShoppingListSyncerTest {
 
     // assertion
     final ShoppingListQuery query = shoppingListSyncer.getQuery();
-    assertThat(query.expansionPaths())
-        .containsExactly(
-            ExpansionPath.of("customer"),
-            ExpansionPath.of("custom.type"),
-            ExpansionPath.of("lineItems[*].variant"),
-            ExpansionPath.of("lineItems[*].custom.type"),
-            ExpansionPath.of("textLineItems[*].custom.type"));
+    assertThat(query.expansionPaths()).containsExactly(ExpansionPath.of("lineItems[*].variant"));
   }
 
   @Test
@@ -98,6 +114,8 @@ class ShoppingListSyncerTest {
     when(pagedQueryResult.getResults()).thenReturn(shoppingLists);
     when(sourceClient.execute(any(ShoppingListQuery.class)))
         .thenReturn(CompletableFuture.completedFuture(pagedQueryResult));
+
+    mockSourceClient(sourceClient);
 
     // test
     final ShoppingListSyncer shoppingListSyncer =
