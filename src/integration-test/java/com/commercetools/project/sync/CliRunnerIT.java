@@ -19,7 +19,6 @@ import static com.commercetools.project.sync.util.TestUtils.assertCustomerSyncer
 import static com.commercetools.project.sync.util.TestUtils.assertProductSyncerLoggingEvents;
 import static com.commercetools.project.sync.util.TestUtils.assertProductTypeSyncerLoggingEvents;
 import static com.commercetools.project.sync.util.TestUtils.assertShoppingListSyncerLoggingEvents;
-import static com.commercetools.project.sync.util.TestUtils.assertSyncerLoggingEvents;
 import static com.commercetools.project.sync.util.TestUtils.assertTaxCategorySyncerLoggingEvents;
 import static io.sphere.sdk.models.LocalizedString.ofEnglish;
 import static java.lang.String.format;
@@ -112,11 +111,9 @@ import java.time.ZonedDateTime;
 import java.util.Collections;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.atomic.AtomicInteger;
 import javax.annotation.Nonnull;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import uk.org.lidalia.slf4jtest.TestLogger;
 import uk.org.lidalia.slf4jtest.TestLoggerFactory;
@@ -761,10 +758,11 @@ class CliRunnerIT {
               assertThat(lastSyncCustomObject.getValue())
                   .satisfies(
                       value -> {
-                        //Excluding til BaseStatisticsDeserializer works with correct type.
-                        //assertThat(value.getLastSyncStatistics()).isInstanceOf(statisticsClass);
+                        // Excluding til BaseStatisticsDeserializer works with correct type.
+                        // assertThat(value.getLastSyncStatistics()).isInstanceOf(statisticsClass);
                         assertThat(value.getLastSyncStatistics().getProcessed().get()).isEqualTo(1);
-                        assertThat(value.getLastSyncTimestamp()).isBeforeOrEqualTo(lastSyncTimestamp);
+                        assertThat(value.getLastSyncTimestamp())
+                            .isBeforeOrEqualTo(lastSyncTimestamp);
                       });
             });
   }

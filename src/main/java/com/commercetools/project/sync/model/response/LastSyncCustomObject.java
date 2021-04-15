@@ -5,7 +5,6 @@ import com.commercetools.project.sync.util.SyncUtils;
 import com.commercetools.sync.commons.helpers.BaseSyncStatistics;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-
 import java.time.ZonedDateTime;
 import java.util.Objects;
 import javax.annotation.Nonnull;
@@ -98,7 +97,7 @@ public final class LastSyncCustomObject<T extends BaseSyncStatistics> {
     this.lastSyncTimestamp = lastSyncTimestamp;
   }
 
-@JsonDeserialize(using = BaseSyncStatisticsDeserializer.class)
+  @JsonDeserialize(using = BaseSyncStatisticsDeserializer.class)
   public void setLastSyncStatistics(T lastSyncStatistics) {
     this.lastSyncStatistics = lastSyncStatistics;
   }
