@@ -40,17 +40,14 @@ import uk.org.lidalia.slf4jtest.TestLoggerFactory;
 
 public class CategorySyncWithReferenceResolutionIT {
 
-  private static final TestLogger categorySyncerTestLogger =
+  private static final TestLogger testLogger =
       TestLoggerFactory.getTestLogger(CategorySyncer.class);
-  private static final TestLogger cliRunnerTestLogger =
-      TestLoggerFactory.getTestLogger(CliRunner.class);
   private static final String RESOURCE_KEY = "foo";
   private static final String TYPE_KEY = "typeKey";
 
   @BeforeEach
   void setup() {
-    categorySyncerTestLogger.clearAll();
-    cliRunnerTestLogger.clearAll();
+    testLogger.clearAll();
     cleanUpProjects(CTP_SOURCE_CLIENT, CTP_TARGET_CLIENT);
     setupSourceProjectData(CTP_SOURCE_CLIENT);
   }
@@ -113,14 +110,11 @@ public class CategorySyncWithReferenceResolutionIT {
     CliRunner.of().run(new String[] {"-s", "categories"}, createITSyncerFactory());
 
     // assertions
-    assertThat(cliRunnerTestLogger.getAllLoggingEvents())
-        .allMatch(loggingEvent -> !Level.ERROR.equals(loggingEvent.getLevel()));
-
-    assertThat(categorySyncerTestLogger.getAllLoggingEvents())
+    assertThat(testLogger.getAllLoggingEvents())
         .allMatch(loggingEvent -> !Level.ERROR.equals(loggingEvent.getLevel()));
 
     // Every sync module is expected to have 2 logs (start and stats summary)
-    assertThat(categorySyncerTestLogger.getAllLoggingEvents()).hasSize(2);
+    assertThat(testLogger.getAllLoggingEvents()).hasSize(2);
     assertCategoryExists(CTP_TARGET_CLIENT, RESOURCE_KEY);
   }
 }
