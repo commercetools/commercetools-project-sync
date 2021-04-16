@@ -1,6 +1,7 @@
 package com.commercetools.project.sync.category;
 
 import static com.commercetools.project.sync.util.TestUtils.getMockedClock;
+import static com.commercetools.sync.categories.utils.CategoryTransformUtils.toCategoryDrafts;
 import static io.sphere.sdk.json.SphereJsonUtils.readObjectFromResource;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
@@ -12,8 +13,11 @@ import static org.mockito.Mockito.when;
 
 import com.commercetools.sync.categories.CategorySync;
 import com.commercetools.sync.commons.helpers.ResourceKeyIdGraphQlRequest;
+import com.commercetools.sync.commons.models.ResourceIdsGraphQlRequest;
 import com.commercetools.sync.commons.models.ResourceKeyId;
 import com.commercetools.sync.commons.models.ResourceKeyIdGraphQlResult;
+import com.commercetools.sync.commons.utils.CaffeineReferenceIdToKeyCacheImpl;
+import com.commercetools.sync.commons.utils.ReferenceIdToKeyCache;
 import io.sphere.sdk.categories.Category;
 import io.sphere.sdk.categories.CategoryDraft;
 import io.sphere.sdk.categories.queries.CategoryQuery;
@@ -23,9 +27,7 @@ import io.sphere.sdk.json.SphereJsonUtils;
 import io.sphere.sdk.queries.PagedQueryResult;
 import java.time.Clock;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
@@ -38,6 +40,9 @@ import uk.org.lidalia.slf4jtest.TestLoggerFactory;
 
 class CategorySyncerTest {
   private final TestLogger syncerTestLogger = TestLoggerFactory.getTestLogger(CategorySyncer.class);
+
+  private final ReferenceIdToKeyCache referenceIdToKeyCache =
+      new CaffeineReferenceIdToKeyCacheImpl();
 
   @BeforeEach
   void setup() {
@@ -74,32 +79,29 @@ class CategorySyncerTest {
             .map(category -> category.getCustom().getType().getId())
             .collect(Collectors.toList());
 
-    String jsonStringCategories =
-        "{\"results\":[{\"id\":\"53c4a8b4-754f-4b95-b6f2-3e1e70e3d0c3\",\"key\":\"cat1\"}]}";
-    final ResourceKeyIdGraphQlResult categoriesResult =
-        SphereJsonUtils.readObject(jsonStringCategories, ResourceKeyIdGraphQlResult.class);
+    final String jsonStringCustomTypes =
+        "{\"results\":[{\"id\":\"53c4a8b4-754f-4b95-b6f2-3e1e70e3d0c3\"," + "\"key\":\"cat1\"} ]}";
+    final ResourceKeyIdGraphQlResult customTypesResult =
+        SphereJsonUtils.readObject(jsonStringCustomTypes, ResourceKeyIdGraphQlResult.class);
 
-    when(sourceClient.execute(any()))
-        .thenReturn(CompletableFuture.completedFuture(categoriesResult));
+    when(sourceClient.execute(any(ResourceIdsGraphQlRequest.class)))
+        .thenReturn(CompletableFuture.completedFuture(customTypesResult));
 
     // test
     final CompletionStage<List<CategoryDraft>> draftsFromPageStage =
         categorySyncer.transform(categoryPage);
 
-    Map<String, String> cache = new HashMap<>();
-    cache.put("53c4a8b4-754f-4b95-b6f2-3e1e70e3d0c3", "cat1");
-
     // assertions
-    // TODO (ahmetoz) adapt to new changes.
-    //    final List<CategoryDraft> expectedResult = mapToCategoryDrafts(categoryPage, cache);
-    //    final List<String> referenceKeys =
-    //        expectedResult
-    //            .stream()
-    //            .filter(category -> category.getCustom() != null)
-    //            .map(category -> category.getCustom().getType().getId())
-    //            .collect(Collectors.toList());
-    //    assertThat(referenceKeys).doesNotContainSequence(referenceIds);
-    //    assertThat(draftsFromPageStage).isCompletedWithValue(expectedResult);
+    final List<CategoryDraft> expectedResult =
+        toCategoryDrafts(sourceClient, referenceIdToKeyCache, categoryPage).join();
+    final List<String> referenceKeys =
+        expectedResult
+            .stream()
+            .filter(category -> category.getCustom() != null)
+            .map(category -> category.getCustom().getType().getId())
+            .collect(Collectors.toList());
+    assertThat(referenceKeys).doesNotContainSequence(referenceIds);
+    assertThat(draftsFromPageStage).isCompletedWithValue(expectedResult);
   }
 
   @Test

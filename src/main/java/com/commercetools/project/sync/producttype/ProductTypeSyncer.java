@@ -89,7 +89,7 @@ public final class ProductTypeSyncer
       @Nonnull final List<ProductType> page) {
     final ReferenceIdToKeyCache referenceIdToKeyCache = new CaffeineReferenceIdToKeyCacheImpl();
     return ProductTypeTransformUtils.toProductTypeDrafts(
-        this.getSourceClient(), referenceIdToKeyCache, page);
+        getSourceClient(), referenceIdToKeyCache, page);
   }
 
   @Nonnull

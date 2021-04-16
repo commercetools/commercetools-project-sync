@@ -83,7 +83,7 @@ public final class CustomerSyncer
   @Override
   protected CompletionStage<List<CustomerDraft>> transform(@Nonnull final List<Customer> page) {
     final ReferenceIdToKeyCache referenceIdToKeyCache = new CaffeineReferenceIdToKeyCacheImpl();
-    return toCustomerDrafts(this.getSourceClient(), referenceIdToKeyCache, page);
+    return toCustomerDrafts(getSourceClient(), referenceIdToKeyCache, page);
   }
 
   @Nonnull

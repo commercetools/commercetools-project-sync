@@ -97,7 +97,7 @@ public final class InventoryEntrySyncer
   protected CompletionStage<List<InventoryEntryDraft>> transform(
       @Nonnull final List<InventoryEntry> page) {
     final ReferenceIdToKeyCache referenceIdToKeyCache = new CaffeineReferenceIdToKeyCacheImpl();
-    return toInventoryEntryDrafts(this.getSourceClient(), referenceIdToKeyCache, page);
+    return toInventoryEntryDrafts(getSourceClient(), referenceIdToKeyCache, page);
   }
 
   @Nonnull

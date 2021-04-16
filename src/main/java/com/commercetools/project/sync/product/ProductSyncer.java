@@ -110,7 +110,7 @@ public final class ProductSyncer
   @Override
   protected CompletionStage<List<ProductDraft>> transform(@Nonnull List<ProductProjection> page) {
     final ReferenceIdToKeyCache referenceIdToKeyCache = new CaffeineReferenceIdToKeyCacheImpl();
-    return toProductDrafts(this.getSourceClient(), referenceIdToKeyCache, page);
+    return toProductDrafts(getSourceClient(), referenceIdToKeyCache, page);
   }
 
   @Nonnull

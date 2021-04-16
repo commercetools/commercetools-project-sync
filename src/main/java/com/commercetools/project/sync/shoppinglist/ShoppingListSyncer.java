@@ -98,7 +98,7 @@ public final class ShoppingListSyncer
   @Override
   protected CompletionStage<List<ShoppingListDraft>> transform(@Nonnull List<ShoppingList> page) {
     final ReferenceIdToKeyCache referenceIdToKeyCache = new CaffeineReferenceIdToKeyCacheImpl();
-    return toShoppingListDrafts(this.getSourceClient(), referenceIdToKeyCache, page);
+    return toShoppingListDrafts(getSourceClient(), referenceIdToKeyCache, page);
   }
 
   @Nonnull

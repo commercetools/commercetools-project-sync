@@ -70,7 +70,7 @@ public final class StateSyncer
   @Override
   protected CompletionStage<List<StateDraft>> transform(@Nonnull List<State> states) {
     final ReferenceIdToKeyCache referenceIdToKeyCache = new CaffeineReferenceIdToKeyCacheImpl();
-    return toStateDrafts(this.getSourceClient(), referenceIdToKeyCache, states);
+    return toStateDrafts(getSourceClient(), referenceIdToKeyCache, states);
   }
 
   @Nonnull

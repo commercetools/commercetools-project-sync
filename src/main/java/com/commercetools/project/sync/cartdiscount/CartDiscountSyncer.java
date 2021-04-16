@@ -88,7 +88,7 @@ public final class CartDiscountSyncer
   protected CompletionStage<List<CartDiscountDraft>> transform(
       @Nonnull final List<CartDiscount> page) {
     final ReferenceIdToKeyCache referenceIdToKeyCache = new CaffeineReferenceIdToKeyCacheImpl();
-    return toCartDiscountDrafts(this.getSourceClient(), referenceIdToKeyCache, page);
+    return toCartDiscountDrafts(getSourceClient(), referenceIdToKeyCache, page);
   }
 
   @Nonnull

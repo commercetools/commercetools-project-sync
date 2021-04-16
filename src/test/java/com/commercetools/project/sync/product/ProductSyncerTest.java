@@ -10,7 +10,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.commercetools.project.sync.model.ProductSyncCustomRequest;
-import com.commercetools.project.sync.model.ResourceIdsGraphQlRequest;
+import com.commercetools.sync.commons.models.ResourceIdsGraphQlRequest;
 import com.commercetools.sync.commons.models.ResourceKeyIdGraphQlResult;
 import com.commercetools.sync.products.ProductSync;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -340,11 +340,8 @@ class ProductSyncerTest {
 
   @Test
   void appendPublishIfPublished_WithPublishedProductAndNonEmptyActions_ShouldAppendPublish() {
-    final ProductCatalogData masterData = mock(ProductCatalogData.class);
-    when(masterData.isPublished()).thenReturn(true);
-
-    final ProductProjection product =
-        mock(Product.class).toProjection(ProductProjectionType.STAGED);
+    final ProductProjection product = mock(ProductProjection.class);
+    when(product.isPublished()).thenReturn(true);
 
     final ArrayList<UpdateAction<Product>> updateActions = new ArrayList<>();
     updateActions.add(ChangeName.of(ofEnglish("foo")));
@@ -373,11 +370,8 @@ class ProductSyncerTest {
 
   @Test
   void appendPublishIfPublished_WithUnPublishedProductAndNonEmptyActions_ShouldNotAppendPublish() {
-    final ProductCatalogData masterData = mock(ProductCatalogData.class);
-    when(masterData.isPublished()).thenReturn(false);
-
-    final ProductProjection product =
-        mock(Product.class).toProjection(ProductProjectionType.STAGED);
+    final ProductProjection product = mock(ProductProjection.class);
+    when(product.isPublished()).thenReturn(false);
 
     final ArrayList<UpdateAction<Product>> updateActions = new ArrayList<>();
     updateActions.add(ChangeName.of(ofEnglish("foo")));
@@ -391,11 +385,8 @@ class ProductSyncerTest {
 
   @Test
   void appendPublishIfPublished_WithPublishedProductAndOnePublish_ShouldNotAppendPublish() {
-    final ProductCatalogData masterData = mock(ProductCatalogData.class);
-    when(masterData.isPublished()).thenReturn(true);
-
-    final ProductProjection product =
-        mock(Product.class).toProjection(ProductProjectionType.STAGED);
+    final ProductProjection product = mock(ProductProjection.class);
+    when(product.isPublished()).thenReturn(true);
 
     final ArrayList<UpdateAction<Product>> updateActions = new ArrayList<>();
     updateActions.add(Publish.of());
@@ -409,11 +400,8 @@ class ProductSyncerTest {
 
   @Test
   void appendPublishIfPublished_WithUnPublishedProductAndOnePublishAction_ShouldNotAppendPublish() {
-    final ProductCatalogData masterData = mock(ProductCatalogData.class);
-    when(masterData.isPublished()).thenReturn(false);
-
-    final ProductProjection product =
-        mock(Product.class).toProjection(ProductProjectionType.STAGED);
+    final ProductProjection product = mock(ProductProjection.class);
+    when(product.isPublished()).thenReturn(false);
 
     final ArrayList<UpdateAction<Product>> updateActions = new ArrayList<>();
     updateActions.add(Publish.of());
@@ -427,11 +415,8 @@ class ProductSyncerTest {
 
   @Test
   void appendPublishIfPublished_WithPublishedProductAndOneUnPublishAction_ShouldNotAppendPublish() {
-    final ProductCatalogData masterData = mock(ProductCatalogData.class);
-    when(masterData.isPublished()).thenReturn(true);
-
-    final ProductProjection product =
-        mock(Product.class).toProjection(ProductProjectionType.STAGED);
+    final ProductProjection product = mock(ProductProjection.class);
+    when(product.isPublished()).thenReturn(true);
 
     final ArrayList<UpdateAction<Product>> updateActions = new ArrayList<>();
     updateActions.add(Unpublish.of());

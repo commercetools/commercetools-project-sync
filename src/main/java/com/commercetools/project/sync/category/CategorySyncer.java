@@ -85,7 +85,7 @@ public final class CategorySyncer
   @Nonnull
   protected CompletionStage<List<CategoryDraft>> transform(@Nonnull final List<Category> page) {
     final ReferenceIdToKeyCache referenceIdToKeyCache = new CaffeineReferenceIdToKeyCacheImpl();
-    return toCategoryDrafts(this.getSourceClient(), referenceIdToKeyCache, page);
+    return toCategoryDrafts(getSourceClient(), referenceIdToKeyCache, page);
   }
 
   @Nonnull

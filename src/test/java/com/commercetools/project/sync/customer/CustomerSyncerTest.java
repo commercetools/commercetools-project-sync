@@ -1,17 +1,23 @@
 package com.commercetools.project.sync.customer;
 
+import static com.commercetools.sync.customers.utils.CustomerTransformUtils.toCustomerDrafts;
 import static io.sphere.sdk.json.SphereJsonUtils.readObjectFromResource;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import com.commercetools.sync.commons.models.ResourceIdsGraphQlRequest;
+import com.commercetools.sync.commons.models.ResourceKeyIdGraphQlResult;
+import com.commercetools.sync.commons.utils.CaffeineReferenceIdToKeyCacheImpl;
+import com.commercetools.sync.commons.utils.ReferenceIdToKeyCache;
 import com.commercetools.sync.customers.CustomerSync;
 import io.sphere.sdk.client.SphereApiConfig;
 import io.sphere.sdk.client.SphereClient;
 import io.sphere.sdk.customers.Customer;
 import io.sphere.sdk.customers.CustomerDraft;
 import io.sphere.sdk.customers.queries.CustomerQuery;
+import io.sphere.sdk.json.SphereJsonUtils;
 import io.sphere.sdk.queries.PagedQueryResult;
 import java.time.Clock;
 import java.util.Collections;
@@ -26,6 +32,9 @@ import uk.org.lidalia.slf4jtest.TestLoggerFactory;
 
 class CustomerSyncerTest {
   private final TestLogger syncerTestLogger = TestLoggerFactory.getTestLogger(CustomerSyncer.class);
+
+  private final ReferenceIdToKeyCache referenceIdToKeyCache =
+      new CaffeineReferenceIdToKeyCacheImpl();
 
   @BeforeEach
   void setup() {
@@ -46,20 +55,29 @@ class CustomerSyncerTest {
   @Test
   void transform_ShouldReplaceCustomerReferenceIdsWithKeys() {
     // preparation
+    final SphereClient sourceClient = mock(SphereClient.class);
     final CustomerSyncer customerSyncer =
-        CustomerSyncer.of(mock(SphereClient.class), mock(SphereClient.class), mock(Clock.class));
+        CustomerSyncer.of(sourceClient, mock(SphereClient.class), mock(Clock.class));
     final List<Customer> customers =
         Collections.singletonList(readObjectFromResource("customer-key-1.json", Customer.class));
+
+    final String jsonStringCustomerGroups =
+        "{\"results\":[{\"id\":\"d1229e6f-2b79-441e-b419-180311e52754\","
+            + "\"key\":\"customerGroupKey\"} ]}";
+    final ResourceKeyIdGraphQlResult customerGroupsResult =
+        SphereJsonUtils.readObject(jsonStringCustomerGroups, ResourceKeyIdGraphQlResult.class);
+
+    when(sourceClient.execute(any(ResourceIdsGraphQlRequest.class)))
+        .thenReturn(CompletableFuture.completedFuture(customerGroupsResult));
 
     // test
     final CompletionStage<List<CustomerDraft>> draftsFromPageStage =
         customerSyncer.transform(customers);
 
     // assertion
-    // TODO: (ahmetoz) adapt changes
-    //    assertThat(draftsFromPageStage)
-    //
-    // .isCompletedWithValue(CustomerReferenceResolutionUtils.mapToCustomerDrafts(customers));
+    assertThat(draftsFromPageStage)
+        .isCompletedWithValue(
+            toCustomerDrafts(sourceClient, referenceIdToKeyCache, customers).join());
   }
 
   @Test

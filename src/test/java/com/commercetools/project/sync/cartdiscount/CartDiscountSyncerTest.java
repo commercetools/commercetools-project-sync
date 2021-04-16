@@ -61,8 +61,9 @@ class CartDiscountSyncerTest {
 
     final List<String> referenceIds =
         cartDiscountPage
-            .stream().map(cartDiscount -> cartDiscount.getCustom().getType().getId())
-        .collect(Collectors.toList());
+            .stream()
+            .map(cartDiscount -> cartDiscount.getCustom().getType().getId())
+            .collect(Collectors.toList());
     mockSourceClient(sourceClient);
 
     // test
@@ -70,15 +71,15 @@ class CartDiscountSyncerTest {
         cartDiscountSyncer.transform(cartDiscountPage);
 
     // assertions
-        final List<CartDiscountDraft> expectedResult =
-            toCartDiscountDrafts(sourceClient, referenceIdToKeyCache, cartDiscountPage).join();
-        final List<String> referenceKeys =
-            expectedResult
-                .stream()
-                .map(cartDiscount -> cartDiscount.getCustom().getType().getId())
-                .collect(Collectors.toList());
-        assertThat(referenceKeys).doesNotContainSequence(referenceIds);
-        assertThat(draftsFromPageStage).isCompletedWithValue(expectedResult);
+    final List<CartDiscountDraft> expectedResult =
+        toCartDiscountDrafts(sourceClient, referenceIdToKeyCache, cartDiscountPage).join();
+    final List<String> referenceKeys =
+        expectedResult
+            .stream()
+            .map(cartDiscount -> cartDiscount.getCustom().getType().getId())
+            .collect(Collectors.toList());
+    assertThat(referenceKeys).doesNotContainSequence(referenceIds);
+    assertThat(draftsFromPageStage).isCompletedWithValue(expectedResult);
   }
 
   @Test
