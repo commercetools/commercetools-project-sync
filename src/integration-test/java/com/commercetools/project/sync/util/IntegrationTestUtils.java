@@ -26,6 +26,7 @@ import io.sphere.sdk.client.SphereRequest;
 import io.sphere.sdk.commands.UpdateAction;
 import io.sphere.sdk.customergroups.commands.CustomerGroupDeleteCommand;
 import io.sphere.sdk.customergroups.queries.CustomerGroupQuery;
+import io.sphere.sdk.customers.Customer;
 import io.sphere.sdk.customers.commands.CustomerDeleteCommand;
 import io.sphere.sdk.customers.queries.CustomerQuery;
 import io.sphere.sdk.customobjects.CustomObject;
@@ -51,6 +52,7 @@ import io.sphere.sdk.shippingmethods.commands.ShippingMethodDeleteCommand;
 import io.sphere.sdk.shippingmethods.queries.ShippingMethodQuery;
 import io.sphere.sdk.shoppinglists.commands.ShoppingListDeleteCommand;
 import io.sphere.sdk.shoppinglists.queries.ShoppingListQuery;
+import io.sphere.sdk.states.State;
 import io.sphere.sdk.states.commands.StateDeleteCommand;
 import io.sphere.sdk.states.queries.StateQuery;
 import io.sphere.sdk.taxcategories.commands.TaxCategoryDeleteCommand;
@@ -328,6 +330,44 @@ public final class IntegrationTestUtils {
         .satisfies(category -> assertThat(category.getKey()).isEqualTo(key));
 
     return categoryQueryResult.getResults().get(0);
+  }
+
+  @Nonnull
+  public static State assertStateExists(
+      @Nonnull final SphereClient ctpClient, @Nonnull final String key) {
+    final String queryPredicate = format("key=\"%s\"", key);
+
+    final PagedQueryResult<State> stateQueryResult =
+        ctpClient
+            .execute(StateQuery.of().withPredicates(QueryPredicate.of(queryPredicate)))
+            .toCompletableFuture()
+            .join();
+
+    assertThat(stateQueryResult.getResults())
+        .hasSize(1)
+        .singleElement()
+        .satisfies(state -> assertThat(state.getKey()).isEqualTo(key));
+
+    return stateQueryResult.getResults().get(0);
+  }
+
+  @Nonnull
+  public static Customer assertCustomerExists(
+      @Nonnull final SphereClient ctpClient, @Nonnull final String key) {
+    final String queryPredicate = format("key=\"%s\"", key);
+
+    final PagedQueryResult<Customer> customerQueryResult =
+        ctpClient
+            .execute(CustomerQuery.of().withPredicates(QueryPredicate.of(queryPredicate)))
+            .toCompletableFuture()
+            .join();
+
+    assertThat(customerQueryResult.getResults())
+        .hasSize(1)
+        .singleElement()
+        .satisfies(customer -> assertThat(customer.getKey()).isEqualTo(key));
+
+    return customerQueryResult.getResults().get(0);
   }
 
   @Nonnull

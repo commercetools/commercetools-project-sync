@@ -1,7 +1,9 @@
 package com.commercetools.project.sync;
 
 import static com.commercetools.project.sync.util.IntegrationTestUtils.assertCategoryExists;
+import static com.commercetools.project.sync.util.IntegrationTestUtils.assertCustomerExists;
 import static com.commercetools.project.sync.util.IntegrationTestUtils.assertProductTypeExists;
+import static com.commercetools.project.sync.util.IntegrationTestUtils.assertStateExists;
 import static com.commercetools.project.sync.util.IntegrationTestUtils.cleanUpProjects;
 import static com.commercetools.project.sync.util.IntegrationTestUtils.createAttributeObject;
 import static com.commercetools.project.sync.util.IntegrationTestUtils.createITSyncerFactory;
@@ -34,6 +36,11 @@ import io.sphere.sdk.categories.CategoryDraft;
 import io.sphere.sdk.categories.CategoryDraftBuilder;
 import io.sphere.sdk.categories.commands.CategoryCreateCommand;
 import io.sphere.sdk.client.SphereClient;
+import io.sphere.sdk.customers.Customer;
+import io.sphere.sdk.customers.CustomerDraft;
+import io.sphere.sdk.customers.CustomerDraftBuilder;
+import io.sphere.sdk.customers.CustomerSignInResult;
+import io.sphere.sdk.customers.commands.CustomerCreateCommand;
 import io.sphere.sdk.customobjects.CustomObject;
 import io.sphere.sdk.customobjects.CustomObjectDraft;
 import io.sphere.sdk.customobjects.commands.CustomObjectUpsertCommand;
@@ -57,6 +64,12 @@ import io.sphere.sdk.producttypes.ProductTypeDraft;
 import io.sphere.sdk.producttypes.ProductTypeDraftBuilder;
 import io.sphere.sdk.producttypes.commands.ProductTypeCreateCommand;
 import io.sphere.sdk.queries.PagedQueryResult;
+import io.sphere.sdk.states.State;
+import io.sphere.sdk.states.StateDraft;
+import io.sphere.sdk.states.StateDraftBuilder;
+import io.sphere.sdk.states.StateType;
+import io.sphere.sdk.states.commands.StateCreateCommand;
+import java.util.Collections;
 import javax.annotation.Nonnull;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -77,6 +90,8 @@ class ProductSyncWithNestedReferencesIT {
   private static final String MAIN_PRODUCT_MASTER_VARIANT_KEY = "main-product-master-variant-key";
   private static final String MAIN_PRODUCT_KEY = "product-with-nested";
   private static final String NESTED_ATTRIBUTE_NAME = "nested-attribute";
+  private static final String STATE_KEY = "state-key";
+  private static final String CUSTOMER_KEY = "customer-key";
 
   @BeforeEach
   void setup() {
@@ -117,6 +132,26 @@ class ProductSyncWithNestedReferencesIT {
             .attributeConstraint(AttributeConstraint.NONE)
             .build();
 
+    final AttributeDefinitionDraft setOfStateAttributeDef =
+        AttributeDefinitionDraftBuilder.of(
+                SetAttributeType.of(ReferenceAttributeType.of(State.referenceTypeId())),
+                "states",
+                ofEnglish("states"),
+                false)
+            .searchable(false)
+            .attributeConstraint(AttributeConstraint.NONE)
+            .build();
+
+    final AttributeDefinitionDraft setOfCustomerAttributeDef =
+        AttributeDefinitionDraftBuilder.of(
+                SetAttributeType.of(ReferenceAttributeType.of(Customer.referenceTypeId())),
+                "customers",
+                ofEnglish("customers"),
+                false)
+            .searchable(false)
+            .attributeConstraint(AttributeConstraint.NONE)
+            .build();
+
     final ProductTypeDraft nestedProductTypeDraft =
         ProductTypeDraftBuilder.of(
                 INNER_PRODUCT_TYPE_KEY,
@@ -127,7 +162,9 @@ class ProductSyncWithNestedReferencesIT {
                 asList(
                     setOfCategoriesAttributeDef,
                     setOfProductTypeAttributeDef,
-                    setOfCustomObjectAttributeDef))
+                    setOfCustomObjectAttributeDef,
+                    setOfStateAttributeDef,
+                    setOfCustomerAttributeDef))
             .build();
 
     final ProductType innerProductType =
@@ -172,6 +209,28 @@ class ProductSyncWithNestedReferencesIT {
             .toCompletableFuture()
             .join();
 
+    final StateDraft stateDraft =
+        StateDraftBuilder.of(STATE_KEY, StateType.PRODUCT_STATE)
+            .roles(Collections.emptySet())
+            .description(ofEnglish("states"))
+            .name(ofEnglish("states"))
+            .initial(true)
+            .transitions(Collections.emptySet())
+            .build();
+
+    final State state =
+        sourceProjectClient.execute(StateCreateCommand.of(stateDraft)).toCompletableFuture().join();
+
+    final CustomerDraft customerDraft =
+        CustomerDraftBuilder.of("test@email.com", "testPassword").key(CUSTOMER_KEY).build();
+
+    final CustomerSignInResult customerSignInResult =
+        sourceProjectClient
+            .execute(CustomerCreateCommand.of(customerDraft))
+            .toCompletableFuture()
+            .join();
+    final Customer customer = customerSignInResult.getCustomer();
+
     final ObjectNode customObjectValue =
         JsonNodeFactory.instance.objectNode().put("field", "value1");
 
@@ -214,6 +273,13 @@ class ProductSyncWithNestedReferencesIT {
     customObjectReferencesAttributeValue.add(
         createReferenceObject(CustomObject.referenceTypeId(), customObject2.getId()));
 
+    final ArrayNode stateReferenceAttributeValue = JsonNodeFactory.instance.arrayNode();
+    stateReferenceAttributeValue.add(createReferenceObject(State.referenceTypeId(), state.getId()));
+
+    final ArrayNode customerReferenceAttributeValue = JsonNodeFactory.instance.arrayNode();
+    customerReferenceAttributeValue.add(
+        createReferenceObject(Customer.referenceTypeId(), customer.getId()));
+
     nestedAttributeValue.add(
         createAttributeObject(
             setOfCategoriesAttributeDef.getName(), categoriesReferencesAttributeValue));
@@ -223,6 +289,11 @@ class ProductSyncWithNestedReferencesIT {
     nestedAttributeValue.add(
         createAttributeObject(
             setOfCustomObjectAttributeDef.getName(), customObjectReferencesAttributeValue));
+    nestedAttributeValue.add(
+        createAttributeObject(setOfStateAttributeDef.getName(), stateReferenceAttributeValue));
+    nestedAttributeValue.add(
+        createAttributeObject(
+            setOfCustomerAttributeDef.getName(), customerReferenceAttributeValue));
 
     setAttributeValue.add(nestedAttributeValue);
 
@@ -276,9 +347,9 @@ class ProductSyncWithNestedReferencesIT {
     assertInventoryEntrySyncerLoggingEvents(syncerTestLogger, 0);
     assertCartDiscountSyncerLoggingEvents(syncerTestLogger, 0);
     assertStateSyncerLoggingEvents(
-        syncerTestLogger, 1); // 1 state is built-in and it will always be processed
+        syncerTestLogger, 2); // 1 state is built-in and it will always be processed
     assertCustomObjectSyncerLoggingEvents(syncerTestLogger, 2);
-    assertCustomerSyncerLoggingEvents(syncerTestLogger, 0);
+    assertCustomerSyncerLoggingEvents(syncerTestLogger, 1);
     assertShoppingListSyncerLoggingEvents(syncerTestLogger, 0);
     // Every sync module is expected to have 2 logs (start and stats summary)
     assertThat(syncerTestLogger.getAllLoggingEvents()).hasSize(22);
@@ -292,6 +363,8 @@ class ProductSyncWithNestedReferencesIT {
     assertProductTypeExists(targetClient, INNER_PRODUCT_TYPE_KEY);
     final ProductType productType = assertProductTypeExists(targetClient, MAIN_PRODUCT_TYPE_KEY);
     final Category category = assertCategoryExists(targetClient, CATEGORY_KEY);
+    final State state = assertStateExists(targetClient, STATE_KEY);
+    final Customer customer = assertCustomerExists(targetClient, CUSTOMER_KEY);
 
     final PagedQueryResult<Product> productQueryResult =
         targetClient.execute(ProductQuery.of()).toCompletableFuture().join();
@@ -317,7 +390,7 @@ class ProductSyncWithNestedReferencesIT {
                         final JsonNode nestedAttributeElement = attributeValueAsArray.get(0);
                         assertThat(nestedAttributeElement).isExactlyInstanceOf(ArrayNode.class);
                         final ArrayNode nestedTypeAttributes = (ArrayNode) nestedAttributeElement;
-                        assertThat(nestedTypeAttributes).hasSize(3);
+                        assertThat(nestedTypeAttributes).hasSize(5);
 
                         assertThat(nestedTypeAttributes.get(0).get("name").asText())
                             .isEqualTo("categories");
@@ -352,6 +425,32 @@ class ProductSyncWithNestedReferencesIT {
                         final ArrayNode customObjectReferences =
                             (ArrayNode) (nestedTypeAttributes.get(2).get("value"));
                         assertThat(customObjectReferences).hasSize(2);
+
+                        assertThat(nestedTypeAttributes.get(3).get("name").asText())
+                            .isEqualTo("states");
+                        assertThat(nestedTypeAttributes.get(3).get("value"))
+                            .isExactlyInstanceOf(ArrayNode.class);
+                        final ArrayNode stateReferences =
+                            (ArrayNode) (nestedTypeAttributes.get(3).get("value"));
+                        assertThat(stateReferences)
+                            .singleElement()
+                            .satisfies(
+                                stateReference ->
+                                    assertThat(stateReference.get("id").asText())
+                                        .isEqualTo(state.getId()));
+
+                        assertThat(nestedTypeAttributes.get(4).get("name").asText())
+                            .isEqualTo("customers");
+                        assertThat(nestedTypeAttributes.get(4).get("value"))
+                            .isExactlyInstanceOf(ArrayNode.class);
+                        final ArrayNode customerReferences =
+                            (ArrayNode) (nestedTypeAttributes.get(4).get("value"));
+                        assertThat(customerReferences)
+                            .singleElement()
+                            .satisfies(
+                                customerReference ->
+                                    assertThat(customerReference.get("id").asText())
+                                        .isEqualTo(customer.getId()));
                       });
             });
   }
