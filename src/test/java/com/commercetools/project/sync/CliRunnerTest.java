@@ -331,7 +331,7 @@ class CliRunnerTest {
         .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
 
     final String customQuery =
-        "\"published=true AND masterData(masterVariant(attributes(name= \\\"abc\\\" AND value=123)))\"";
+        "\"published=true AND masterVariant(attributes(name= \\\"abc\\\" AND value=123))\"";
     final String productQueryParametersValue = "{\"where\": " + customQuery + "}";
 
     final SyncerFactory syncerFactory =
@@ -361,7 +361,7 @@ class CliRunnerTest {
 
     final Long limit = 100L;
     final String customQuery =
-        "\"published=true AND masterData(masterVariant(attributes(name= \"abc\\\" AND value=123)))\"";
+        "\"published=true AND masterVariant(attributes(name= \"abc\\\" AND value=123))\"";
     final String productQueryParametersValue =
         "{\"limit\": " + limit + ", \"where\": " + customQuery + "}";
 
@@ -403,7 +403,7 @@ class CliRunnerTest {
 
     final Long limit = -100L;
     final String customQuery =
-        "\"published=true AND masterData(masterVariant(attributes(name= \"abc\\\" AND value=123)))\"";
+        "\"published=true AND masterVariant(attributes(name= \"abc\\\" AND value=123))\"";
     final String productQueryParametersValue =
         "{\"limit\": " + limit + ", \"where\": " + customQuery + "}";
 

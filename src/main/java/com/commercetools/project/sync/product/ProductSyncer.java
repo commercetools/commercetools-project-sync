@@ -29,8 +29,10 @@ import io.sphere.sdk.products.commands.updateactions.Unpublish;
 import io.sphere.sdk.products.queries.ProductProjectionQuery;
 import io.sphere.sdk.queries.QueryPredicate;
 import java.time.Clock;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.CompletionStage;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -110,7 +112,23 @@ public final class ProductSyncer
   @Override
   protected CompletionStage<List<ProductDraft>> transform(@Nonnull List<ProductProjection> page) {
     final ReferenceIdToKeyCache referenceIdToKeyCache = new CaffeineReferenceIdToKeyCacheImpl();
-    return toProductDrafts(getSourceClient(), referenceIdToKeyCache, page);
+    return toProductDrafts(getSourceClient(), referenceIdToKeyCache, page)
+        .handle(
+            (productDrafts, throwable) -> {
+              if (throwable != null) {
+                LOGGER.warn(throwable.getMessage(), getCompletionExceptionCause(throwable));
+                return Collections.emptyList();
+              }
+              return productDrafts;
+            });
+  }
+
+  @Nonnull
+  private static Throwable getCompletionExceptionCause(@Nonnull final Throwable exception) {
+    if (exception instanceof CompletionException) {
+      return getCompletionExceptionCause(exception.getCause());
+    }
+    return exception;
   }
 
   @Nonnull

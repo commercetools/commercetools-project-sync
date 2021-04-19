@@ -10,12 +10,12 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.commercetools.project.sync.model.ProductSyncCustomRequest;
+import com.commercetools.sync.commons.exceptions.ReferenceTransformException;
 import com.commercetools.sync.commons.models.ResourceIdsGraphQlRequest;
 import com.commercetools.sync.commons.models.ResourceKeyIdGraphQlResult;
 import com.commercetools.sync.products.ProductSync;
 import com.fasterxml.jackson.databind.JsonNode;
 import io.sphere.sdk.client.BadGatewayException;
-import io.sphere.sdk.client.SphereApiConfig;
 import io.sphere.sdk.client.SphereClient;
 import io.sphere.sdk.commands.UpdateAction;
 import io.sphere.sdk.json.SphereJsonUtils;
@@ -160,94 +160,6 @@ class ProductSyncerTest {
   }
 
   @Test
-  void
-      transform_WithIrresolvableAttributeReferences_ShouldSkipProductsWithIrresolvableReferences() {
-    // preparation
-    final SphereClient sourceClient = mock(SphereClient.class);
-    when(sourceClient.getConfig()).thenReturn(SphereApiConfig.of("test-project"));
-    final ProductSyncer productSyncer =
-        ProductSyncer.of(sourceClient, mock(SphereClient.class), getMockedClock(), null);
-    final List<ProductProjection> productPage =
-        asList(
-            readObjectFromResource("product-key-1.json", Product.class)
-                .toProjection(ProductProjectionType.STAGED),
-            readObjectFromResource("product-key-2.json", Product.class)
-                .toProjection(ProductProjectionType.STAGED));
-
-    String jsonStringProducts =
-        "{\"results\":[{\"id\":\"53c4a8b4-754f-4b95-b6f2-3e1e70e3d0c1\"," + "\"key\":\"prod1\"}]}";
-    final ResourceKeyIdGraphQlResult productsResult =
-        SphereJsonUtils.readObject(jsonStringProducts, ResourceKeyIdGraphQlResult.class);
-
-    String jsonStringProductTypes =
-        "{\"results\":[{\"id\":\"53c4a8b4-754f-4b95-b6f2-3e1e70e3d0c2\","
-            + "\"key\":\"prodType1\"}]}";
-    final ResourceKeyIdGraphQlResult productTypesResult =
-        SphereJsonUtils.readObject(jsonStringProductTypes, ResourceKeyIdGraphQlResult.class);
-
-    String jsonStringCategories =
-        "{\"results\":[{\"id\":\"53c4a8b4-754f-4b95-b6f2-3e1e70e3d0c3\"," + "\"key\":\"cat1\"}]}";
-    final ResourceKeyIdGraphQlResult categoriesResult =
-        SphereJsonUtils.readObject(jsonStringCategories, ResourceKeyIdGraphQlResult.class);
-
-    when(sourceClient.execute(any(ResourceIdsGraphQlRequest.class)))
-        .thenReturn(CompletableFuture.completedFuture(productsResult))
-        .thenReturn(CompletableFuture.completedFuture(categoriesResult))
-        .thenReturn(CompletableFuture.completedFuture(productTypesResult));
-
-    // test
-    final List<ProductDraft> draftsFromPageStage =
-        productSyncer.transform(productPage).toCompletableFuture().join();
-
-    // assertions
-    assertThat(draftsFromPageStage).hasSize(1);
-    assertThat(draftsFromPageStage)
-        .anySatisfy(
-            productDraft ->
-                assertThat(productDraft.getMasterVariant().getAttributes())
-                    .anySatisfy(
-                        attributeDraft -> {
-                          assertThat(attributeDraft.getName()).isEqualTo("productReference");
-                          assertThat(attributeDraft.getValue().get("id").asText())
-                              .isEqualTo("prod1");
-                        }));
-
-    assertThat(draftsFromPageStage)
-        .anySatisfy(
-            productDraft ->
-                assertThat(productDraft.getMasterVariant().getAttributes())
-                    .anySatisfy(
-                        attributeDraft -> {
-                          assertThat(attributeDraft.getName()).isEqualTo("categoryReference");
-                          assertThat(attributeDraft.getValue().get("id").asText())
-                              .isEqualTo("cat1");
-                        }));
-
-    assertThat(draftsFromPageStage)
-        .anySatisfy(
-            productDraft ->
-                assertThat(productDraft.getMasterVariant().getAttributes())
-                    .anySatisfy(
-                        attributeDraft -> {
-                          assertThat(attributeDraft.getName()).isEqualTo("productTypeReference");
-                          assertThat(attributeDraft.getValue().get("id").asText())
-                              .isEqualTo("prodType1");
-                        }));
-
-    assertThat(testLogger.getAllLoggingEvents())
-        .anySatisfy(
-            loggingEvent ->
-                assertThat(loggingEvent.getMessage())
-                    .contains(
-                        "The product with id 'ba81a6da-cf83-435b-a89e-2afab579846f' on the source project ('test-project') "
-                            + "will not be synced because it has the following reference attribute(s): \n"
-                            + "[{\"id\":\"53c4a8b4-754f-4b95-b6f2-3e1e70e3d0c5\",\"typeId\":\"product\"}, "
-                            + "{\"id\":\"53c4a8b4-754f-4b95-b6f2-3e1e70e3d0c4\",\"typeId\":\"category\"}].\n"
-                            + "These references are either pointing to a non-existent resource or to an existing one but with a blank key. "
-                            + "Please make sure these referenced resources are existing and have non-blank (i.e. non-null and non-empty) keys."));
-  }
-
-  @Test
   void transform_WithErrorOnGraphQlRequest_ShouldContinueAndLogError() {
     // preparation
     final SphereClient sourceClient = mock(SphereClient.class);
@@ -276,10 +188,13 @@ class ProductSyncerTest {
             loggingEvent -> {
               assertThat(loggingEvent.getMessage())
                   .contains(
-                      "Failed to replace referenced resource ids with keys on the"
-                          + " attributes of the products in the current fetched page from the source project.");
+                      ReferenceTransformException.class.getCanonicalName()
+                          + ": Failed to replace referenced resource ids with keys on the attributes of the "
+                          + "products in the current fetched page from the source project. "
+                          + "This page will not be synced to the target project.");
               assertThat(loggingEvent.getThrowable().isPresent()).isTrue();
-              assertThat(loggingEvent.getThrowable().get()).isEqualTo(badGatewayException);
+              assertThat(loggingEvent.getThrowable().get().getCause().getCause())
+                  .isEqualTo(badGatewayException);
             });
   }
 

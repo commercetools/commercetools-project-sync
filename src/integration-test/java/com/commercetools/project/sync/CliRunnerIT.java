@@ -864,8 +864,7 @@ class CliRunnerIT {
   void
       run_WithSyncAsArgumentWithAllArgAsFullSyncAndWithCustomQueryAndLimitForProducts_ShouldExecuteAllSyncers() {
     final Long limit = 100L;
-    final String customQuery =
-        "\"masterData(published=true) AND masterData(staged(masterVariant(key= \\\"foo\\\")))\"";
+    final String customQuery = "\"published=true AND masterVariant(key= \\\"foo\\\")\"";
     final String productQueryParametersValue =
         "{\"limit\": " + limit + ", \"where\": " + customQuery + "}";
 

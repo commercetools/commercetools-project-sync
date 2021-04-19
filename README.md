@@ -111,8 +111,8 @@ As of now, these are the supported resources:
        --productQueryParameters         Pass your customized product fetch limit
                                         and a product predicate to filter product 
                                         resources to sync in the JSON format. 
-                                        Example: "{\"limit\": 100, \"where\": \"masterData
-                                        (published=true)\"}" could be used to fetch 
+                                        Example: "{\"limit\": 100, \"where\": \"
+                                        published=true\"}" could be used to fetch 
                                         only published products to sync and limit 
                                         max 100 elements in one page.                
     -v,--version                        Print the version of the application.
@@ -181,7 +181,7 @@ You might pass your customized product fetch limit, and a product predicate to f
 For instance:
 
 ```bash
--s products -productQueryParameters "{\"limit\": 100, \"where\": \"masterData(published=true) AND masterData(staged(masterVariant(attributes(name=\\\"attribute-name\\\" and value=\\\"attribute-value\\\"))))\"}"
+-s products -productQueryParameters "{\"limit\": 100, \"where\": \"published=true AND masterVariant(attributes(name=\\\"attribute-name\\\" and value=\\\"attribute-value\\\"))\"}"
 ```
 
 Predicates provide a way for complex filter expressions when querying resources. Refer commercetools docs for more details.
@@ -189,7 +189,7 @@ Predicates provide a way for complex filter expressions when querying resources.
 Note: The value of the productQueryParameters argument should be in JSON format and as shown in the above example, please use escape character \ for the nested double quote values.
 Example: 
 ```bash
--s products -productQueryParameters "{\"limit\": 100, \"where\": \"masterData(published=true) AND masterData(staged(masterVariant(key= \\\"variantKey\\\")))\"}"
+-s products -productQueryParameters "{\"limit\": 100, \"where\": \"published=true AND masterVariant(key= \\\"variantKey\\\")\"}"
 ```
 
 #### Running the Docker Image
