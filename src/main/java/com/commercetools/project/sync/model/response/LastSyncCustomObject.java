@@ -1,8 +1,10 @@
 package com.commercetools.project.sync.model.response;
 
+import com.commercetools.project.sync.BaseSyncStatisticsDeserializer;
 import com.commercetools.project.sync.util.SyncUtils;
 import com.commercetools.sync.commons.helpers.BaseSyncStatistics;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import java.time.ZonedDateTime;
 import java.util.Objects;
 import javax.annotation.Nonnull;
@@ -95,11 +97,10 @@ public final class LastSyncCustomObject<T extends BaseSyncStatistics> {
     this.lastSyncTimestamp = lastSyncTimestamp;
   }
 
-  // TODO: Implement a setter for lastSyncStatistics too to be able to deserialize statisitcs. It
-  // needs a
-  // customized deserializer for because BaseSyncStatistics is an abstract class:
-  // https://www.baeldung.com/jackson-inheritance
-  // https://github.com/commercetools/commercetools-project-sync/issues/27
+  @JsonDeserialize(using = BaseSyncStatisticsDeserializer.class)
+  public void setLastSyncStatistics(T lastSyncStatistics) {
+    this.lastSyncStatistics = lastSyncStatistics;
+  }
 
   public void setApplicationVersion(@Nonnull final String applicationVersion) {
     this.applicationVersion = applicationVersion;
