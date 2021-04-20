@@ -134,7 +134,6 @@ public final class ProductSyncer
   @Nonnull
   @Override
   protected ProductProjectionQuery getQuery() {
-    // TODO (ahmetoz) adapt queries to projection.
     ProductSyncCustomRequest customRequest = this.productSyncCustomRequest;
     ProductProjectionQuery productQuery = ProductProjectionQuery.ofStaged();
     if (customRequest == null) {
