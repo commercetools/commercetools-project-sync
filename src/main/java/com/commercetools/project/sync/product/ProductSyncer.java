@@ -24,8 +24,6 @@ import io.sphere.sdk.models.WithKey;
 import io.sphere.sdk.products.Product;
 import io.sphere.sdk.products.ProductDraft;
 import io.sphere.sdk.products.ProductProjection;
-import io.sphere.sdk.products.commands.updateactions.Publish;
-import io.sphere.sdk.products.commands.updateactions.Unpublish;
 import io.sphere.sdk.products.queries.ProductProjectionQuery;
 import io.sphere.sdk.queries.QueryPredicate;
 import java.time.Clock;
@@ -92,7 +90,6 @@ public final class ProductSyncer
         ProductSyncOptionsBuilder.of(targetClient)
             .errorCallback(logErrorCallback)
             .warningCallback(logWarningCallback)
-            .beforeUpdateCallback(ProductSyncer::appendPublishIfPublished)
             .build();
 
     final ProductSync productSync = new ProductSync(syncOptions);
@@ -147,52 +144,5 @@ public final class ProductSyncer
     }
 
     return productQuery;
-  }
-
-  /**
-   * Used for the beforeUpdateCallback of the sync. When an {@code targetProduct} is updated, this
-   * method will add a {@link Publish} update action to the list of update actions, only if the
-   * {@code targetProduct} has the published field set to true and has new update actions (not
-   * containing a publish action nor an unpublish action). Which means that it will publish the
-   * staged changes caused by the {@code updateActions} if it was already published.
-   *
-   * @param updateActions update actions needed to sync {@code srcProductDraft} to {@code
-   *     targetProduct}.
-   * @param srcProductDraft the source product draft with the changes.
-   * @param targetProduct the target product to be updated.
-   * @return the same list of update actions with a publish update action added, if there are staged
-   *     changes that should be published.
-   */
-  @Nonnull
-  static List<UpdateAction<Product>> appendPublishIfPublished(
-      @Nonnull final List<UpdateAction<Product>> updateActions,
-      @Nonnull final ProductDraft srcProductDraft,
-      @Nonnull final ProductProjection targetProduct) {
-
-    // TODO: (ahmetoz) adapt queries.
-    // Also not sure about this action, it might be already added to java-sync, please check this:
-    // https://github.com/commercetools/commercetools-sync-java/blob/master/docs/RELEASE_NOTES.md#191----aug-5-2020
-    if (!updateActions.isEmpty()
-        && targetProduct.isPublished()
-        && doesNotContainPublishOrUnPublishActions(updateActions)) {
-
-      updateActions.add(Publish.of());
-    }
-
-    return updateActions;
-  }
-
-  private static boolean doesNotContainPublishOrUnPublishActions(
-      @Nonnull final List<UpdateAction<Product>> updateActions) {
-
-    final Publish publishAction = Publish.of();
-    final Unpublish unpublishAction = Unpublish.of();
-
-    return updateActions
-        .stream()
-        .noneMatch(
-            action ->
-                publishAction.getAction().equals(action.getAction())
-                    || unpublishAction.getAction().equals(action.getAction()));
   }
 }

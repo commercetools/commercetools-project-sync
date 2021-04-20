@@ -2,7 +2,6 @@ package com.commercetools.project.sync.product;
 
 import static com.commercetools.project.sync.util.TestUtils.getMockedClock;
 import static io.sphere.sdk.json.SphereJsonUtils.readObjectFromResource;
-import static io.sphere.sdk.models.LocalizedString.ofEnglish;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -17,20 +16,14 @@ import com.commercetools.sync.products.ProductSync;
 import com.fasterxml.jackson.databind.JsonNode;
 import io.sphere.sdk.client.BadGatewayException;
 import io.sphere.sdk.client.SphereClient;
-import io.sphere.sdk.commands.UpdateAction;
 import io.sphere.sdk.json.SphereJsonUtils;
 import io.sphere.sdk.products.Product;
-import io.sphere.sdk.products.ProductCatalogData;
 import io.sphere.sdk.products.ProductDraft;
 import io.sphere.sdk.products.ProductProjection;
 import io.sphere.sdk.products.ProductProjectionType;
-import io.sphere.sdk.products.commands.updateactions.ChangeName;
-import io.sphere.sdk.products.commands.updateactions.Publish;
-import io.sphere.sdk.products.commands.updateactions.Unpublish;
 import io.sphere.sdk.products.queries.ProductProjectionQuery;
 import io.sphere.sdk.queries.QueryPredicate;
 import io.sphere.sdk.utils.CompletableFutureUtils;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -236,110 +229,5 @@ class ProductSyncerTest {
     // assertion
     assertThat(query.limit()).isEqualTo(100);
     assertThat(query.predicates()).contains(QueryPredicate.of(customQuery));
-  }
-
-  @Test
-  void appendPublishIfPublished_WithPublishedProductAndEmptyActions_ShouldNotAppendPublish() {
-    final ProductCatalogData masterData = mock(ProductCatalogData.class);
-    when(masterData.isPublished()).thenReturn(true);
-
-    final ProductProjection product =
-        mock(Product.class).toProjection(ProductProjectionType.STAGED);
-
-    final List<UpdateAction<Product>> newUpdateActions =
-        ProductSyncer.appendPublishIfPublished(
-            new ArrayList<>(), mock(ProductDraft.class), product);
-
-    assertThat(newUpdateActions).isEmpty();
-  }
-
-  @Test
-  void appendPublishIfPublished_WithPublishedProductAndNonEmptyActions_ShouldAppendPublish() {
-    final ProductProjection product = mock(ProductProjection.class);
-    when(product.isPublished()).thenReturn(true);
-
-    final ArrayList<UpdateAction<Product>> updateActions = new ArrayList<>();
-    updateActions.add(ChangeName.of(ofEnglish("foo")));
-
-    final List<UpdateAction<Product>> newUpdateActions =
-        ProductSyncer.appendPublishIfPublished(updateActions, mock(ProductDraft.class), product);
-
-    assertThat(newUpdateActions).hasSize(2);
-    assertThat(newUpdateActions.get(1)).isEqualTo(Publish.of());
-  }
-
-  @Test
-  void appendPublishIfPublished_WithUnPublishedProductAndEmptyActions_ShouldNotAppendPublish() {
-    final ProductCatalogData masterData = mock(ProductCatalogData.class);
-    when(masterData.isPublished()).thenReturn(false);
-
-    final ProductProjection product =
-        mock(Product.class).toProjection(ProductProjectionType.STAGED);
-
-    final List<UpdateAction<Product>> newUpdateActions =
-        ProductSyncer.appendPublishIfPublished(
-            new ArrayList<>(), mock(ProductDraft.class), product);
-
-    assertThat(newUpdateActions).isEmpty();
-  }
-
-  @Test
-  void appendPublishIfPublished_WithUnPublishedProductAndNonEmptyActions_ShouldNotAppendPublish() {
-    final ProductProjection product = mock(ProductProjection.class);
-    when(product.isPublished()).thenReturn(false);
-
-    final ArrayList<UpdateAction<Product>> updateActions = new ArrayList<>();
-    updateActions.add(ChangeName.of(ofEnglish("foo")));
-
-    final List<UpdateAction<Product>> newUpdateActions =
-        ProductSyncer.appendPublishIfPublished(updateActions, mock(ProductDraft.class), product);
-
-    assertThat(newUpdateActions).hasSize(1);
-    assertThat(newUpdateActions.get(0)).isEqualTo(ChangeName.of(ofEnglish("foo")));
-  }
-
-  @Test
-  void appendPublishIfPublished_WithPublishedProductAndOnePublish_ShouldNotAppendPublish() {
-    final ProductProjection product = mock(ProductProjection.class);
-    when(product.isPublished()).thenReturn(true);
-
-    final ArrayList<UpdateAction<Product>> updateActions = new ArrayList<>();
-    updateActions.add(Publish.of());
-
-    final List<UpdateAction<Product>> newUpdateActions =
-        ProductSyncer.appendPublishIfPublished(updateActions, mock(ProductDraft.class), product);
-
-    assertThat(newUpdateActions).hasSize(1);
-    assertThat(newUpdateActions.get(0)).isEqualTo(Publish.of());
-  }
-
-  @Test
-  void appendPublishIfPublished_WithUnPublishedProductAndOnePublishAction_ShouldNotAppendPublish() {
-    final ProductProjection product = mock(ProductProjection.class);
-    when(product.isPublished()).thenReturn(false);
-
-    final ArrayList<UpdateAction<Product>> updateActions = new ArrayList<>();
-    updateActions.add(Publish.of());
-
-    final List<UpdateAction<Product>> newUpdateActions =
-        ProductSyncer.appendPublishIfPublished(updateActions, mock(ProductDraft.class), product);
-
-    assertThat(newUpdateActions).hasSize(1);
-    assertThat(newUpdateActions.get(0)).isEqualTo(Publish.of());
-  }
-
-  @Test
-  void appendPublishIfPublished_WithPublishedProductAndOneUnPublishAction_ShouldNotAppendPublish() {
-    final ProductProjection product = mock(ProductProjection.class);
-    when(product.isPublished()).thenReturn(true);
-
-    final ArrayList<UpdateAction<Product>> updateActions = new ArrayList<>();
-    updateActions.add(Unpublish.of());
-
-    final List<UpdateAction<Product>> newUpdateActions =
-        ProductSyncer.appendPublishIfPublished(updateActions, mock(ProductDraft.class), product);
-
-    assertThat(newUpdateActions).hasSize(1);
-    assertThat(newUpdateActions.get(0)).isEqualTo(Unpublish.of());
   }
 }
