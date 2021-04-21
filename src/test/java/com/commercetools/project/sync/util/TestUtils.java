@@ -12,11 +12,14 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import com.commercetools.project.sync.model.response.LastSyncCustomObject;
+import com.commercetools.sync.commons.models.ResourceIdsGraphQlRequest;
+import com.commercetools.sync.commons.models.ResourceKeyIdGraphQlResult;
 import com.commercetools.sync.products.helpers.ProductSyncStatistics;
 import io.sphere.sdk.client.SphereClient;
 import io.sphere.sdk.customobjects.CustomObject;
 import io.sphere.sdk.customobjects.commands.CustomObjectUpsertCommand;
 import io.sphere.sdk.customobjects.queries.CustomObjectQuery;
+import io.sphere.sdk.json.SphereJsonUtils;
 import io.sphere.sdk.queries.PagedQueryResult;
 import java.time.Clock;
 import java.time.ZonedDateTime;
@@ -251,6 +254,16 @@ public final class TestUtils {
     final Clock clock = mock(Clock.class);
     when(clock.millis()).thenReturn(0L);
     return clock;
+  }
+
+  public static void mockResourceIdsGraphQlRequest(SphereClient client, String id, String key) {
+    final String jsonResponseString =
+        "{\"results\":[{\"id\":\"" + id + "\"," + "\"key\":\"" + key + "\"}]}";
+    final ResourceKeyIdGraphQlResult result =
+        SphereJsonUtils.readObject(jsonResponseString, ResourceKeyIdGraphQlResult.class);
+
+    when(client.execute(any(ResourceIdsGraphQlRequest.class)))
+        .thenReturn(CompletableFuture.completedFuture(result));
   }
 
   private TestUtils() {}

@@ -1,13 +1,12 @@
 package com.commercetools.project.sync.shoppinglist;
 
+import static com.commercetools.project.sync.util.TestUtils.mockResourceIdsGraphQlRequest;
 import static io.sphere.sdk.json.SphereJsonUtils.readObjectFromResource;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import com.commercetools.sync.commons.models.ResourceIdsGraphQlRequest;
-import com.commercetools.sync.commons.models.ResourceKeyIdGraphQlResult;
 import com.commercetools.sync.commons.utils.CaffeineReferenceIdToKeyCacheImpl;
 import com.commercetools.sync.commons.utils.ReferenceIdToKeyCache;
 import com.commercetools.sync.shoppinglists.ShoppingListSync;
@@ -15,7 +14,6 @@ import com.commercetools.sync.shoppinglists.utils.ShoppingListTransformUtils;
 import io.sphere.sdk.client.SphereApiConfig;
 import io.sphere.sdk.client.SphereClient;
 import io.sphere.sdk.expansion.ExpansionPath;
-import io.sphere.sdk.json.SphereJsonUtils;
 import io.sphere.sdk.queries.PagedQueryResult;
 import io.sphere.sdk.shoppinglists.ShoppingList;
 import io.sphere.sdk.shoppinglists.ShoppingListDraft;
@@ -63,7 +61,8 @@ class ShoppingListSyncerTest {
     final List<ShoppingList> shoppingList =
         Collections.singletonList(readObjectFromResource("shopping-list.json", ShoppingList.class));
 
-    mockSourceClient(sourceClient);
+    mockResourceIdsGraphQlRequest(
+        sourceClient, "5ebfa80e-f4aa-4c0b-be64-e348e09a855a", "customTypeKey");
 
     // test
     final CompletionStage<List<ShoppingListDraft>> draftsFromPageStage =
@@ -75,17 +74,6 @@ class ShoppingListSyncerTest {
             ShoppingListTransformUtils.toShoppingListDrafts(
                     sourceClient, referenceIdToKeyCache, shoppingList)
                 .join());
-  }
-
-  private void mockSourceClient(SphereClient sourceClient) {
-    final String jsonStringCustomTypes =
-        "{\"results\":[{\"id\":\"5ebfa80e-f4aa-4c0b-be64-e348e09a855a\","
-            + "\"key\":\"customTypeKey\"} ]}";
-    final ResourceKeyIdGraphQlResult customTypesResult =
-        SphereJsonUtils.readObject(jsonStringCustomTypes, ResourceKeyIdGraphQlResult.class);
-
-    when(sourceClient.execute(any(ResourceIdsGraphQlRequest.class)))
-        .thenReturn(CompletableFuture.completedFuture(customTypesResult));
   }
 
   @Test
@@ -115,7 +103,8 @@ class ShoppingListSyncerTest {
     when(sourceClient.execute(any(ShoppingListQuery.class)))
         .thenReturn(CompletableFuture.completedFuture(pagedQueryResult));
 
-    mockSourceClient(sourceClient);
+    mockResourceIdsGraphQlRequest(
+        sourceClient, "5ebfa80e-f4aa-4c0b-be64-e348e09a855a", "customTypeKey");
 
     // test
     final ShoppingListSyncer shoppingListSyncer =
