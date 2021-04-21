@@ -131,16 +131,16 @@ public final class ProductSyncer
   @Nonnull
   @Override
   protected ProductProjectionQuery getQuery() {
-    ProductSyncCustomRequest customRequest = this.productSyncCustomRequest;
     ProductProjectionQuery productQuery = ProductProjectionQuery.ofStaged();
-    if (customRequest == null) {
+    if (productSyncCustomRequest == null) {
       return productQuery;
     }
-    if (null != customRequest.getLimit()) {
-      productQuery = productQuery.withLimit(customRequest.getLimit());
+    if (null != productSyncCustomRequest.getLimit()) {
+      productQuery = productQuery.withLimit(productSyncCustomRequest.getLimit());
     }
-    if (null != customRequest.getWhere()) {
-      productQuery = productQuery.withPredicates(QueryPredicate.of(customRequest.getWhere()));
+    if (null != productSyncCustomRequest.getWhere()) {
+      productQuery =
+          productQuery.withPredicates(QueryPredicate.of(productSyncCustomRequest.getWhere()));
     }
 
     return productQuery;
