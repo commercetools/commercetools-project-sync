@@ -109,8 +109,8 @@ As of now, these are the supported resources:
        --syncProjectSyncCustomObjects   Sync custom objects that were created
                                         with project sync (this application).
        --productQueryParameters         Pass your customized product fetch limit
-                                        and a product predicate to filter product 
-                                        resources to sync in the JSON format. 
+                                        and a product projection predicate to filter  
+                                        product resources to sync in the JSON format. 
                                         Example: "{\"limit\": 100, \"where\": \"
                                         published=true\"}" could be used to fetch 
                                         only published products to sync and limit 
@@ -176,7 +176,7 @@ the  `-s` option with `types productTypes` as below:
 
 #### Running ProductSync with custom product query parameters
 
-You might pass your customized product fetch limit, and a product predicate to filter product resources to sync in the JSON format.
+You might pass your customized product fetch limit, and a product projection predicate to filter product resources to sync in the JSON format.
 
 For instance:
 
