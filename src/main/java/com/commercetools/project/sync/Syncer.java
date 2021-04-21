@@ -62,8 +62,9 @@ public abstract class Syncer<
 
   private static final Logger LOGGER = LoggerFactory.getLogger(Syncer.class);
 
-  // Using default Caffeine cache implementation from the library for caching reference IdToKey
-  // values.
+  /* Using default Caffeine cache implementation from sync-java library for caching reference
+   * IdToKey values.
+   */
   protected static final ReferenceIdToKeyCache referenceIdToKeyCache =
       new CaffeineReferenceIdToKeyCacheImpl();
 
