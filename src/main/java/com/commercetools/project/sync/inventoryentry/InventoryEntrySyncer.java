@@ -9,9 +9,7 @@ import com.commercetools.project.sync.Syncer;
 import com.commercetools.project.sync.service.CustomObjectService;
 import com.commercetools.project.sync.service.impl.CustomObjectServiceImpl;
 import com.commercetools.sync.commons.exceptions.SyncException;
-import com.commercetools.sync.commons.utils.CaffeineReferenceIdToKeyCacheImpl;
 import com.commercetools.sync.commons.utils.QuadConsumer;
-import com.commercetools.sync.commons.utils.ReferenceIdToKeyCache;
 import com.commercetools.sync.commons.utils.TriConsumer;
 import com.commercetools.sync.inventories.InventorySync;
 import com.commercetools.sync.inventories.InventorySyncOptions;
@@ -96,7 +94,6 @@ public final class InventoryEntrySyncer
   @Override
   protected CompletionStage<List<InventoryEntryDraft>> transform(
       @Nonnull final List<InventoryEntry> page) {
-    final ReferenceIdToKeyCache referenceIdToKeyCache = new CaffeineReferenceIdToKeyCacheImpl();
     return toInventoryEntryDrafts(getSourceClient(), referenceIdToKeyCache, page);
   }
 

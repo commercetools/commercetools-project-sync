@@ -10,6 +10,8 @@ import com.commercetools.project.sync.service.CustomObjectService;
 import com.commercetools.sync.commons.BaseSync;
 import com.commercetools.sync.commons.BaseSyncOptions;
 import com.commercetools.sync.commons.helpers.BaseSyncStatistics;
+import com.commercetools.sync.commons.utils.CaffeineReferenceIdToKeyCacheImpl;
+import com.commercetools.sync.commons.utils.ReferenceIdToKeyCache;
 import io.sphere.sdk.client.SphereClient;
 import io.sphere.sdk.customobjects.CustomObject;
 import io.sphere.sdk.models.ResourceView;
@@ -59,6 +61,11 @@ public abstract class Syncer<
     B extends BaseSync<RD, S, O>> {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(Syncer.class);
+
+  // Using default Caffeine cache implementation from the library for caching reference IdToKey
+  // values.
+  protected static final ReferenceIdToKeyCache referenceIdToKeyCache =
+      new CaffeineReferenceIdToKeyCacheImpl();
 
   private final B sync;
   private final SphereClient sourceClient;

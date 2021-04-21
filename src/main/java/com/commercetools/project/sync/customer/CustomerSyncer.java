@@ -8,9 +8,7 @@ import com.commercetools.project.sync.Syncer;
 import com.commercetools.project.sync.service.CustomObjectService;
 import com.commercetools.project.sync.service.impl.CustomObjectServiceImpl;
 import com.commercetools.sync.commons.exceptions.SyncException;
-import com.commercetools.sync.commons.utils.CaffeineReferenceIdToKeyCacheImpl;
 import com.commercetools.sync.commons.utils.QuadConsumer;
-import com.commercetools.sync.commons.utils.ReferenceIdToKeyCache;
 import com.commercetools.sync.commons.utils.TriConsumer;
 import com.commercetools.sync.customers.CustomerSync;
 import com.commercetools.sync.customers.CustomerSyncOptions;
@@ -82,7 +80,6 @@ public final class CustomerSyncer
   @Nonnull
   @Override
   protected CompletionStage<List<CustomerDraft>> transform(@Nonnull final List<Customer> page) {
-    final ReferenceIdToKeyCache referenceIdToKeyCache = new CaffeineReferenceIdToKeyCacheImpl();
     return toCustomerDrafts(getSourceClient(), referenceIdToKeyCache, page);
   }
 

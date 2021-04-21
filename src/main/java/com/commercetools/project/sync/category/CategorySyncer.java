@@ -12,9 +12,7 @@ import com.commercetools.sync.categories.CategorySyncOptions;
 import com.commercetools.sync.categories.CategorySyncOptionsBuilder;
 import com.commercetools.sync.categories.helpers.CategorySyncStatistics;
 import com.commercetools.sync.commons.exceptions.SyncException;
-import com.commercetools.sync.commons.utils.CaffeineReferenceIdToKeyCacheImpl;
 import com.commercetools.sync.commons.utils.QuadConsumer;
-import com.commercetools.sync.commons.utils.ReferenceIdToKeyCache;
 import com.commercetools.sync.commons.utils.TriConsumer;
 import io.sphere.sdk.categories.Category;
 import io.sphere.sdk.categories.CategoryDraft;
@@ -84,7 +82,6 @@ public final class CategorySyncer
   @Override
   @Nonnull
   protected CompletionStage<List<CategoryDraft>> transform(@Nonnull final List<Category> page) {
-    final ReferenceIdToKeyCache referenceIdToKeyCache = new CaffeineReferenceIdToKeyCacheImpl();
     return toCategoryDrafts(getSourceClient(), referenceIdToKeyCache, page);
   }
 

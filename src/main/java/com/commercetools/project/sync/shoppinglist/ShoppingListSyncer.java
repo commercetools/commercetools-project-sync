@@ -10,9 +10,7 @@ import com.commercetools.project.sync.Syncer;
 import com.commercetools.project.sync.service.CustomObjectService;
 import com.commercetools.project.sync.service.impl.CustomObjectServiceImpl;
 import com.commercetools.sync.commons.exceptions.SyncException;
-import com.commercetools.sync.commons.utils.CaffeineReferenceIdToKeyCacheImpl;
 import com.commercetools.sync.commons.utils.QuadConsumer;
-import com.commercetools.sync.commons.utils.ReferenceIdToKeyCache;
 import com.commercetools.sync.commons.utils.TriConsumer;
 import com.commercetools.sync.shoppinglists.ShoppingListSync;
 import com.commercetools.sync.shoppinglists.ShoppingListSyncOptions;
@@ -97,7 +95,6 @@ public final class ShoppingListSyncer
   @Nonnull
   @Override
   protected CompletionStage<List<ShoppingListDraft>> transform(@Nonnull List<ShoppingList> page) {
-    final ReferenceIdToKeyCache referenceIdToKeyCache = new CaffeineReferenceIdToKeyCacheImpl();
     return toShoppingListDrafts(getSourceClient(), referenceIdToKeyCache, page);
   }
 

@@ -12,9 +12,7 @@ import com.commercetools.sync.cartdiscounts.CartDiscountSyncOptions;
 import com.commercetools.sync.cartdiscounts.CartDiscountSyncOptionsBuilder;
 import com.commercetools.sync.cartdiscounts.helpers.CartDiscountSyncStatistics;
 import com.commercetools.sync.commons.exceptions.SyncException;
-import com.commercetools.sync.commons.utils.CaffeineReferenceIdToKeyCacheImpl;
 import com.commercetools.sync.commons.utils.QuadConsumer;
-import com.commercetools.sync.commons.utils.ReferenceIdToKeyCache;
 import com.commercetools.sync.commons.utils.TriConsumer;
 import io.sphere.sdk.cartdiscounts.CartDiscount;
 import io.sphere.sdk.cartdiscounts.CartDiscountDraft;
@@ -87,7 +85,6 @@ public final class CartDiscountSyncer
   @Nonnull
   protected CompletionStage<List<CartDiscountDraft>> transform(
       @Nonnull final List<CartDiscount> page) {
-    final ReferenceIdToKeyCache referenceIdToKeyCache = new CaffeineReferenceIdToKeyCacheImpl();
     return toCartDiscountDrafts(getSourceClient(), referenceIdToKeyCache, page);
   }
 

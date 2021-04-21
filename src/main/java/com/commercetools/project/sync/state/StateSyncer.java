@@ -8,9 +8,7 @@ import com.commercetools.project.sync.Syncer;
 import com.commercetools.project.sync.service.CustomObjectService;
 import com.commercetools.project.sync.service.impl.CustomObjectServiceImpl;
 import com.commercetools.sync.commons.exceptions.SyncException;
-import com.commercetools.sync.commons.utils.CaffeineReferenceIdToKeyCacheImpl;
 import com.commercetools.sync.commons.utils.QuadConsumer;
-import com.commercetools.sync.commons.utils.ReferenceIdToKeyCache;
 import com.commercetools.sync.commons.utils.TriConsumer;
 import com.commercetools.sync.states.StateSync;
 import com.commercetools.sync.states.StateSyncOptions;
@@ -69,7 +67,6 @@ public final class StateSyncer
   @Nonnull
   @Override
   protected CompletionStage<List<StateDraft>> transform(@Nonnull List<State> states) {
-    final ReferenceIdToKeyCache referenceIdToKeyCache = new CaffeineReferenceIdToKeyCacheImpl();
     return toStateDrafts(getSourceClient(), referenceIdToKeyCache, states);
   }
 
