@@ -4,7 +4,7 @@ import static com.commercetools.project.sync.util.SyncUtils.IDENTIFIER_NOT_PRESE
 import static com.commercetools.project.sync.util.SyncUtils.logErrorCallback;
 import static com.commercetools.project.sync.util.SyncUtils.logWarningCallback;
 import static com.commercetools.sync.shoppinglists.utils.ShoppingListReferenceResolutionUtils.buildShoppingListQuery;
-import static com.commercetools.sync.shoppinglists.utils.ShoppingListReferenceResolutionUtils.mapToShoppingListDrafts;
+import static com.commercetools.sync.shoppinglists.utils.ShoppingListTransformUtils.toShoppingListDrafts;
 
 import com.commercetools.project.sync.Syncer;
 import com.commercetools.project.sync.service.CustomObjectService;
@@ -24,7 +24,6 @@ import io.sphere.sdk.shoppinglists.queries.ShoppingListQuery;
 import java.time.Clock;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import javax.annotation.Nonnull;
 import org.slf4j.Logger;
@@ -32,6 +31,7 @@ import org.slf4j.LoggerFactory;
 
 public final class ShoppingListSyncer
     extends Syncer<
+        ShoppingList,
         ShoppingList,
         ShoppingListDraft,
         ShoppingListSyncStatistics,
@@ -95,7 +95,7 @@ public final class ShoppingListSyncer
   @Nonnull
   @Override
   protected CompletionStage<List<ShoppingListDraft>> transform(@Nonnull List<ShoppingList> page) {
-    return CompletableFuture.completedFuture(mapToShoppingListDrafts(page));
+    return toShoppingListDrafts(getSourceClient(), referenceIdToKeyCache, page);
   }
 
   @Nonnull

@@ -19,6 +19,7 @@ import static com.commercetools.project.sync.util.TestUtils.getMockedClock;
 import static com.commercetools.project.sync.util.TestUtils.mockLastSyncCustomObject;
 import static com.commercetools.project.sync.util.TestUtils.stubClientsCustomObjectService;
 import static com.commercetools.project.sync.util.TestUtils.verifyInteractionsWithClientAfterSync;
+import static io.sphere.sdk.products.ProductProjectionType.STAGED;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
@@ -37,7 +38,6 @@ import com.commercetools.project.sync.customer.CustomerSyncer;
 import com.commercetools.project.sync.customobject.CustomObjectSyncer;
 import com.commercetools.project.sync.exception.CliException;
 import com.commercetools.project.sync.inventoryentry.InventoryEntrySyncer;
-import com.commercetools.project.sync.model.ResourceIdsGraphQlRequest;
 import com.commercetools.project.sync.model.response.LastSyncCustomObject;
 import com.commercetools.project.sync.product.ProductSyncer;
 import com.commercetools.project.sync.producttype.ProductTypeSyncer;
@@ -46,7 +46,9 @@ import com.commercetools.project.sync.state.StateSyncer;
 import com.commercetools.project.sync.taxcategory.TaxCategorySyncer;
 import com.commercetools.project.sync.type.TypeSyncer;
 import com.commercetools.project.sync.util.MockPagedQueryResult;
+import com.commercetools.sync.commons.exceptions.ReferenceTransformException;
 import com.commercetools.sync.commons.helpers.ResourceKeyIdGraphQlRequest;
+import com.commercetools.sync.commons.models.ResourceIdsGraphQlRequest;
 import com.commercetools.sync.commons.models.ResourceKeyId;
 import com.commercetools.sync.commons.models.ResourceKeyIdGraphQlResult;
 import com.commercetools.sync.products.helpers.ProductSyncStatistics;
@@ -65,8 +67,9 @@ import io.sphere.sdk.customobjects.queries.CustomObjectQuery;
 import io.sphere.sdk.inventory.queries.InventoryEntryQuery;
 import io.sphere.sdk.json.SphereJsonUtils;
 import io.sphere.sdk.products.Product;
+import io.sphere.sdk.products.ProductProjection;
 import io.sphere.sdk.products.commands.ProductCreateCommand;
-import io.sphere.sdk.products.queries.ProductQuery;
+import io.sphere.sdk.products.queries.ProductProjectionQuery;
 import io.sphere.sdk.producttypes.queries.ProductTypeQuery;
 import io.sphere.sdk.queries.PagedQueryResult;
 import io.sphere.sdk.queries.QueryPredicate;
@@ -200,7 +203,7 @@ class SyncerFactoryTest {
     final SphereClient targetClient = mock(SphereClient.class);
     when(targetClient.getConfig()).thenReturn(SphereClientConfig.of("bar", "bar", "bar"));
 
-    when(sourceClient.execute(any(ProductQuery.class)))
+    when(sourceClient.execute(any(ProductProjectionQuery.class)))
         .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
 
     final SyncerFactory syncerFactory =
@@ -213,7 +216,7 @@ class SyncerFactoryTest {
     syncerFactory.sync(new String[] {"products"}, "myRunnerName", false, false, null);
 
     // assertions
-    verify(sourceClient, times(1)).execute(any(ProductQuery.class));
+    verify(sourceClient, times(1)).execute(any(ProductProjectionQuery.class));
 
     verifyTimestampGeneratorCustomObjectUpsertIsCalled(targetClient, "ProductSync", "myRunnerName");
     verifyLastSyncCustomObjectQuery(targetClient, "productSync", "myRunnerName", "foo", 1);
@@ -263,7 +266,7 @@ class SyncerFactoryTest {
     final SphereClient targetClient = mock(SphereClient.class);
     when(targetClient.getConfig()).thenReturn(SphereClientConfig.of("bar", "bar", "bar"));
 
-    when(sourceClient.execute(any(ProductQuery.class)))
+    when(sourceClient.execute(any(ProductProjectionQuery.class)))
         .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
 
     final SyncerFactory syncerFactory =
@@ -276,7 +279,7 @@ class SyncerFactoryTest {
     syncerFactory.sync(new String[] {"products"}, "myRunnerName", true, false, null);
 
     // assertions
-    verify(sourceClient, times(1)).execute(any(ProductQuery.class));
+    verify(sourceClient, times(1)).execute(any(ProductProjectionQuery.class));
 
     verifyTimestampGeneratorCustomObjectUpsertIsNotCalled(
         targetClient, "ProductSync", "myRunnerName");
@@ -320,14 +323,16 @@ class SyncerFactoryTest {
     final SphereClient targetClient = mock(SphereClient.class);
     when(targetClient.getConfig()).thenReturn(SphereClientConfig.of("bar", "bar", "bar"));
 
-    final Product product5 =
-        SphereJsonUtils.readObjectFromResource("product-key-5.json", Product.class);
-    final Product product6 =
-        SphereJsonUtils.readObjectFromResource("product-key-6.json", Product.class);
-    final PagedQueryResult<Product> twoProductResult =
+    final ProductProjection product5 =
+        SphereJsonUtils.readObjectFromResource("product-key-5.json", Product.class)
+            .toProjection(STAGED);
+    final ProductProjection product6 =
+        SphereJsonUtils.readObjectFromResource("product-key-6.json", Product.class)
+            .toProjection(STAGED);
+    final PagedQueryResult<ProductProjection> twoProductResult =
         MockPagedQueryResult.of(asList(product5, product6));
 
-    when(sourceClient.execute(any(ProductQuery.class)))
+    when(sourceClient.execute(any(ProductProjectionQuery.class)))
         .thenReturn(CompletableFuture.completedFuture(twoProductResult));
 
     when(targetClient.execute(any())).thenReturn(CompletableFuture.completedFuture(null));
@@ -344,7 +349,7 @@ class SyncerFactoryTest {
     syncerFactory.sync(new String[] {"products"}, "myRunnerName", true, false, null);
 
     // assertions
-    verify(sourceClient, times(1)).execute(any(ProductQuery.class));
+    verify(sourceClient, times(1)).execute(any(ProductProjectionQuery.class));
     verify(sourceClient, times(3)).execute(any(ResourceIdsGraphQlRequest.class));
     verifyInteractionsWithClientAfterSync(sourceClient, 1);
 
@@ -372,12 +377,18 @@ class SyncerFactoryTest {
         .haveExactly(1, statisticsLog);
 
     assertThat(productSyncerTestLogger.getAllLoggingEvents())
-        .contains(
-            LoggingEvent.warn(
-                badGatewayException,
-                "Failed to replace referenced resource ids with keys on the attributes of the products in "
-                    + "the current fetched page from the source project. This page will not be synced to the target "
-                    + "project."));
+        .anySatisfy(
+            loggingEvent -> {
+              assertThat(loggingEvent.getMessage())
+                  .contains(
+                      ReferenceTransformException.class.getCanonicalName()
+                          + ": Failed to replace referenced resource ids with keys on the attributes of the "
+                          + "products in the current fetched page from the source project. "
+                          + "This page will not be synced to the target project.");
+              assertThat(loggingEvent.getThrowable().isPresent()).isTrue();
+              assertThat(loggingEvent.getThrowable().get().getCause().getCause())
+                  .isEqualTo(badGatewayException);
+            });
   }
 
   @SuppressFBWarnings(
@@ -392,23 +403,26 @@ class SyncerFactoryTest {
     final SphereClient targetClient = mock(SphereClient.class);
     when(targetClient.getConfig()).thenReturn(SphereClientConfig.of("bar", "bar", "bar"));
 
-    final Product product1 =
-        SphereJsonUtils.readObjectFromResource("product-key-7.json", Product.class);
-    final Product product2 =
-        SphereJsonUtils.readObjectFromResource("product-key-8.json", Product.class);
-    final Product product3 =
-        SphereJsonUtils.readObjectFromResource("product-key-9.json", Product.class);
+    final ProductProjection product1 =
+        SphereJsonUtils.readObjectFromResource("product-key-7.json", Product.class)
+            .toProjection(STAGED);
+    final ProductProjection product2 =
+        SphereJsonUtils.readObjectFromResource("product-key-8.json", Product.class)
+            .toProjection(STAGED);
+    final ProductProjection product3 =
+        SphereJsonUtils.readObjectFromResource("product-key-9.json", Product.class)
+            .toProjection(STAGED);
 
-    final List<Product> fullPageOfProducts =
+    final List<ProductProjection> fullPageOfProducts =
         IntStream.range(0, 500).mapToObj(o -> product1).collect(Collectors.toList());
 
-    when(sourceClient.execute(any(ProductQuery.class)))
+    when(sourceClient.execute(any(ProductProjectionQuery.class)))
         .thenReturn(CompletableFuture.completedFuture(MockPagedQueryResult.of(fullPageOfProducts)))
         .thenReturn(
             CompletableFuture.completedFuture(
                 MockPagedQueryResult.of(asList(product1, product3, product2))));
 
-    when(targetClient.execute(any(ProductQuery.class)))
+    when(targetClient.execute(any(ProductProjectionQuery.class)))
         .thenReturn(CompletableFuture.completedFuture(MockPagedQueryResult.of(emptyList())));
     when(targetClient.execute(any(ProductTypeQuery.class)))
         .thenReturn(CompletableFuture.completedFuture(MockPagedQueryResult.of(emptyList())));
@@ -421,8 +435,11 @@ class SyncerFactoryTest {
     when(targetClient.execute(any(CustomObjectQuery.class)))
         .thenReturn(CompletableFuture.completedFuture(MockPagedQueryResult.of(emptyList())));
 
+    final Product product4 =
+        SphereJsonUtils.readObjectFromResource("product-key-8.json", Product.class);
+
     when(targetClient.execute(any(ProductCreateCommand.class)))
-        .thenReturn(CompletableFuture.completedFuture(product2));
+        .thenReturn(CompletableFuture.completedFuture(product4));
 
     String jsonAsString =
         "{\"results\":[{\"id\":\"53c4a8b4-865f-4b95-b6f2-3e1e70e3d0c1\",\"key\":\"productKey3\"}]}";
@@ -463,9 +480,9 @@ class SyncerFactoryTest {
     syncerFactory.sync(new String[] {"products"}, "myRunnerName", true, false, null);
 
     // assertions
-    verify(sourceClient, times(2)).execute(any(ProductQuery.class));
+    verify(sourceClient, times(2)).execute(any(ProductProjectionQuery.class));
     verify(sourceClient, times(9)).execute(any(ResourceIdsGraphQlRequest.class));
-    verifyInteractionsWithClientAfterSync(sourceClient, 2);
+    verifyInteractionsWithClientAfterSync(sourceClient, 1);
 
     final Condition<LoggingEvent> startLog =
         new Condition<>(
@@ -486,27 +503,23 @@ class SyncerFactoryTest {
             "statistics log");
 
     assertThat(productSyncerTestLogger.getAllLoggingEvents())
-        .hasSize(4)
+        .hasSize(3)
         .haveExactly(1, startLog)
         .haveExactly(1, statisticsLog);
 
     assertThat(productSyncerTestLogger.getAllLoggingEvents())
-        .hasSize(4)
-        .contains(
-            LoggingEvent.warn(
-                "The product with id "
-                    + "'ba81a6da-cf83-435b-a89e-2afab579846f' on the source project ('foo') will not be synced because it "
-                    + "has the following reference attribute(s): \n"
-                    + "[{\"id\":\"53c4a8b4-865f-4b95-b6f2-3e1e70e3d0c5\",\"typeId\":\"product\"}, "
-                    + "{\"id\":\"53c4a8b4-865f-4b95-b6f2-3e1e70e3d0c4\",\"typeId\":\"category\"}].\n"
-                    + "These references are either pointing to a non-existent resource or to an existing one but with a "
-                    + "blank key. Please make sure these referenced resources are existing and have non-blank (i.e. "
-                    + "non-null and non-empty) keys."),
-            LoggingEvent.warn(
-                badGatewayException,
-                "Failed to replace referenced resource ids with keys on the attributes of the products"
-                    + " in the current fetched page from the source project. This page will not be synced to the target"
-                    + " project."));
+        .anySatisfy(
+            loggingEvent -> {
+              assertThat(loggingEvent.getMessage())
+                  .contains(
+                      ReferenceTransformException.class.getCanonicalName()
+                          + ": Failed to replace referenced resource ids with keys on the attributes of the "
+                          + "products in the current fetched page from the source project. "
+                          + "This page will not be synced to the target project.");
+              assertThat(loggingEvent.getThrowable().isPresent()).isTrue();
+              assertThat(loggingEvent.getThrowable().get().getCause().getCause())
+                  .isEqualTo(badGatewayException);
+            });
   }
 
   private static void verifyTimestampGeneratorCustomObjectUpsertIsCalled(
@@ -966,7 +979,7 @@ class SyncerFactoryTest {
         .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
     when(sourceClient.execute(any(InventoryEntryQuery.class)))
         .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
-    when(sourceClient.execute(any(ProductQuery.class)))
+    when(sourceClient.execute(any(ProductProjectionQuery.class)))
         .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
     when(sourceClient.execute(any(CartDiscountQuery.class)))
         .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
@@ -1027,7 +1040,7 @@ class SyncerFactoryTest {
     verify(sourceClient, times(1)).execute(any(ProductTypeQuery.class));
     verify(sourceClient, times(1)).execute(any(TypeQuery.class));
     verify(sourceClient, times(1)).execute(any(CategoryQuery.class));
-    verify(sourceClient, times(1)).execute(any(ProductQuery.class));
+    verify(sourceClient, times(1)).execute(any(ProductProjectionQuery.class));
     verify(sourceClient, times(1)).execute(any(InventoryEntryQuery.class));
     verify(sourceClient, times(1)).execute(any(CartDiscountQuery.class));
     verify(sourceClient, times(1)).execute(any(StateQuery.class));
@@ -1082,7 +1095,7 @@ class SyncerFactoryTest {
 
     when(sourceClient.execute(any(ProductTypeQuery.class)))
         .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
-    when(sourceClient.execute(any(ProductQuery.class)))
+    when(sourceClient.execute(any(ProductProjectionQuery.class)))
         .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
     when(sourceClient.execute(any(CustomerQuery.class)))
         .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
@@ -1125,7 +1138,7 @@ class SyncerFactoryTest {
     inOrder.verify(sourceClient, times(1)).execute(any(ProductTypeQuery.class));
     verify(sourceClient, times(1)).execute(any(CustomerQuery.class));
 
-    inOrder.verify(sourceClient, times(1)).execute(any(ProductQuery.class));
+    inOrder.verify(sourceClient, times(1)).execute(any(ProductProjectionQuery.class));
 
     inOrder.verify(sourceClient, times(1)).execute(any(ShoppingListQuery.class));
     verifyInteractionsWithClientAfterSync(sourceClient, 4);
@@ -1241,7 +1254,7 @@ class SyncerFactoryTest {
     final SphereClient targetClient = mock(SphereClient.class);
     when(targetClient.getConfig()).thenReturn(SphereClientConfig.of("bar", "bar", "bar"));
 
-    when(sourceClient.execute(any(ProductQuery.class)))
+    when(sourceClient.execute(any(ProductProjectionQuery.class)))
         .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
     when(sourceClient.execute(any(ShoppingListQuery.class)))
         .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
@@ -1265,7 +1278,7 @@ class SyncerFactoryTest {
     verifyLastSyncCustomObjectQuery(targetClient, "productSync", DEFAULT_RUNNER_NAME, "foo", 1);
     verifyLastSyncCustomObjectQuery(
         targetClient, "shoppingListSync", DEFAULT_RUNNER_NAME, "foo", 1);
-    verify(sourceClient, times(1)).execute(any(ProductQuery.class));
+    verify(sourceClient, times(1)).execute(any(ProductProjectionQuery.class));
     verify(sourceClient, times(1)).execute(any(ShoppingListQuery.class));
     verifyInteractionsWithClientAfterSync(sourceClient, 2);
 

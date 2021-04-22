@@ -130,9 +130,10 @@ public final class SyncerFactory {
     for (SyncModuleOption syncOptionValue : syncOptions) {
       Syncer<
               ? extends ResourceView,
+              ? extends ResourceView<?, ?>,
               ?,
               ? extends BaseSyncStatistics,
-              ? extends BaseSyncOptions<?, ?>,
+              ? extends BaseSyncOptions<?, ?, ?>,
               ? extends QueryDsl<?, ?>,
               ? extends BaseSync<?, ?, ?>>
           syncer =
@@ -288,9 +289,10 @@ public final class SyncerFactory {
    */
   private Syncer<
           ? extends ResourceView,
+          ? extends ResourceView<?, ?>,
           ?,
           ? extends BaseSyncStatistics,
-          ? extends BaseSyncOptions<?, ?>,
+          ? extends BaseSyncOptions<?, ?, ?>,
           ? extends QueryDsl<?, ?>,
           ? extends BaseSync<?, ?, ?>>
       buildSyncer(
@@ -301,9 +303,10 @@ public final class SyncerFactory {
 
     Syncer<
             ? extends ResourceView,
+            ? extends ResourceView<?, ?>,
             ?,
             ? extends BaseSyncStatistics,
-            ? extends BaseSyncOptions<?, ?>,
+            ? extends BaseSyncOptions<?, ?, ?>,
             ? extends QueryDsl<?, ?>,
             ? extends BaseSync<?, ?, ?>>
         syncer = null;

@@ -36,7 +36,7 @@ import io.sphere.sdk.client.SphereClientConfig;
 import io.sphere.sdk.customers.queries.CustomerQuery;
 import io.sphere.sdk.customobjects.queries.CustomObjectQuery;
 import io.sphere.sdk.inventory.queries.InventoryEntryQuery;
-import io.sphere.sdk.products.queries.ProductQuery;
+import io.sphere.sdk.products.queries.ProductProjectionQuery;
 import io.sphere.sdk.producttypes.queries.ProductTypeQuery;
 import io.sphere.sdk.queries.PagedQueryResult;
 import io.sphere.sdk.shoppinglists.queries.ShoppingListQuery;
@@ -209,7 +209,7 @@ class CliRunnerTest {
     final SphereClient targetClient = mock(SphereClient.class);
     when(targetClient.getConfig()).thenReturn(SphereClientConfig.of("bar", "bar", "bar"));
 
-    when(sourceClient.execute(any(ProductQuery.class)))
+    when(sourceClient.execute(any(ProductProjectionQuery.class)))
         .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
 
     final SyncerFactory syncerFactory =
@@ -222,7 +222,7 @@ class CliRunnerTest {
 
     // assertions
     verify(syncerFactory, times(1)).sync(new String[] {"products"}, null, false, false, null);
-    verify(sourceClient, times(1)).execute(any(ProductQuery.class));
+    verify(sourceClient, times(1)).execute(any(ProductProjectionQuery.class));
   }
 
   @Test
@@ -234,7 +234,7 @@ class CliRunnerTest {
     final SphereClient targetClient = mock(SphereClient.class);
     when(targetClient.getConfig()).thenReturn(SphereClientConfig.of("bar", "bar", "bar"));
 
-    when(sourceClient.execute(any(ProductQuery.class)))
+    when(sourceClient.execute(any(ProductProjectionQuery.class)))
         .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
 
     final SyncerFactory syncerFactory =
@@ -247,7 +247,7 @@ class CliRunnerTest {
 
     // assertions
     verify(syncerFactory, times(1)).sync(new String[] {"products"}, null, true, false, null);
-    verify(sourceClient, times(1)).execute(any(ProductQuery.class));
+    verify(sourceClient, times(1)).execute(any(ProductProjectionQuery.class));
   }
 
   @Test
@@ -260,7 +260,7 @@ class CliRunnerTest {
     final SphereClient targetClient = mock(SphereClient.class);
     when(targetClient.getConfig()).thenReturn(SphereClientConfig.of("bar", "bar", "bar"));
 
-    when(sourceClient.execute(any(ProductQuery.class)))
+    when(sourceClient.execute(any(ProductProjectionQuery.class)))
         .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
 
     final Long limit = 100L;
@@ -282,7 +282,7 @@ class CliRunnerTest {
             syncerFactory);
 
     // assertions
-    verify(sourceClient, times(1)).execute(any(ProductQuery.class));
+    verify(sourceClient, times(1)).execute(any(ProductProjectionQuery.class));
   }
 
   @Test
@@ -295,7 +295,7 @@ class CliRunnerTest {
     final SphereClient targetClient = mock(SphereClient.class);
     when(targetClient.getConfig()).thenReturn(SphereClientConfig.of("bar", "bar", "bar"));
 
-    when(sourceClient.execute(any(ProductQuery.class)))
+    when(sourceClient.execute(any(ProductProjectionQuery.class)))
         .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
 
     final Long limit = 100L;
@@ -314,7 +314,7 @@ class CliRunnerTest {
             syncerFactory);
 
     // assertions
-    verify(sourceClient, times(1)).execute(any(ProductQuery.class));
+    verify(sourceClient, times(1)).execute(any(ProductProjectionQuery.class));
   }
 
   @Test
@@ -327,11 +327,11 @@ class CliRunnerTest {
     final SphereClient targetClient = mock(SphereClient.class);
     when(targetClient.getConfig()).thenReturn(SphereClientConfig.of("bar", "bar", "bar"));
 
-    when(sourceClient.execute(any(ProductQuery.class)))
+    when(sourceClient.execute(any(ProductProjectionQuery.class)))
         .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
 
     final String customQuery =
-        "\"published=true AND masterData(masterVariant(attributes(name= \\\"abc\\\" AND value=123)))\"";
+        "\"published=true AND masterVariant(attributes(name= \\\"abc\\\" AND value=123))\"";
     final String productQueryParametersValue = "{\"where\": " + customQuery + "}";
 
     final SyncerFactory syncerFactory =
@@ -347,7 +347,7 @@ class CliRunnerTest {
             syncerFactory);
 
     // assertions
-    verify(sourceClient, times(1)).execute(any(ProductQuery.class));
+    verify(sourceClient, times(1)).execute(any(ProductProjectionQuery.class));
   }
 
   @Test
@@ -361,7 +361,7 @@ class CliRunnerTest {
 
     final Long limit = 100L;
     final String customQuery =
-        "\"published=true AND masterData(masterVariant(attributes(name= \"abc\\\" AND value=123)))\"";
+        "\"published=true AND masterVariant(attributes(name= \"abc\\\" AND value=123))\"";
     final String productQueryParametersValue =
         "{\"limit\": " + limit + ", \"where\": " + customQuery + "}";
 
@@ -403,7 +403,7 @@ class CliRunnerTest {
 
     final Long limit = -100L;
     final String customQuery =
-        "\"published=true AND masterData(masterVariant(attributes(name= \"abc\\\" AND value=123)))\"";
+        "\"published=true AND masterVariant(attributes(name= \"abc\\\" AND value=123))\"";
     final String productQueryParametersValue =
         "{\"limit\": " + limit + ", \"where\": " + customQuery + "}";
 
@@ -445,7 +445,7 @@ class CliRunnerTest {
     final SphereClient targetClient = mock(SphereClient.class);
     when(targetClient.getConfig()).thenReturn(SphereClientConfig.of("bar", "bar", "bar"));
 
-    when(sourceClient.execute(any(ProductQuery.class)))
+    when(sourceClient.execute(any(ProductProjectionQuery.class)))
         .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
 
     final SyncerFactory syncerFactory =
@@ -689,7 +689,7 @@ class CliRunnerTest {
     final SphereClient targetClient = mock(SphereClient.class);
     when(targetClient.getConfig()).thenReturn(SphereClientConfig.of("bar", "bar", "bar"));
 
-    when(sourceClient.execute(any(ProductQuery.class)))
+    when(sourceClient.execute(any(ProductProjectionQuery.class)))
         .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
 
     final SyncerFactory syncerFactory =
@@ -702,7 +702,7 @@ class CliRunnerTest {
 
     // assertions
     verify(syncerFactory, times(1)).sync(new String[] {"products"}, null, false, false, null);
-    verify(sourceClient, times(1)).execute(any(ProductQuery.class));
+    verify(sourceClient, times(1)).execute(any(ProductProjectionQuery.class));
   }
 
   @Test
@@ -714,7 +714,7 @@ class CliRunnerTest {
     final SphereClient targetClient = mock(SphereClient.class);
     when(targetClient.getConfig()).thenReturn(SphereClientConfig.of("bar", "bar", "bar"));
 
-    when(sourceClient.execute(any(ProductQuery.class)))
+    when(sourceClient.execute(any(ProductProjectionQuery.class)))
         .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
 
     final SyncerFactory syncerFactory =
@@ -728,7 +728,7 @@ class CliRunnerTest {
     // assertions
     verify(syncerFactory, times(1))
         .sync(new String[] {"products"}, "Runner123", false, false, null);
-    verify(sourceClient, times(1)).execute(any(ProductQuery.class));
+    verify(sourceClient, times(1)).execute(any(ProductProjectionQuery.class));
   }
 
   @Test
@@ -740,7 +740,7 @@ class CliRunnerTest {
     final SphereClient targetClient = mock(SphereClient.class);
     when(targetClient.getConfig()).thenReturn(SphereClientConfig.of("bar", "bar", "bar"));
 
-    when(sourceClient.execute(any(ProductQuery.class)))
+    when(sourceClient.execute(any(ProductProjectionQuery.class)))
         .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
 
     final SyncerFactory syncerFactory =
@@ -756,7 +756,7 @@ class CliRunnerTest {
 
     // assertions
     verify(syncerFactory, times(1)).sync(new String[] {"products"}, "Runner123", true, false, null);
-    verify(sourceClient, times(1)).execute(any(ProductQuery.class));
+    verify(sourceClient, times(1)).execute(any(ProductProjectionQuery.class));
   }
 
   @Test
@@ -830,7 +830,7 @@ class CliRunnerTest {
         .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
     when(sourceClient.execute(any(InventoryEntryQuery.class)))
         .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
-    when(sourceClient.execute(any(ProductQuery.class)))
+    when(sourceClient.execute(any(ProductProjectionQuery.class)))
         .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
     when(sourceClient.execute(any(CartDiscountQuery.class)))
         .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
@@ -859,7 +859,7 @@ class CliRunnerTest {
     verify(sourceClient, times(1)).execute(any(TypeQuery.class));
     verify(sourceClient, times(1)).execute(any(TaxCategoryQuery.class));
     verify(sourceClient, times(1)).execute(any(CategoryQuery.class));
-    verify(sourceClient, times(1)).execute(any(ProductQuery.class));
+    verify(sourceClient, times(1)).execute(any(ProductProjectionQuery.class));
     verify(sourceClient, times(1)).execute(any(InventoryEntryQuery.class));
     verify(sourceClient, times(1)).execute(any(CartDiscountQuery.class));
     verify(sourceClient, times(1)).execute(any(StateQuery.class));
@@ -885,7 +885,7 @@ class CliRunnerTest {
         .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
     when(sourceClient.execute(any(InventoryEntryQuery.class)))
         .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
-    when(sourceClient.execute(any(ProductQuery.class)))
+    when(sourceClient.execute(any(ProductProjectionQuery.class)))
         .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
     when(sourceClient.execute(any(CartDiscountQuery.class)))
         .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
@@ -914,7 +914,7 @@ class CliRunnerTest {
     verify(sourceClient, times(1)).execute(any(TypeQuery.class));
     verify(sourceClient, times(1)).execute(any(TaxCategoryQuery.class));
     verify(sourceClient, times(1)).execute(any(CategoryQuery.class));
-    verify(sourceClient, times(1)).execute(any(ProductQuery.class));
+    verify(sourceClient, times(1)).execute(any(ProductProjectionQuery.class));
     verify(sourceClient, times(1)).execute(any(InventoryEntryQuery.class));
     verify(sourceClient, times(1)).execute(any(CartDiscountQuery.class));
     verify(sourceClient, times(1)).execute(any(StateQuery.class));
@@ -940,7 +940,7 @@ class CliRunnerTest {
         .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
     when(sourceClient.execute(any(InventoryEntryQuery.class)))
         .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
-    when(sourceClient.execute(any(ProductQuery.class)))
+    when(sourceClient.execute(any(ProductProjectionQuery.class)))
         .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
     when(sourceClient.execute(any(CartDiscountQuery.class)))
         .thenReturn(CompletableFuture.completedFuture(PagedQueryResult.empty()));
@@ -982,7 +982,7 @@ class CliRunnerTest {
     verify(sourceClient, times(1)).execute(any(CartDiscountQuery.class));
     verify(sourceClient, times(1)).execute(any(CustomerQuery.class));
 
-    inOrder.verify(sourceClient).execute(any(ProductQuery.class));
+    inOrder.verify(sourceClient).execute(any(ProductProjectionQuery.class));
 
     inOrder.verify(sourceClient).execute(any(ShoppingListQuery.class));
 

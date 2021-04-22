@@ -47,42 +47,7 @@
   "custom": {
     "type": {
       "typeId": "type",
-      "id": "4db98ea6-38dc-4ccb-b20f-466e1566fd03",
-      "obj": {
-        "id": "4db98ea6-38dc-4ccb-b20f-466e1566fd03",
-        "version": 1,
-        "createdAt": "2020-08-10T10:16:32.331Z",
-        "lastModifiedAt": "2020-08-10T10:16:32.331Z",
-        "lastModifiedBy": {
-          "isPlatformClient": true
-        },
-        "createdBy": {
-          "isPlatformClient": true
-        },
-        "key": "test cart discount custom type",
-        "name": {
-          "en": "customized fields"
-        },
-        "description": {
-          "en": "customized fields definition"
-        },
-        "resourceTypeIds": [
-          "cart-discount"
-        ],
-        "fieldDefinitions": [
-          {
-            "name": "color",
-            "label": {
-              "en": "color"
-            },
-            "required": false,
-            "type": {
-              "name": "String"
-            },
-            "inputHint": "SingleLine"
-          }
-        ]
-      }
+      "id": "4db98ea6-38dc-4ccb-b20f-466e1566fd03"
     },
     "fields": {
       "color": "Test"

@@ -6,24 +6,7 @@
   "sku": "1",
   "supplyChannel": {
     "typeId": "channel",
-    "id": "5c0516b5-f506-4b6a-b4d1-c06ca29ab7e1",
-    "obj": {
-      "id": "5c0516b5-f506-4b6a-b4d1-c06ca29ab7e1",
-      "version": 1,
-      "createdAt": "2020-08-10T11:43:12.310Z",
-      "lastModifiedAt": "2020-08-10T11:43:12.310Z",
-      "lastModifiedBy": {
-        "isPlatformClient": true
-      },
-      "createdBy": {
-        "isPlatformClient": true
-      },
-      "key": "test-channel-key",
-      "roles": [
-        "InventorySupply",
-        "ProductDistribution"
-      ]
-    }
+    "id": "5c0516b5-f506-4b6a-b4d1-c06ca29ab7e1"
   },
   "quantityOnStock": 0,
   "availableQuantity": 0,
@@ -31,42 +14,7 @@
   "custom": {
     "type": {
       "typeId": "type",
-      "id": "02e915e7-7763-48d1-83bd-d4e940a1a368",
-      "obj": {
-        "id": "02e915e7-7763-48d1-83bd-d4e940a1a368",
-        "version": 1,
-        "createdAt": "2020-08-10T11:40:30.601Z",
-        "lastModifiedAt": "2020-08-10T11:40:30.601Z",
-        "lastModifiedBy": {
-          "isPlatformClient": true
-        },
-        "createdBy": {
-          "isPlatformClient": true
-        },
-        "key": "test-custom-type-key",
-        "name": {
-          "en": "customized fields"
-        },
-        "description": {
-          "en": "customized fields definition"
-        },
-        "resourceTypeIds": [
-          "inventory-entry"
-        ],
-        "fieldDefinitions": [
-          {
-            "name": "color",
-            "label": {
-              "en": "color"
-            },
-            "required": false,
-            "type": {
-              "name": "String"
-            },
-            "inputHint": "SingleLine"
-          }
-        ]
-      }
+      "id": "02e915e7-7763-48d1-83bd-d4e940a1a368"
     },
     "fields": {
       "color": "Test"

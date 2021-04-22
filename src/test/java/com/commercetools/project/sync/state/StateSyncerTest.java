@@ -8,16 +8,18 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import com.commercetools.sync.commons.models.ResourceIdsGraphQlRequest;
+import com.commercetools.sync.commons.models.ResourceKeyIdGraphQlResult;
 import com.commercetools.sync.states.StateSync;
 import io.sphere.sdk.client.SphereApiConfig;
 import io.sphere.sdk.client.SphereClient;
+import io.sphere.sdk.json.SphereJsonUtils;
 import io.sphere.sdk.models.LocalizedString;
 import io.sphere.sdk.queries.PagedQueryResult;
 import io.sphere.sdk.states.State;
 import io.sphere.sdk.states.StateDraft;
 import io.sphere.sdk.states.StateDraftBuilder;
 import io.sphere.sdk.states.StateType;
-import io.sphere.sdk.states.expansion.StateExpansionModel;
 import io.sphere.sdk.states.queries.StateQuery;
 import java.time.Clock;
 import java.util.Arrays;
@@ -53,12 +55,22 @@ class StateSyncerTest {
   @Test
   void transform_ShouldReplaceStateTransitionIdsWithKeys() {
     // preparation
+    final SphereClient sourceClient = mock(SphereClient.class);
     final StateSyncer stateSyncer =
-        StateSyncer.of(mock(SphereClient.class), mock(SphereClient.class), getMockedClock());
+        StateSyncer.of(sourceClient, mock(SphereClient.class), getMockedClock());
     final List<State> states =
         asList(
             readObjectFromResource("state-1.json", State.class),
             readObjectFromResource("state-2.json", State.class));
+
+    final String jsonStringTransitions =
+        "{\"results\":[{\"id\":\"ab949f1b-c441-4c70-9cf0-4182c36d6a6c\","
+            + "\"key\":\"Initial\"} ]}";
+    final ResourceKeyIdGraphQlResult transitionsResult =
+        SphereJsonUtils.readObject(jsonStringTransitions, ResourceKeyIdGraphQlResult.class);
+
+    when(sourceClient.execute(any(ResourceIdsGraphQlRequest.class)))
+        .thenReturn(CompletableFuture.completedFuture(transitionsResult));
 
     // test
     final CompletionStage<List<StateDraft>> stateDrafts = stateSyncer.transform(states);
@@ -85,7 +97,7 @@ class StateSyncerTest {
   }
 
   @Test
-  void getQuery_ShouldBuildStateQueryWithTransitionsExpanded() {
+  void getQuery_ShouldBuildStateQuery() {
     // preparation
     final StateSyncer stateSyncer =
         StateSyncer.of(mock(SphereClient.class), mock(SphereClient.class), getMockedClock());
@@ -94,8 +106,7 @@ class StateSyncerTest {
     final StateQuery query = stateSyncer.getQuery();
 
     // assertion
-    assertThat(query)
-        .isEqualTo(StateQuery.of().withExpansionPaths(StateExpansionModel::transitions));
+    assertThat(query).isEqualTo(StateQuery.of());
   }
 
   @Test

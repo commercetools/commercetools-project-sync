@@ -58,8 +58,8 @@ final class CliRunner {
   static final String SYNC_PROJECT_SYNC_CUSTOM_OBJECTS_OPTION_DESCRIPTION =
       "Sync custom objects that were created with project sync (this application).";
   static final String PRODUCT_QUERY_PARAMETERS_OPTION_DESCRIPTION =
-      "Pass your customized product fetch limit and a product predicate to filter product resources to sync in the JSON format. "
-          + "Example: {\"limit\": 100, \"where\": \"masterData(published=true)\"} could be used to fetch only published "
+      "Pass your customized product fetch limit and a product projection predicate to filter product resources to sync in the JSON format. "
+          + "Example: {\"limit\": 100, \"where\": \"published=true\"} could be used to fetch only published "
           + "products to sync and limit max 100 elements in one page.";
 
   private static final Logger LOGGER = LoggerFactory.getLogger(CliRunner.class);

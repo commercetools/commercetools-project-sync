@@ -39,6 +39,7 @@ import org.slf4j.LoggerFactory;
 public final class CustomObjectSyncer
     extends Syncer<
         CustomObject<JsonNode>,
+        CustomObject<JsonNode>,
         CustomObjectDraft<JsonNode>,
         CustomObjectSyncStatistics,
         CustomObjectSyncOptions,

@@ -3,8 +3,7 @@ package com.commercetools.project.sync.inventoryentry;
 import static com.commercetools.project.sync.util.SyncUtils.IDENTIFIER_NOT_PRESENT;
 import static com.commercetools.project.sync.util.SyncUtils.logErrorCallback;
 import static com.commercetools.project.sync.util.SyncUtils.logWarningCallback;
-import static com.commercetools.sync.inventories.utils.InventoryReferenceResolutionUtils.buildInventoryQuery;
-import static com.commercetools.sync.inventories.utils.InventoryReferenceResolutionUtils.mapToInventoryEntryDrafts;
+import static com.commercetools.sync.inventories.utils.InventoryTransformUtils.toInventoryEntryDrafts;
 
 import com.commercetools.project.sync.Syncer;
 import com.commercetools.project.sync.service.CustomObjectService;
@@ -24,7 +23,6 @@ import io.sphere.sdk.inventory.queries.InventoryEntryQuery;
 import java.time.Clock;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import javax.annotation.Nonnull;
 import org.slf4j.Logger;
@@ -32,6 +30,7 @@ import org.slf4j.LoggerFactory;
 
 public final class InventoryEntrySyncer
     extends Syncer<
+        InventoryEntry,
         InventoryEntry,
         InventoryEntryDraft,
         InventorySyncStatistics,
@@ -95,13 +94,13 @@ public final class InventoryEntrySyncer
   @Override
   protected CompletionStage<List<InventoryEntryDraft>> transform(
       @Nonnull final List<InventoryEntry> page) {
-    return CompletableFuture.completedFuture(mapToInventoryEntryDrafts(page));
+    return toInventoryEntryDrafts(getSourceClient(), referenceIdToKeyCache, page);
   }
 
   @Nonnull
   @Override
   protected InventoryEntryQuery getQuery() {
-    return buildInventoryQuery();
+    return InventoryEntryQuery.of();
   }
 
   @Nonnull

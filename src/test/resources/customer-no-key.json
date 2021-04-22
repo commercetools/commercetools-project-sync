@@ -36,6 +36,5 @@
   "shippingAddressIds": [],
   "billingAddressIds": [],
   "isEmailVerified": false,
-  "stores": [],
-  "customerGroup": {}
+  "stores": []
 }

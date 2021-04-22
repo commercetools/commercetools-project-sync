@@ -35,6 +35,7 @@ import org.slf4j.LoggerFactory;
 public final class TaxCategorySyncer
     extends Syncer<
         TaxCategory,
+        TaxCategory,
         TaxCategoryDraft,
         TaxCategorySyncStatistics,
         TaxCategorySyncOptions,
@@ -105,6 +106,7 @@ public final class TaxCategorySyncer
   @Nonnull
   private static List<TaxRateDraft> convertTaxRateToTaxRateDraft(
       @Nonnull final List<TaxRate> taxRates) {
+
     return taxRates
         .stream()
         .map(taxRate -> TaxRateDraftBuilder.of(taxRate).build())

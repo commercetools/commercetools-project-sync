@@ -2,10 +2,9 @@ package com.commercetools.project.sync.category;
 
 import static com.commercetools.project.sync.util.SyncUtils.logErrorCallback;
 import static com.commercetools.project.sync.util.SyncUtils.logWarningCallback;
+import static com.commercetools.sync.categories.utils.CategoryTransformUtils.toCategoryDrafts;
 
 import com.commercetools.project.sync.Syncer;
-import com.commercetools.project.sync.category.service.CategoryReferenceTransformService;
-import com.commercetools.project.sync.category.service.impl.CategoryReferenceTransformTransformServiceImpl;
 import com.commercetools.project.sync.service.CustomObjectService;
 import com.commercetools.project.sync.service.impl.CustomObjectServiceImpl;
 import com.commercetools.sync.categories.CategorySync;
@@ -31,6 +30,7 @@ import org.slf4j.LoggerFactory;
 public final class CategorySyncer
     extends Syncer<
         Category,
+        Category,
         CategoryDraft,
         CategorySyncStatistics,
         CategorySyncOptions,
@@ -39,18 +39,14 @@ public final class CategorySyncer
 
   private static final Logger LOGGER = LoggerFactory.getLogger(CategorySyncer.class);
 
-  private final CategoryReferenceTransformService referencesService;
-
   /** Instantiates a {@link Syncer} instance. */
   private CategorySyncer(
       @Nonnull final CategorySync categorySync,
       @Nonnull final SphereClient sourceClient,
       @Nonnull final SphereClient targetClient,
       @Nonnull final CustomObjectService customObjectService,
-      @Nonnull final CategoryReferenceTransformService referencesService,
       @Nonnull final Clock clock) {
     super(categorySync, sourceClient, targetClient, customObjectService, clock);
-    this.referencesService = referencesService;
   }
 
   @Nonnull
@@ -80,22 +76,13 @@ public final class CategorySyncer
 
     final CustomObjectService customObjectService = new CustomObjectServiceImpl(targetClient);
 
-    final CategoryReferenceTransformService referenceTransformService =
-        new CategoryReferenceTransformTransformServiceImpl(sourceClient);
-
-    return new CategorySyncer(
-        categorySync,
-        sourceClient,
-        targetClient,
-        customObjectService,
-        referenceTransformService,
-        clock);
+    return new CategorySyncer(categorySync, sourceClient, targetClient, customObjectService, clock);
   }
 
   @Override
   @Nonnull
   protected CompletionStage<List<CategoryDraft>> transform(@Nonnull final List<Category> page) {
-    return this.referencesService.transformCategoryReferences(page);
+    return toCategoryDrafts(getSourceClient(), referenceIdToKeyCache, page);
   }
 
   @Nonnull
