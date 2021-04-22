@@ -79,6 +79,12 @@ public final class TypeSyncer
 
   @Nonnull
   @Override
+  protected Logger getLoggerInstance() {
+    return LOGGER;
+  }
+
+  @Nonnull
+  @Override
   protected CompletionStage<List<TypeDraft>> transform(@Nonnull final List<Type> page) {
     return CompletableFuture.completedFuture(
         page.stream().map(TypeSyncer::typeToDraft).collect(Collectors.toList()));

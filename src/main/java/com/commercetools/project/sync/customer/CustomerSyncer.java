@@ -88,4 +88,10 @@ public final class CustomerSyncer
   protected CustomerQuery getQuery() {
     return CustomerQuery.of();
   }
+
+  @Nonnull
+  @Override
+  protected Logger getLoggerInstance() {
+    return LOGGER;
+  }
 }

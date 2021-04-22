@@ -32,33 +32,6 @@ import uk.org.lidalia.slf4jtest.TestLogger;
 
 public final class TestUtils {
 
-  public static void assertAllSyncersLoggingEvents(
-      @Nonnull final TestLogger syncerTestLogger,
-      @Nonnull final TestLogger cliRunnerTestLogger,
-      final int numberOfResources) {
-
-    assertThat(cliRunnerTestLogger.getAllLoggingEvents())
-        .allMatch(loggingEvent -> !Level.ERROR.equals(loggingEvent.getLevel()));
-
-    assertThat(syncerTestLogger.getAllLoggingEvents())
-        .allMatch(loggingEvent -> !Level.ERROR.equals(loggingEvent.getLevel()));
-
-    assertTypeSyncerLoggingEvents(syncerTestLogger, numberOfResources);
-    assertProductTypeSyncerLoggingEvents(syncerTestLogger, numberOfResources);
-    assertCategorySyncerLoggingEvents(syncerTestLogger, numberOfResources);
-    assertProductSyncerLoggingEvents(syncerTestLogger, numberOfResources);
-    assertInventoryEntrySyncerLoggingEvents(syncerTestLogger, numberOfResources);
-    assertCartDiscountSyncerLoggingEvents(syncerTestLogger, numberOfResources);
-    // +1 state is a built-in state and it cant be deleted
-    assertStateSyncerLoggingEvents(syncerTestLogger, numberOfResources + 1);
-    assertTaxCategorySyncerLoggingEvents(syncerTestLogger, numberOfResources);
-    assertCustomerSyncerLoggingEvents(syncerTestLogger, numberOfResources);
-    assertShoppingListSyncerLoggingEvents(syncerTestLogger, numberOfResources);
-
-    // Every sync module is expected to have 2 logs (start and stats summary)
-    assertThat(syncerTestLogger.getAllLoggingEvents()).hasSize(22);
-  }
-
   public static void assertTypeSyncerLoggingEvents(
       @Nonnull final TestLogger syncerTestLogger, final int numberOfResources) {
     final String typeStatsSummary =

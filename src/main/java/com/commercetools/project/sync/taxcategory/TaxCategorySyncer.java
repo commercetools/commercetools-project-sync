@@ -118,4 +118,10 @@ public final class TaxCategorySyncer
   protected TaxCategoryQuery getQuery() {
     return TaxCategoryQuery.of();
   }
+
+  @Nonnull
+  @Override
+  protected Logger getLoggerInstance() {
+    return LOGGER;
+  }
 }

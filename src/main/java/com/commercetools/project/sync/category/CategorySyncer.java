@@ -90,4 +90,10 @@ public final class CategorySyncer
   protected CategoryQuery getQuery() {
     return CategoryQuery.of();
   }
+
+  @Nonnull
+  @Override
+  protected Logger getLoggerInstance() {
+    return LOGGER;
+  }
 }

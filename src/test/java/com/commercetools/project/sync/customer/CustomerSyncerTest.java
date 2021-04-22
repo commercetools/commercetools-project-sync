@@ -112,7 +112,7 @@ class CustomerSyncerTest {
     customerSyncer.sync(null, true).toCompletableFuture().join();
 
     // assertion
-    final LoggingEvent errorLog = syncerTestLogger.getAllLoggingEvents().get(0);
+    final LoggingEvent errorLog = syncerTestLogger.getAllLoggingEvents().get(1);
     assertThat(errorLog.getMessage())
         .isEqualTo(
             "Error when trying to sync customer. Existing key: <<not present>>. Update actions: []");
@@ -149,7 +149,7 @@ class CustomerSyncerTest {
     customerSyncer.sync(null, true).toCompletableFuture().join();
 
     // assertion
-    final LoggingEvent errorLog = syncerTestLogger.getAllLoggingEvents().get(0);
+    final LoggingEvent errorLog = syncerTestLogger.getAllLoggingEvents().get(1);
     assertThat(errorLog.getMessage())
         .isEqualTo("Warning when trying to sync customer. Existing key: customerKey");
     assertThat(errorLog.getThrowable().get().getMessage())

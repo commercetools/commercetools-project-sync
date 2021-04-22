@@ -93,4 +93,10 @@ public final class CartDiscountSyncer
   protected CartDiscountQuery getQuery() {
     return CartDiscountQuery.of();
   }
+
+  @Nonnull
+  @Override
+  protected Logger getLoggerInstance() {
+    return LOGGER;
+  }
 }

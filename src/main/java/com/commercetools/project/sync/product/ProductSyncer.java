@@ -142,4 +142,10 @@ public final class ProductSyncer
 
     return productQuery;
   }
+
+  @Nonnull
+  @Override
+  protected Logger getLoggerInstance() {
+    return LOGGER;
+  }
 }
