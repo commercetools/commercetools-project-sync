@@ -94,4 +94,10 @@ public final class CartDiscountSyncer
   protected CartDiscountQuery getQuery() {
     return buildCartDiscountQuery();
   }
+
+  @Nonnull
+  @Override
+  protected Logger getLoggerInstance() {
+    return LOGGER;
+  }
 }

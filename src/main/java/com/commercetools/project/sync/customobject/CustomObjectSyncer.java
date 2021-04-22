@@ -111,6 +111,12 @@ public final class CustomObjectSyncer
   }
 
   @Nonnull
+  @Override
+  protected Logger getLoggerInstance() {
+    return LOGGER;
+  }
+
+  @Nonnull
   public static CustomObjectSyncer of(
       @Nonnull final SphereClient sourceClient,
       @Nonnull final SphereClient targetClient,

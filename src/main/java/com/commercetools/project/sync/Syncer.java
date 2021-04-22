@@ -1,6 +1,5 @@
 package com.commercetools.project.sync;
 
-import static com.commercetools.project.sync.util.StatisticsUtils.logStatistics;
 import static com.commercetools.project.sync.util.SyncUtils.getSyncModuleName;
 import static com.commercetools.sync.commons.utils.CtpQueryUtils.queryAll;
 import static java.lang.String.format;
@@ -22,8 +21,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import net.logstash.logback.marker.Markers;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Base class of the syncer that handles syncing a resource from a source CTP project to a target
@@ -53,8 +52,6 @@ public abstract class Syncer<
     V extends BaseSyncOptions<T, S>,
     C extends QueryDsl<T, C>,
     B extends BaseSync<S, U, V>> {
-
-  private static final Logger LOGGER = LoggerFactory.getLogger(Syncer.class);
 
   private final B sync;
   private final SphereClient sourceClient;
@@ -110,12 +107,13 @@ public abstract class Syncer<
 
     final String sourceProjectKey = sourceClient.getConfig().getProjectKey();
     final String syncModuleName = getSyncModuleName(sync.getClass());
-    if (LOGGER.isInfoEnabled()) {
+    if (getLoggerInstance().isInfoEnabled()) {
       final String targetProjectKey = targetClient.getConfig().getProjectKey();
-      LOGGER.info(
-          format(
-              "Starting %s from CTP project with key '%s' to project with key '%s'",
-              syncModuleName, sourceProjectKey, targetProjectKey));
+      getLoggerInstance()
+          .info(
+              format(
+                  "Starting %s from CTP project with key '%s' to project with key '%s'",
+                  syncModuleName, sourceProjectKey, targetProjectKey));
     }
 
     final CompletionStage<Void> syncStage;
@@ -133,8 +131,11 @@ public abstract class Syncer<
 
     return syncStage.thenAccept(
         ignoredResult -> {
-          if (LOGGER.isInfoEnabled()) {
-            logStatistics(sync.getStatistics(), LOGGER);
+          if (getLoggerInstance().isInfoEnabled()) {
+            getLoggerInstance()
+                .info(
+                    Markers.append("statistics", sync.getStatistics()),
+                    sync.getStatistics().getReportMessage());
           }
         });
   }
@@ -256,6 +257,9 @@ public abstract class Syncer<
   public B getSync() {
     return sync;
   }
+
+  @Nonnull
+  protected abstract Logger getLoggerInstance();
 
   @Nonnull
   public SphereClient getSourceClient() {

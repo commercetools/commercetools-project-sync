@@ -96,4 +96,10 @@ public final class ProductTypeSyncer
     // https://github.com/commercetools/commercetools-project-sync/issues/44
     return ProductTypeReferenceResolutionUtils.buildProductTypeQuery(1);
   }
+
+  @Nonnull
+  @Override
+  protected Logger getLoggerInstance() {
+    return LOGGER;
+  }
 }

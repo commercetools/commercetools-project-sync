@@ -12,6 +12,7 @@ import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.commercetools.project.sync.category.CategorySyncer;
 import io.sphere.sdk.categories.CategoryDraft;
 import io.sphere.sdk.categories.CategoryDraftBuilder;
 import io.sphere.sdk.categories.commands.CategoryCreateCommand;
@@ -39,16 +40,14 @@ import uk.org.lidalia.slf4jtest.TestLoggerFactory;
 
 public class CategorySyncWithReferenceResolutionIT {
 
-  private static final TestLogger syncerTestLogger = TestLoggerFactory.getTestLogger(Syncer.class);
-  private static final TestLogger cliRunnerTestLogger =
-      TestLoggerFactory.getTestLogger(CliRunner.class);
+  private static final TestLogger testLogger =
+      TestLoggerFactory.getTestLogger(CategorySyncer.class);
   private static final String RESOURCE_KEY = "foo";
   private static final String TYPE_KEY = "typeKey";
 
   @BeforeEach
   void setup() {
-    syncerTestLogger.clearAll();
-    cliRunnerTestLogger.clearAll();
+    testLogger.clearAll();
     cleanUpProjects(CTP_SOURCE_CLIENT, CTP_TARGET_CLIENT);
     setupSourceProjectData(CTP_SOURCE_CLIENT);
   }
@@ -111,14 +110,11 @@ public class CategorySyncWithReferenceResolutionIT {
     CliRunner.of().run(new String[] {"-s", "categories"}, createITSyncerFactory());
 
     // assertions
-    assertThat(cliRunnerTestLogger.getAllLoggingEvents())
-        .allMatch(loggingEvent -> !Level.ERROR.equals(loggingEvent.getLevel()));
-
-    assertThat(syncerTestLogger.getAllLoggingEvents())
+    assertThat(testLogger.getAllLoggingEvents())
         .allMatch(loggingEvent -> !Level.ERROR.equals(loggingEvent.getLevel()));
 
     // Every sync module is expected to have 2 logs (start and stats summary)
-    assertThat(syncerTestLogger.getAllLoggingEvents()).hasSize(2);
+    assertThat(testLogger.getAllLoggingEvents()).hasSize(2);
     assertCategoryExists(CTP_TARGET_CLIENT, RESOURCE_KEY);
   }
 }

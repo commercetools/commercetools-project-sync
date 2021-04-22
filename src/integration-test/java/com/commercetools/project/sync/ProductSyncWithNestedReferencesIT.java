@@ -25,6 +25,17 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.commercetools.project.sync.cartdiscount.CartDiscountSyncer;
+import com.commercetools.project.sync.category.CategorySyncer;
+import com.commercetools.project.sync.customer.CustomerSyncer;
+import com.commercetools.project.sync.customobject.CustomObjectSyncer;
+import com.commercetools.project.sync.inventoryentry.InventoryEntrySyncer;
+import com.commercetools.project.sync.product.ProductSyncer;
+import com.commercetools.project.sync.producttype.ProductTypeSyncer;
+import com.commercetools.project.sync.shoppinglist.ShoppingListSyncer;
+import com.commercetools.project.sync.state.StateSyncer;
+import com.commercetools.project.sync.taxcategory.TaxCategorySyncer;
+import com.commercetools.project.sync.type.TypeSyncer;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
@@ -67,9 +78,30 @@ import uk.org.lidalia.slf4jtest.TestLoggerFactory;
 
 class ProductSyncWithNestedReferencesIT {
 
-  private static final TestLogger syncerTestLogger = TestLoggerFactory.getTestLogger(Syncer.class);
   private static final TestLogger cliRunnerTestLogger =
       TestLoggerFactory.getTestLogger(CliRunner.class);
+  private static final TestLogger productSyncerTestLogger =
+      TestLoggerFactory.getTestLogger(ProductSyncer.class);
+  private static final TestLogger productTypeSyncerTestLogger =
+      TestLoggerFactory.getTestLogger(ProductTypeSyncer.class);
+  private static final TestLogger customerSyncerTestLogger =
+      TestLoggerFactory.getTestLogger(CustomerSyncer.class);
+  private static final TestLogger shoppingListSyncerTestLogger =
+      TestLoggerFactory.getTestLogger(ShoppingListSyncer.class);
+  private static final TestLogger stateSyncerTestLogger =
+      TestLoggerFactory.getTestLogger(StateSyncer.class);
+  private static final TestLogger inventoryEntrySyncerTestLogger =
+      TestLoggerFactory.getTestLogger(InventoryEntrySyncer.class);
+  private static final TestLogger customObjectSyncerTestLogger =
+      TestLoggerFactory.getTestLogger(CustomObjectSyncer.class);
+  private static final TestLogger typeSyncerTestLogger =
+      TestLoggerFactory.getTestLogger(TypeSyncer.class);
+  private static final TestLogger categorySyncerTestLogger =
+      TestLoggerFactory.getTestLogger(CategorySyncer.class);
+  private static final TestLogger cartDiscountSyncerTestLogger =
+      TestLoggerFactory.getTestLogger(CartDiscountSyncer.class);
+  private static final TestLogger taxCategorySyncerTestLogger =
+      TestLoggerFactory.getTestLogger(TaxCategorySyncer.class);
 
   private static final String INNER_PRODUCT_TYPE_KEY = "inner-product-type";
   private static final String MAIN_PRODUCT_TYPE_KEY = "sample-product-type";
@@ -80,8 +112,18 @@ class ProductSyncWithNestedReferencesIT {
 
   @BeforeEach
   void setup() {
-    syncerTestLogger.clearAll();
     cliRunnerTestLogger.clearAll();
+    productSyncerTestLogger.clearAll();
+    productTypeSyncerTestLogger.clearAll();
+    customerSyncerTestLogger.clearAll();
+    shoppingListSyncerTestLogger.clearAll();
+    stateSyncerTestLogger.clearAll();
+    inventoryEntrySyncerTestLogger.clearAll();
+    customObjectSyncerTestLogger.clearAll();
+    typeSyncerTestLogger.clearAll();
+    categorySyncerTestLogger.clearAll();
+    cartDiscountSyncerTestLogger.clearAll();
+    taxCategorySyncerTestLogger.clearAll();
     cleanUpProjects(CTP_SOURCE_CLIENT, CTP_TARGET_CLIENT);
     setupSourceProjectData(CTP_SOURCE_CLIENT);
   }
@@ -265,23 +307,18 @@ class ProductSyncWithNestedReferencesIT {
     assertThat(cliRunnerTestLogger.getAllLoggingEvents())
         .allMatch(loggingEvent -> !Level.ERROR.equals(loggingEvent.getLevel()));
 
-    assertThat(syncerTestLogger.getAllLoggingEvents())
-        .allMatch(loggingEvent -> !Level.ERROR.equals(loggingEvent.getLevel()));
-
-    assertTypeSyncerLoggingEvents(syncerTestLogger, 0);
-    assertProductTypeSyncerLoggingEvents(syncerTestLogger, 2);
-    assertTaxCategorySyncerLoggingEvents(syncerTestLogger, 0);
-    assertCategorySyncerLoggingEvents(syncerTestLogger, 1);
-    assertProductSyncerLoggingEvents(syncerTestLogger, 1);
-    assertInventoryEntrySyncerLoggingEvents(syncerTestLogger, 0);
-    assertCartDiscountSyncerLoggingEvents(syncerTestLogger, 0);
+    assertTypeSyncerLoggingEvents(typeSyncerTestLogger, 0);
+    assertProductTypeSyncerLoggingEvents(productTypeSyncerTestLogger, 2);
+    assertTaxCategorySyncerLoggingEvents(taxCategorySyncerTestLogger, 0);
+    assertCategorySyncerLoggingEvents(categorySyncerTestLogger, 1);
+    assertProductSyncerLoggingEvents(productSyncerTestLogger, 1);
+    assertInventoryEntrySyncerLoggingEvents(inventoryEntrySyncerTestLogger, 0);
+    assertCartDiscountSyncerLoggingEvents(cartDiscountSyncerTestLogger, 0);
     assertStateSyncerLoggingEvents(
-        syncerTestLogger, 1); // 1 state is built-in and it will always be processed
-    assertCustomObjectSyncerLoggingEvents(syncerTestLogger, 2);
-    assertCustomerSyncerLoggingEvents(syncerTestLogger, 0);
-    assertShoppingListSyncerLoggingEvents(syncerTestLogger, 0);
-    // Every sync module is expected to have 2 logs (start and stats summary)
-    assertThat(syncerTestLogger.getAllLoggingEvents()).hasSize(22);
+        stateSyncerTestLogger, 1); // 1 state is built-in and it will always be processed
+    assertCustomObjectSyncerLoggingEvents(customObjectSyncerTestLogger, 2);
+    assertCustomerSyncerLoggingEvents(customerSyncerTestLogger, 0);
+    assertShoppingListSyncerLoggingEvents(shoppingListSyncerTestLogger, 0);
 
     assertAllResourcesAreSyncedToTarget(CTP_TARGET_CLIENT);
   }
