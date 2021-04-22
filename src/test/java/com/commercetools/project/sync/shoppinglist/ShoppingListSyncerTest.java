@@ -112,7 +112,7 @@ class ShoppingListSyncerTest {
     shoppingListSyncer.sync(null, true).toCompletableFuture().join();
 
     // assertion
-    final LoggingEvent errorLog = syncerTestLogger.getAllLoggingEvents().get(0);
+    final LoggingEvent errorLog = syncerTestLogger.getAllLoggingEvents().get(1);
     assertThat(errorLog.getMessage())
         .isEqualTo(
             "Error when trying to sync shoppingList. Existing key: <<not present>>. Update actions: []");

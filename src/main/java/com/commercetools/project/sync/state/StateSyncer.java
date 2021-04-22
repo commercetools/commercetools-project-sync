@@ -75,4 +75,10 @@ public final class StateSyncer
   protected StateQuery getQuery() {
     return StateQuery.of();
   }
+
+  @Nonnull
+  @Override
+  protected Logger getLoggerInstance() {
+    return LOGGER;
+  }
 }

@@ -94,4 +94,10 @@ public final class ProductTypeSyncer
   protected ProductTypeQuery getQuery() {
     return ProductTypeQuery.of();
   }
+
+  @Nonnull
+  @Override
+  protected Logger getLoggerInstance() {
+    return LOGGER;
+  }
 }

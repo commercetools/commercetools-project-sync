@@ -102,4 +102,10 @@ public final class InventoryEntrySyncer
   protected InventoryEntryQuery getQuery() {
     return InventoryEntryQuery.of();
   }
+
+  @Nonnull
+  @Override
+  protected Logger getLoggerInstance() {
+    return LOGGER;
+  }
 }
