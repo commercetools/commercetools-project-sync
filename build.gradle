@@ -28,14 +28,14 @@ apply from: "$rootDir/gradle-scripts/test-logger.gradle"
 
 
 ext {
-    commercetoolsJvmSdkVersion =  '1.62.0'
+    commercetoolsJvmSdkVersion =  '1.63.0'
     mockitoVersion = '3.8.0'
     slf4jTestVersion = '1.2.0'
     assertjVersion = '3.19.0'
     pmdVersion = '5.6.1'
     jacocoVersion = '0.8.6'
     findbugsVersion = '3.0.1'
-    commercetoolsSyncJava='5.1.0'
+    commercetoolsSyncJava='5.1.1'
     apacheCliVersion = '1.4'
     jupiterApiVersion = '5.7.1'
     caffeineVersion = '3.0.2'
