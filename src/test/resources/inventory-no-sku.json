@@ -3,7 +3,20 @@
   "version": 1,
   "createdAt": "2016-02-12T14:34:57.099Z",
   "lastModifiedAt": "2016-02-12T14:34:57.099Z",
+  "supplyChannel": {
+    "typeId": "channel",
+    "id": "5c0516b5-f506-4b6a-b4d1-c06ca29ab7e1"
+  },
   "quantityOnStock": 0,
   "availableQuantity": 0,
-  "reservations": []
+  "reservations": [],
+  "custom": {
+    "type": {
+      "typeId": "type",
+      "id": "02e915e7-7763-48d1-83bd-d4e940a1a368"
+    },
+    "fields": {
+      "color": "Test"
+    }
+  }
 }
