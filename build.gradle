@@ -35,7 +35,7 @@ ext {
     pmdVersion = '5.6.1'
     jacocoVersion = '0.8.6'
     findbugsVersion = '3.0.1'
-    commercetoolsSyncJava='5.1.0'
+    commercetoolsSyncJava='5.1.1'
     apacheCliVersion = '1.4'
     jupiterApiVersion = '5.7.1'
     caffeineVersion = '3.0.2'
