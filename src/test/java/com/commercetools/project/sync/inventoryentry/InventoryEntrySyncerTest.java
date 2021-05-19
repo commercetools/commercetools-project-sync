@@ -127,6 +127,22 @@ class InventoryEntrySyncerTest {
     when(sourceClient.execute(any(InventoryEntryQuery.class)))
         .thenReturn(CompletableFuture.completedFuture(pagedQueryResult));
 
+    final String jsonStringCustomTypes =
+        "{\"results\":[{\"id\":\"02e915e7-7763-48d1-83bd-d4e940a1a368\","
+            + "\"key\":\"test-custom-type-key\"} ]}";
+    final ResourceKeyIdGraphQlResult customTypesResult =
+        SphereJsonUtils.readObject(jsonStringCustomTypes, ResourceKeyIdGraphQlResult.class);
+
+    final String jsonStringSupplyChannels =
+        "{\"results\":[{\"id\":\"5c0516b5-f506-4b6a-b4d1-c06ca29ab7e1\","
+            + "\"key\":\"test-channel-key\"} ]}";
+    final ResourceKeyIdGraphQlResult supplyChannelsResult =
+        SphereJsonUtils.readObject(jsonStringSupplyChannels, ResourceKeyIdGraphQlResult.class);
+
+    when(sourceClient.execute(any(ResourceIdsGraphQlRequest.class)))
+        .thenReturn(CompletableFuture.completedFuture(customTypesResult))
+        .thenReturn(CompletableFuture.completedFuture(supplyChannelsResult));
+
     // test
     final InventoryEntrySyncer inventoryEntrySyncer =
         InventoryEntrySyncer.of(sourceClient, targetClient, mock(Clock.class));
