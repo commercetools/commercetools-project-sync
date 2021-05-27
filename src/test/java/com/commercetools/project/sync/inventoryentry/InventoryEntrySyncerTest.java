@@ -1,5 +1,14 @@
 package com.commercetools.project.sync.inventoryentry;
 
+import static com.commercetools.project.sync.util.TestUtils.getMockedClock;
+import static com.commercetools.sync.inventories.utils.InventoryTransformUtils.toInventoryEntryDrafts;
+import static io.sphere.sdk.json.SphereJsonUtils.readObjectFromResource;
+import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 import com.commercetools.sync.commons.models.ResourceIdsGraphQlRequest;
 import com.commercetools.sync.commons.models.ResourceKeyIdGraphQlResult;
 import com.commercetools.sync.commons.utils.CaffeineReferenceIdToKeyCacheImpl;
@@ -12,11 +21,6 @@ import io.sphere.sdk.inventory.InventoryEntryDraft;
 import io.sphere.sdk.inventory.queries.InventoryEntryQuery;
 import io.sphere.sdk.json.SphereJsonUtils;
 import io.sphere.sdk.queries.PagedQueryResult;
-import org.junit.jupiter.api.Test;
-import uk.org.lidalia.slf4jtest.LoggingEvent;
-import uk.org.lidalia.slf4jtest.TestLogger;
-import uk.org.lidalia.slf4jtest.TestLoggerFactory;
-
 import java.time.Clock;
 import java.util.Collections;
 import java.util.List;
@@ -24,15 +28,10 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import static com.commercetools.project.sync.util.TestUtils.getMockedClock;
-import static com.commercetools.sync.inventories.utils.InventoryTransformUtils.toInventoryEntryDrafts;
-import static io.sphere.sdk.json.SphereJsonUtils.readObjectFromResource;
-import static java.util.Arrays.asList;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import org.junit.jupiter.api.Test;
+import uk.org.lidalia.slf4jtest.LoggingEvent;
+import uk.org.lidalia.slf4jtest.TestLogger;
+import uk.org.lidalia.slf4jtest.TestLoggerFactory;
 
 class InventoryEntrySyncerTest {
 
