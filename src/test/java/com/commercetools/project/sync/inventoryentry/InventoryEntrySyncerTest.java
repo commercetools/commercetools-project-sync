@@ -111,7 +111,6 @@ class InventoryEntrySyncerTest {
     assertThat(draftsFromPageStage).isCompletedWithValue(expectedResult);
   }
 
-  @Disabled
   @Test
   void syncWithError_ShouldCallErrorCallback() {
     final TestLogger syncerTestLogger = TestLoggerFactory.getTestLogger(InventoryEntrySyncer.class);
