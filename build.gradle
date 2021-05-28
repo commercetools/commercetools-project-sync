@@ -38,13 +38,10 @@ ext {
     commercetoolsSyncJava='5.1.1'
     apacheCliVersion = '1.4'
     jupiterApiVersion = '5.7.2'
-    caffeineVersion = '2.8.5'
     asyncHttpClientVersion = '2.12.3'
     logbackVersion = '1.2.3'
     logstashLogbackEncoderVersion= '6.6'
 }
-
-
 
 apply from: "$rootDir/gradle-scripts/spotless.gradle"
 apply from: "$rootDir/gradle-scripts/pmd.gradle"
@@ -79,7 +76,6 @@ dependencies {
     implementation "ch.qos.logback:logback-classic:${logbackVersion}"
     implementation "ch.qos.logback:logback-core:${logbackVersion}"
     implementation "net.logstash.logback:logstash-logback-encoder:${logstashLogbackEncoderVersion}"
-
     implementation "com.google.code.findbugs:annotations:${findbugsVersion}"
 
     constraints {
