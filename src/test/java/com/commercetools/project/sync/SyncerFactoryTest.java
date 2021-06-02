@@ -419,8 +419,7 @@ class SyncerFactoryTest {
     when(sourceClient.execute(any(ProductProjectionQuery.class)))
         .thenReturn(CompletableFuture.completedFuture(MockPagedQueryResult.of(fullPageOfProducts)))
         .thenReturn(
-            CompletableFuture.completedFuture(
-                MockPagedQueryResult.of(asList(product3, product2))));
+            CompletableFuture.completedFuture(MockPagedQueryResult.of(asList(product3, product2))));
 
     when(targetClient.execute(any(ProductProjectionQuery.class)))
         .thenReturn(CompletableFuture.completedFuture(MockPagedQueryResult.of(emptyList())));
