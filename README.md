@@ -197,7 +197,7 @@ Example:
 ##### Download
 
 ```bash
-docker pull commercetools/commercetools-project-sync:4.0.2
+docker pull commercetools/commercetools-project-sync:4.0.3
 ```
 ##### Run
 
@@ -209,14 +209,14 @@ docker run \
 -e TARGET_PROJECT_KEY=xxxx \
 -e TARGET_CLIENT_ID=xxxx \
 -e TARGET_CLIENT_SECRET=xxxx \
-commercetools/commercetools-project-sync:4.0.2 -s all
+commercetools/commercetools-project-sync:4.0.3 -s all
 ```
 
 
 ### Examples
  - To run the all sync modules from a source project to a target project
    ```bash
-   docker run commercetools/commercetools-project-sync:4.0.2 -s all
+   docker run commercetools/commercetools-project-sync:4.0.3 -s all
    ```
    This will run the following sync modules in the given order:
  1. `Type` Sync and `ProductType` Sync and `States` Sync and `TaxCategory` Sync and `CustomObject` Sync in parallel.
@@ -226,68 +226,68 @@ commercetools/commercetools-project-sync:4.0.2 -s all
 
  - To run the type sync
    ```bash
-   docker run commercetools/commercetools-project-sync:4.0.2 -s types
+   docker run commercetools/commercetools-project-sync:4.0.3 -s types
    ```
 
  - To run the productType sync
    ```bash
-   docker run commercetools/commercetools-project-sync:4.0.2 -s productTypes
+   docker run commercetools/commercetools-project-sync:4.0.3 -s productTypes
    ```
 
 - To run the states sync
    ```bash
-   docker run commercetools/commercetools-project-sync:4.0.2 -s states
+   docker run commercetools/commercetools-project-sync:4.0.3 -s states
    ```
 - To run the taxCategory sync
    ```bash
-   docker run commercetools/commercetools-project-sync:4.0.2 -s taxCategories
+   docker run commercetools/commercetools-project-sync:4.0.3 -s taxCategories
    ```
 
 - To run the category sync
    ```bash
-   docker run commercetools/commercetools-project-sync:4.0.2 -s categories
+   docker run commercetools/commercetools-project-sync:4.0.3 -s categories
    ```
 
 - To run the product sync
    ```bash
-   docker run commercetools/commercetools-project-sync:4.0.2 -s products
+   docker run commercetools/commercetools-project-sync:4.0.3 -s products
    ```
 
 - To run the cartDiscount sync
    ```bash
-   docker run commercetools/commercetools-project-sync:4.0.2 -s cartDiscounts
+   docker run commercetools/commercetools-project-sync:4.0.3 -s cartDiscounts
    ```
 
 - To run the inventoryEntry sync
    ```bash
-   docker run commercetools/commercetools-project-sync:4.0.2 -s inventoryEntries
+   docker run commercetools/commercetools-project-sync:4.0.3 -s inventoryEntries
    ```
 
 - To run the customObject sync
    ```bash
-   docker run commercetools/commercetools-project-sync:4.0.2 -s customObjects
+   docker run commercetools/commercetools-project-sync:4.0.3 -s customObjects
    ```
 
 - To run the customer sync
    ```bash
-   docker run commercetools/commercetools-project-sync:4.0.2 -s customers
+   docker run commercetools/commercetools-project-sync:4.0.3 -s customers
    ```
   
 - To run the shoppingList sync
    ```bash
-   docker run commercetools/commercetools-project-sync:4.0.2 -s shoppingLists
+   docker run commercetools/commercetools-project-sync:4.0.3 -s shoppingLists
    ```
 - To run both products and shoppingList sync
    ```bash
-   docker run commercetools/commercetools-project-sync:4.0.2 -s products shoppingLists
+   docker run commercetools/commercetools-project-sync:4.0.3 -s products shoppingLists
    ```
   
 - To run type, productType and shoppingList sync
    ```bash
-   docker run commercetools/commercetools-project-sync:4.0.2 -s types productTypes shoppingLists
+   docker run commercetools/commercetools-project-sync:4.0.3 -s types productTypes shoppingLists
    ```
 
 - To run all sync modules using a runner name
    ```bash
-   docker run commercetools/commercetools-project-sync:4.0.2 -s all -r myRunnerName
+   docker run commercetools/commercetools-project-sync:4.0.3 -s all -r myRunnerName
    ```
