@@ -79,7 +79,7 @@ dependencies {
     implementation "com.google.code.findbugs:annotations:${findbugsVersion}"
 
     constraints {
-        implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-cbor:2.12.3") {
+        implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-cbor:2.12.4") {
             because "previous versions are vulnerable to DoS"
         }
         implementation("io.netty:netty-codec-http:4.1.65.Final") {
