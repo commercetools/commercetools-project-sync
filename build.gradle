@@ -3,7 +3,7 @@ buildscript {
         shadowJarVersion = '5.1.0'
     }
     repositories {
-        jcenter()
+        mavenCentral()
     }
     dependencies {
         classpath "com.github.jengelman.gradle.plugins:shadow:${shadowJarVersion}"
