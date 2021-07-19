@@ -1,5 +1,12 @@
 package com.commercetools.project.sync;
 
+import static com.commercetools.project.sync.util.IntegrationTestUtils.cleanUpProjects;
+import static com.commercetools.project.sync.util.IntegrationTestUtils.createITSyncerFactory;
+import static com.commercetools.project.sync.util.SphereClientUtils.CTP_SOURCE_CLIENT;
+import static com.commercetools.project.sync.util.SphereClientUtils.CTP_TARGET_CLIENT;
+import static java.util.Collections.singletonList;
+import static org.assertj.core.api.Assertions.assertThat;
+
 import com.commercetools.project.sync.inventoryentry.InventoryEntrySyncer;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
@@ -20,29 +27,24 @@ import io.sphere.sdk.types.StringFieldType;
 import io.sphere.sdk.types.TypeDraft;
 import io.sphere.sdk.types.TypeDraftBuilder;
 import io.sphere.sdk.types.commands.TypeCreateCommand;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import uk.org.lidalia.slf4jext.Level;
-import uk.org.lidalia.slf4jtest.TestLogger;
-import uk.org.lidalia.slf4jtest.TestLoggerFactory;
-
-import javax.annotation.Nonnull;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.IntStream;
+import javax.annotation.Nonnull;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
+import uk.org.lidalia.slf4jext.Level;
+import uk.org.lidalia.slf4jtest.TestLogger;
+import uk.org.lidalia.slf4jtest.TestLoggerFactory;
 
-import static com.commercetools.project.sync.util.IntegrationTestUtils.cleanUpProjects;
-import static com.commercetools.project.sync.util.IntegrationTestUtils.createITSyncerFactory;
-import static com.commercetools.project.sync.util.SphereClientUtils.CTP_SOURCE_CLIENT;
-import static com.commercetools.project.sync.util.SphereClientUtils.CTP_TARGET_CLIENT;
-import static java.util.Collections.singletonList;
-import static org.assertj.core.api.Assertions.assertThat;
-
-// Scenario created to evaluate multiple channel use case
-// see: https://github.com/commercetools/commercetools-project-sync/issues/301
+@Disabled(
+    "Disabled for normal builds, "
+        + "This scenario created to evaluate multiple channel use case"
+        + "see: https://github.com/commercetools/commercetools-project-sync/issues/301")
 public class InventorySyncMultiChannelIT {
   private static final TestLogger testLogger =
       TestLoggerFactory.getTestLogger(InventoryEntrySyncer.class);
@@ -150,45 +152,43 @@ public class InventorySyncMultiChannelIT {
   private void create249InventoryEntry(SphereClient sphereClient) {
     CompletableFuture.allOf(
             IntStream.range(0, 10)
-                    .mapToObj(
-                            value ->
-                                    sphereClient
-                                            .execute(
-                                                    InventoryEntryCreateCommand.of(
-                                                            InventoryEntryDraftBuilder.of("SKU_" + value, 1L)
-                                                                    .build()))
-                                            .toCompletableFuture())
-                    .toArray(CompletableFuture[]::new))
-            .join();
+                .mapToObj(
+                    value ->
+                        sphereClient
+                            .execute(
+                                InventoryEntryCreateCommand.of(
+                                    InventoryEntryDraftBuilder.of("SKU_" + value, 1L).build()))
+                            .toCompletableFuture())
+                .toArray(CompletableFuture[]::new))
+        .join();
 
     CompletableFuture.allOf(
             IntStream.range(0, 251)
-                .mapToObj(
-                    value -> create(sphereClient, value))
+                .mapToObj(value -> create(sphereClient, value))
                 .toArray(CompletableFuture[]::new))
         .join();
   }
 
   private CompletableFuture<InventoryEntry> create(SphereClient sphereClient, int value) {
     final ChannelDraft channelDraft1 =
-            ChannelDraft.of("other-channel-key_"+ value).withRoles(ChannelRole.INVENTORY_SUPPLY);
+        ChannelDraft.of("other-channel-key_" + value).withRoles(ChannelRole.INVENTORY_SUPPLY);
 
     final String channelId =
-            sphereClient
-                    .execute(ChannelCreateCommand.of(channelDraft1))
-                    .toCompletableFuture()
-                    .join()
-                    .getId();
+        sphereClient
+            .execute(ChannelCreateCommand.of(channelDraft1))
+            .toCompletableFuture()
+            .join()
+            .getId();
 
     final Reference<Channel> supplyChannelReference = Channel.referenceOfId(channelId);
 
     return sphereClient
-            .execute(
-                    InventoryEntryCreateCommand.of(
-                            InventoryEntryDraftBuilder.of("SKU_CHANNEL", 0L)
-                                    .supplyChannel(supplyChannelReference)
-                                    .build()))
-            .toCompletableFuture();
+        .execute(
+            InventoryEntryCreateCommand.of(
+                InventoryEntryDraftBuilder.of("SKU_CHANNEL", 0L)
+                    .supplyChannel(supplyChannelReference)
+                    .build()))
+        .toCompletableFuture();
   }
 
   @Test
