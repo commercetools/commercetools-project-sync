@@ -22,7 +22,7 @@ jobs:
         with:
           java-version: 11
       - name: Build with Gradle
-        run: ./gradlew clean build
+        run: ./gradlew clean setLibraryVersion build
         env:
           SOURCE_PROJECT_KEY: project-sync-source
           SOURCE_CLIENT_ID: ${{ secrets.SOURCE_CLIENT_ID }}
