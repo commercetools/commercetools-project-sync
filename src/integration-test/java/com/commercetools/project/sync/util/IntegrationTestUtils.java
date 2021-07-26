@@ -162,7 +162,6 @@ public final class IntegrationTestUtils {
             ProductQuery.of(),
             versioned -> ProductUpdateCommand.of(versioned, Unpublish.of()))
         .join();
-    queryAndExecute(client, ShoppingListQuery.of(), ShoppingListDeleteCommand::of).join();
 
     final CompletableFuture<Void> deleteProduct =
         queryAndExecute(client, ProductQuery.of(), ProductDeleteCommand::of);
@@ -183,6 +182,8 @@ public final class IntegrationTestUtils {
             StateQuery.of().plusPredicates(QueryPredicate.of("builtIn=\"false\"")),
             StateDeleteCommand::of)
         .join();
+
+    queryAndExecute(client, ShoppingListQuery.of(), ShoppingListDeleteCommand::of).join();
 
     final CompletableFuture<Void> deleteType =
         queryAndExecute(client, TypeQuery.of(), TypeDeleteCommand::of);
