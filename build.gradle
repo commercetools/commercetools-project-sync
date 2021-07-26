@@ -25,6 +25,7 @@ apply from: "$rootDir/gradle-scripts/repositories.gradle"
 apply from: "$rootDir/gradle-scripts/test.gradle"
 apply from: "$rootDir/gradle-scripts/integration-tests.gradle"
 apply from: "$rootDir/gradle-scripts/test-logger.gradle"
+apply from: "$rootDir/gradle-scripts/set-library-version.gradle"
 
 
 ext {

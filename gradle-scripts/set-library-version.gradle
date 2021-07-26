@@ -1,0 +1,32 @@
+task setLibraryVersion {
+    description 'If the env var "GITHUB_TAG" is set, injects the value in the ' +
+            'src/main/java/com/commercetools/project/sync/util/ProjectSyncSolutionInfo.java. Otherwise, if the env var is not ' +
+            'set it sets the version to the value "dev-version". Note: Should only be executed before compilation in ' +
+            'the CI tool (e.g. github action.)'
+    doLast {
+        def versionFile = 'src/main/java/com/commercetools/project/sync/util/ProjectSyncSolutionInfo.java'
+        def versionFileContents = new File(versionFile).text
+        def versionPlaceholder = '#{LIB_VERSION}'
+        def libVersion = 'dev-version'
+        def tagName = System.getenv('GITHUB_TAG')
+
+        if (!versionFileContents.contains(versionPlaceholder)) {
+            throw new InvalidUserCodeException("$versionFile does not contain the placeholder: $versionPlaceholder. " +
+                    "Please make sure the file contains the placeholder, in order for the version to be injected " +
+                    "correctly.")
+        }
+
+        // if build was triggered by a git tag, set version to tag name
+        if (tagName) {
+            libVersion = tagName
+        }
+
+        if (libVersion) {
+            println "Injecting the version: '$libVersion' in $versionFile"
+            ant.replace(file: versionFile, token: versionPlaceholder, value: libVersion)
+        } else {
+            throw new InvalidUserDataException("Unable to set library version in $versionFile. Please make sure the" +
+                    " var 'libVersion' is set correctly.")
+        }
+    }
+}
