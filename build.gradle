@@ -29,7 +29,7 @@ apply from: "$rootDir/gradle-scripts/set-library-version.gradle"
 
 
 ext {
-    commercetoolsJvmSdkVersion =  '1.64.0'
+    commercetoolsJvmSdkVersion =  '2.0.0'
     mockitoVersion = '3.11.2'
     slf4jTestVersion = '1.2.0'
     assertjVersion = '3.20.2'
