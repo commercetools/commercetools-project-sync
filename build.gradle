@@ -29,14 +29,13 @@ apply from: "$rootDir/gradle-scripts/set-library-version.gradle"
 
 
 ext {
-    commercetoolsJvmSdkVersion =  '2.0.0'
     mockitoVersion = '3.11.2'
     slf4jTestVersion = '1.2.0'
     assertjVersion = '3.20.2'
     pmdVersion = '5.6.1'
     jacocoVersion = '0.8.6'
     findbugsVersion = '3.0.1'
-    commercetoolsSyncJava = '6.0.0'
+    commercetoolsSyncJava = '7.0.0'
     apacheCliVersion = '1.4'
     jupiterApiVersion = '5.7.2'
     asyncHttpClientVersion = '2.12.3'
@@ -69,8 +68,6 @@ tasks.withType(SpotlessTask) {
 dependencies {
     implementation "com.commercetools:commercetools-sync-java:${commercetoolsSyncJava}"
 
-    implementation "com.commercetools.sdk.jvm.core:commercetools-models:${commercetoolsJvmSdkVersion}"
-    implementation "com.commercetools.sdk.jvm.core:commercetools-java-client-ahc-2_5:${commercetoolsJvmSdkVersion}"
     implementation "org.asynchttpclient:async-http-client:${asyncHttpClientVersion}"
 
     implementation "commons-cli:commons-cli:${apacheCliVersion}"
