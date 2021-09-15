@@ -6,6 +6,10 @@
   "quantityOnStock": 0,
   "availableQuantity": 0,
   "reservations": [],
+  "supplyChannel": {
+    "typeId": "channel",
+    "id": "1489488b-f737-4a9e-ba49-2d42d84c4c6f"
+  },
   "custom": {
     "type": {
       "typeId": "type",

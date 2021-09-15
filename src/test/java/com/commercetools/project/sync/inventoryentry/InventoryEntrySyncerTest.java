@@ -130,6 +130,8 @@ class InventoryEntrySyncerTest {
 
     mockResourceIdsGraphQlRequest(
         sourceClient, "4db98ea6-38dc-4ccb-b20f-466e1566567h", "customTypeKey");
+    mockResourceIdsGraphQlRequest(
+        sourceClient, "1489488b-f737-4a9e-ba49-2d42d84c4c6f", "channelKey");
 
     // test
     final InventoryEntrySyncer inventoryEntrySyncer =
