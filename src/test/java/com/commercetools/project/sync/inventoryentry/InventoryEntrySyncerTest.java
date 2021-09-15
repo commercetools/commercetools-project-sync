@@ -1,6 +1,7 @@
 package com.commercetools.project.sync.inventoryentry;
 
 import static com.commercetools.project.sync.util.TestUtils.getMockedClock;
+import static com.commercetools.project.sync.util.TestUtils.mockResourceIdsGraphQlRequest;
 import static com.commercetools.sync.inventories.utils.InventoryTransformUtils.toInventoryEntryDrafts;
 import static io.sphere.sdk.json.SphereJsonUtils.readObjectFromResource;
 import static java.util.Arrays.asList;
@@ -126,6 +127,9 @@ class InventoryEntrySyncerTest {
     when(pagedQueryResult.getResults()).thenReturn(inventoryEntries);
     when(sourceClient.execute(any(InventoryEntryQuery.class)))
         .thenReturn(CompletableFuture.completedFuture(pagedQueryResult));
+
+    mockResourceIdsGraphQlRequest(
+        sourceClient, "4db98ea6-38dc-4ccb-b20f-466e1566567h", "customTypeKey");
 
     // test
     final InventoryEntrySyncer inventoryEntrySyncer =
