@@ -82,6 +82,7 @@ class StateSyncerTest {
             .description(LocalizedString.ofEnglish("State 1"))
             .name(LocalizedString.ofEnglish("State 1"))
             .initial(true)
+            .transitions(Collections.emptySet())
             .build();
     final StateDraft draft2 =
         StateDraftBuilder.of("State 2", StateType.LINE_ITEM_STATE)
