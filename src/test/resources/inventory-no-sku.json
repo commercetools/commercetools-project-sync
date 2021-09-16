@@ -5,5 +5,18 @@
   "lastModifiedAt": "2016-02-12T14:34:57.099Z",
   "quantityOnStock": 0,
   "availableQuantity": 0,
-  "reservations": []
+  "reservations": [],
+  "supplyChannel": {
+    "typeId": "channel",
+    "id": "1489488b-f737-4a9e-ba49-2d42d84c4c6f"
+  },
+  "custom": {
+    "type": {
+      "typeId": "type",
+      "id": "4db98ea6-38dc-4ccb-b20f-466e1566567h"
+    },
+    "fields": {
+      "textField": "test inventory"
+    }
+  }
 }

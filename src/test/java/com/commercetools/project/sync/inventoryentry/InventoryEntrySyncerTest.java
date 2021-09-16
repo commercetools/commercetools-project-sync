@@ -1,6 +1,7 @@
 package com.commercetools.project.sync.inventoryentry;
 
 import static com.commercetools.project.sync.util.TestUtils.getMockedClock;
+import static com.commercetools.project.sync.util.TestUtils.mockResourceIdsGraphQlRequest;
 import static com.commercetools.sync.inventories.utils.InventoryTransformUtils.toInventoryEntryDrafts;
 import static io.sphere.sdk.json.SphereJsonUtils.readObjectFromResource;
 import static java.util.Arrays.asList;
@@ -28,6 +29,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import uk.org.lidalia.slf4jtest.LoggingEvent;
 import uk.org.lidalia.slf4jtest.TestLogger;
@@ -35,8 +37,15 @@ import uk.org.lidalia.slf4jtest.TestLoggerFactory;
 
 class InventoryEntrySyncerTest {
 
+  private final TestLogger syncerTestLogger =
+      TestLoggerFactory.getTestLogger(InventoryEntrySyncer.class);
   private final ReferenceIdToKeyCache referenceIdToKeyCache =
       new CaffeineReferenceIdToKeyCacheImpl();
+
+  @BeforeEach
+  void setup() {
+    syncerTestLogger.clearAll();
+  }
 
   @Test
   void of_ShouldCreateInventoryEntrySyncerInstance() {
@@ -112,7 +121,6 @@ class InventoryEntrySyncerTest {
 
   @Test
   void syncWithError_ShouldCallErrorCallback() {
-    final TestLogger syncerTestLogger = TestLoggerFactory.getTestLogger(InventoryEntrySyncer.class);
     // preparation: inventory entry with no key is synced
     final SphereClient sourceClient = mock(SphereClient.class);
     final SphereClient targetClient = mock(SphereClient.class);
@@ -126,6 +134,11 @@ class InventoryEntrySyncerTest {
     when(pagedQueryResult.getResults()).thenReturn(inventoryEntries);
     when(sourceClient.execute(any(InventoryEntryQuery.class)))
         .thenReturn(CompletableFuture.completedFuture(pagedQueryResult));
+
+    mockResourceIdsGraphQlRequest(
+        sourceClient, "4db98ea6-38dc-4ccb-b20f-466e1566567h", "customTypeKey");
+    mockResourceIdsGraphQlRequest(
+        sourceClient, "1489488b-f737-4a9e-ba49-2d42d84c4c6f", "channelKey");
 
     // test
     final InventoryEntrySyncer inventoryEntrySyncer =
