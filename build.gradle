@@ -36,7 +36,7 @@ ext {
     jacocoVersion = '0.8.6'
     findbugsVersion = '3.0.1'
     commercetoolsSyncJava = '8.0.0'
-    apacheCliVersion = '1.4'
+    apacheCliVersion = '1.5.0'
     jupiterApiVersion = '5.8.1'
     asyncHttpClientVersion = '2.12.3'
     logbackVersion = '1.2.6'
