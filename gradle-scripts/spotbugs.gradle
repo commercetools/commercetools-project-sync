@@ -1,0 +1,11 @@
+// Example to configure HTML report
+tasks.matching { task -> task.name.startsWith('spotbugs') }.forEach {
+    it.reports {
+        html {
+            enabled = true
+            stylesheet = 'plain.xsl'
+        }
+
+        xml.enabled = false
+    }
+}

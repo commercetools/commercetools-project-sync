@@ -8,7 +8,6 @@ import static java.lang.String.format;
 
 import com.commercetools.project.sync.exception.CliException;
 import com.commercetools.project.sync.model.ProductSyncCustomRequest;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.util.Arrays;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
@@ -160,8 +159,6 @@ final class CliRunner {
     return options;
   }
 
-  @SuppressFBWarnings(
-      "NP_NONNULL_PARAM_VIOLATION") // https://github.com/findbugsproject/findbugs/issues/79
   private static CompletionStage<Void> processCliArguments(
       @Nonnull final CommandLine commandLine,
       @Nonnull final Options cliOptions,
