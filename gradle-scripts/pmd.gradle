@@ -1,7 +1,7 @@
 pmd {
     toolVersion = pmdVersion
     ruleSetConfig = rootProject.resources.text.fromFile('config/pmd/pmd.xml')
-    rulePriority = 2 // If a rule priority, with a level greater than or equal this number, is violated; the build should fail.
+    rulesMinimumPriority = 2 // If a rule priority, with a level greater than or equal this number, is violated; the build should fail.
     consoleOutput = true
 }
 
