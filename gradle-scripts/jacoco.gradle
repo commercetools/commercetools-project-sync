@@ -23,9 +23,9 @@ jacocoTestCoverageVerification {
 jacocoTestReport {
     executionData fileTree(project.rootDir.absolutePath).include("**/build/jacoco/*.exec")
     reports {
-        xml.enabled = true
+        xml.required = true
         xml.setDestination(file("${buildDir}/reports/jacoco/report.xml"))
-        html.enabled = false
-        csv.enabled = false
+        html.required = false
+        csv.required = false
     }
 }
