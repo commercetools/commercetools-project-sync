@@ -5,7 +5,7 @@ import io.sphere.sdk.client.SolutionInfo;
 public final class ProjectSyncSolutionInfo extends SolutionInfo {
   private static final String LIB_NAME = "commercetools-project-sync";
   /** This value is injected by the script at gradle-scripts/set-library-version.gradle. */
-  public static final String LIB_VERSION = "#{LIB_VERSION}";
+  public static final String LIB_VERSION = "dev-version";
 
   public static final String LIB_WEBSITE =
       "https://github.com/commercetools/commercetools-project-sync";

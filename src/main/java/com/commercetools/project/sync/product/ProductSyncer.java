@@ -110,7 +110,9 @@ public final class ProductSyncer
         .handle(
             (productDrafts, throwable) -> {
               if (throwable != null) {
-                LOGGER.warn(throwable.getMessage(), getCompletionExceptionCause(throwable));
+                if (LOGGER.isWarnEnabled()) {
+                  LOGGER.warn(throwable.getMessage(), getCompletionExceptionCause(throwable));
+                }
                 return Collections.emptyList();
               }
               return productDrafts;

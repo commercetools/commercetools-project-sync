@@ -1,8 +1,8 @@
 pmd {
     toolVersion = pmdVersion
-    ruleSetConfig = rootProject.resources.text.fromFile('config/pmd/pmd.xml')
     rulesMinimumPriority = 2 // If a rule priority, with a level greater than or equal this number, is violated; the build should fail.
     consoleOutput = true
+    ruleSets = ["category/java/errorprone.xml", "category/java/bestpractices.xml"]
 }
 
 tasks.withType(Pmd) {
