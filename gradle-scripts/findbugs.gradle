@@ -1,9 +1,0 @@
-findbugs {
-    toolVersion = findbugsVersion
-}
-
-tasks.withType(FindBugs) {
-    reports {
-        xml.enabled = false
-    }
-}

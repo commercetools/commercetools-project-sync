@@ -52,7 +52,6 @@ import com.commercetools.sync.commons.models.ResourceIdsGraphQlRequest;
 import com.commercetools.sync.commons.models.ResourceKeyId;
 import com.commercetools.sync.commons.models.ResourceKeyIdGraphQlResult;
 import com.commercetools.sync.products.helpers.ProductSyncStatistics;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.sphere.sdk.cartdiscounts.queries.CartDiscountQuery;
 import io.sphere.sdk.categories.queries.CategoryQuery;
 import io.sphere.sdk.client.BadGatewayException;
@@ -98,6 +97,8 @@ import uk.org.lidalia.slf4jtest.LoggingEvent;
 import uk.org.lidalia.slf4jtest.TestLogger;
 import uk.org.lidalia.slf4jtest.TestLoggerFactory;
 
+// This will suppress MoreThanOneLogger warnings in this class
+@SuppressWarnings("PMD.MoreThanOneLogger")
 class SyncerFactoryTest {
   private static final TestLogger productSyncerTestLogger =
       TestLoggerFactory.getTestLogger(ProductSyncer.class);
@@ -311,8 +312,6 @@ class SyncerFactoryTest {
         .haveExactly(1, statisticsLog);
   }
 
-  @SuppressFBWarnings(
-      "NP_NONNULL_PARAM_VIOLATION") // https://github.com/findbugsproject/findbugs/issues/79
   @Test
   void
       sync_AsProductsFullSyncWithExceptionDuringAttributeReferenceReplacement_ShouldBuildSyncerAndExecuteSync() {
@@ -391,8 +390,6 @@ class SyncerFactoryTest {
             });
   }
 
-  @SuppressFBWarnings(
-      "NP_NONNULL_PARAM_VIOLATION") // https://github.com/findbugsproject/findbugs/issues/79
   @Test
   void
       sync_AsProductsFullSyncWithExceptionDuringAttributeReferenceReplacement_ShouldContinueWithPages() {

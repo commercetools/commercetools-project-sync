@@ -53,13 +53,15 @@ public final class SyncUtils {
       updateActionsString =
           updateActions.stream().map(Object::toString).collect(Collectors.joining(","));
     }
-    logger.error(
-        format(
-            "Error when trying to sync %s. Existing key: %s. Update actions: %s",
-            resourceName,
-            resource.map(WithKey::getKey).orElse(IDENTIFIER_NOT_PRESENT),
-            updateActionsString),
-        exception);
+    if (logger.isErrorEnabled()) {
+      logger.error(
+          format(
+              "Error when trying to sync %s. Existing key: %s. Update actions: %s",
+              resourceName,
+              resource.map(WithKey::getKey).orElse(IDENTIFIER_NOT_PRESENT),
+              updateActionsString),
+          exception);
+    }
   }
 
   public static <T extends ResourceView> void logErrorCallback(
@@ -73,11 +75,13 @@ public final class SyncUtils {
       updateActionsString =
           updateActions.stream().map(Object::toString).collect(Collectors.joining(","));
     }
-    logger.error(
-        format(
-            "Error when trying to sync %s. Existing key: %s. Update actions: %s",
-            resourceName, resourceIdentifier, updateActionsString),
-        exception);
+    if (logger.isErrorEnabled()) {
+      logger.error(
+          format(
+              "Error when trying to sync %s. Existing key: %s. Update actions: %s",
+              resourceName, resourceIdentifier, updateActionsString),
+          exception);
+    }
   }
 
   public static <T extends WithKey> void logWarningCallback(
@@ -85,11 +89,13 @@ public final class SyncUtils {
       @Nonnull final String resourceName,
       @Nonnull final SyncException exception,
       @Nonnull final Optional<T> resource) {
-    logger.warn(
-        format(
-            "Warning when trying to sync %s. Existing key: %s",
-            resourceName, resource.map(WithKey::getKey).orElse(IDENTIFIER_NOT_PRESENT)),
-        exception);
+    if (logger.isWarnEnabled()) {
+      logger.warn(
+          format(
+              "Warning when trying to sync %s. Existing key: %s",
+              resourceName, resource.map(WithKey::getKey).orElse(IDENTIFIER_NOT_PRESENT)),
+          exception);
+    }
   }
 
   public static void logWarningCallback(
@@ -97,10 +103,12 @@ public final class SyncUtils {
       @Nonnull final String resourceName,
       @Nonnull final SyncException exception,
       @Nonnull final String resourceIdentifier) {
-    logger.warn(
-        format(
-            "Warning when trying to sync %s. Existing key: %s", resourceName, resourceIdentifier),
-        exception);
+    if (logger.isWarnEnabled()) {
+      logger.warn(
+          format(
+              "Warning when trying to sync %s. Existing key: %s", resourceName, resourceIdentifier),
+          exception);
+    }
   }
 
   @Nonnull

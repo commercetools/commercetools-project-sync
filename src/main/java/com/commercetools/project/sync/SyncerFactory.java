@@ -24,7 +24,6 @@ import com.commercetools.project.sync.type.TypeSyncer;
 import com.commercetools.sync.commons.BaseSync;
 import com.commercetools.sync.commons.BaseSyncOptions;
 import com.commercetools.sync.commons.helpers.BaseSyncStatistics;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.sphere.sdk.client.SphereClient;
 import io.sphere.sdk.models.ResourceView;
 import io.sphere.sdk.queries.QueryDsl;
@@ -76,8 +75,6 @@ public final class SyncerFactory {
     return new SyncerFactory(sourceClient, targetClient, clock, closeClients);
   }
 
-  @SuppressFBWarnings(
-      "NP_NONNULL_PARAM_VIOLATION") // https://github.com/findbugsproject/findbugs/issues/79
   @Nonnull
   CompletableFuture<Void> sync(
       @Nonnull final String[] syncOptionValues,

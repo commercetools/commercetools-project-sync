@@ -34,6 +34,18 @@ All notable changes to the [commercetools-project-sync project](https://github.c
 This project adheres to [Semantic Versioning](https://semver.org/).
 
 
+### 5.1.0 - Dec 14, 2021
+[Commits](https://github.com/commercetools/commercetools-project-sync/compare/5.0.0...5.1.0)
+
+- ✨ **Build Tools**
+  - Migrated from gradle `v5.6.4` to [`v7.3.1`](https://togithub.com/gradle/gradle/releases/v7.3.1)
+  - Migrated github actions `setup-java` plugin from `v1` to [`v2`](https://togithub.com/actions/setup-java/compare/v1...v2)
+  - Migrated github actions `codecov-action` plugin from `v1` to [`v2`](https://togithub.com/codecov/codecov-action/compare/v1...v2)
+  - Migrated from findbugs to spotbugs
+  
+- 🛠️ **Dependency Updates**
+  - `com.commercetools:commercetools-sync-java` `8.0.0` -> [`8.1.0`](https://github.com/commercetools/commercetools-sync-java/releases/tag/8.1.0)
+
 ### 5.0.0 - Oct 1, 2021
 [Commits](https://github.com/commercetools/commercetools-project-sync/compare/4.0.10...5.0.0)
 
