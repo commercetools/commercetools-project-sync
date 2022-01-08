@@ -32,7 +32,7 @@ apply from: "$rootDir/gradle-scripts/set-library-version.gradle"
 ext {
     mockitoVersion = '4.2.0'
     slf4jTestVersion = '1.2.0'
-    assertjVersion = '3.21.0'
+    assertjVersion = '3.22.0'
     pmdVersion = '6.41.0'
     jacocoVersion = '0.8.6'
     commercetoolsSyncJava = '8.1.1'
