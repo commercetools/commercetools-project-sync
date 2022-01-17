@@ -78,4 +78,20 @@ dependencies {
     testImplementation "org.junit.jupiter:junit-jupiter-params:${jupiterApiVersion}"
     testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:${jupiterApiVersion}"
     testImplementation "org.assertj:assertj-core:${assertjVersion}"
+
+    // overrides based on synk security informations until the other libraries publish the fixes.
+    constraints {
+        implementation("io.netty:netty-codec:4.1.73.Final") {
+            because "previous versions are vulnerable to Denial of Service (DoS) (CVE-2021-37137)"
+        }
+        implementation("io.netty:netty-codec-http:4.1.73.Final") {
+            because "previous versions are vulnerable to Denial of Service (DoS) (CVE-2021-43797)"
+        }
+        implementation("com.fasterxml.jackson.core:jackson-databind:2.13.1") {
+            because "previous versions are vulnerable to Denial of Service (DoS) (CVSS 5.9)"
+        }
+        implementation("com.beust:jcommander:1.82.0") {
+            because "previous versions are vulnerable to Information Exposure"
+        }
+    }
 }
