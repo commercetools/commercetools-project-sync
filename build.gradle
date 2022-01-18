@@ -38,6 +38,7 @@ ext {
     commercetoolsSyncJava = '8.1.0'
     apacheCliVersion = '1.5.0'
     jupiterApiVersion = '5.8.2'
+    asyncHttpClientVersion = '2.12.3'
     logbackVersion = '1.3.0-alpha12'
     logstashLogbackEncoderVersion= '7.0.1'
 }
@@ -66,6 +67,18 @@ tasks.withType(SpotlessTask) {
 
 dependencies {
     implementation "com.commercetools:commercetools-sync-java:${commercetoolsSyncJava}"
+    implementation "org.asynchttpclient:async-http-client:${asyncHttpClientVersion}"
+    implementation "commons-cli:commons-cli:${apacheCliVersion}"
+    implementation "ch.qos.logback:logback-classic:${logbackVersion}"
+    implementation "ch.qos.logback:logback-core:${logbackVersion}"
+    implementation "net.logstash.logback:logstash-logback-encoder:${logstashLogbackEncoderVersion}"
+    testImplementation "uk.org.lidalia:slf4j-test:${slf4jTestVersion}"
+    testImplementation "org.mockito:mockito-core:${mockitoVersion}"
+    testImplementation "org.junit.jupiter:junit-jupiter-api:${jupiterApiVersion}"
+    testImplementation "org.junit.jupiter:junit-jupiter-params:${jupiterApiVersion}"
+    testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:${jupiterApiVersion}"
+    testImplementation "org.assertj:assertj-core:${assertjVersion}"
+
     // overrides based on synk security informations until the other libraries publish the fixes.
     constraints {
         implementation("io.netty:netty-codec:4.1.73.Final") {
@@ -81,14 +94,4 @@ dependencies {
             because "previous versions are vulnerable to Information Exposure"
         }
     }
-    implementation "commons-cli:commons-cli:${apacheCliVersion}"
-    implementation "ch.qos.logback:logback-classic:${logbackVersion}"
-    implementation "ch.qos.logback:logback-core:${logbackVersion}"
-    implementation "net.logstash.logback:logstash-logback-encoder:${logstashLogbackEncoderVersion}"
-    testImplementation "uk.org.lidalia:slf4j-test:${slf4jTestVersion}"
-    testImplementation "org.mockito:mockito-core:${mockitoVersion}"
-    testImplementation "org.junit.jupiter:junit-jupiter-api:${jupiterApiVersion}"
-    testImplementation "org.junit.jupiter:junit-jupiter-params:${jupiterApiVersion}"
-    testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:${jupiterApiVersion}"
-    testImplementation "org.assertj:assertj-core:${assertjVersion}"
 }
