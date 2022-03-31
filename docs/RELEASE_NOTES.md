@@ -33,6 +33,22 @@ All notable changes to the [commercetools-project-sync project](https://github.c
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+### 5.1.1 - March 31, 2022
+[Commits](https://github.com/commercetools/commercetools-project-sync/compare/5.1.0...5.1.1)
+
+- ✨ **Build Tools**
+  - Migrated from gradle `v7.3.1` to [`v7.4.1`](https://togithub.com/gradle/gradle/releases/v7.4.1)
+
+- 🛠️ **Dependency Updates**
+  - `com.commercetools:commercetools-sync-java` `8.1.0` -> [`8.1.1`](https://github.com/commercetools/commercetools-sync-java/releases/tag/8.1.1)
+  - `com.github.ben-manes.versions` `0.39.0` -> [`0.42.0`](https://github.com/ben-manes/gradle-versions-plugin/releases/tag/v0.42.0)
+  - `com.adarshr.test-logger` `3.1.0` -> [`3.2.0`](https://github.com/radarsh/gradle-test-logger-plugin/releases/tag/v3.2.0)
+  - `com.diffplug.spotless` `6.1.0` -> `6.4.1`
+  - `com.bmuschko.docker-java-application` `7.1.0` - > [`7.3.0`](https://bmuschko.github.io/gradle-docker-plugin/current/user-guide/#change_log)
+  - `com.github.spotbugs` `5.0.3` -> [`5.0.6`](https://github.com/spotbugs/spotbugs-gradle-plugin/releases/tag/5.0.6)
+  - `org.assertj.assertj-core` `3.21.0` ->  [`3.22.0`](https://assertj.github.io/doc/#assertj-core-3-22-0-release-notes)
+  - `ch.qos.logback:logback-core` `1.3.0-alpha12` -> [`1.3.0-alpha14`](https://logback.qos.ch/news.html)
+  - `mockito-junit-jupiter` `4.2.0` ->  [`4.4.0`](https://github.com/mockito/mockito/releases/tag/v4.4.0)
 
 ### 5.1.0 - Dec 14, 2021
 [Commits](https://github.com/commercetools/commercetools-project-sync/compare/5.0.0...5.1.0)
