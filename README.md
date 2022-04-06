@@ -48,8 +48,8 @@ As of now, these are the supported resources:
 
      |  Resource/ Sub-resource |  Required Fields |
      |---|---|
-     | Product | `key`, `sku` |
-     | Product Variant  | `key`  |
+     | Product | `key` |
+     | Product Variant  | `key`, `sku`  |
      | Product Variant Asset (if exists) | `key`  |
      | ProductType  | `key`  |
      | Type  | `key`  |
