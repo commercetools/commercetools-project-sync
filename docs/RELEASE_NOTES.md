@@ -33,6 +33,12 @@ All notable changes to the [commercetools-project-sync project](https://github.c
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+### 5.1.2 - April 6, 2022
+[Commits](https://github.com/commercetools/commercetools-project-sync/compare/5.1.1...5.1.2)
+
+- ✨ **Enhancements** (1)
+  - Added `commercetools-project-sync/version` to user-agent header. [#367](https://github.com/commercetools/commercetools-project-sync/pull/367)
+
 ### 5.1.1 - March 31, 2022
 [Commits](https://github.com/commercetools/commercetools-project-sync/compare/5.1.0...5.1.1)
 
