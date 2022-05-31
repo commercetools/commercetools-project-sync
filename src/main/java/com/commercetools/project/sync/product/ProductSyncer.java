@@ -19,9 +19,8 @@ import com.commercetools.sync.products.helpers.ProductSyncStatistics;
 import io.sphere.sdk.client.SphereClient;
 import io.sphere.sdk.commands.UpdateAction;
 import io.sphere.sdk.models.WithKey;
-import io.sphere.sdk.products.Product;
-import io.sphere.sdk.products.ProductDraft;
-import io.sphere.sdk.products.ProductProjection;
+import io.sphere.sdk.products.*;
+import io.sphere.sdk.products.commands.updateactions.SetDiscountedPrice;
 import io.sphere.sdk.products.queries.ProductProjectionQuery;
 import io.sphere.sdk.queries.QueryPredicate;
 import java.time.Clock;
@@ -30,6 +29,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.CompletionStage;
+import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import org.slf4j.Logger;
@@ -86,6 +86,16 @@ public final class ProductSyncer
                 logWarningCallback(LOGGER, "product", exception, oldResource);
     final ProductSyncOptions syncOptions =
         ProductSyncOptionsBuilder.of(targetClient)
+            .beforeUpdateCallback(
+                (updateActions, newProductDraft, oldProduct) -> {
+                  if (updateActions != null) {
+                    return updateActions
+                        .stream()
+                        .filter(updateAction -> !(updateAction instanceof SetDiscountedPrice))
+                        .collect(Collectors.toList());
+                  }
+                  return null;
+                })
             .errorCallback(logErrorCallback)
             .warningCallback(logWarningCallback)
             .build();
@@ -115,8 +125,52 @@ public final class ProductSyncer
                 }
                 return Collections.emptyList();
               }
-              return productDrafts;
+              return removeDiscountedFromPrices(productDrafts);
             });
+  }
+
+  /**
+   * Currently java-sync does not support discounted price sync. This workaround is to remove
+   * discounted prices from syncing.
+   *
+   * <p>Issue: https://github.com/commercetools/commercetools-project-sync/issues/363
+   */
+  private List<ProductDraft> removeDiscountedFromPrices(List<ProductDraft> productDrafts) {
+    return productDrafts
+        .stream()
+        .map(
+            productDraft -> {
+              List<ProductVariantDraft> productVariants =
+                  productDraft
+                      .getVariants()
+                      .stream()
+                      .map(this::createProductVariantDraftWithoutDiscounted)
+                      .collect(Collectors.toList());
+              ProductVariantDraft masterVariant = productDraft.getMasterVariant();
+              ProductVariantDraft masterVariantDraft = null;
+              if (masterVariant != null) {
+                masterVariantDraft = createProductVariantDraftWithoutDiscounted(masterVariant);
+              }
+              return ProductDraftBuilder.of(productDraft)
+                  .masterVariant(masterVariantDraft)
+                  .variants(productVariants)
+                  .build();
+            })
+        .collect(Collectors.toList());
+  }
+
+  private ProductVariantDraftDsl createProductVariantDraftWithoutDiscounted(
+      ProductVariantDraft productVariantDraft) {
+    List<PriceDraft> prices = productVariantDraft.getPrices();
+    List<PriceDraft> priceDrafts = null;
+    if (prices != null) {
+      priceDrafts =
+          prices
+              .stream()
+              .map(priceDraft -> PriceDraftBuilder.of(priceDraft).discounted(null).build())
+              .collect(Collectors.toList());
+    }
+    return ProductVariantDraftBuilder.of(productVariantDraft).prices(priceDrafts).build();
   }
 
   @Nonnull
