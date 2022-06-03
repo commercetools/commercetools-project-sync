@@ -1,0 +1,89 @@
+{
+  "id": "6f7c7c6d-6c7c-4c84-ab33-b08ca461f7c2",
+  "version": 3,
+  "lastMessageSequenceNumber": 1,
+  "createdAt": "2022-05-23T20:12:36.534Z",
+  "lastModifiedAt": "2022-06-03T10:43:47.348Z",
+  "lastModifiedBy": {
+    "isPlatformClient": true
+  },
+  "createdBy": {
+    "isPlatformClient": true
+  },
+  "productType": {
+    "typeId": "product-type",
+    "id": "9aad3fdf-56fc-40e7-96d1-078b8b016f86"
+  },
+  "masterData": {
+    "current": {
+      "name": {
+        "en": "Wine subscription"
+      },
+      "categories": [],
+      "categoryOrderHints": {},
+      "slug": {
+        "en": "wine-subscription"
+      },
+      "masterVariant": {
+        "id": 1,
+        "sku": "wine01",
+        "prices": [],
+        "images": [],
+        "attributes": [],
+        "assets": []
+      },
+      "variants": [],
+      "searchKeywords": {}
+    },
+    "staged": {
+      "name": {
+        "en": "Wine subscription"
+      },
+      "categories": [],
+      "categoryOrderHints": {},
+      "slug": {
+        "en": "wine-subscription"
+      },
+      "masterVariant": {
+        "id": 1,
+        "sku": "wine01",
+        "prices": [
+          {
+            "id": "4aced858-bb95-4112-b021-64f1b754d74b",
+            "value": {
+              "type": "centPrecision",
+              "currencyCode": "EUR",
+              "centAmount": 4200,
+              "fractionDigits": 2
+            },
+            "discounted": {
+              "value": {
+                "type": "centPrecision",
+                "currencyCode": "EUR",
+                "centAmount": 4000,
+                "fractionDigits": 2
+              },
+              "discount": {
+                "typeId": "product-discount",
+                "id": "659e94b7-8d5b-404e-8d72-547e3931b42f"
+              }
+            }
+          }
+        ],
+        "images": [],
+        "attributes": [],
+        "assets": []
+      },
+      "variants": [],
+      "searchKeywords": {}
+    },
+    "published": false,
+    "hasStagedChanges": true
+  },
+  "key": "productKey10",
+  "taxCategory": {
+    "typeId": "tax-category",
+    "id": "e245e8d6-7a15-4bd5-8c8b-d033c662e17a"
+  },
+  "lastVariantId": 1
+}

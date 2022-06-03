@@ -153,6 +153,44 @@ class ProductSyncerTest {
   }
 
   @Test
+  void transform_WithDiscountedPrices_ShouldRemoveDiscountedPrices() {
+    // preparation
+    final SphereClient sourceClient = mock(SphereClient.class);
+    final ProductSyncer productSyncer =
+        ProductSyncer.of(sourceClient, mock(SphereClient.class), getMockedClock(), null);
+    final List<ProductProjection> productPage =
+        Collections.singletonList(
+            readObjectFromResource("product-key-10.json", Product.class)
+                .toProjection(ProductProjectionType.STAGED));
+
+    String jsonStringProductTypes =
+        "{\"results\":[{\"id\":\"53c4a8b4-754f-4b95-b6f2-3e1e70e3d0d3\","
+            + "\"key\":\"prodType1\"}]}";
+    final ResourceKeyIdGraphQlResult productTypesResult =
+        SphereJsonUtils.readObject(jsonStringProductTypes, ResourceKeyIdGraphQlResult.class);
+
+    when(sourceClient.execute(any(ResourceIdsGraphQlRequest.class)))
+        .thenReturn(CompletableFuture.completedFuture(productTypesResult));
+
+    // test
+    final List<ProductDraft> draftsFromPageStage =
+        productSyncer.transform(productPage).toCompletableFuture().join();
+
+    final Optional<ProductDraft> productDraftKey1 =
+        draftsFromPageStage
+            .stream()
+            .filter(productDraft -> "productKey10".equals(productDraft.getKey()))
+            .findFirst();
+
+    assertThat(productDraftKey1)
+        .hasValueSatisfying(
+            productDraft ->
+                assertThat(productDraft.getMasterVariant().getPrices())
+                    .anySatisfy(priceDraft -> assertThat(priceDraft.getDiscounted()).isNull()));
+    assertThat(testLogger.getAllLoggingEvents()).isEmpty();
+  }
+
+  @Test
   void transform_WithErrorOnGraphQlRequest_ShouldContinueAndLogError() {
     // preparation
     final SphereClient sourceClient = mock(SphereClient.class);
