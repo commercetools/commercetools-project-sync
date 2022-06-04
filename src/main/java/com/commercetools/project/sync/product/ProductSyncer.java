@@ -28,7 +28,6 @@ import io.sphere.sdk.products.ProductProjection;
 import io.sphere.sdk.products.ProductVariantDraft;
 import io.sphere.sdk.products.ProductVariantDraftBuilder;
 import io.sphere.sdk.products.ProductVariantDraftDsl;
-import io.sphere.sdk.products.commands.updateactions.SetDiscountedPrice;
 import io.sphere.sdk.products.queries.ProductProjectionQuery;
 import io.sphere.sdk.queries.QueryPredicate;
 import java.time.Clock;
@@ -94,16 +93,6 @@ public final class ProductSyncer
                 logWarningCallback(LOGGER, "product", exception, oldResource);
     final ProductSyncOptions syncOptions =
         ProductSyncOptionsBuilder.of(targetClient)
-            .beforeUpdateCallback(
-                (updateActions, newProductDraft, oldProduct) -> {
-                  if (updateActions != null) {
-                    return updateActions
-                        .stream()
-                        .filter(updateAction -> !(updateAction instanceof SetDiscountedPrice))
-                        .collect(Collectors.toList());
-                  }
-                  return null;
-                })
             .errorCallback(logErrorCallback)
             .warningCallback(logWarningCallback)
             .build();
