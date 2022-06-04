@@ -24,4 +24,9 @@
         <Bug pattern="EC_UNRELATED_TYPES"/>
     </Match>
 
+    <!-- Ignoring because of the bug in spotbugs: https://github.com/spotbugs/spotbugs/issues/2040 -->
+    <Match>
+        <Bug pattern="THROWS_METHOD_THROWS_CLAUSE_THROWABLE"/>
+    </Match>
+
 </FindBugsFilter>
