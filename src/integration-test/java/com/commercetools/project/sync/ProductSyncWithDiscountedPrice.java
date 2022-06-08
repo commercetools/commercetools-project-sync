@@ -118,7 +118,7 @@ class ProductSyncWithDiscountedPrice {
   void run_WhenTargetProductHasDiscountedPrice_ShouldNotRemoveIt() {
     // test
     CliRunner.of()
-        .run(new String[] {"-s", "all", "-r", "runnerName", "-f"}, createITSyncerFactory());
+        .run(new String[] {"-s", "products", "-r", "runnerName", "-f"}, createITSyncerFactory());
 
     // assertions
     assertThat(cliRunnerTestLogger.getAllLoggingEvents())
