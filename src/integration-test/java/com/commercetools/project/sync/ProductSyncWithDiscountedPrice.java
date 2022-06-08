@@ -13,9 +13,21 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.neovisionaries.i18n.CountryCode;
 import io.sphere.sdk.client.SphereClient;
 import io.sphere.sdk.models.Reference;
-import io.sphere.sdk.productdiscounts.*;
+import io.sphere.sdk.productdiscounts.DiscountedPrice;
+import io.sphere.sdk.productdiscounts.ProductDiscount;
+import io.sphere.sdk.productdiscounts.ProductDiscountDraft;
+import io.sphere.sdk.productdiscounts.ProductDiscountDraftBuilder;
+import io.sphere.sdk.productdiscounts.ProductDiscountValue;
 import io.sphere.sdk.productdiscounts.commands.ProductDiscountCreateCommand;
-import io.sphere.sdk.products.*;
+import io.sphere.sdk.products.Price;
+import io.sphere.sdk.products.PriceDraft;
+import io.sphere.sdk.products.PriceDraftBuilder;
+import io.sphere.sdk.products.Product;
+import io.sphere.sdk.products.ProductDraft;
+import io.sphere.sdk.products.ProductDraftBuilder;
+import io.sphere.sdk.products.ProductVariant;
+import io.sphere.sdk.products.ProductVariantDraft;
+import io.sphere.sdk.products.ProductVariantDraftBuilder;
 import io.sphere.sdk.products.commands.ProductCreateCommand;
 import io.sphere.sdk.products.queries.ProductQuery;
 import io.sphere.sdk.producttypes.ProductType;
@@ -50,8 +62,6 @@ class ProductSyncWithDiscountedPrice {
   @BeforeEach
   void setup() {
     cliRunnerTestLogger.clearAll();
-
-    cleanUpProjects(CTP_SOURCE_CLIENT, CTP_TARGET_CLIENT);
 
     ProductDiscountDraft productDiscountDraft =
         ProductDiscountDraftBuilder.of()
