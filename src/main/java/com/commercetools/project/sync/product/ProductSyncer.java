@@ -132,7 +132,8 @@ public final class ProductSyncer
    *
    * <p>Issue: https://github.com/commercetools/commercetools-project-sync/issues/363
    */
-  private List<ProductDraft> removeDiscountedFromPrices(@Nonnull final List<ProductDraft> productDrafts) {
+  private List<ProductDraft> removeDiscountedFromPrices(
+      @Nonnull final List<ProductDraft> productDrafts) {
     return productDrafts
         .stream()
         .map(
