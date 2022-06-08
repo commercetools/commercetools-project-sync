@@ -132,18 +132,18 @@ public final class ProductSyncer
    *
    * <p>Issue: https://github.com/commercetools/commercetools-project-sync/issues/363
    */
-  private List<ProductDraft> removeDiscountedFromPrices(List<ProductDraft> productDrafts) {
+  private List<ProductDraft> removeDiscountedFromPrices(@Nonnull final List<ProductDraft> productDrafts) {
     return productDrafts
         .stream()
         .map(
             productDraft -> {
-              List<ProductVariantDraft> productVariants =
+              final List<ProductVariantDraft> productVariants =
                   productDraft
                       .getVariants()
                       .stream()
                       .map(this::createProductVariantDraftWithoutDiscounted)
                       .collect(Collectors.toList());
-              ProductVariantDraft masterVariant = productDraft.getMasterVariant();
+              final ProductVariantDraft masterVariant = productDraft.getMasterVariant();
               ProductVariantDraft masterVariantDraft = null;
               if (masterVariant != null) {
                 masterVariantDraft = createProductVariantDraftWithoutDiscounted(masterVariant);
@@ -157,8 +157,8 @@ public final class ProductSyncer
   }
 
   private ProductVariantDraftDsl createProductVariantDraftWithoutDiscounted(
-      ProductVariantDraft productVariantDraft) {
-    List<PriceDraft> prices = productVariantDraft.getPrices();
+      @Nonnull final ProductVariantDraft productVariantDraft) {
+    final List<PriceDraft> prices = productVariantDraft.getPrices();
     List<PriceDraft> priceDrafts = null;
     if (prices != null) {
       priceDrafts =
