@@ -35,6 +35,8 @@ import io.sphere.sdk.customobjects.queries.CustomObjectQuery;
 import io.sphere.sdk.inventory.commands.InventoryEntryDeleteCommand;
 import io.sphere.sdk.inventory.queries.InventoryEntryQuery;
 import io.sphere.sdk.models.Versioned;
+import io.sphere.sdk.productdiscounts.commands.ProductDiscountDeleteCommand;
+import io.sphere.sdk.productdiscounts.queries.ProductDiscountQuery;
 import io.sphere.sdk.products.Product;
 import io.sphere.sdk.products.ProductVariant;
 import io.sphere.sdk.products.commands.ProductDeleteCommand;
@@ -172,8 +174,15 @@ public final class IntegrationTestUtils {
     final CompletableFuture<Void> deleteCustomObject =
         queryAndExecute(
             client, CustomObjectQuery.ofJsonNode(), CustomObjectDeleteCommand::ofJsonNode);
+    final CompletableFuture<Void> deleteProductDiscount =
+        queryAndExecute(client, ProductDiscountQuery.of(), ProductDiscountDeleteCommand::of);
 
-    CompletableFuture.allOf(deleteProduct, deleteInventory, deleteCartDiscount, deleteCustomObject)
+    CompletableFuture.allOf(
+            deleteProduct,
+            deleteInventory,
+            deleteCartDiscount,
+            deleteCustomObject,
+            deleteProductDiscount)
         .join();
 
     queryAndExecute(
