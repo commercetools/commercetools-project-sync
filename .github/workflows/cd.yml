@@ -20,7 +20,7 @@ jobs:
           java-version: 11
           distribution: 'zulu'
       - name: Build and push image to docker using gradle plugin
-        run: ./gradlew setLibraryVersion dockerPushImage -Dbuild.version=${{ steps.vars.outputs.tag }} --daemon
+        run: ./gradlew setLibraryVersion dockerBuildxImage -Dbuild.version=${{ steps.vars.outputs.tag }} --daemon
         env:
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
           DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
