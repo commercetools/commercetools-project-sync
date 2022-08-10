@@ -10,6 +10,7 @@ docker {
         username = System.getenv('DOCKER_USERNAME')
         password = System.getenv('DOCKER_PASSWORD')
         println 'helloxx ' + System.getenv('DOCKER_USERNAME')
+        println 'helloxx2 ' + username
     }
 }
 
