@@ -2,8 +2,8 @@ name: CD
 
 on:
   push:
-    tags:
-      - '*.*.*'
+    branches:
+      - multiarch_images_test
 
 jobs:
   docker:
@@ -20,7 +20,7 @@ jobs:
           java-version: 11
           distribution: 'zulu'
       - name: Build and push image to docker using gradle plugin
-        run: ./gradlew setLibraryVersion dockerBuildxImage -Dbuild.version=${{ steps.vars.outputs.tag }} --daemon
+        run: ./gradlew setLibraryVersion dockerBuildxImage -Dbuild.version=multiarchtest --daemon
         env:
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
           DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
