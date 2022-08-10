@@ -12,9 +12,17 @@ docker {
     }
 }
 
-task dockerBuildxImage(type:Exec) {
+task dockerBuildxCreate(type:Exec) {
     group 'docker'
     dependsOn dockerCreateDockerfile
+    workingDir 'build/docker'
+    executable 'docker'
+    args = ['buildx', 'create', '--use']
+}
+
+task dockerBuildxImage(type:Exec) {
+    group 'docker'
+    dependsOn dockerBuildxCreate
     workingDir 'build/docker'
     executable 'docker'
     args = ['buildx', 'build', '--platform', 'linux/amd64,linux/arm64/v8', '--tag', dockerImageName, '--push', '.']
