@@ -14,7 +14,6 @@ plugins {
     id "com.github.ben-manes.versions" version '0.42.0'
     id 'com.adarshr.test-logger' version '3.2.0'
     id 'com.diffplug.spotless' version '6.9.0'
-    id 'com.bmuschko.docker-java-application' version '7.4.0'
     id "com.github.spotbugs" version "5.0.9"
 }
 
@@ -48,7 +47,6 @@ apply from: "$rootDir/gradle-scripts/pmd.gradle"
 apply from: "$rootDir/gradle-scripts/jacoco.gradle"
 apply from: "$rootDir/gradle-scripts/spotbugs.gradle"
 apply from: "$rootDir/gradle-scripts/shadow.gradle"
-apply from: "$rootDir/gradle-scripts/docker.gradle"
 apply from: "$rootDir/gradle-scripts/execution-order.gradle"
 
 /**
