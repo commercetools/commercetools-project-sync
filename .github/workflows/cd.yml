@@ -19,7 +19,7 @@ jobs:
         with:
           java-version: 11
           distribution: 'zulu'
-      - name: Build and push image to docker using gradle plugin
+      - name: Build java classes
         run: ./gradlew setLibraryVersion assemble
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
@@ -30,7 +30,7 @@ jobs:
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
-      - name: Build and push extension module
+      - name: Build and push project sync
         id: docker_build_extension
         uses: docker/build-push-action@v3
         with:
