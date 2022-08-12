@@ -92,7 +92,7 @@ Before building a docker image, you need to compile java classes:
 ```
 Then you can build the docker image with the following command:
 ```bash
-docker buildx build  --platform linux/amd64 --tag commercetools/commercetools-project-sync:<version> . --load
+docker buildx build --tag commercetools/commercetools-project-sync:<version> . --load
 ```
 
 The docker image has been built and published to your desktop docker.
