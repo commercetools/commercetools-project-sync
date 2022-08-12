@@ -83,13 +83,18 @@ It is recommended to set it in your IDE auto formatting settings for this projec
 ./gradlew clean build
 ````
 
-### Build 
+### Build a docker image
 
- Gradle docker plugin is used to build and deploy the docker images. 
- To build the docker image locally, please run
- ````bash
-./gradlew dockerBuildImage
-````
+To build a docker image, you need to install docker. [Dockerfile](../Dockerfile) is provided in the root folder.
+Before building a docker image, you need to compile java classes:
+```bash
+./gradlew setLibraryVersion assemble
+```
+Then you can build the docker image with the following command:
+```bash
+docker buildx build --tag commercetools/commercetools-project-sync:<version> . --load
+```
+
 The docker image has been built and published to your desktop docker.
 
 Example:
