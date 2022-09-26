@@ -197,12 +197,12 @@ final class CliRunner {
           printApplicationVersion();
           break;
         default:
-          resultCompletionStage = exceptionallyCompletedFuture(
+          resultCompletionStage =
+              exceptionallyCompletedFuture(
                   new CliException(
-                          format("Please check that the first sync option is either -%s, -%s or -%s.",
-                                  SYNC_MODULE_OPTION_SHORT, HELP_OPTION_SHORT, VERSION_OPTION_SHORT)
-                  )
-          );
+                      format(
+                          "Please check that the first sync option is either -%s, -%s or -%s.",
+                          SYNC_MODULE_OPTION_SHORT, HELP_OPTION_SHORT, VERSION_OPTION_SHORT)));
           break;
       }
 
