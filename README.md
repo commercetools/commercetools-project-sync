@@ -104,7 +104,8 @@ As of now, these are the supported resources:
                                         is unique, otherwise running more
                                         than 1 sync instance with the same
                                         name would lead to an unexpected
-                                        behaviour. (optional parameter)
+                                        behaviour. This option must
+                                        be added after `-s` option. (optional parameter)
                                         default: 'runnerName'.
     -s,--sync <args>                    Choose one or more of the following modules
                                         to run: "types", "productTypes",
@@ -114,14 +115,16 @@ As of now, these are the supported resources:
                                         "taxCategories", "customers",
                                         "shoppingLists" or "all".
        --syncProjectSyncCustomObjects   Sync custom objects that were created
-                                        with project sync (this application).
+                                        with project sync (this application). This option must
+                                        be added after `-s` option.
        --productQueryParameters         Pass your customized product fetch limit
                                         and a product projection predicate to filter  
                                         product resources to sync in the JSON format. 
                                         Example: "{\"limit\": 100, \"where\": \"
                                         published=true\"}" could be used to fetch 
                                         only published products to sync and limit 
-                                        max 100 elements in one page.                
+                                        max 100 elements in one page. This option must
+                                        be added after `-s` option.                
     -v,--version                        Print the version of the application.
    ```
 
