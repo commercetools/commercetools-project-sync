@@ -96,7 +96,8 @@ As of now, these are the supported resources:
     -f,--full                           By default, a delta sync runs using
                                         last-sync-timestamp logic. Use this
                                         flag to run a full sync. i.e. sync
-                                        the entire data set.
+                                        the entire data set. This option must
+                                        be added after `-s` option.
     -h,--help                           Print help information.
     -r,--runnerName <arg>               Choose a name for the running sync
                                         instance. Please make sure the name

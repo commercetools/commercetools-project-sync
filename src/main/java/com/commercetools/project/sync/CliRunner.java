@@ -51,7 +51,7 @@ final class CliRunner {
           + "(optional parameter) default: 'runnerName'.";
   static final String FULL_SYNC_OPTION_DESCRIPTION =
       "By default, a delta sync runs using last-sync-timestamp logic. Use this flag to run a full sync. i.e. sync the "
-          + "entire data set.";
+          + "entire data set. This option must be added after `-s` option.";
   static final String HELP_OPTION_DESCRIPTION = "Print help information.";
   static final String VERSION_OPTION_DESCRIPTION = "Print the version of the application.";
   static final String SYNC_PROJECT_SYNC_CUSTOM_OBJECTS_OPTION_DESCRIPTION =
