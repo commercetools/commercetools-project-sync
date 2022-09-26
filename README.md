@@ -96,14 +96,16 @@ As of now, these are the supported resources:
     -f,--full                           By default, a delta sync runs using
                                         last-sync-timestamp logic. Use this
                                         flag to run a full sync. i.e. sync
-                                        the entire data set.
+                                        the entire data set. This option must
+                                        be added after `-s` option.
     -h,--help                           Print help information.
     -r,--runnerName <arg>               Choose a name for the running sync
                                         instance. Please make sure the name
                                         is unique, otherwise running more
                                         than 1 sync instance with the same
                                         name would lead to an unexpected
-                                        behaviour. (optional parameter)
+                                        behaviour. This option must
+                                        be added after `-s` option. (optional parameter)
                                         default: 'runnerName'.
     -s,--sync <args>                    Choose one or more of the following modules
                                         to run: "types", "productTypes",
@@ -113,14 +115,16 @@ As of now, these are the supported resources:
                                         "taxCategories", "customers",
                                         "shoppingLists" or "all".
        --syncProjectSyncCustomObjects   Sync custom objects that were created
-                                        with project sync (this application).
+                                        with project sync (this application). This option must
+                                        be added after `-s` option.
        --productQueryParameters         Pass your customized product fetch limit
                                         and a product projection predicate to filter  
                                         product resources to sync in the JSON format. 
                                         Example: "{\"limit\": 100, \"where\": \"
                                         published=true\"}" could be used to fetch 
                                         only published products to sync and limit 
-                                        max 100 elements in one page.                
+                                        max 100 elements in one page. This option must
+                                        be added after `-s` option.                
     -v,--version                        Print the version of the application.
    ```
 
@@ -203,7 +207,7 @@ Example:
 ##### Download
 
 ```bash
-docker pull commercetools/commercetools-project-sync:5.2.0
+docker pull commercetools/commercetools-project-sync:5.2.1
 ```
 ##### Run
 
@@ -215,14 +219,14 @@ docker run \
 -e TARGET_PROJECT_KEY=xxxx \
 -e TARGET_CLIENT_ID=xxxx \
 -e TARGET_CLIENT_SECRET=xxxx \
-commercetools/commercetools-project-sync:5.2.0 -s all
+commercetools/commercetools-project-sync:5.2.1 -s all
 ```
 
 
 ### Examples
  - To run the all sync modules from a source project to a target project
    ```bash
-   docker run commercetools/commercetools-project-sync:5.2.0 -s all
+   docker run commercetools/commercetools-project-sync:5.2.1 -s all
    ```
    This will run the following sync modules in the given order:
  1. `Type` Sync and `ProductType` Sync and `States` Sync and `TaxCategory` Sync and `CustomObject` Sync in parallel.
@@ -232,68 +236,68 @@ commercetools/commercetools-project-sync:5.2.0 -s all
 
  - To run the type sync
    ```bash
-   docker run commercetools/commercetools-project-sync:5.2.0 -s types
+   docker run commercetools/commercetools-project-sync:5.2.1 -s types
    ```
 
  - To run the productType sync
    ```bash
-   docker run commercetools/commercetools-project-sync:5.2.0 -s productTypes
+   docker run commercetools/commercetools-project-sync:5.2.1 -s productTypes
    ```
 
 - To run the states sync
    ```bash
-   docker run commercetools/commercetools-project-sync:5.2.0 -s states
+   docker run commercetools/commercetools-project-sync:5.2.1 -s states
    ```
 - To run the taxCategory sync
    ```bash
-   docker run commercetools/commercetools-project-sync:5.2.0 -s taxCategories
+   docker run commercetools/commercetools-project-sync:5.2.1 -s taxCategories
    ```
 
 - To run the category sync
    ```bash
-   docker run commercetools/commercetools-project-sync:5.2.0 -s categories
+   docker run commercetools/commercetools-project-sync:5.2.1 -s categories
    ```
 
 - To run the product sync
    ```bash
-   docker run commercetools/commercetools-project-sync:5.2.0 -s products
+   docker run commercetools/commercetools-project-sync:5.2.1 -s products
    ```
 
 - To run the cartDiscount sync
    ```bash
-   docker run commercetools/commercetools-project-sync:5.2.0 -s cartDiscounts
+   docker run commercetools/commercetools-project-sync:5.2.1 -s cartDiscounts
    ```
 
 - To run the inventoryEntry sync
    ```bash
-   docker run commercetools/commercetools-project-sync:5.2.0 -s inventoryEntries
+   docker run commercetools/commercetools-project-sync:5.2.1 -s inventoryEntries
    ```
 
 - To run the customObject sync
    ```bash
-   docker run commercetools/commercetools-project-sync:5.2.0 -s customObjects
+   docker run commercetools/commercetools-project-sync:5.2.1 -s customObjects
    ```
 
 - To run the customer sync
    ```bash
-   docker run commercetools/commercetools-project-sync:5.2.0 -s customers
+   docker run commercetools/commercetools-project-sync:5.2.1 -s customers
    ```
   
 - To run the shoppingList sync
    ```bash
-   docker run commercetools/commercetools-project-sync:5.2.0 -s shoppingLists
+   docker run commercetools/commercetools-project-sync:5.2.1 -s shoppingLists
    ```
 - To run both products and shoppingList sync
    ```bash
-   docker run commercetools/commercetools-project-sync:5.2.0 -s products shoppingLists
+   docker run commercetools/commercetools-project-sync:5.2.1 -s products shoppingLists
    ```
   
 - To run type, productType and shoppingList sync
    ```bash
-   docker run commercetools/commercetools-project-sync:5.2.0 -s types productTypes shoppingLists
+   docker run commercetools/commercetools-project-sync:5.2.1 -s types productTypes shoppingLists
    ```
 
 - To run all sync modules using a runner name
    ```bash
-   docker run commercetools/commercetools-project-sync:5.2.0 -s all -r myRunnerName
+   docker run commercetools/commercetools-project-sync:5.2.1 -s all -r myRunnerName
    ```

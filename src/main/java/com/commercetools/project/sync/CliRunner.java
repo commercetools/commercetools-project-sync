@@ -47,19 +47,20 @@ final class CliRunner {
               ArrayUtils.add(SyncModuleOption.getSyncOptionValues(), SYNC_MODULE_OPTION_ALL));
   static final String RUNNER_NAME_OPTION_DESCRIPTION =
       "Choose a name for the running sync instance. Please make sure the name is unique, otherwise running more than 1 sync "
-          + "instance with the same name would lead to an unexpected behaviour. "
+          + "instance with the same name would lead to an unexpected behaviour. This option must be added after `-s` option."
           + "(optional parameter) default: 'runnerName'.";
   static final String FULL_SYNC_OPTION_DESCRIPTION =
       "By default, a delta sync runs using last-sync-timestamp logic. Use this flag to run a full sync. i.e. sync the "
-          + "entire data set.";
+          + "entire data set. This option must be added after `-s` option.";
   static final String HELP_OPTION_DESCRIPTION = "Print help information.";
   static final String VERSION_OPTION_DESCRIPTION = "Print the version of the application.";
   static final String SYNC_PROJECT_SYNC_CUSTOM_OBJECTS_OPTION_DESCRIPTION =
-      "Sync custom objects that were created with project sync (this application).";
+      "Sync custom objects that were created with project sync (this application). "
+          + "This option must be added after `-s` option.";
   static final String PRODUCT_QUERY_PARAMETERS_OPTION_DESCRIPTION =
       "Pass your customized product fetch limit and a product projection predicate to filter product resources to sync in the JSON format. "
           + "Example: {\"limit\": 100, \"where\": \"published=true\"} could be used to fetch only published "
-          + "products to sync and limit max 100 elements in one page.";
+          + "products to sync and limit max 100 elements in one page. This option must be added after `-s` option.";
 
   private static final Logger LOGGER = LoggerFactory.getLogger(CliRunner.class);
 
@@ -186,17 +187,24 @@ final class CliRunner {
       }
       final String optionName = option.getOpt();
       CompletionStage<Void> resultCompletionStage = CompletableFuture.completedFuture(null);
-
-      if (SYNC_MODULE_OPTION_SHORT.equalsIgnoreCase(optionName)) {
-        resultCompletionStage = processSyncOptionAndExecute(commandLine, syncerFactory);
-      }
-
-      if (HELP_OPTION_SHORT.equalsIgnoreCase(optionName)) {
-        printHelpToStdOut(cliOptions);
-      }
-
-      if (VERSION_OPTION_SHORT.equalsIgnoreCase(optionName)) {
-        printApplicationVersion();
+      switch (optionName) {
+        case SYNC_MODULE_OPTION_SHORT:
+          resultCompletionStage = processSyncOptionAndExecute(commandLine, syncerFactory);
+          break;
+        case HELP_OPTION_SHORT:
+          printHelpToStdOut(cliOptions);
+          break;
+        case VERSION_OPTION_SHORT:
+          printApplicationVersion();
+          break;
+        default:
+          resultCompletionStage =
+              exceptionallyCompletedFuture(
+                  new CliException(
+                      format(
+                          "Please check that the first sync option is either -%s, -%s or -%s.",
+                          SYNC_MODULE_OPTION_SHORT, HELP_OPTION_SHORT, VERSION_OPTION_SHORT)));
+          break;
       }
 
       return resultCompletionStage;
