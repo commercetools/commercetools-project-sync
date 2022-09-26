@@ -186,17 +186,24 @@ final class CliRunner {
       }
       final String optionName = option.getOpt();
       CompletionStage<Void> resultCompletionStage = CompletableFuture.completedFuture(null);
-
-      if (SYNC_MODULE_OPTION_SHORT.equalsIgnoreCase(optionName)) {
-        resultCompletionStage = processSyncOptionAndExecute(commandLine, syncerFactory);
-      }
-
-      if (HELP_OPTION_SHORT.equalsIgnoreCase(optionName)) {
-        printHelpToStdOut(cliOptions);
-      }
-
-      if (VERSION_OPTION_SHORT.equalsIgnoreCase(optionName)) {
-        printApplicationVersion();
+      switch (optionName) {
+        case SYNC_MODULE_OPTION_SHORT:
+          resultCompletionStage = processSyncOptionAndExecute(commandLine, syncerFactory);
+          break;
+        case HELP_OPTION_SHORT:
+          printHelpToStdOut(cliOptions);
+          break;
+        case VERSION_OPTION_SHORT:
+          printApplicationVersion();
+          break;
+        default:
+          resultCompletionStage = exceptionallyCompletedFuture(
+                  new CliException(
+                          format("Please check that the first sync option is either -%s, -%s or -%s.",
+                                  SYNC_MODULE_OPTION_SHORT, HELP_OPTION_SHORT, VERSION_OPTION_SHORT)
+                  )
+          );
+          break;
       }
 
       return resultCompletionStage;
