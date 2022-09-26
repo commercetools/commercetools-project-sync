@@ -201,6 +201,34 @@ class CliRunnerTest {
   }
 
   @Test
+  void run_WithFullSyncAsFirstArgument_ShouldFailAndLogError() {
+    // preparation
+    final SyncerFactory syncerFactory =
+        SyncerFactory.of(
+            () -> mock(SphereClient.class), () -> mock(SphereClient.class), getMockedClock());
+
+    // test
+    CliRunner.of().run(new String[] {"-f"}, syncerFactory);
+
+    // assertion
+    assertThat(testLogger.getAllLoggingEvents())
+        .hasSize(1)
+        .singleElement()
+        .satisfies(
+            loggingEvent -> {
+              assertThat(loggingEvent.getLevel()).isEqualTo(Level.ERROR);
+              assertThat(loggingEvent.getMessage()).contains("Failed to run sync process.");
+              final Optional<Throwable> actualThrowableOpt = loggingEvent.getThrowable();
+              assertThat(actualThrowableOpt).isNotNull();
+              assertThat(actualThrowableOpt.isPresent()).isTrue();
+              final Throwable actualThrowable = actualThrowableOpt.get();
+              assertThat(actualThrowable).isExactlyInstanceOf(CliException.class);
+              assertThat(actualThrowable.getMessage())
+                  .contains("Please check that the first sync option is either -s, -h or -v.");
+            });
+  }
+
+  @Test
   void run_AsProductDeltaSync_ShouldBuildSyncerAndExecuteSync() {
     // preparation
     final SphereClient sourceClient = mock(SphereClient.class);
