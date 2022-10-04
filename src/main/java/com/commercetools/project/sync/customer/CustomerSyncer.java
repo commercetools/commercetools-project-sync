@@ -32,6 +32,7 @@ public final class CustomerSyncer
         Customer,
         Customer,
         CustomerDraft,
+        Customer,
         CustomerSyncStatistics,
         CustomerSyncOptions,
         CustomerQuery,

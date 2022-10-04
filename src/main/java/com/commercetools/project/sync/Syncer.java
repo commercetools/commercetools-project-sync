@@ -14,6 +14,7 @@ import com.commercetools.sync.commons.utils.ReferenceIdToKeyCache;
 import io.sphere.sdk.client.SphereClient;
 import io.sphere.sdk.customobjects.CustomObject;
 import io.sphere.sdk.models.ResourceView;
+import io.sphere.sdk.models.Versioned;
 import io.sphere.sdk.queries.QueryDsl;
 import io.sphere.sdk.queries.QueryPredicate;
 import java.time.Clock;
@@ -55,10 +56,11 @@ public abstract class Syncer<
     RU extends ResourceView,
     RC extends ResourceView<RC, RC>,
     RD,
+    V extends Versioned,
     S extends BaseSyncStatistics,
     O extends BaseSyncOptions<RU, RD, RC>,
     Q extends QueryDsl<RU, Q>,
-    B extends BaseSync<RD, S, O>> {
+    B extends BaseSync<RD, V, S, O>> {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(Syncer.class);
 

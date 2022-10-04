@@ -32,6 +32,7 @@ public final class CategorySyncer
         Category,
         Category,
         CategoryDraft,
+        Category,
         CategorySyncStatistics,
         CategorySyncOptions,
         CategoryQuery,

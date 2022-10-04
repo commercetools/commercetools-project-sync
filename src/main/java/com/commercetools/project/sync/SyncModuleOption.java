@@ -19,8 +19,8 @@ import java.util.List;
 import java.util.stream.Stream;
 
 public enum SyncModuleOption {
-  TYPE_SYNC("types", TypeSync.class, Collections.EMPTY_LIST),
-  PRODUCT_TYPE_SYNC("productTypes", ProductTypeSync.class, Collections.EMPTY_LIST),
+  TYPE_SYNC("types", TypeSync.class, Collections.emptyList()),
+  PRODUCT_TYPE_SYNC("productTypes", ProductTypeSync.class, Collections.emptyList()),
   CART_DISCOUNT_SYNC("cartDiscounts", CartDiscountSync.class, Collections.singletonList(TYPE_SYNC)),
   CUSTOM_OBJECT_SYNC("customObjects", CustomObjectSync.class, Collections.emptyList()),
   CATEGORY_SYNC("categories", CategorySync.class, Collections.singletonList(TYPE_SYNC)),

@@ -32,6 +32,7 @@ public final class ProductTypeSyncer
         ProductType,
         ProductType,
         ProductTypeDraft,
+        ProductType,
         ProductTypeSyncStatistics,
         ProductTypeSyncOptions,
         ProductTypeQuery,
