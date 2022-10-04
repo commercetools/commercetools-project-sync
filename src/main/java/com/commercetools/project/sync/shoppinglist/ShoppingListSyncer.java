@@ -34,6 +34,7 @@ public final class ShoppingListSyncer
         ShoppingList,
         ShoppingList,
         ShoppingListDraft,
+        ShoppingList,
         ShoppingListSyncStatistics,
         ShoppingListSyncOptions,
         ShoppingListQuery,

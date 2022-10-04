@@ -26,6 +26,7 @@ import com.commercetools.sync.commons.BaseSyncOptions;
 import com.commercetools.sync.commons.helpers.BaseSyncStatistics;
 import io.sphere.sdk.client.SphereClient;
 import io.sphere.sdk.models.ResourceView;
+import io.sphere.sdk.models.Versioned;
 import io.sphere.sdk.queries.QueryDsl;
 import java.time.Clock;
 import java.util.ArrayList;
@@ -129,10 +130,11 @@ public final class SyncerFactory {
               ? extends ResourceView,
               ? extends ResourceView<?, ?>,
               ?,
+              ? extends Versioned,
               ? extends BaseSyncStatistics,
               ? extends BaseSyncOptions<?, ?, ?>,
               ? extends QueryDsl<?, ?>,
-              ? extends BaseSync<?, ?, ?>>
+              ? extends BaseSync<?, ?, ?, ?>>
           syncer =
               buildSyncer(
                   syncOptionValue,
@@ -288,10 +290,11 @@ public final class SyncerFactory {
           ? extends ResourceView,
           ? extends ResourceView<?, ?>,
           ?,
+          ? extends Versioned,
           ? extends BaseSyncStatistics,
           ? extends BaseSyncOptions<?, ?, ?>,
           ? extends QueryDsl<?, ?>,
-          ? extends BaseSync<?, ?, ?>>
+          ? extends BaseSync<?, ?, ?, ?>>
       buildSyncer(
           @Nonnull final SyncModuleOption syncModuleOption,
           @Nonnull final String runnerNameOptionValue,
@@ -302,10 +305,11 @@ public final class SyncerFactory {
             ? extends ResourceView,
             ? extends ResourceView<?, ?>,
             ?,
+            ? extends Versioned,
             ? extends BaseSyncStatistics,
             ? extends BaseSyncOptions<?, ?, ?>,
             ? extends QueryDsl<?, ?>,
-            ? extends BaseSync<?, ?, ?>>
+            ? extends BaseSync<?, ?, ?, ?>>
         syncer = null;
 
     switch (syncModuleOption) {

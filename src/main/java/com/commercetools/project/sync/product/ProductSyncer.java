@@ -47,6 +47,7 @@ public final class ProductSyncer
         ProductProjection,
         Product,
         ProductDraft,
+        ProductProjection,
         ProductSyncStatistics,
         ProductSyncOptions,
         ProductProjectionQuery,

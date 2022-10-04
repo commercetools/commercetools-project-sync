@@ -41,6 +41,7 @@ public final class CustomObjectSyncer
         CustomObject<JsonNode>,
         CustomObject<JsonNode>,
         CustomObjectDraft<JsonNode>,
+        CustomObject<JsonNode>,
         CustomObjectSyncStatistics,
         CustomObjectSyncOptions,
         CustomObjectQuery<JsonNode>,

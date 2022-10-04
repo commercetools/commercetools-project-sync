@@ -33,6 +33,7 @@ public final class InventoryEntrySyncer
         InventoryEntry,
         InventoryEntry,
         InventoryEntryDraft,
+        InventoryEntry,
         InventorySyncStatistics,
         InventorySyncOptions,
         InventoryEntryQuery,

@@ -37,6 +37,7 @@ public final class TaxCategorySyncer
         TaxCategory,
         TaxCategory,
         TaxCategoryDraft,
+        TaxCategory,
         TaxCategorySyncStatistics,
         TaxCategorySyncOptions,
         TaxCategoryQuery,

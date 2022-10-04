@@ -32,6 +32,7 @@ public final class CartDiscountSyncer
         CartDiscount,
         CartDiscount,
         CartDiscountDraft,
+        CartDiscount,
         CartDiscountSyncStatistics,
         CartDiscountSyncOptions,
         CartDiscountQuery,
