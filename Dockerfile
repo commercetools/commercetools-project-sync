@@ -1,4 +1,4 @@
-FROM adoptopenjdk/openjdk11:jre
+FROM eclipse-temurin:11-jre
 LABEL maintainer="PS Team Munich [ps-dev@commercetools.com]"
 WORKDIR /app
 COPY ./build/libs libs/

@@ -16,7 +16,7 @@ jobs:
         uses: actions/setup-java@v3
         with:
           java-version: 11
-          distribution: 'zulu'
+          distribution: 'temurin'
       - name: Build with Gradle
         run: ./gradlew clean setLibraryVersion build
         env:
