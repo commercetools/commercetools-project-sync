@@ -19,6 +19,7 @@
     - [Download](#download)
     - [Run](#run)
 - [Examples](#examples)
+- [Scopes](#scopes)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -303,3 +304,27 @@ commercetools/commercetools-project-sync:5.3.1 -s all
    ```bash
    docker run commercetools/commercetools-project-sync:5.3.1 -s all -r myRunnerName
    ```
+
+## Scopes
+If you want to narrow down the credential scopes instead of using `manage_project` scope, make sure you grant the correct scopes for every resource you intend to sync.
+
+### Required scope for all resources
+For project-sync to run successfully, it is **required to grant access to custom objects for the target project**. Therefore, one of the below scope must always be granted for any resources: `manage_products` OR `manage_orders` OR `manage_customers` OR `manage_key_value_documents`
+
+### Required scope per resource
+
+In addition to the above-mentioned scope, the table below shows the minimal scope for every resource
+
+| Resource          | Scope |
+|-------------------| --- |
+| Cart discounts    | `manage_cart_discounts` |
+| Categories        | `manage_categories`|
+| Inventory entries | `manage_products`|
+| Products          | `manage_products`|
+| Product types     | `manage_products`|
+| Types             | `manage_types`|
+| States            | `manage_states`|
+| Tax categories    | `manage_tax_categories`|
+| Custom objects    | `manage_products` OR `manage_orders` OR `manage_customers` OR `manage_key_value_documents`|
+| Customers         | `manage_customers`|
+| Shopping lists    | `manage_shopping_lists`|
