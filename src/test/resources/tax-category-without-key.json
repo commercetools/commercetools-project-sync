@@ -12,11 +12,11 @@
       "subRates": [
         {
           "name": "sub-rate 01",
-          "amount": "0.18"
+          "amount": 0.18
         },
         {
           "name": "sub-rate 02",
-          "amount": "0.01"
+          "amount": 0.01
         }
       ]
     }

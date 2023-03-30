@@ -3,7 +3,7 @@
   "version": 1,
   "createdAt": "2016-02-12T14:34:57.099Z",
   "lastModifiedAt": "2016-02-12T14:34:57.099Z",
-  "sku": "1",
+  "sku": "sku1",
   "supplyChannel": {
     "typeId": "channel",
     "id": "5c0516b5-f506-4b6a-b4d1-c06ca29ab7e1"
