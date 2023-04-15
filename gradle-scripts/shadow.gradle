@@ -1,6 +1,7 @@
 apply plugin: 'com.github.johnrengelman.shadow'
 shadowJar {
     dependsOn distZip
+    dependsOn distTar
     archiveBaseName = 'commercetools-project-sync'
     archiveClassifier = null
     archiveVersion = null
