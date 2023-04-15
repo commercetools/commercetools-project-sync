@@ -18,7 +18,7 @@ jobs:
           java-version: 11
           distribution: 'temurin'
       - name: Build with Gradle
-        run: ./gradlew clean setLibraryVersion build
+        run: ./gradlew --stacktrace clean setLibraryVersion build
         env:
           SOURCE_PROJECT_KEY: project-sync-source
           SOURCE_CLIENT_ID: ${{ secrets.SOURCE_CLIENT_ID }}
