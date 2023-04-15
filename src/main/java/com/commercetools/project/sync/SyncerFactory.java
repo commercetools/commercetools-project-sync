@@ -222,8 +222,7 @@ public final class SyncerFactory {
   private static Collection<List<SyncModuleOption>> groupSyncModuleOptions(
       List<SyncModuleOption> syncModuleOptions) {
     Map<SyncModuleOption, Integer> syncModuleOptionWithEssentialSyncOptionsCount =
-        syncModuleOptions
-            .stream()
+        syncModuleOptions.stream()
             .collect(
                 Collectors.toMap(
                     Function.identity(),

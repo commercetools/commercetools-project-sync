@@ -65,8 +65,7 @@ class ProductTypeSyncerTest {
     // assertions
     assertThat(draftsFromPageStage)
         .isCompletedWithValue(
-            productTypePage
-                .stream()
+            productTypePage.stream()
                 .map(ProductTypeDraftBuilder::of)
                 .map(ProductTypeDraftBuilder::build)
                 .collect(toList()));

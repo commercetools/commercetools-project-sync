@@ -106,8 +106,7 @@ public final class IntegrationTestUtils {
             .thenCompose(
                 customObjects ->
                     CompletableFuture.allOf(
-                        customObjects
-                            .stream()
+                        customObjects.stream()
                             .map(
                                 customObject ->
                                     ctpClient.execute(
@@ -132,8 +131,7 @@ public final class IntegrationTestUtils {
             .thenCompose(
                 customObjects ->
                     CompletableFuture.allOf(
-                        customObjects
-                            .stream()
+                        customObjects.stream()
                             .map(
                                 customObject ->
                                     ctpClient.execute(
@@ -227,8 +225,7 @@ public final class IntegrationTestUtils {
     final Consumer<List<ProductType>> pageConsumer =
         pageElements ->
             CompletableFuture.allOf(
-                    pageElements
-                        .stream()
+                    pageElements.stream()
                         .map(productType -> deleteProductTypeWithRetry(ctpClient, productType))
                         .map(CompletionStage::toCompletableFuture)
                         .toArray(CompletableFuture[]::new))
@@ -267,9 +264,7 @@ public final class IntegrationTestUtils {
               page.forEach(
                   productType -> {
                     final Set<UpdateAction<ProductType>> removeActions =
-                        productType
-                            .getAttributes()
-                            .stream()
+                        productType.getAttributes().stream()
                             .map(
                                 attributeDefinition ->
                                     RemoveAttributeDefinition.of(attributeDefinition.getName()))
@@ -280,9 +275,7 @@ public final class IntegrationTestUtils {
         .thenCompose(
             aVoid ->
                 CompletableFuture.allOf(
-                    productTypesToUpdate
-                        .entrySet()
-                        .stream()
+                    productTypesToUpdate.entrySet().stream()
                         .map(entry -> updateProductTypeWithRetry(ctpClient, entry))
                         .toArray(CompletableFuture[]::new)))
         .toCompletableFuture()

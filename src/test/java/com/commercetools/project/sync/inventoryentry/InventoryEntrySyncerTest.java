@@ -70,8 +70,7 @@ class InventoryEntrySyncerTest {
             readObjectFromResource("inventory-sku-1.json", InventoryEntry.class),
             readObjectFromResource("inventory-sku-2.json", InventoryEntry.class));
     final List<String> referenceIds =
-        inventoryPage
-            .stream()
+        inventoryPage.stream()
             .filter(inventoryEntry -> inventoryEntry.getSupplyChannel() != null)
             .filter(inventoryEntry -> inventoryEntry.getCustom() != null)
             .flatMap(
@@ -105,8 +104,7 @@ class InventoryEntrySyncerTest {
     final List<InventoryEntryDraft> expectedResult =
         toInventoryEntryDrafts(sourceClient, referenceIdToKeyCache, inventoryPage).join();
     final List<String> referenceKeys =
-        expectedResult
-            .stream()
+        expectedResult.stream()
             .filter(inventoryEntry -> inventoryEntry.getSupplyChannel() != null)
             .filter(inventoryEntry -> inventoryEntry.getCustom() != null)
             .flatMap(

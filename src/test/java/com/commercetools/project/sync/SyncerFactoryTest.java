@@ -556,8 +556,7 @@ class SyncerFactoryTest {
     verify(client, atLeast(0)).execute(sphereClientArgumentCaptor.capture());
     final List<SphereRequest> allValues = sphereClientArgumentCaptor.getAllValues();
     final CustomObjectDraft customObjectDraft =
-        allValues
-            .stream()
+        allValues.stream()
             .filter(sphereRequest -> sphereRequest instanceof CustomObjectUpsertCommand)
             .map(sphereRequest -> (CustomObjectUpsertCommand) sphereRequest)
             .map(command -> (CustomObjectDraft) command.getDraft())
