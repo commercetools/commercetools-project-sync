@@ -54,8 +54,7 @@ public final class QueryUtils {
     final Consumer<List<T>> pageConsumer =
         pageElements ->
             CompletableFuture.allOf(
-                    pageElements
-                        .stream()
+                    pageElements.stream()
                         .map(resourceToStageMapper)
                         .map(CompletionStage::toCompletableFuture)
                         .toArray(CompletableFuture[]::new))

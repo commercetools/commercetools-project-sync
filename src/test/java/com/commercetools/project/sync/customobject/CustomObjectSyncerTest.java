@@ -73,8 +73,7 @@ public class CustomObjectSyncerTest {
     // assertions
     assertThat(draftsFromPageStage)
         .isCompletedWithValue(
-            customObjects
-                .stream()
+            customObjects.stream()
                 .map(
                     customObject ->
                         CustomObjectDraft.ofUnversionedUpsert(

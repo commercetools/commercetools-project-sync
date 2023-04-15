@@ -68,14 +68,11 @@ class TaxCategorySyncerTest {
     // assertions
     assertThat(draftsFromPageStage)
         .isCompletedWithValue(
-            taxCategoryPage
-                .stream()
+            taxCategoryPage.stream()
                 .map(
                     taxCategory -> {
                       List<TaxRateDraft> taxRateDrafts =
-                          taxCategory
-                              .getTaxRates()
-                              .stream()
+                          taxCategory.getTaxRates().stream()
                               .map(taxRate -> TaxRateDraftBuilder.of(taxRate).build())
                               .collect(Collectors.toList());
                       return TaxCategoryDraftBuilder.of(

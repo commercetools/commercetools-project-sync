@@ -97,8 +97,7 @@ class ProductSyncerTest {
     // assertions
 
     final Optional<ProductDraft> productDraftKey1 =
-        draftsFromPageStage
-            .stream()
+        draftsFromPageStage.stream()
             .filter(productDraft -> "productKey4".equals(productDraft.getKey()))
             .findFirst();
 
@@ -177,8 +176,7 @@ class ProductSyncerTest {
         productSyncer.transform(productPage).toCompletableFuture().join();
 
     final Optional<ProductDraft> productDraftKey1 =
-        draftsFromPageStage
-            .stream()
+        draftsFromPageStage.stream()
             .filter(productDraft -> "productKey10".equals(productDraft.getKey()))
             .findFirst();
 

@@ -58,8 +58,7 @@ class CartDiscountSyncerTest {
             readObjectFromResource("cart-discount-key-2.json", CartDiscount.class));
 
     final List<String> referenceIds =
-        cartDiscountPage
-            .stream()
+        cartDiscountPage.stream()
             .map(cartDiscount -> cartDiscount.getCustom().getType().getId())
             .collect(Collectors.toList());
     mockResourceIdsGraphQlRequest(
@@ -73,8 +72,7 @@ class CartDiscountSyncerTest {
     final List<CartDiscountDraft> expectedResult =
         toCartDiscountDrafts(sourceClient, referenceIdToKeyCache, cartDiscountPage).join();
     final List<String> referenceKeys =
-        expectedResult
-            .stream()
+        expectedResult.stream()
             .map(cartDiscount -> cartDiscount.getCustom().getType().getId())
             .collect(Collectors.toList());
     assertThat(referenceKeys).doesNotContainSequence(referenceIds);

@@ -73,8 +73,7 @@ class CategorySyncerTest {
             readObjectFromResource("category-key-1.json", Category.class),
             readObjectFromResource("category-key-2.json", Category.class));
     final List<String> referenceIds =
-        categoryPage
-            .stream()
+        categoryPage.stream()
             .filter(category -> category.getCustom() != null)
             .map(category -> category.getCustom().getType().getId())
             .collect(Collectors.toList());
@@ -95,8 +94,7 @@ class CategorySyncerTest {
     final List<CategoryDraft> expectedResult =
         toCategoryDrafts(sourceClient, referenceIdToKeyCache, categoryPage).join();
     final List<String> referenceKeys =
-        expectedResult
-            .stream()
+        expectedResult.stream()
             .filter(category -> category.getCustom() != null)
             .map(category -> category.getCustom().getType().getId())
             .collect(Collectors.toList());

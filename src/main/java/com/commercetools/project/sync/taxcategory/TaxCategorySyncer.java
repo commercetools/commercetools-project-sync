@@ -108,8 +108,7 @@ public final class TaxCategorySyncer
   private static List<TaxRateDraft> convertTaxRateToTaxRateDraft(
       @Nonnull final List<TaxRate> taxRates) {
 
-    return taxRates
-        .stream()
+    return taxRates.stream()
         .map(taxRate -> TaxRateDraftBuilder.of(taxRate).build())
         .collect(Collectors.toList());
   }

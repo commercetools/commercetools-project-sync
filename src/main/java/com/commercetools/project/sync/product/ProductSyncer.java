@@ -135,14 +135,11 @@ public final class ProductSyncer
    */
   private List<ProductDraft> removeDiscountedFromPrices(
       @Nonnull final List<ProductDraft> productDrafts) {
-    return productDrafts
-        .stream()
+    return productDrafts.stream()
         .map(
             productDraft -> {
               final List<ProductVariantDraft> productVariants =
-                  productDraft
-                      .getVariants()
-                      .stream()
+                  productDraft.getVariants().stream()
                       .map(this::createProductVariantDraftWithoutDiscounted)
                       .collect(Collectors.toList());
               final ProductVariantDraft masterVariant = productDraft.getMasterVariant();
@@ -164,8 +161,7 @@ public final class ProductSyncer
     List<PriceDraft> priceDrafts = null;
     if (prices != null) {
       priceDrafts =
-          prices
-              .stream()
+          prices.stream()
               .map(priceDraft -> PriceDraftBuilder.of(priceDraft).discounted(null).build())
               .collect(Collectors.toList());
     }

@@ -184,8 +184,7 @@ class ProductSyncWithReferencesIT {
 
     final ArrayNode setAttributeValue = JsonNodeFactory.instance.arrayNode();
     final Set<ObjectNode> productReferences =
-        productIds
-            .stream()
+        productIds.stream()
             .map(productId -> createReferenceObject(Product.referenceTypeId(), productId))
             .collect(Collectors.toSet());
     setAttributeValue.addAll(productReferences);

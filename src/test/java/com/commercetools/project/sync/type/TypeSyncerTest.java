@@ -64,8 +64,7 @@ class TypeSyncerTest {
     // assertions
     assertThat(draftsFromPageStage)
         .isCompletedWithValue(
-            typePage
-                .stream()
+            typePage.stream()
                 .map(
                     type ->
                         TypeDraftBuilder.of(
