@@ -10,6 +10,7 @@ jacoco {
 }
 
 jacocoTestCoverageVerification {
+    dependsOn startScripts
     executionData fileTree(project.rootDir.absolutePath).include("**/build/jacoco/*.exec")
     violationRules {
         rule {

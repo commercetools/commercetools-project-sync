@@ -1,12 +1,12 @@
 buildscript {
     ext {
-        shadowJarVersion = '6.1.0'
+        shadowJarVersion = '8.1.1'
     }
     repositories {
         mavenCentral()
     }
     dependencies {
-        classpath "com.github.jengelman.gradle.plugins:shadow:${shadowJarVersion}"
+        classpath "com.github.johnrengelman:shadow:${shadowJarVersion}"
     }
 }
 
