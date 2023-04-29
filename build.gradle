@@ -33,7 +33,7 @@ ext {
     slf4jTestVersion = '1.2.0'
     assertjVersion = '3.24.2'
     pmdVersion = '6.55.0'
-    jacocoVersion = '0.8.8'
+    jacocoVersion = '0.8.10'
     commercetoolsSyncJava = '9.2.3'
     apacheCliVersion = '1.5.0'
     jupiterApiVersion = '5.9.2'
