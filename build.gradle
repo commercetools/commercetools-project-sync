@@ -39,7 +39,7 @@ ext {
     jupiterApiVersion = '5.9.3'
     asyncHttpClientVersion = '2.12.3'
     logbackVersion = '1.4.8'
-    logstashLogbackEncoderVersion= '7.3'
+    logstashLogbackEncoderVersion= '7.4'
 }
 
 apply from: "$rootDir/gradle-scripts/spotless.gradle"
