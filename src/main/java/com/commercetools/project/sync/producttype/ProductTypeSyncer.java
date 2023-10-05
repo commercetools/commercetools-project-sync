@@ -3,6 +3,12 @@ package com.commercetools.project.sync.producttype;
 import static com.commercetools.project.sync.util.SyncUtils.logErrorCallback;
 import static com.commercetools.project.sync.util.SyncUtils.logWarningCallback;
 
+import com.commercetools.api.client.ByProjectKeyProductTypesGet;
+import com.commercetools.api.client.ProjectApiRoot;
+import com.commercetools.api.models.product_type.ProductType;
+import com.commercetools.api.models.product_type.ProductTypeDraft;
+import com.commercetools.api.models.product_type.ProductTypePagedQueryResponse;
+import com.commercetools.api.models.product_type.ProductTypeUpdateAction;
 import com.commercetools.project.sync.Syncer;
 import com.commercetools.project.sync.service.CustomObjectService;
 import com.commercetools.project.sync.service.impl.CustomObjectServiceImpl;
@@ -14,11 +20,6 @@ import com.commercetools.sync.producttypes.ProductTypeSyncOptions;
 import com.commercetools.sync.producttypes.ProductTypeSyncOptionsBuilder;
 import com.commercetools.sync.producttypes.helpers.ProductTypeSyncStatistics;
 import com.commercetools.sync.producttypes.utils.ProductTypeTransformUtils;
-import io.sphere.sdk.client.SphereClient;
-import io.sphere.sdk.commands.UpdateAction;
-import io.sphere.sdk.producttypes.ProductType;
-import io.sphere.sdk.producttypes.ProductTypeDraft;
-import io.sphere.sdk.producttypes.queries.ProductTypeQuery;
 import java.time.Clock;
 import java.util.List;
 import java.util.Optional;
@@ -27,15 +28,17 @@ import javax.annotation.Nonnull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+// This class compiles but not tested yet
+// TODO: Test class and adjust logic if needed
 public final class ProductTypeSyncer
     extends Syncer<
         ProductType,
-        ProductType,
+        ProductTypeUpdateAction,
         ProductTypeDraft,
-        ProductType,
         ProductTypeSyncStatistics,
         ProductTypeSyncOptions,
-        ProductTypeQuery,
+        ByProjectKeyProductTypesGet,
+        ProductTypePagedQueryResponse,
         ProductTypeSync> {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(ProductTypeSyncer.class);
@@ -43,8 +46,8 @@ public final class ProductTypeSyncer
   /** Instantiates a {@link Syncer} instance. */
   private ProductTypeSyncer(
       @Nonnull final ProductTypeSync productTypeSync,
-      @Nonnull final SphereClient sourceClient,
-      @Nonnull final SphereClient targetClient,
+      @Nonnull final ProjectApiRoot sourceClient,
+      @Nonnull final ProjectApiRoot targetClient,
       @Nonnull final CustomObjectService customObjectService,
       @Nonnull final Clock clock) {
     super(productTypeSync, sourceClient, targetClient, customObjectService, clock);
@@ -52,15 +55,15 @@ public final class ProductTypeSyncer
 
   @Nonnull
   public static ProductTypeSyncer of(
-      @Nonnull final SphereClient sourceClient,
-      @Nonnull final SphereClient targetClient,
+      @Nonnull final ProjectApiRoot sourceClient,
+      @Nonnull final ProjectApiRoot targetClient,
       @Nonnull final Clock clock) {
 
     final QuadConsumer<
             SyncException,
             Optional<ProductTypeDraft>,
             Optional<ProductType>,
-            List<UpdateAction<ProductType>>>
+            List<ProductTypeUpdateAction>>
         logErrorCallback =
             (exception, newResourceDraft, oldResource, updateActions) ->
                 logErrorCallback(LOGGER, "product type", exception, oldResource, updateActions);
@@ -92,8 +95,8 @@ public final class ProductTypeSyncer
 
   @Nonnull
   @Override
-  protected ProductTypeQuery getQuery() {
-    return ProductTypeQuery.of();
+  protected ByProjectKeyProductTypesGet getQuery() {
+    return getSourceClient().productTypes().get();
   }
 
   @Nonnull

@@ -13,10 +13,9 @@ import javax.annotation.Nullable;
 public interface CustomObjectService {
 
   /**
-   * Creates or updates a custom object with the container named
-   * 'commercetools-project-sync.{@param runnerName}.{@param syncModuleName}.timestampGenerator' and
-   * key equals 'timestampGenerator' and then reading the 'lastModifiedAt' field of the persisted custom
-   * object and returning it.
+   * Creates or updates a custom object with the container named 'commercetools-project-sync.{@param
+   * runnerName}.{@param syncModuleName}.timestampGenerator' and key equals 'timestampGenerator' and
+   * then reading the 'lastModifiedAt' field of the persisted custom object and returning it.
    *
    * @param syncModuleName the name of the resource being synced. E.g. productSync, categorySync,
    *     etc..
@@ -38,8 +37,8 @@ public interface CustomObjectService {
    *     etc..
    * @param runnerName the name of this specific running sync instance defined by the user.
    * @return the custom object with container 'commercetools-project-sync.{@param
-   *     runnerName}.{@param syncModuleName}' and key '{@param sourceProjectKey}', wrapped in an {@link Optional} as a
-   *     result of a {@link CompletionStage}.
+   *     runnerName}.{@param syncModuleName}' and key '{@param sourceProjectKey}', wrapped in an
+   *     {@link Optional} as a result of a {@link CompletionStage}.
    */
   @Nonnull
   CompletionStage<Optional<LastSyncCustomObject>> getLastSyncCustomObject(
@@ -58,7 +57,8 @@ public interface CustomObjectService {
    *     etc..
    * @param runnerName the name of this specific running sync instance defined by the user.
    * @param lastSyncCustomObject contains information about the last sync instance.
-   * @return a {@link CompletableFuture} of {@link ApiHttpResponse} with the created/updated custom object resource.
+   * @return a {@link CompletableFuture} of {@link ApiHttpResponse} with the created/updated custom
+   *     object resource.
    */
   @Nonnull
   CompletableFuture<ApiHttpResponse<CustomObject>> createLastSyncCustomObject(

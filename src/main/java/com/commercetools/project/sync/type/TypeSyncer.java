@@ -3,6 +3,13 @@ package com.commercetools.project.sync.type;
 import static com.commercetools.project.sync.util.SyncUtils.logErrorCallback;
 import static com.commercetools.project.sync.util.SyncUtils.logWarningCallback;
 
+import com.commercetools.api.client.ByProjectKeyTypesGet;
+import com.commercetools.api.client.ProjectApiRoot;
+import com.commercetools.api.models.type.Type;
+import com.commercetools.api.models.type.TypeDraft;
+import com.commercetools.api.models.type.TypeDraftBuilder;
+import com.commercetools.api.models.type.TypePagedQueryResponse;
+import com.commercetools.api.models.type.TypeUpdateAction;
 import com.commercetools.project.sync.Syncer;
 import com.commercetools.project.sync.service.CustomObjectService;
 import com.commercetools.project.sync.service.impl.CustomObjectServiceImpl;
@@ -13,12 +20,6 @@ import com.commercetools.sync.types.TypeSync;
 import com.commercetools.sync.types.TypeSyncOptions;
 import com.commercetools.sync.types.TypeSyncOptionsBuilder;
 import com.commercetools.sync.types.helpers.TypeSyncStatistics;
-import io.sphere.sdk.client.SphereClient;
-import io.sphere.sdk.commands.UpdateAction;
-import io.sphere.sdk.types.Type;
-import io.sphere.sdk.types.TypeDraft;
-import io.sphere.sdk.types.TypeDraftBuilder;
-import io.sphere.sdk.types.queries.TypeQuery;
 import java.time.Clock;
 import java.util.List;
 import java.util.Optional;
@@ -29,17 +30,26 @@ import javax.annotation.Nonnull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+// This class compiles but not tested yet
+// TODO: Test class and adjust logic if needed
 public final class TypeSyncer
     extends Syncer<
-        Type, Type, TypeDraft, Type, TypeSyncStatistics, TypeSyncOptions, TypeQuery, TypeSync> {
+        Type,
+        TypeUpdateAction,
+        TypeDraft,
+        TypeSyncStatistics,
+        TypeSyncOptions,
+        ByProjectKeyTypesGet,
+        TypePagedQueryResponse,
+        TypeSync> {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(TypeSyncer.class);
 
   /** Instantiates a {@link Syncer} instance. */
   private TypeSyncer(
       @Nonnull final TypeSync typeSync,
-      @Nonnull final SphereClient sourceClient,
-      @Nonnull final SphereClient targetClient,
+      @Nonnull final ProjectApiRoot sourceClient,
+      @Nonnull final ProjectApiRoot targetClient,
       @Nonnull final CustomObjectService customObjectService,
       @Nonnull final Clock clock) {
     super(typeSync, sourceClient, targetClient, customObjectService, clock);
@@ -47,11 +57,11 @@ public final class TypeSyncer
 
   @Nonnull
   public static TypeSyncer of(
-      @Nonnull final SphereClient sourceClient,
-      @Nonnull final SphereClient targetClient,
+      @Nonnull final ProjectApiRoot sourceClient,
+      @Nonnull final ProjectApiRoot targetClient,
       @Nonnull final Clock clock) {
 
-    final QuadConsumer<SyncException, Optional<TypeDraft>, Optional<Type>, List<UpdateAction<Type>>>
+    final QuadConsumer<SyncException, Optional<TypeDraft>, Optional<Type>, List<TypeUpdateAction>>
         logErrorCallback =
             (exception, newResourceDraft, oldResource, updateActions) ->
                 logErrorCallback(LOGGER, "type", exception, oldResource, updateActions);
@@ -73,8 +83,8 @@ public final class TypeSyncer
 
   @Nonnull
   @Override
-  protected TypeQuery getQuery() {
-    return TypeQuery.of();
+  protected ByProjectKeyTypesGet getQuery() {
+    return getSourceClient().types().get();
   }
 
   @Nonnull
@@ -92,7 +102,10 @@ public final class TypeSyncer
 
   @Nonnull
   private static TypeDraft typeToDraft(@Nonnull final Type type) {
-    return TypeDraftBuilder.of(type.getKey(), type.getName(), type.getResourceTypeIds())
+    return TypeDraftBuilder.of()
+        .key(type.getKey())
+        .name(type.getName())
+        .resourceTypeIds(type.getResourceTypeIds())
         .description(type.getDescription())
         .fieldDefinitions(type.getFieldDefinitions())
         .build();

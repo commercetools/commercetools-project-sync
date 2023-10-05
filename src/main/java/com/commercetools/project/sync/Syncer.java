@@ -9,7 +9,6 @@ import com.commercetools.api.models.DomainResource;
 import com.commercetools.api.models.PagedQueryResourceRequest;
 import com.commercetools.api.models.ResourcePagedQueryResponse;
 import com.commercetools.api.models.ResourceUpdateAction;
-import com.commercetools.api.models.WithKey;
 import com.commercetools.api.models.category.Category;
 import com.commercetools.api.models.category.CategoryDraft;
 import com.commercetools.api.models.common.BaseResource;
@@ -43,8 +42,8 @@ import org.slf4j.LoggerFactory;
  *
  * @param <ResourceT> The type of the resource to update (e.g. {@link ProductProjection}, {@link
  *     Category}, etc..)
- * @param <ResourceUpdateActionT> The update actions to update the resource with (e.g.
- * {@link com.commercetools.api.models.product.ProductUpdateAction})
+ * @param <ResourceUpdateActionT> The update actions to update the resource with (e.g. {@link
+ *     com.commercetools.api.models.product.ProductUpdateAction})
  * @param <ResourceDraftT> The type of the resource draft (e.g. {@link ProductDraft}, {@link
  *     CategoryDraft}, etc..)
  * @param <SyncStatisticsT> The type of the sync statistics resulting from the sync process (e.g.
@@ -61,7 +60,7 @@ import org.slf4j.LoggerFactory;
  *     com.commercetools.sync.categories.CategorySync}, etc..)
  */
 public abstract class Syncer<
-    ResourceT extends BaseResource & DomainResource<ResourceT> & WithKey,
+    ResourceT extends BaseResource & DomainResource<ResourceT>,
     ResourceUpdateActionT extends ResourceUpdateAction<ResourceUpdateActionT>,
     ResourceDraftT,
     SyncStatisticsT extends BaseSyncStatistics,
@@ -112,11 +111,10 @@ public abstract class Syncer<
   }
 
   /**
-   * Fetches the sourceClient's project resources of type {@code ResourceT} with all needed references
-   * expanded and treats each page as a batch to the sync process. Then executes the sync process
-   * on every page sequentially. It then returns a completion stage
-   * containing a {@link Void} result after the execution of the sync process and logging the
-   * result.
+   * Fetches the sourceClient's project resources of type {@code ResourceT} with all needed
+   * references expanded and treats each page as a batch to the sync process. Then executes the sync
+   * process on every page sequentially. It then returns a completion stage containing a {@link
+   * Void} result after the execution of the sync process and logging the result.
    *
    * <p>Note: If {@param isFullSync} is {@code false}, i.e. a delta sync is required, the method
    * checks if there was a last sync time stamp persisted as a custom object in the target project
@@ -266,9 +264,9 @@ public abstract class Syncer<
   }
 
   /**
-   * Given a {@link List} representing a page of resources of type {@link ResourceT}, this method creates
-   * a list of drafts of type {@link ResourceDraftT} where reference ids of the references are
-   * replaced with keys and are ready for reference resolution by the sync process.
+   * Given a {@link List} representing a page of resources of type {@link ResourceT}, this method
+   * creates a list of drafts of type {@link ResourceDraftT} where reference ids of the references
+   * are replaced with keys and are ready for reference resolution by the sync process.
    *
    * @return a {@link CompletionStage} containing a list of drafts of type {@link ResourceDraftT}
    *     after being transformed from type {@link ResourceT}.
