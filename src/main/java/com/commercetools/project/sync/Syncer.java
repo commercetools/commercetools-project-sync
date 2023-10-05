@@ -1,9 +1,21 @@
 package com.commercetools.project.sync;
 
+import static com.commercetools.api.client.QueryUtils.queryAll;
 import static com.commercetools.project.sync.util.SyncUtils.getSyncModuleName;
-import static com.commercetools.sync.commons.utils.CtpQueryUtils.queryAll;
 import static java.lang.String.format;
 
+import com.commercetools.api.client.ProjectApiRoot;
+import com.commercetools.api.models.DomainResource;
+import com.commercetools.api.models.PagedQueryResourceRequest;
+import com.commercetools.api.models.ResourcePagedQueryResponse;
+import com.commercetools.api.models.ResourceUpdateAction;
+import com.commercetools.api.models.WithKey;
+import com.commercetools.api.models.category.Category;
+import com.commercetools.api.models.category.CategoryDraft;
+import com.commercetools.api.models.common.BaseResource;
+import com.commercetools.api.models.custom_object.CustomObject;
+import com.commercetools.api.models.product.ProductDraft;
+import com.commercetools.api.models.product.ProductProjection;
 import com.commercetools.project.sync.model.response.LastSyncCustomObject;
 import com.commercetools.project.sync.service.CustomObjectService;
 import com.commercetools.sync.commons.BaseSync;
@@ -11,12 +23,7 @@ import com.commercetools.sync.commons.BaseSyncOptions;
 import com.commercetools.sync.commons.helpers.BaseSyncStatistics;
 import com.commercetools.sync.commons.utils.CaffeineReferenceIdToKeyCacheImpl;
 import com.commercetools.sync.commons.utils.ReferenceIdToKeyCache;
-import io.sphere.sdk.client.SphereClient;
-import io.sphere.sdk.customobjects.CustomObject;
-import io.sphere.sdk.models.ResourceView;
-import io.sphere.sdk.models.Versioned;
-import io.sphere.sdk.queries.QueryDsl;
-import io.sphere.sdk.queries.QueryPredicate;
+import io.vrap.rmf.base.client.ApiHttpResponse;
 import java.time.Clock;
 import java.time.ZonedDateTime;
 import java.util.List;
@@ -28,39 +35,40 @@ import net.logstash.logback.marker.Markers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+// This class compiles but not tested yet
+// TODO: Test class and adjust logic if needed
 /**
  * Base class of the syncer that handles syncing a resource from a source CTP project to a target
  * CTP project.
  *
- * @param <RU> The type of the resource to update (e.g. {@link
- *     io.sphere.sdk.products.ProductProjection}, {@link io.sphere.sdk.categories.CategoryDraft},
- *     etc..)
- * @param <RC> The type of the resource to create (e.g. {@link io.sphere.sdk.products.Product},
- *     {@link io.sphere.sdk.categories.Category}, etc..)
- * @param <RD> The type of the resource draft (e.g. {@link io.sphere.sdk.products.ProductDraft},
- *     {@link io.sphere.sdk.categories.CategoryDraft}, etc..)
- * @param <S> The type of the sync statistics resulting from the sync process (e.g. {@link
- *     com.commercetools.sync.products.helpers.ProductSyncStatistics}, {@link
+ * @param <ResourceT>> The type of the resource to update (e.g. {@link ProductProjection}, {@link
+ *     Category}, etc..)
+ * @param <ResourceUpdateActionT>> The type of the resource to create
+ * @param <ResourceDraftT>> The type of the resource draft (e.g. {@link ProductDraft}, {@link
+ *     CategoryDraft}, etc..)
+ * @param <SyncStatisticsT>> The type of the sync statistics resulting from the sync process (e.g.
+ *     {@link com.commercetools.sync.products.helpers.ProductSyncStatistics}, {@link
  *     com.commercetools.sync.categories.helpers.CategorySyncStatistics}, etc..)
- * @param <O> The type of the sync options used for the sync (e.g. {@link
+ * @param <SyncOptionsT>> The type of the sync options used for the sync (e.g. {@link
  *     com.commercetools.sync.products.ProductSyncOptions}, {@link
  *     com.commercetools.sync.categories.CategorySyncOptions}, etc..)
- * @param <Q> The type of the query used to query for the source resources (e.g. {@link
- *     io.sphere.sdk.products.queries.ProductProjectionQuery}, {@link
- *     io.sphere.sdk.categories.queries.CategoryQuery}, etc..)
- * @param <B> The type of the sync instance used to execute the sync process (e.g. {@link
+ * @param <PagedQueryT> The type of the query used to query for the source resources (e.g. {@link
+ *     com.commercetools.api.client.ByProjectKeyProductProjectionsGet}, {@link
+ *     com.commercetools.api.client.ByProjectKeyCategoriesGet}, etc..)
+ * @param <BaseSyncT> The type of the sync instance used to execute the sync process (e.g. {@link
  *     com.commercetools.sync.products.ProductSync}, {@link
  *     com.commercetools.sync.categories.CategorySync}, etc..)
  */
 public abstract class Syncer<
-    RU extends ResourceView,
-    RC extends ResourceView<RC, RC>,
-    RD,
-    V extends Versioned,
-    S extends BaseSyncStatistics,
-    O extends BaseSyncOptions<RU, RD, RC>,
-    Q extends QueryDsl<RU, Q>,
-    B extends BaseSync<RD, V, S, O>> {
+    ResourceT extends BaseResource & DomainResource<ResourceT> & WithKey,
+    ResourceUpdateActionT extends ResourceUpdateAction<ResourceUpdateActionT>,
+    ResourceDraftT,
+    SyncStatisticsT extends BaseSyncStatistics,
+    SyncOptionsT extends BaseSyncOptions<ResourceT, ResourceDraftT, ResourceUpdateActionT>,
+    PagedQueryT extends PagedQueryResourceRequest<PagedQueryT, PagedQueryResponseT>,
+    PagedQueryResponseT extends ResourcePagedQueryResponse<ResourceT>,
+    BaseSyncT extends
+        BaseSync<ResourceT, ResourceDraftT, ResourceUpdateActionT, SyncStatisticsT, SyncOptionsT>> {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(Syncer.class);
 
@@ -70,9 +78,9 @@ public abstract class Syncer<
   protected static final ReferenceIdToKeyCache referenceIdToKeyCache =
       new CaffeineReferenceIdToKeyCacheImpl();
 
-  private final B sync;
-  private final SphereClient sourceClient;
-  private final SphereClient targetClient;
+  private final BaseSyncT sync;
+  private final ProjectApiRoot sourceClient;
+  private final ProjectApiRoot targetClient;
   private final CustomObjectService customObjectService;
   private final Clock clock;
 
@@ -90,9 +98,9 @@ public abstract class Syncer<
    * @param clock the clock to record the time for calculating the sync duration.
    */
   public Syncer(
-      @Nonnull final B sync,
-      @Nonnull final SphereClient sourceClient,
-      @Nonnull final SphereClient targetClient,
+      @Nonnull final BaseSyncT sync,
+      @Nonnull final ProjectApiRoot sourceClient,
+      @Nonnull final ProjectApiRoot targetClient,
       @Nonnull final CustomObjectService customObjectService,
       @Nonnull final Clock clock) {
     this.sync = sync;
@@ -122,10 +130,10 @@ public abstract class Syncer<
    */
   public CompletionStage<Void> sync(@Nullable final String runnerName, final boolean isFullSync) {
 
-    final String sourceProjectKey = sourceClient.getConfig().getProjectKey();
+    final String sourceProjectKey = sourceClient.getProjectKey();
     final String syncModuleName = getSyncModuleName(sync.getClass());
     if (getLoggerInstance().isInfoEnabled()) {
-      final String targetProjectKey = targetClient.getConfig().getProjectKey();
+      final String targetProjectKey = targetClient.getProjectKey();
       getLoggerInstance()
           .info(
               format(
@@ -179,7 +187,7 @@ public abstract class Syncer<
   }
 
   @Nonnull
-  private CompletionStage<Q> getQueryOfResourcesSinceLastSync(
+  private CompletionStage<PagedQueryT> getQueryOfResourcesSinceLastSync(
       @Nonnull final String sourceProjectKey,
       @Nonnull final String syncModuleName,
       @Nullable final String runnerName,
@@ -190,7 +198,6 @@ public abstract class Syncer<
         .thenApply(
             customObjectOptional ->
                 customObjectOptional
-                    .map(CustomObject::getValue)
                     .map(LastSyncCustomObject::getLastSyncTimestamp)
                     .map(
                         lastSyncTimestamp ->
@@ -201,21 +208,21 @@ public abstract class Syncer<
   }
 
   @Nonnull
-  private Q getQueryWithTimeBoundedPredicate(
+  private PagedQueryT getQueryWithTimeBoundedPredicate(
       @Nonnull final ZonedDateTime lowerBound, @Nonnull final ZonedDateTime upperBound) {
 
-    final QueryPredicate<RU> queryPredicate =
-        QueryPredicate.of(
-            format(
-                "lastModifiedAt >= \"%s\" AND lastModifiedAt <= \"%s\"", lowerBound, upperBound));
-    return getQuery().plusPredicates(queryPredicate);
+    return (PagedQueryT)
+        getQuery()
+            .withWhere("lastModifiedAt >= \":lower\" AND lastModifiedAt <= \":upper\"")
+            .withPredicateVar("lower", lowerBound)
+            .withPredicateVar("upper", upperBound);
   }
 
   @Nonnull
-  private CompletionStage<Long> sync(@Nonnull final Q queryResourcesSinceLastSync) {
+  private CompletionStage<Long> sync(@Nonnull final PagedQueryT queryResourcesSinceLastSync) {
 
     final long timeBeforeSync = clock.millis();
-    return queryAll(sourceClient, queryResourcesSinceLastSync, this::syncPage)
+    return queryAll(queryResourcesSinceLastSync, this::syncPage)
         .thenApply(
             ignoredResult -> {
               final long timeAfterSync = clock.millis();
@@ -224,7 +231,7 @@ public abstract class Syncer<
   }
 
   @Nonnull
-  private CompletionStage<CustomObject<LastSyncCustomObject>> createNewLastSyncCustomObject(
+  private CompletableFuture<ApiHttpResponse<CustomObject>> createNewLastSyncCustomObject(
       @Nonnull final String sourceProjectKey,
       @Nonnull final String syncModuleName,
       @Nullable final String runnerName,
@@ -240,7 +247,7 @@ public abstract class Syncer<
     final ZonedDateTime lastSyncTimestampMinusBuffer =
         newLastSyncTimestamp.minusMinutes(bufferInMinutes);
 
-    final LastSyncCustomObject<S> lastSyncCustomObject =
+    final LastSyncCustomObject<SyncStatisticsT> lastSyncCustomObject =
         LastSyncCustomObject.of(
             lastSyncTimestampMinusBuffer, sync.getStatistics(), syncDurationInMillis);
 
@@ -253,25 +260,26 @@ public abstract class Syncer<
    * {@link CompletableFuture} of each sync process on the given page as a batch.
    */
   @Nonnull
-  private S syncPage(@Nonnull final List<RU> page) {
+  private SyncStatisticsT syncPage(@Nonnull final List<ResourceT> page) {
     return transform(page).thenCompose(sync::sync).toCompletableFuture().join();
   }
 
   /**
    * Given a {@link List} representing a page of resources of type {@code T}, this method creates a
-   * a list of drafts of type {@link S} where reference ids of the references are replaced with keys
-   * and are ready for reference resolution by the sync process.
+   * a list of drafts of type {@link SyncStatisticsT} where reference ids of the references are
+   * replaced with keys and are ready for reference resolution by the sync process.
    *
-   * @return a {@link CompletionStage} containing a list of drafts of type {@link S} after being
-   *     transformed from type {@link RU}.
+   * @return a {@link CompletionStage} containing a list of drafts of type {@link SyncStatisticsT}
+   *     after being transformed from type {@link ResourceT}.
    */
   @Nonnull
-  protected abstract CompletionStage<List<RD>> transform(@Nonnull final List<RU> page);
+  protected abstract CompletionStage<List<ResourceDraftT>> transform(
+      @Nonnull final List<ResourceT> page);
 
   @Nonnull
-  protected abstract Q getQuery();
+  protected abstract PagedQueryT getQuery();
 
-  public B getSync() {
+  public BaseSyncT getSync() {
     return sync;
   }
 
@@ -279,7 +287,7 @@ public abstract class Syncer<
   protected abstract Logger getLoggerInstance();
 
   @Nonnull
-  public SphereClient getSourceClient() {
+  public ProjectApiRoot getSourceClient() {
     return sourceClient;
   }
 }

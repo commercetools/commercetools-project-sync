@@ -2,34 +2,33 @@ package com.commercetools.project.sync.service.impl;
 
 import static com.commercetools.project.sync.util.SyncUtils.buildCurrentCtpTimestampContainerName;
 import static com.commercetools.project.sync.util.SyncUtils.buildLastSyncTimestampContainerName;
-import static java.lang.String.format;
 
+import com.commercetools.api.client.ProjectApiRoot;
+import com.commercetools.api.models.custom_object.CustomObject;
+import com.commercetools.api.models.custom_object.CustomObjectDraft;
+import com.commercetools.api.models.custom_object.CustomObjectDraftBuilder;
 import com.commercetools.project.sync.model.response.LastSyncCustomObject;
 import com.commercetools.project.sync.service.CustomObjectService;
-import io.sphere.sdk.client.SphereClient;
-import io.sphere.sdk.customobjects.CustomObject;
-import io.sphere.sdk.customobjects.CustomObjectDraft;
-import io.sphere.sdk.customobjects.commands.CustomObjectUpsertCommand;
-import io.sphere.sdk.customobjects.queries.CustomObjectQuery;
-import io.sphere.sdk.models.ResourceView;
-import io.sphere.sdk.queries.PagedQueryResult;
-import io.sphere.sdk.queries.QueryPredicate;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.vrap.rmf.base.client.ApiHttpResponse;
+import io.vrap.rmf.base.client.utils.json.JsonUtils;
 import java.time.ZonedDateTime;
-import java.util.Collection;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
-import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+// This class compiles but not tested yet
+// TODO: Test class and adjust logic if needed
 public class CustomObjectServiceImpl implements CustomObjectService {
 
   public static final String TIMESTAMP_GENERATOR_KEY = "timestampGenerator";
-  private final SphereClient sphereClient;
+  private final ProjectApiRoot ctpClient;
 
-  public CustomObjectServiceImpl(@Nonnull final SphereClient sphereClient) {
-    this.sphereClient = sphereClient;
+  public CustomObjectServiceImpl(@Nonnull final ProjectApiRoot ctpClient) {
+    this.ctpClient = ctpClient;
   }
 
   /**
@@ -51,17 +50,22 @@ public class CustomObjectServiceImpl implements CustomObjectService {
 
     final String container = buildCurrentCtpTimestampContainerName(syncModuleName, runnerName);
 
-    final CustomObjectDraft<String> currentTimestampDraft =
-        CustomObjectDraft.ofUnversionedUpsert(
-            container, TIMESTAMP_GENERATOR_KEY, UUID.randomUUID().toString(), String.class);
+    final CustomObjectDraft currentTimestampDraft =
+        CustomObjectDraftBuilder.of()
+            .container(container)
+            .key(TIMESTAMP_GENERATOR_KEY)
+            .value(UUID.randomUUID().toString())
+            .build();
 
-    return createCustomObject(currentTimestampDraft).thenApply(ResourceView::getLastModifiedAt);
+    return createCustomObject(currentTimestampDraft)
+        .thenApply(ApiHttpResponse::getBody)
+        .thenApply(CustomObject::getLastModifiedAt);
   }
 
   @Nonnull
-  private <T> CompletionStage<CustomObject<T>> createCustomObject(
-      @Nonnull final CustomObjectDraft<T> customObjectDraft) {
-    return this.sphereClient.execute(CustomObjectUpsertCommand.of(customObjectDraft));
+  private CompletableFuture<ApiHttpResponse<CustomObject>> createCustomObject(
+      @Nonnull final CustomObjectDraft customObjectDraft) {
+    return this.ctpClient.customObjects().post(customObjectDraft).execute();
   }
 
   /**
@@ -82,22 +86,33 @@ public class CustomObjectServiceImpl implements CustomObjectService {
    */
   @Nonnull
   @Override
-  public CompletionStage<Optional<CustomObject<LastSyncCustomObject>>> getLastSyncCustomObject(
+  public CompletableFuture<Optional<LastSyncCustomObject>> getLastSyncCustomObject(
       @Nonnull final String sourceProjectKey,
       @Nonnull final String syncModuleName,
       @Nullable final String runnerName) {
 
-    final QueryPredicate<CustomObject<LastSyncCustomObject>> queryPredicate =
-        QueryPredicate.of(
-            format(
-                "container=\"%s\" AND key=\"%s\"",
-                buildLastSyncTimestampContainerName(syncModuleName, runnerName), sourceProjectKey));
+    final String containerName = buildLastSyncTimestampContainerName(syncModuleName, runnerName);
 
-    return this.sphereClient
-        .execute(CustomObjectQuery.of(LastSyncCustomObject.class).plusPredicates(queryPredicate))
-        .thenApply(PagedQueryResult::getResults)
-        .thenApply(Collection::stream)
-        .thenApply(Stream::findFirst);
+    return this.ctpClient
+        .customObjects()
+        .withContainerAndKey(containerName, sourceProjectKey)
+        .get()
+        .execute()
+        .handle(
+            (customObjectApiHttpResponse, throwable) -> {
+              if (throwable != null) {
+                return Optional.empty();
+              } else {
+                final CustomObject responseBody = customObjectApiHttpResponse.getBody();
+                final ObjectMapper objectMapper = JsonUtils.getConfiguredObjectMapper();
+                final LastSyncCustomObject lastSyncCustomObject =
+                    responseBody == null
+                        ? null
+                        : objectMapper.convertValue(
+                            responseBody.getValue(), LastSyncCustomObject.class);
+                return Optional.ofNullable(lastSyncCustomObject);
+              }
+            });
   }
 
   /**
@@ -117,18 +132,18 @@ public class CustomObjectServiceImpl implements CustomObjectService {
    */
   @Nonnull
   @Override
-  public CompletionStage<CustomObject<LastSyncCustomObject>> createLastSyncCustomObject(
+  public CompletableFuture<ApiHttpResponse<CustomObject>> createLastSyncCustomObject(
       @Nonnull final String sourceProjectKey,
       @Nonnull final String syncModuleName,
       @Nullable final String runnerName,
       @Nonnull final LastSyncCustomObject lastSyncCustomObject) {
 
-    final CustomObjectDraft<LastSyncCustomObject> lastSyncCustomObjectDraft =
-        CustomObjectDraft.ofUnversionedUpsert(
-            buildLastSyncTimestampContainerName(syncModuleName, runnerName),
-            sourceProjectKey,
-            lastSyncCustomObject,
-            LastSyncCustomObject.class);
+    final CustomObjectDraft lastSyncCustomObjectDraft =
+        CustomObjectDraftBuilder.of()
+            .container(buildLastSyncTimestampContainerName(syncModuleName, runnerName))
+            .key(sourceProjectKey)
+            .value(lastSyncCustomObject)
+            .build();
 
     return createCustomObject(lastSyncCustomObjectDraft);
   }
