@@ -41,15 +41,16 @@ import org.slf4j.LoggerFactory;
  * Base class of the syncer that handles syncing a resource from a source CTP project to a target
  * CTP project.
  *
- * @param <ResourceT>> The type of the resource to update (e.g. {@link ProductProjection}, {@link
+ * @param <ResourceT> The type of the resource to update (e.g. {@link ProductProjection}, {@link
  *     Category}, etc..)
- * @param <ResourceUpdateActionT>> The type of the resource to create
- * @param <ResourceDraftT>> The type of the resource draft (e.g. {@link ProductDraft}, {@link
+ * @param <ResourceUpdateActionT> The update actions to update the resource with (e.g.
+ * {@link com.commercetools.api.models.product.ProductUpdateAction})
+ * @param <ResourceDraftT> The type of the resource draft (e.g. {@link ProductDraft}, {@link
  *     CategoryDraft}, etc..)
- * @param <SyncStatisticsT>> The type of the sync statistics resulting from the sync process (e.g.
+ * @param <SyncStatisticsT> The type of the sync statistics resulting from the sync process (e.g.
  *     {@link com.commercetools.sync.products.helpers.ProductSyncStatistics}, {@link
  *     com.commercetools.sync.categories.helpers.CategorySyncStatistics}, etc..)
- * @param <SyncOptionsT>> The type of the sync options used for the sync (e.g. {@link
+ * @param <SyncOptionsT> The type of the sync options used for the sync (e.g. {@link
  *     com.commercetools.sync.products.ProductSyncOptions}, {@link
  *     com.commercetools.sync.categories.CategorySyncOptions}, etc..)
  * @param <PagedQueryT> The type of the query used to query for the source resources (e.g. {@link
@@ -111,13 +112,13 @@ public abstract class Syncer<
   }
 
   /**
-   * Fetches the sourceClient's project resources of type {@code T} with all needed references
-   * expanded and treats each page as a batch to the sync process. Then executes the sync process of
-   * on every page fetched from the source project sequentially. It then returns a completion stage
+   * Fetches the sourceClient's project resources of type {@code ResourceT} with all needed references
+   * expanded and treats each page as a batch to the sync process. Then executes the sync process
+   * on every page sequentially. It then returns a completion stage
    * containing a {@link Void} result after the execution of the sync process and logging the
    * result.
    *
-   * <p>Note: If {@code isFullSync} is {@code false}, i.e. a delta sync is required, the method
+   * <p>Note: If {@param isFullSync} is {@code false}, i.e. a delta sync is required, the method
    * checks if there was a last sync time stamp persisted as a custom object in the target project
    * for this specific source project and sync module. If there is, it will sync only the resources
    * which were modified after the last sync time stamp and before the start of this sync.
@@ -265,11 +266,11 @@ public abstract class Syncer<
   }
 
   /**
-   * Given a {@link List} representing a page of resources of type {@code T}, this method creates a
-   * a list of drafts of type {@link SyncStatisticsT} where reference ids of the references are
+   * Given a {@link List} representing a page of resources of type {@link ResourceT}, this method creates
+   * a list of drafts of type {@link ResourceDraftT} where reference ids of the references are
    * replaced with keys and are ready for reference resolution by the sync process.
    *
-   * @return a {@link CompletionStage} containing a list of drafts of type {@link SyncStatisticsT}
+   * @return a {@link CompletionStage} containing a list of drafts of type {@link ResourceDraftT}
    *     after being transformed from type {@link ResourceT}.
    */
   @Nonnull

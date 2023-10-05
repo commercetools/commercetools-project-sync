@@ -31,18 +31,6 @@ public class CustomObjectServiceImpl implements CustomObjectService {
     this.ctpClient = ctpClient;
   }
 
-  /**
-   * Gets the current timestamp of CTP by creating/updating a custom object with the container:
-   * 'commercetools-project-sync.{@code runnerName}.{@code syncModuleName}.timestampGenerator' and
-   * key: 'timestampGenerator' and then returning the lastModifiedAt of this created/updated custom
-   * object.
-   *
-   * @param syncModuleName the name of the resource being synced. E.g. productSync, categorySync,
-   *     etc..
-   * @param runnerName the name of this specific running sync instance defined by the user.
-   * @return a {@link CompletionStage} containing the current CTP timestamp as {@link
-   *     ZonedDateTime}.
-   */
   @Nonnull
   @Override
   public CompletionStage<ZonedDateTime> getCurrentCtpTimestamp(
@@ -62,28 +50,18 @@ public class CustomObjectServiceImpl implements CustomObjectService {
         .thenApply(CustomObject::getLastModifiedAt);
   }
 
+  /**
+   * Helper to create a custom object of {@param customObjectDraft} on the CTP project defined by the {@code ctpClient}.
+   *
+   * @param customObjectDraft draft of custom object to create
+   * @return a {@link CompletableFuture} of {@link ApiHttpResponse} with the created custom object resource.
+   */
   @Nonnull
   private CompletableFuture<ApiHttpResponse<CustomObject>> createCustomObject(
       @Nonnull final CustomObjectDraft customObjectDraft) {
     return this.ctpClient.customObjects().post(customObjectDraft).execute();
   }
 
-  /**
-   * Queries for custom objects, on the CTP project defined by the {@code sphereClient}, which have
-   * a container: 'commercetools-project-sync.{@code runnerName}.{@code syncModuleName}' and key:
-   * {@code sourceProjectKey}. The method then returns the first custom object returned in the
-   * result set if there is, wrapped in an {@link Optional} as a result of a {@link
-   * CompletionStage}. It will be, at most, one custom object since the key is unique per custom
-   * object container as per CTP documentation.
-   *
-   * @param sourceProjectKey the source project from which the data is coming.
-   * @param syncModuleName the name of the resource being synced. E.g. productSync, categorySync,
-   *     etc..
-   * @param runnerName the name of this specific running sync instance defined by the user.
-   * @return the first custom object returned in the result set if there is, wrapped in an {@link
-   *     Optional} as a result of a {@link CompletionStage}. It will be, at most, one custom object
-   *     since the key is unique per custom object container as per CTP documentation.
-   */
   @Nonnull
   @Override
   public CompletableFuture<Optional<LastSyncCustomObject>> getLastSyncCustomObject(
@@ -115,21 +93,6 @@ public class CustomObjectServiceImpl implements CustomObjectService {
             });
   }
 
-  /**
-   * Creates (or updates an already existing) custom object, with the container:
-   * 'commercetools-project-sync.{@code runnerName}.{@code syncModuleName}' and key: {@code
-   * sourceProjectKey}, enriched with the information in the passed {@link LastSyncCustomObject}
-   * param.
-   *
-   * @param sourceProjectKey the source project from which the data is coming.
-   * @param syncModuleName the name of the resource being synced. E.g. productSync, categorySync,
-   *     etc..
-   * @param runnerName the name of this specific running sync instance defined by the user.
-   * @param lastSyncCustomObject contains information about the last sync instance.
-   * @return the first custom object returned in the result set if there is, wrapped in an {@link
-   *     Optional} as a result of a {@link CompletionStage}. It will be, at most, one custom object
-   *     since the key is unique per custom object container as per CTP documentation.
-   */
   @Nonnull
   @Override
   public CompletableFuture<ApiHttpResponse<CustomObject>> createLastSyncCustomObject(
