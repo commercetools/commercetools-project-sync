@@ -4,10 +4,15 @@ import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_ALL;
 import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_DESCRIPTION;
 import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_LONG;
 import static com.commercetools.project.sync.CliRunner.SYNC_MODULE_OPTION_SHORT;
-import static io.sphere.sdk.utils.CompletableFutureUtils.exceptionallyCompletedFuture;
+import static io.vrap.rmf.base.client.utils.CompletableFutureUtils.exceptionallyCompletedFuture;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import com.commercetools.api.client.ProjectApiRoot;
+import com.commercetools.api.models.PagedQueryResourceRequest;
+import com.commercetools.api.models.ResourcePagedQueryResponse;
+import com.commercetools.api.models.ResourceUpdateAction;
+import com.commercetools.api.models.common.BaseResource;
 import com.commercetools.project.sync.cartdiscount.CartDiscountSyncer;
 import com.commercetools.project.sync.category.CategorySyncer;
 import com.commercetools.project.sync.customer.CustomerSyncer;
@@ -24,10 +29,6 @@ import com.commercetools.project.sync.type.TypeSyncer;
 import com.commercetools.sync.commons.BaseSync;
 import com.commercetools.sync.commons.BaseSyncOptions;
 import com.commercetools.sync.commons.helpers.BaseSyncStatistics;
-import io.sphere.sdk.client.SphereClient;
-import io.sphere.sdk.models.ResourceView;
-import io.sphere.sdk.models.Versioned;
-import io.sphere.sdk.queries.QueryDsl;
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -43,14 +44,14 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 public final class SyncerFactory {
-  private final Supplier<SphereClient> targetClientSupplier;
-  private final Supplier<SphereClient> sourceClientSupplier;
+  private final Supplier<ProjectApiRoot> targetClientSupplier;
+  private final Supplier<ProjectApiRoot> sourceClientSupplier;
   private final Clock clock;
   private final boolean shouldCloseClients;
 
   private SyncerFactory(
-      @Nonnull final Supplier<SphereClient> sourceClient,
-      @Nonnull final Supplier<SphereClient> targetClient,
+      @Nonnull final Supplier<ProjectApiRoot> sourceClient,
+      @Nonnull final Supplier<ProjectApiRoot> targetClient,
       @Nonnull final Clock clock,
       final boolean closeClients) {
     this.targetClientSupplier = targetClient;
@@ -61,16 +62,16 @@ public final class SyncerFactory {
 
   @Nonnull
   public static SyncerFactory of(
-      @Nonnull final Supplier<SphereClient> sourceClient,
-      @Nonnull final Supplier<SphereClient> targetClient,
+      @Nonnull final Supplier<ProjectApiRoot> sourceClient,
+      @Nonnull final Supplier<ProjectApiRoot> targetClient,
       @Nonnull final Clock clock) {
     return new SyncerFactory(sourceClient, targetClient, clock, true);
   }
 
   @Nonnull
   public static SyncerFactory of(
-      @Nonnull final Supplier<SphereClient> sourceClient,
-      @Nonnull final Supplier<SphereClient> targetClient,
+      @Nonnull final Supplier<ProjectApiRoot> sourceClient,
+      @Nonnull final Supplier<ProjectApiRoot> targetClient,
       @Nonnull final Clock clock,
       final boolean closeClients) {
     return new SyncerFactory(sourceClient, targetClient, clock, closeClients);
@@ -127,14 +128,14 @@ public final class SyncerFactory {
 
     for (SyncModuleOption syncOptionValue : syncOptions) {
       Syncer<
-              ? extends ResourceView,
-              ? extends ResourceView<?, ?>,
+              ? extends BaseResource,
+              ? extends ResourceUpdateAction<?>,
               ?,
-              ? extends Versioned,
               ? extends BaseSyncStatistics,
               ? extends BaseSyncOptions<?, ?, ?>,
-              ? extends QueryDsl<?, ?>,
-              ? extends BaseSync<?, ?, ?, ?>>
+              ? extends PagedQueryResourceRequest<?, ?>,
+              ? extends ResourcePagedQueryResponse<?>,
+              ? extends BaseSync<?, ?, ?, ?, ?>>
           syncer =
               buildSyncer(
                   syncOptionValue,
@@ -286,14 +287,14 @@ public final class SyncerFactory {
    * @return The instance of the syncer corresponding to the passed option value.
    */
   private Syncer<
-          ? extends ResourceView,
-          ? extends ResourceView<?, ?>,
+          ? extends BaseResource,
+          ? extends ResourceUpdateAction<?>,
           ?,
-          ? extends Versioned,
           ? extends BaseSyncStatistics,
           ? extends BaseSyncOptions<?, ?, ?>,
-          ? extends QueryDsl<?, ?>,
-          ? extends BaseSync<?, ?, ?, ?>>
+          ? extends PagedQueryResourceRequest<?, ?>,
+          ? extends ResourcePagedQueryResponse<?>,
+          ? extends BaseSync<?, ?, ?, ?, ?>>
       buildSyncer(
           @Nonnull final SyncModuleOption syncModuleOption,
           @Nonnull final String runnerNameOptionValue,
@@ -301,14 +302,14 @@ public final class SyncerFactory {
           @Nullable final ProductSyncCustomRequest productSyncCustomRequest) {
 
     Syncer<
-            ? extends ResourceView,
-            ? extends ResourceView<?, ?>,
+            ? extends BaseResource,
+            ? extends ResourceUpdateAction<?>,
             ?,
-            ? extends Versioned,
             ? extends BaseSyncStatistics,
             ? extends BaseSyncOptions<?, ?, ?>,
-            ? extends QueryDsl<?, ?>,
-            ? extends BaseSync<?, ?, ?, ?>>
+            ? extends PagedQueryResourceRequest<?, ?>,
+            ? extends ResourcePagedQueryResponse<?>,
+            ? extends BaseSync<?, ?, ?, ?, ?>>
         syncer = null;
 
     switch (syncModuleOption) {
