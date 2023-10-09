@@ -1,14 +1,14 @@
 package com.commercetools.project.sync;
 
 import static com.commercetools.project.sync.service.impl.CustomObjectServiceImpl.TIMESTAMP_GENERATOR_KEY;
+import static com.commercetools.project.sync.util.CtpClientUtils.CTP_SOURCE_CLIENT;
+import static com.commercetools.project.sync.util.CtpClientUtils.CTP_TARGET_CLIENT;
 import static com.commercetools.project.sync.util.IntegrationTestUtils.assertCategoryExists;
 import static com.commercetools.project.sync.util.IntegrationTestUtils.assertProductExists;
 import static com.commercetools.project.sync.util.IntegrationTestUtils.assertProductTypeExists;
 import static com.commercetools.project.sync.util.IntegrationTestUtils.cleanUpProjects;
 import static com.commercetools.project.sync.util.IntegrationTestUtils.createITSyncerFactory;
 import static com.commercetools.project.sync.util.QueryUtils.queryAndExecute;
-import static com.commercetools.project.sync.util.SphereClientUtils.CTP_SOURCE_CLIENT;
-import static com.commercetools.project.sync.util.SphereClientUtils.CTP_TARGET_CLIENT;
 import static com.commercetools.project.sync.util.SyncUtils.APPLICATION_DEFAULT_NAME;
 import static com.commercetools.project.sync.util.SyncUtils.DEFAULT_RUNNER_NAME;
 import static com.commercetools.project.sync.util.TestUtils.assertCartDiscountSyncerLoggingEvents;
