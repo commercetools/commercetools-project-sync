@@ -16,7 +16,6 @@ import java.time.ZonedDateTime;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
@@ -33,7 +32,7 @@ public class CustomObjectServiceImpl implements CustomObjectService {
 
   @Nonnull
   @Override
-  public CompletionStage<ZonedDateTime> getCurrentCtpTimestamp(
+  public CompletableFuture<ZonedDateTime> getCurrentCtpTimestamp(
       @Nullable final String runnerName, @Nonnull final String syncModuleName) {
 
     final String container = buildCurrentCtpTimestampContainerName(syncModuleName, runnerName);
