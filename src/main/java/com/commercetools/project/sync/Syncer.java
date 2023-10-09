@@ -111,11 +111,10 @@ public abstract class Syncer<
   }
 
   /**
-   * Fetches the sourceClient's project resources of type {@code ResourceT} with all needed references
-   * expanded and treats each page as a batch to the sync process. Then executes the sync process
-   * on every page sequentially. It then returns a completion stage
-   * containing a {@link Void} result after the execution of the sync process and logging the
-   * result.
+   * Fetches the sourceClient's project resources of type {@code ResourceT} with all needed
+   * references expanded and treats each page as a batch to the sync process. Then executes the sync
+   * process on every page sequentially. It then returns a completion stage containing a {@link
+   * Void} result after the execution of the sync process and logging the result.
    *
    * <p>Note: If {@param isFullSync} is {@code false}, i.e. a delta sync is required, the method
    * checks if there was a last sync time stamp persisted as a custom object in the target project
@@ -265,9 +264,9 @@ public abstract class Syncer<
   }
 
   /**
-   * Given a {@link List} representing a page of resources of type {@link ResourceT}, this method creates
-   * a list of drafts of type {@link ResourceDraftT} where reference ids of the references are
-   * replaced with keys and are ready for reference resolution by the sync process.
+   * Given a {@link List} representing a page of resources of type {@link ResourceT}, this method
+   * creates a list of drafts of type {@link ResourceDraftT} where reference ids of the references
+   * are replaced with keys and are ready for reference resolution by the sync process.
    *
    * @return a {@link CompletionStage} containing a list of drafts of type {@link ResourceDraftT}
    *     after being transformed from type {@link ResourceT}.
