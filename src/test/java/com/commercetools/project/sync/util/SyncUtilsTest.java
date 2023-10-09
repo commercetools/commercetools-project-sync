@@ -5,12 +5,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import com.commercetools.api.models.ResourceUpdateAction;
+import com.commercetools.api.models.WithKey;
 import com.commercetools.sync.commons.exceptions.SyncException;
 import com.commercetools.sync.products.ProductSync;
 import com.commercetools.sync.types.TypeSync;
-import io.sphere.sdk.commands.UpdateAction;
-import io.sphere.sdk.models.ResourceView;
-import io.sphere.sdk.models.WithKey;
 import java.util.Arrays;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
@@ -19,6 +18,8 @@ import uk.org.lidalia.slf4jtest.LoggingEvent;
 import uk.org.lidalia.slf4jtest.TestLogger;
 import uk.org.lidalia.slf4jtest.TestLoggerFactory;
 
+// These tests do compile but are not valid
+// TODO: Make tests valid
 class SyncUtilsTest {
 
   @BeforeEach
@@ -62,9 +63,9 @@ class SyncUtilsTest {
   void logErrorCallbackWithStringResourceIdentifier_ShouldLogErrorWithCorrectMessage() {
     final TestLogger testLogger = TestLoggerFactory.getTestLogger(SyncUtilsTest.class);
     SyncException exception = new SyncException("test sync exception");
-    UpdateAction<ResourceView> updateAction1 = mock(UpdateAction.class);
+    ResourceUpdateAction updateAction1 = mock(ResourceUpdateAction.class);
     when(updateAction1.toString()).thenReturn("updateAction1");
-    UpdateAction<ResourceView> updateAction2 = mock(UpdateAction.class);
+    ResourceUpdateAction updateAction2 = mock(ResourceUpdateAction.class);
     when(updateAction2.toString()).thenReturn("updateAction2");
 
     logErrorCallback(
@@ -104,9 +105,9 @@ class SyncUtilsTest {
   void logErrorCallbackWithResource_ShouldLogErrorWithCorrectMessage() {
     final TestLogger testLogger = TestLoggerFactory.getTestLogger(SyncUtilsTest.class);
     final SyncException exception = new SyncException("test sync exception");
-    final UpdateAction<WithKey> updateAction1 = mock(UpdateAction.class);
+    final ResourceUpdateAction updateAction1 = mock(ResourceUpdateAction.class);
     when(updateAction1.toString()).thenReturn("updateAction1");
-    final UpdateAction<WithKey> updateAction2 = mock(UpdateAction.class);
+    final ResourceUpdateAction updateAction2 = mock(ResourceUpdateAction.class);
     when(updateAction2.toString()).thenReturn("updateAction2");
     final WithKey resource = mock(WithKey.class);
     when(resource.getKey()).thenReturn("test identifier");

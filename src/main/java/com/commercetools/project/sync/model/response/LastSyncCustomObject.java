@@ -92,7 +92,6 @@ public final class LastSyncCustomObject<T extends BaseSyncStatistics> {
 
   // Setters are needed for the 'com.fasterxml.jackson' deserialization, for example, when fetching
   // from CTP custom objects.
-
   public void setLastSyncTimestamp(@Nonnull final ZonedDateTime lastSyncTimestamp) {
     this.lastSyncTimestamp = lastSyncTimestamp;
   }
