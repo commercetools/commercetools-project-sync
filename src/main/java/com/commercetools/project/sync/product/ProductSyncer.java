@@ -5,6 +5,19 @@ import static com.commercetools.project.sync.util.SyncUtils.logErrorCallback;
 import static com.commercetools.project.sync.util.SyncUtils.logWarningCallback;
 import static com.commercetools.sync.products.utils.ProductTransformUtils.toProductDrafts;
 
+import com.commercetools.api.client.ByProjectKeyProductProjectionsGet;
+import com.commercetools.api.client.ProjectApiRoot;
+import com.commercetools.api.models.WithKey;
+import com.commercetools.api.models.common.DiscountedPriceDraft;
+import com.commercetools.api.models.common.PriceDraft;
+import com.commercetools.api.models.common.PriceDraftBuilder;
+import com.commercetools.api.models.product.ProductDraft;
+import com.commercetools.api.models.product.ProductDraftBuilder;
+import com.commercetools.api.models.product.ProductProjection;
+import com.commercetools.api.models.product.ProductProjectionPagedQueryResponse;
+import com.commercetools.api.models.product.ProductUpdateAction;
+import com.commercetools.api.models.product.ProductVariantDraft;
+import com.commercetools.api.models.product.ProductVariantDraftBuilder;
 import com.commercetools.project.sync.Syncer;
 import com.commercetools.project.sync.model.ProductSyncCustomRequest;
 import com.commercetools.project.sync.service.CustomObjectService;
@@ -16,20 +29,6 @@ import com.commercetools.sync.products.ProductSync;
 import com.commercetools.sync.products.ProductSyncOptions;
 import com.commercetools.sync.products.ProductSyncOptionsBuilder;
 import com.commercetools.sync.products.helpers.ProductSyncStatistics;
-import io.sphere.sdk.client.SphereClient;
-import io.sphere.sdk.commands.UpdateAction;
-import io.sphere.sdk.models.WithKey;
-import io.sphere.sdk.products.PriceDraft;
-import io.sphere.sdk.products.PriceDraftBuilder;
-import io.sphere.sdk.products.Product;
-import io.sphere.sdk.products.ProductDraft;
-import io.sphere.sdk.products.ProductDraftBuilder;
-import io.sphere.sdk.products.ProductProjection;
-import io.sphere.sdk.products.ProductVariantDraft;
-import io.sphere.sdk.products.ProductVariantDraftBuilder;
-import io.sphere.sdk.products.ProductVariantDraftDsl;
-import io.sphere.sdk.products.queries.ProductProjectionQuery;
-import io.sphere.sdk.queries.QueryPredicate;
 import java.time.Clock;
 import java.util.Collections;
 import java.util.List;
@@ -42,15 +41,17 @@ import javax.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+// This class compiles but not tested yet
+// TODO: Test class and adjust logic if needed
 public final class ProductSyncer
     extends Syncer<
         ProductProjection,
-        Product,
+        ProductUpdateAction,
         ProductDraft,
-        ProductProjection,
         ProductSyncStatistics,
         ProductSyncOptions,
-        ProductProjectionQuery,
+        ByProjectKeyProductProjectionsGet,
+        ProductProjectionPagedQueryResponse,
         ProductSync> {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(ProductSyncer.class);
@@ -60,8 +61,8 @@ public final class ProductSyncer
   /** Instantiates a {@link Syncer} instance. */
   private ProductSyncer(
       @Nonnull final ProductSync productSync,
-      @Nonnull final SphereClient sourceClient,
-      @Nonnull final SphereClient targetClient,
+      @Nonnull final ProjectApiRoot sourceClient,
+      @Nonnull final ProjectApiRoot targetClient,
       @Nonnull final CustomObjectService customObjectService,
       @Nonnull final Clock clock,
       @Nullable final ProductSyncCustomRequest productSyncCustomRequest) {
@@ -71,8 +72,8 @@ public final class ProductSyncer
 
   @Nonnull
   public static ProductSyncer of(
-      @Nonnull final SphereClient sourceClient,
-      @Nonnull final SphereClient targetClient,
+      @Nonnull final ProjectApiRoot sourceClient,
+      @Nonnull final ProjectApiRoot targetClient,
       @Nonnull final Clock clock,
       @Nullable final ProductSyncCustomRequest productSyncCustomRequest) {
 
@@ -80,7 +81,7 @@ public final class ProductSyncer
             SyncException,
             Optional<ProductDraft>,
             Optional<ProductProjection>,
-            List<UpdateAction<Product>>>
+            List<ProductUpdateAction>>
         logErrorCallback =
             (exception, newResourceDraft, oldResource, updateActions) -> {
               final String resourceKey =
@@ -155,14 +156,18 @@ public final class ProductSyncer
         .collect(Collectors.toList());
   }
 
-  private ProductVariantDraftDsl createProductVariantDraftWithoutDiscounted(
+  private ProductVariantDraft createProductVariantDraftWithoutDiscounted(
       @Nonnull final ProductVariantDraft productVariantDraft) {
     final List<PriceDraft> prices = productVariantDraft.getPrices();
     List<PriceDraft> priceDrafts = null;
     if (prices != null) {
       priceDrafts =
           prices.stream()
-              .map(priceDraft -> PriceDraftBuilder.of(priceDraft).discounted(null).build())
+              .map(
+                  priceDraft ->
+                      PriceDraftBuilder.of(priceDraft)
+                          .discounted((DiscountedPriceDraft) null)
+                          .build())
               .collect(Collectors.toList());
     }
     return ProductVariantDraftBuilder.of(productVariantDraft).prices(priceDrafts).build();
@@ -178,20 +183,20 @@ public final class ProductSyncer
 
   @Nonnull
   @Override
-  protected ProductProjectionQuery getQuery() {
-    ProductProjectionQuery productQuery = ProductProjectionQuery.ofStaged();
+  protected ByProjectKeyProductProjectionsGet getQuery() {
+    final ByProjectKeyProductProjectionsGet productProjectionsGet =
+        getSourceClient().productProjections().get().addStaged(true);
     if (productSyncCustomRequest == null) {
-      return productQuery;
+      return productProjectionsGet;
     }
     if (null != productSyncCustomRequest.getLimit()) {
-      productQuery = productQuery.withLimit(productSyncCustomRequest.getLimit());
+      productProjectionsGet.withLimit(productSyncCustomRequest.getLimit());
     }
     if (null != productSyncCustomRequest.getWhere()) {
-      productQuery =
-          productQuery.withPredicates(QueryPredicate.of(productSyncCustomRequest.getWhere()));
+      productProjectionsGet.withWhere(productSyncCustomRequest.getWhere());
     }
 
-    return productQuery;
+    return productProjectionsGet;
   }
 
   @Nonnull

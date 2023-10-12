@@ -3,9 +3,14 @@ package com.commercetools.project.sync.shoppinglist;
 import static com.commercetools.project.sync.util.SyncUtils.IDENTIFIER_NOT_PRESENT;
 import static com.commercetools.project.sync.util.SyncUtils.logErrorCallback;
 import static com.commercetools.project.sync.util.SyncUtils.logWarningCallback;
-import static com.commercetools.sync.shoppinglists.utils.ShoppingListReferenceResolutionUtils.buildShoppingListQuery;
 import static com.commercetools.sync.shoppinglists.utils.ShoppingListTransformUtils.toShoppingListDrafts;
 
+import com.commercetools.api.client.ByProjectKeyShoppingListsGet;
+import com.commercetools.api.client.ProjectApiRoot;
+import com.commercetools.api.models.shopping_list.ShoppingList;
+import com.commercetools.api.models.shopping_list.ShoppingListDraft;
+import com.commercetools.api.models.shopping_list.ShoppingListPagedQueryResponse;
+import com.commercetools.api.models.shopping_list.ShoppingListUpdateAction;
 import com.commercetools.project.sync.Syncer;
 import com.commercetools.project.sync.service.CustomObjectService;
 import com.commercetools.project.sync.service.impl.CustomObjectServiceImpl;
@@ -16,11 +21,6 @@ import com.commercetools.sync.shoppinglists.ShoppingListSync;
 import com.commercetools.sync.shoppinglists.ShoppingListSyncOptions;
 import com.commercetools.sync.shoppinglists.ShoppingListSyncOptionsBuilder;
 import com.commercetools.sync.shoppinglists.helpers.ShoppingListSyncStatistics;
-import io.sphere.sdk.client.SphereClient;
-import io.sphere.sdk.commands.UpdateAction;
-import io.sphere.sdk.shoppinglists.ShoppingList;
-import io.sphere.sdk.shoppinglists.ShoppingListDraft;
-import io.sphere.sdk.shoppinglists.queries.ShoppingListQuery;
 import java.time.Clock;
 import java.util.List;
 import java.util.Optional;
@@ -29,38 +29,40 @@ import javax.annotation.Nonnull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+// This class compiles but not tested yet
+// TODO: Test class and adjust logic if needed
 public final class ShoppingListSyncer
     extends Syncer<
         ShoppingList,
-        ShoppingList,
+        ShoppingListUpdateAction,
         ShoppingListDraft,
-        ShoppingList,
         ShoppingListSyncStatistics,
         ShoppingListSyncOptions,
-        ShoppingListQuery,
+        ByProjectKeyShoppingListsGet,
+        ShoppingListPagedQueryResponse,
         ShoppingListSync> {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(ShoppingListSyncer.class);
 
   private ShoppingListSyncer(
       @Nonnull final ShoppingListSync sync,
-      @Nonnull final SphereClient sourceClient,
-      @Nonnull final SphereClient targetClient,
+      @Nonnull final ProjectApiRoot sourceClient,
+      @Nonnull final ProjectApiRoot targetClient,
       @Nonnull final CustomObjectService customObjectService,
       @Nonnull final Clock clock) {
     super(sync, sourceClient, targetClient, customObjectService, clock);
   }
 
   public static ShoppingListSyncer of(
-      @Nonnull final SphereClient sourceClient,
-      @Nonnull final SphereClient targetClient,
+      @Nonnull final ProjectApiRoot sourceClient,
+      @Nonnull final ProjectApiRoot targetClient,
       @Nonnull final Clock clock) {
 
     final QuadConsumer<
             SyncException,
             Optional<ShoppingListDraft>,
             Optional<ShoppingList>,
-            List<UpdateAction<ShoppingList>>>
+            List<ShoppingListUpdateAction>>
         logErrorCallback =
             (exception, newResourceDraft, oldResource, updateActions) ->
                 logErrorCallback(
@@ -101,8 +103,8 @@ public final class ShoppingListSyncer
 
   @Nonnull
   @Override
-  protected ShoppingListQuery getQuery() {
-    return buildShoppingListQuery();
+  protected ByProjectKeyShoppingListsGet getQuery() {
+    return getSourceClient().shoppingLists().get().addExpand("lineItems[*].variant");
   }
 
   @Nonnull

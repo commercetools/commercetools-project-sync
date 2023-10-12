@@ -4,6 +4,12 @@ import static com.commercetools.project.sync.util.SyncUtils.IDENTIFIER_NOT_PRESE
 import static com.commercetools.project.sync.util.SyncUtils.logErrorCallback;
 import static com.commercetools.project.sync.util.SyncUtils.logWarningCallback;
 
+import com.commercetools.api.client.ByProjectKeyCustomObjectsGet;
+import com.commercetools.api.client.ProjectApiRoot;
+import com.commercetools.api.models.custom_object.CustomObject;
+import com.commercetools.api.models.custom_object.CustomObjectDraft;
+import com.commercetools.api.models.custom_object.CustomObjectDraftBuilder;
+import com.commercetools.api.models.custom_object.CustomObjectPagedQueryResponse;
 import com.commercetools.project.sync.SyncModuleOption;
 import com.commercetools.project.sync.Syncer;
 import com.commercetools.project.sync.service.CustomObjectService;
@@ -17,18 +23,12 @@ import com.commercetools.sync.customobjects.CustomObjectSyncOptions;
 import com.commercetools.sync.customobjects.CustomObjectSyncOptionsBuilder;
 import com.commercetools.sync.customobjects.helpers.CustomObjectCompositeIdentifier;
 import com.commercetools.sync.customobjects.helpers.CustomObjectSyncStatistics;
-import com.fasterxml.jackson.databind.JsonNode;
-import io.sphere.sdk.client.SphereClient;
-import io.sphere.sdk.commands.UpdateAction;
-import io.sphere.sdk.customobjects.CustomObject;
-import io.sphere.sdk.customobjects.CustomObjectDraft;
-import io.sphere.sdk.customobjects.queries.CustomObjectQuery;
+import com.commercetools.sync.customobjects.models.NoopResourceUpdateAction;
 import java.time.Clock;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
@@ -36,15 +36,17 @@ import javax.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+// This class compiles but not tested yet
+// TODO: Test class and adjust logic if needed
 public final class CustomObjectSyncer
     extends Syncer<
-        CustomObject<JsonNode>,
-        CustomObject<JsonNode>,
-        CustomObjectDraft<JsonNode>,
-        CustomObject<JsonNode>,
+        CustomObject,
+        NoopResourceUpdateAction,
+        CustomObjectDraft,
         CustomObjectSyncStatistics,
         CustomObjectSyncOptions,
-        CustomObjectQuery<JsonNode>,
+        ByProjectKeyCustomObjectsGet,
+        CustomObjectPagedQueryResponse,
         CustomObjectSync> {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(CustomObjectSyncer.class);
@@ -71,8 +73,8 @@ public final class CustomObjectSyncer
    */
   private CustomObjectSyncer(
       @Nonnull CustomObjectSync sync,
-      @Nonnull SphereClient sourceClient,
-      @Nonnull SphereClient targetClient,
+      @Nonnull ProjectApiRoot sourceClient,
+      @Nonnull ProjectApiRoot targetClient,
       @Nonnull CustomObjectService customObjectService,
       @Nonnull Clock clock,
       @Nullable String runnerName,
@@ -84,31 +86,32 @@ public final class CustomObjectSyncer
 
   @Nonnull
   @Override
-  protected CompletionStage<List<CustomObjectDraft<JsonNode>>> transform(
-      @Nonnull List<CustomObject<JsonNode>> page) {
-    final List<CustomObjectDraft<JsonNode>> collect =
+  protected CompletableFuture<List<CustomObjectDraft>> transform(@Nonnull List<CustomObject> page) {
+    final List<CustomObjectDraft> collect =
         page.stream()
             .map(
                 customObject ->
-                    CustomObjectDraft.ofUnversionedUpsert(
-                        customObject.getContainer(),
-                        customObject.getKey(),
-                        customObject.getValue()))
+                    CustomObjectDraftBuilder.of()
+                        .container(customObject.getContainer())
+                        .key(customObject.getKey())
+                        .value(customObject.getValue())
+                        .build())
             .collect(Collectors.toList());
     return CompletableFuture.completedFuture(collect);
   }
 
   @Nonnull
   @Override
-  protected CustomObjectQuery<JsonNode> getQuery() {
-    final CustomObjectQuery<JsonNode> customObjectQuery = CustomObjectQuery.ofJsonNode();
+  protected ByProjectKeyCustomObjectsGet getQuery() {
+    final ByProjectKeyCustomObjectsGet customObjectQuery = getSourceClient().customObjects().get();
     if (isSyncProjectSyncCustomObjects) {
       return customObjectQuery;
     } else {
       final List<String> excludedContainerNames = getExcludedContainerNames();
-      return customObjectQuery.plusPredicates(
-          customObjectQueryModel ->
-              customObjectQueryModel.container().isNotIn(excludedContainerNames));
+      final String asStringList = excludedContainerNames.stream().collect(Collectors.joining(","));
+      return customObjectQuery
+          .withWhere("container not in (:excludedNames)")
+          .withPredicateVar("excludedNames", asStringList);
     }
   }
 
@@ -120,16 +123,16 @@ public final class CustomObjectSyncer
 
   @Nonnull
   public static CustomObjectSyncer of(
-      @Nonnull final SphereClient sourceClient,
-      @Nonnull final SphereClient targetClient,
+      @Nonnull final ProjectApiRoot sourceClient,
+      @Nonnull final ProjectApiRoot targetClient,
       @Nonnull final Clock clock,
       @Nullable final String runnerName,
       final boolean isSyncProjectSyncCustomObjects) {
     final QuadConsumer<
             SyncException,
-            Optional<CustomObjectDraft<JsonNode>>,
-            Optional<CustomObject<JsonNode>>,
-            List<UpdateAction<CustomObject<JsonNode>>>>
+            Optional<CustomObjectDraft>,
+            Optional<CustomObject>,
+            List<NoopResourceUpdateAction>>
         logErrorCallback =
             (exception, newResourceDraft, oldResource, updateActions) -> {
               final String resourceIdentifier = getCustomObjectResourceIdentifier(oldResource);
@@ -137,8 +140,7 @@ public final class CustomObjectSyncer
               logErrorCallback(
                   LOGGER, "customObject", exception, resourceIdentifier, updateActions);
             };
-    final TriConsumer<
-            SyncException, Optional<CustomObjectDraft<JsonNode>>, Optional<CustomObject<JsonNode>>>
+    final TriConsumer<SyncException, Optional<CustomObjectDraft>, Optional<CustomObject>>
         logWarningCallback =
             (exception, newResourceDraft, oldResource) -> {
               final String resourceIdentifier = getCustomObjectResourceIdentifier(oldResource);
@@ -165,7 +167,7 @@ public final class CustomObjectSyncer
   }
 
   private static String getCustomObjectResourceIdentifier(
-      @Nonnull Optional<CustomObject<JsonNode>> oldResource) {
+      @Nonnull Optional<CustomObject> oldResource) {
     return oldResource
         .map(CustomObjectCompositeIdentifier::of)
         .map(CustomObjectCompositeIdentifier::toString)

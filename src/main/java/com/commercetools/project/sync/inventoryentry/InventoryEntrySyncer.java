@@ -5,6 +5,12 @@ import static com.commercetools.project.sync.util.SyncUtils.logErrorCallback;
 import static com.commercetools.project.sync.util.SyncUtils.logWarningCallback;
 import static com.commercetools.sync.inventories.utils.InventoryTransformUtils.toInventoryEntryDrafts;
 
+import com.commercetools.api.client.ByProjectKeyInventoryGet;
+import com.commercetools.api.client.ProjectApiRoot;
+import com.commercetools.api.models.inventory.InventoryEntry;
+import com.commercetools.api.models.inventory.InventoryEntryDraft;
+import com.commercetools.api.models.inventory.InventoryEntryUpdateAction;
+import com.commercetools.api.models.inventory.InventoryPagedQueryResponse;
 import com.commercetools.project.sync.Syncer;
 import com.commercetools.project.sync.service.CustomObjectService;
 import com.commercetools.project.sync.service.impl.CustomObjectServiceImpl;
@@ -15,11 +21,6 @@ import com.commercetools.sync.inventories.InventorySync;
 import com.commercetools.sync.inventories.InventorySyncOptions;
 import com.commercetools.sync.inventories.InventorySyncOptionsBuilder;
 import com.commercetools.sync.inventories.helpers.InventorySyncStatistics;
-import io.sphere.sdk.client.SphereClient;
-import io.sphere.sdk.commands.UpdateAction;
-import io.sphere.sdk.inventory.InventoryEntry;
-import io.sphere.sdk.inventory.InventoryEntryDraft;
-import io.sphere.sdk.inventory.queries.InventoryEntryQuery;
 import java.time.Clock;
 import java.util.List;
 import java.util.Optional;
@@ -28,15 +29,17 @@ import javax.annotation.Nonnull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+// This class compiles but not tested yet
+// TODO: Test class and adjust logic if needed
 public final class InventoryEntrySyncer
     extends Syncer<
         InventoryEntry,
-        InventoryEntry,
+        InventoryEntryUpdateAction,
         InventoryEntryDraft,
-        InventoryEntry,
         InventorySyncStatistics,
         InventorySyncOptions,
-        InventoryEntryQuery,
+        ByProjectKeyInventoryGet,
+        InventoryPagedQueryResponse,
         InventorySync> {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(InventoryEntrySyncer.class);
@@ -44,23 +47,23 @@ public final class InventoryEntrySyncer
   /** Instantiates a {@link Syncer} instance. */
   private InventoryEntrySyncer(
       @Nonnull final InventorySync inventorySync,
-      @Nonnull final SphereClient sourceClient,
-      @Nonnull final SphereClient targetClient,
+      @Nonnull final ProjectApiRoot sourceClient,
+      @Nonnull final ProjectApiRoot targetClient,
       @Nonnull final CustomObjectService customObjectService,
       @Nonnull final Clock clock) {
     super(inventorySync, sourceClient, targetClient, customObjectService, clock);
   }
 
   public static InventoryEntrySyncer of(
-      @Nonnull final SphereClient sourceClient,
-      @Nonnull final SphereClient targetClient,
+      @Nonnull final ProjectApiRoot sourceClient,
+      @Nonnull final ProjectApiRoot targetClient,
       @Nonnull final Clock clock) {
 
     final QuadConsumer<
             SyncException,
             Optional<InventoryEntryDraft>,
             Optional<InventoryEntry>,
-            List<UpdateAction<InventoryEntry>>>
+            List<InventoryEntryUpdateAction>>
         logErrorCallback =
             (exception, newResourceDraft, oldResource, updateActions) ->
                 logErrorCallback(
@@ -100,8 +103,8 @@ public final class InventoryEntrySyncer
 
   @Nonnull
   @Override
-  protected InventoryEntryQuery getQuery() {
-    return InventoryEntryQuery.of();
+  protected ByProjectKeyInventoryGet getQuery() {
+    return getSourceClient().inventory().get();
   }
 
   @Nonnull
