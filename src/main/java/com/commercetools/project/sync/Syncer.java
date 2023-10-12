@@ -32,7 +32,6 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import net.logstash.logback.marker.Markers;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 // This class compiles but not tested yet
 // TODO: Test class and adjust logic if needed
@@ -69,8 +68,6 @@ public abstract class Syncer<
     PagedQueryResponseT extends ResourcePagedQueryResponse<ResourceT>,
     BaseSyncT extends
         BaseSync<ResourceT, ResourceDraftT, ResourceUpdateActionT, SyncStatisticsT, SyncOptionsT>> {
-
-  private static final Logger LOGGER = LoggerFactory.getLogger(Syncer.class);
 
   /* Using default Caffeine cache implementation from sync-java library for caching reference
    * IdToKey values.
