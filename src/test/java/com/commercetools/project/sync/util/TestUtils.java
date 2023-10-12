@@ -1,5 +1,6 @@
 package com.commercetools.project.sync.util;
 
+import static io.vrap.rmf.base.client.utils.json.JsonUtils.fromInputStream;
 import static java.lang.String.format;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -25,6 +26,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import io.vrap.rmf.base.client.ApiHttpResponse;
 import io.vrap.rmf.base.client.error.BadGatewayException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 import java.time.ZonedDateTime;
@@ -195,6 +197,12 @@ public final class TestUtils {
     // " example: Syncing products from CTP project with key 'x' to project with key 'y' is done","
     verify(client, times(numberOfGetConfigInvocations)).getProjectKey();
     verifyNoMoreInteractions(client);
+  }
+
+  public static <T> T readObjectFromResource(final String resourcePath, final Class<T> objectType) {
+    final InputStream resourceAsStream =
+        Thread.currentThread().getContextClassLoader().getResourceAsStream(resourcePath);
+    return fromInputStream(resourceAsStream, objectType);
   }
 
   @SuppressWarnings("unchecked")
