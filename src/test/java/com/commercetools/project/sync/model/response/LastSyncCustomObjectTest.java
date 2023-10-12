@@ -7,6 +7,8 @@ import com.commercetools.sync.products.helpers.ProductSyncStatistics;
 import java.time.ZonedDateTime;
 import org.junit.jupiter.api.Test;
 
+// These tests do compile but not valid
+// TODO: Make tests valid
 class LastSyncCustomObjectTest {
 
   @Test
