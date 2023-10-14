@@ -125,7 +125,7 @@ class CustomObjectServiceImplTest {
 
   @Test
   @SuppressWarnings("unchecked")
-  @Disabled("objectmapper does not correctly convert sync statistics from json to a java type")
+  @Disabled("https://commercetools.atlassian.net/browse/DEVX-272")
   void
       getLastSyncCustomObject_OnSuccessfulQueryWithResults_ShouldCompleteWithLastSyncCustomObject() {
     // preparation
