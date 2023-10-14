@@ -14,7 +14,7 @@ plugins {
     id "com.github.ben-manes.versions" version '0.49.0'
     id 'com.adarshr.test-logger' version '3.2.0'
     id 'com.diffplug.spotless' version '6.22.0'
-    id "com.github.spotbugs" version "5.1.4"
+    id "com.github.spotbugs" version "5.1.5"
 }
 
 apply from: "$rootDir/gradle-scripts/extensions.gradle"
