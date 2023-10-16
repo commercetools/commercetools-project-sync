@@ -77,20 +77,16 @@ public class CustomObjectServiceImpl implements CustomObjectService {
         .withContainerAndKey(containerName, sourceProjectKey)
         .get()
         .execute()
-        .handle(
-            (customObjectApiHttpResponse, throwable) -> {
-              if (throwable != null) {
-                return Optional.empty();
-              } else {
-                final CustomObject responseBody = customObjectApiHttpResponse.getBody();
-                final ObjectMapper objectMapper = JsonUtils.getConfiguredObjectMapper();
-                final LastSyncCustomObject lastSyncCustomObject =
-                    responseBody == null
-                        ? null
-                        : objectMapper.convertValue(
-                            responseBody.getValue(), LastSyncCustomObject.class);
-                return Optional.ofNullable(lastSyncCustomObject);
-              }
+        .thenApply(
+            (customObjectApiHttpResponse) -> {
+              final CustomObject responseBody = customObjectApiHttpResponse.getBody();
+              final ObjectMapper objectMapper = JsonUtils.getConfiguredObjectMapper();
+              final LastSyncCustomObject lastSyncCustomObject =
+                  responseBody == null
+                      ? null
+                      : objectMapper.convertValue(
+                          responseBody.getValue(), LastSyncCustomObject.class);
+              return Optional.ofNullable(lastSyncCustomObject);
             });
   }
 

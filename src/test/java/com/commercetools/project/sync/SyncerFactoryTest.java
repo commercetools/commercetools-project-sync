@@ -543,8 +543,6 @@ class SyncerFactoryTest {
                         new ApiHttpResponse<>(
                             200, null, emptyResultsAsString.getBytes(charsetUTF8)));
                   }
-
-                  return null;
                 })
             .withApiBaseUrl("testBaseUrl")
             .build("testClient");
