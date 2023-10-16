@@ -18,8 +18,6 @@ import uk.org.lidalia.slf4jtest.LoggingEvent;
 import uk.org.lidalia.slf4jtest.TestLogger;
 import uk.org.lidalia.slf4jtest.TestLoggerFactory;
 
-// These tests do compile but are not valid
-// TODO: Make tests valid
 class SyncUtilsTest {
 
   @BeforeEach
