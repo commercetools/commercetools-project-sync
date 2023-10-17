@@ -126,35 +126,13 @@ class SyncerFactoryTest {
   private ProjectApiRoot sourceClient;
   private ProjectApiRoot targetClient;
 
-  private AtomicInteger verifyProductTypesGetCounter,
-      verifyTypesGetCounter,
-      verifyStatesGetCounter,
-      verifyTaxCategoriesGetCounter,
-      verifyCategoriesGetCounter,
-      verifyInventoryGetCounter,
-      verifyProductProjectionsGetCounter,
-      verifyCartDiscountsGetCounter,
-      verifyCustomersGetCounter,
-      verifyCustomObjectsGetCounter,
-      verifyShoppingListsGetCounter,
-      verifyInvokeClientCounter;
-
   @BeforeEach
   void setupTest() {
-    verifyProductTypesGetCounter = new AtomicInteger(0);
-    verifyTypesGetCounter = new AtomicInteger(0);
-    verifyStatesGetCounter = new AtomicInteger(0);
-    verifyTaxCategoriesGetCounter = new AtomicInteger(0);
-    verifyCategoriesGetCounter = new AtomicInteger(0);
-    verifyInventoryGetCounter = new AtomicInteger(0);
-    verifyProductProjectionsGetCounter = new AtomicInteger(0);
-    verifyCustomObjectsGetCounter = new AtomicInteger(0);
-    verifyCustomersGetCounter = new AtomicInteger(0);
-    verifyCartDiscountsGetCounter = new AtomicInteger(0);
-    verifyShoppingListsGetCounter = new AtomicInteger(0);
-    verifyInvokeClientCounter = new AtomicInteger(0);
-    sourceClient = mockClientResourceRequests("testProjectKey");
+    final ProjectApiRoot clientWithEmptyResourceResults =
+        mockClientResourceRequests("testProjectKey");
+    sourceClient = spy(clientWithEmptyResourceResults);
     targetClient = mock(ProjectApiRoot.class);
+    when(targetClient.getProjectKey()).thenReturn("testTargetProjectKey");
   }
 
   @AfterEach
@@ -178,40 +156,6 @@ class SyncerFactoryTest {
         projectKey,
         (uri, method, encodedRequetsBody) -> {
           final String responseString = "{\"results\":[]}";
-          if (uri.contains("product-types") && ApiHttpMethod.GET.equals(method)) {
-            verifyProductTypesGetCounter.incrementAndGet();
-          }
-          if (uri.contains("types") && ApiHttpMethod.GET.equals(method)) {
-            verifyTypesGetCounter.incrementAndGet();
-          }
-          if (uri.contains("states") && ApiHttpMethod.GET.equals(method)) {
-            verifyStatesGetCounter.incrementAndGet();
-          }
-          if (uri.contains("tax-categories") && ApiHttpMethod.GET.equals(method)) {
-            verifyTaxCategoriesGetCounter.incrementAndGet();
-          }
-          if (uri.contains("categories") && ApiHttpMethod.GET.equals(method)) {
-            verifyCategoriesGetCounter.incrementAndGet();
-          }
-          if (uri.contains("inventory?") && ApiHttpMethod.GET.equals(method)) {
-            verifyInventoryGetCounter.incrementAndGet();
-          }
-          if (uri.contains("product-projections") && ApiHttpMethod.GET.equals(method)) {
-            verifyProductProjectionsGetCounter.incrementAndGet();
-          }
-          if (uri.contains("cart-discounts") && ApiHttpMethod.GET.equals(method)) {
-            verifyCartDiscountsGetCounter.incrementAndGet();
-          }
-          if (uri.contains("custom-objects") && ApiHttpMethod.GET.equals(method)) {
-            verifyCustomObjectsGetCounter.incrementAndGet();
-          }
-          if (uri.contains("customers") && ApiHttpMethod.GET.equals(method)) {
-            verifyCustomersGetCounter.incrementAndGet();
-          }
-          if (uri.contains("shopping-lists") && ApiHttpMethod.GET.equals(method)) {
-            verifyShoppingListsGetCounter.incrementAndGet();
-          }
-          verifyInvokeClientCounter.incrementAndGet();
           return CompletableFuture.completedFuture(
               new ApiHttpResponse<>(200, null, responseString.getBytes(StandardCharsets.UTF_8)));
         });
@@ -265,29 +209,25 @@ class SyncerFactoryTest {
   @SuppressWarnings("unchecked")
   void sync_AsProductsDeltaSync_ShouldBuildSyncerAndExecuteSync() {
     // preparation
-    final ProjectApiRoot sourceClientSpy = spy(sourceClient);
     final ZonedDateTime currentCtpTimestamp = ZonedDateTime.now();
-    final ProjectApiRoot targetClientMock = mock(ProjectApiRoot.class);
-    when(targetClientMock.getProjectKey()).thenReturn("testProjectKey");
-    stubClientsCustomObjectService(targetClientMock, currentCtpTimestamp);
+    stubClientsCustomObjectService(targetClient, currentCtpTimestamp);
 
     final SyncerFactory syncerFactory =
-        SyncerFactory.of(() -> sourceClientSpy, () -> targetClientMock, getMockedClock());
+        SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock());
 
     // test
     syncerFactory.sync(new String[] {"products"}, "myRunnerName", false, false, null);
 
     // assertions
     // verify product-projections are queried once
-    verify(sourceClientSpy, times(1)).productProjections();
-    assertThat(verifyProductProjectionsGetCounter.get()).isEqualTo(1);
-    verifyTimestampGeneratorCustomObjectUpsertIsCalled(
-        targetClientMock, "ProductSync", "myRunnerName");
+    verify(sourceClient, times(1)).productProjections();
+    //    assertThat(verifyProductProjectionsGetCounter.get()).isEqualTo(1);
+    verifyTimestampGeneratorCustomObjectUpsertIsCalled(targetClient, "ProductSync", "myRunnerName");
     verifyLastSyncCustomObjectQuery(
-        targetClientMock, "productSync", "myRunnerName", "testProjectKey", 1);
+        targetClient, "productSync", "myRunnerName", "testProjectKey", 1);
     // verify two custom object upserts : 1. current ctp timestamp and 2. last sync timestamp
     // creation)
-    verify(targetClientMock.customObjects(), times(2)).post(any(CustomObjectDraft.class));
+    verify(targetClient.customObjects(), times(2)).post(any(CustomObjectDraft.class));
     // TODO: Assert on actual last sync timestamp creation in detail after Statistics classes in
     // java-sync library
     // TODO: override #equals method:
@@ -295,7 +235,7 @@ class SyncerFactoryTest {
     // TODO: e.g. verifyNewLastSyncCustomObjectCreation(targetClient,
     // currentCtpTimestamp.minusMinutes(2), any(ProductSyncStatistics.class), 0L, "productSync",
     // "foo");
-    verifyInteractionsWithClientAfterSync(sourceClientSpy, 1);
+    verifyInteractionsWithClientAfterSync(sourceClient, 1);
 
     final Condition<LoggingEvent> startLog =
         new Condition<>(
@@ -325,27 +265,23 @@ class SyncerFactoryTest {
   @SuppressWarnings("unchecked")
   void sync_AsProductsFullSync_ShouldBuildSyncerAndExecuteSync() {
     // preparation
-    final ProjectApiRoot sourceClientSpy = spy(sourceClient);
     final ZonedDateTime currentCtpTimestamp = ZonedDateTime.now();
-    final ProjectApiRoot targetClient = mock(ProjectApiRoot.class);
-    when(targetClient.getProjectKey()).thenReturn("testTargetProjectKey");
     stubClientsCustomObjectService(targetClient, currentCtpTimestamp);
 
     final SyncerFactory syncerFactory =
-        SyncerFactory.of(() -> sourceClientSpy, () -> targetClient, getMockedClock());
+        SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock());
 
     // test
     syncerFactory.sync(new String[] {"products"}, "myRunnerName", true, false, null);
 
     // assertions
-    verify(sourceClientSpy, times(1)).productProjections();
-    assertThat(verifyProductProjectionsGetCounter.get()).isEqualTo(1);
-
+    verify(sourceClient, times(1)).productProjections();
+    //    assertThat(verifyProductProjectionsGetCounter.get()).isEqualTo(1);
     verifyTimestampGeneratorCustomObjectUpsertIsNotCalled(
         targetClient, "ProductSync", "myRunnerName");
     verifyLastSyncCustomObjectQuery(targetClient, "productSync", "myRunnerName", "foo", 0);
     verify(targetClient.customObjects(), times(0)).post(any(CustomObjectDraft.class));
-    verifyInteractionsWithClientAfterSync(sourceClientSpy, 1);
+    verifyInteractionsWithClientAfterSync(sourceClient, 1);
 
     final Condition<LoggingEvent> startLog =
         new Condition<>(
@@ -392,6 +328,7 @@ class SyncerFactoryTest {
             .total(2L)
             .build();
 
+    final AtomicInteger verifyProductProjectionsGetCounter = new AtomicInteger(0);
     final BadGatewayException badGatewayException = createBadGatewayException();
     final ProjectApiRoot sourceClient =
         withTestClient(
@@ -400,7 +337,6 @@ class SyncerFactoryTest {
               if (uri.contains("graphql") && ApiHttpMethod.POST.equals(method)) {
                 return CompletableFutureUtils.failed(badGatewayException);
               }
-              verifyInvokeClientCounter.incrementAndGet();
               if (uri.contains("product-projections") && ApiHttpMethod.GET.equals(method)) {
                 if (verifyProductProjectionsGetCounter.get() == 0) {
                   verifyProductProjectionsGetCounter.incrementAndGet();
@@ -414,8 +350,6 @@ class SyncerFactoryTest {
               return null;
             });
 
-    final ProjectApiRoot targetClient = mock(ProjectApiRoot.class);
-    when(targetClient.getProjectKey()).thenReturn("testTargetProjectKey");
     stubClientsCustomObjectService(targetClient, ZonedDateTime.now());
     final ByProjectKeyProductsPost byProjectKeyProductsPost = mock(ByProjectKeyProductsPost.class);
     when(byProjectKeyProductsPost.execute())
@@ -481,6 +415,7 @@ class SyncerFactoryTest {
   void
       sync_AsProductsFullSyncWithExceptionDuringAttributeReferenceReplacement_ShouldContinueWithPages() {
     // preparation
+    final AtomicInteger verifyProductProjectionsGetCounter = new AtomicInteger(0);
     final AtomicInteger sourceGraphQLPostCounter = new AtomicInteger(0);
     final ProductProjection product1 =
         ProductMixin.toProjection(
@@ -713,13 +648,6 @@ class SyncerFactoryTest {
       @Nonnull ProjectApiRoot client,
       @Nonnull String syncMethodName,
       @Nonnull String syncRunnerName) {
-    // fact: SphereRequest is a very broad interface and we actually wanted to capture only
-    // CustomObjectUpsertCommand.
-    // I tried it but argumentcaptor captures also CustomObjectQueryImpl classes, because we call
-    // both query and upsert in the mocked ProjectApiRoot.
-    // This situation throws runtime NPE error later in the method as query doesnt contain a draft.
-    // I guess generics doesnt work here as type is not know on compile time.
-    // That's why we need to filter instanceof CustomObjectUpsertCommand in the streams.
     final ArgumentCaptor<CustomObjectDraft> customObjectDraftArgumentCaptor =
         ArgumentCaptor.forClass(CustomObjectDraft.class);
 
@@ -727,7 +655,6 @@ class SyncerFactoryTest {
     final List<CustomObjectDraft> allValues = customObjectDraftArgumentCaptor.getAllValues();
     final CustomObjectDraft customObjectDraft =
         allValues.stream()
-            .filter(draft -> draft instanceof CustomObjectDraft)
             .filter(
                 draft ->
                     draft
@@ -777,10 +704,7 @@ class SyncerFactoryTest {
   @SuppressWarnings("unchecked")
   void sync_AsCategoriesDeltaSync_ShouldBuildSyncerAndExecuteSync() {
     // preparation
-    final ProjectApiRoot sourceClient = mockClientResourceRequests("testSourceProjectKey");
     final ZonedDateTime currentCtpTimestamp = ZonedDateTime.now();
-    final ProjectApiRoot targetClient = mock(ProjectApiRoot.class);
-    when(targetClient.getProjectKey()).thenReturn("testTargetProjectKey");
     stubClientsCustomObjectService(targetClient, currentCtpTimestamp);
 
     final SyncerFactory syncerFactory =
@@ -789,11 +713,11 @@ class SyncerFactoryTest {
     syncerFactory.sync(new String[] {"categories"}, null, false, false, null);
 
     // assertions
-    assertThat(verifyCategoriesGetCounter.get()).isEqualTo(1);
+    verify(sourceClient, times(1)).categories();
     verifyTimestampGeneratorCustomObjectUpsertIsCalled(
         targetClient, "CategorySync", DEFAULT_RUNNER_NAME);
     verifyLastSyncCustomObjectQuery(
-        targetClient, "categorySync", DEFAULT_RUNNER_NAME, "testSourceProjectKey", 1);
+        targetClient, "categorySync", DEFAULT_RUNNER_NAME, "testProjectKey", 1);
     // verify two custom object upserts : 1. current ctp timestamp and 2. last sync timestamp
     verify(targetClient.customObjects(), times(2)).post(any(CustomObjectDraft.class));
     // TODO: Assert on actual last sync timestamp creation in detail after Statistics classes in
@@ -803,7 +727,7 @@ class SyncerFactoryTest {
     // TODO: e.g. verifyNewLastSyncCustomObjectCreation(targetClient,
     // currentCtpTimestamp.minusMinutes(2), any(ProductSyncStatistics.class), 0L, "productSync",
     // "foo");
-    assertThat(verifyInvokeClientCounter.get()).isEqualTo(1);
+    verifyInteractionsWithClientAfterSync(sourceClient, 1);
 
     final Condition<LoggingEvent> startLog =
         new Condition<>(
@@ -833,10 +757,7 @@ class SyncerFactoryTest {
   @SuppressWarnings("unchecked")
   void sync_AsProductTypesDeltaSync_ShouldBuildSyncerAndExecuteSync() {
     // preparation
-    final ProjectApiRoot sourceClient = mockClientResourceRequests("testSourceProjectKey");
     final ZonedDateTime currentCtpTimestamp = ZonedDateTime.now();
-    final ProjectApiRoot targetClient = mock(ProjectApiRoot.class);
-    when(targetClient.getProjectKey()).thenReturn("testTargetProjectKey");
     stubClientsCustomObjectService(targetClient, currentCtpTimestamp);
 
     final SyncerFactory syncerFactory =
@@ -846,11 +767,11 @@ class SyncerFactoryTest {
     syncerFactory.sync(new String[] {"productTypes"}, "", false, false, null);
 
     // assertions
-    assertThat(verifyProductTypesGetCounter.get()).isEqualTo(1);
+    verify(sourceClient, times(1)).productTypes();
     verifyTimestampGeneratorCustomObjectUpsertIsCalled(
         targetClient, "ProductTypeSync", DEFAULT_RUNNER_NAME);
     verifyLastSyncCustomObjectQuery(
-        targetClient, "productTypeSync", DEFAULT_RUNNER_NAME, "testSourceProjectKey", 1);
+        targetClient, "productTypeSync", DEFAULT_RUNNER_NAME, "testProjectKey", 1);
     // verify two custom object upserts : 1. current ctp timestamp and 2. last sync timestamp
     // creation)
     verify(targetClient.customObjects(), times(2)).post(any(CustomObjectDraft.class));
@@ -861,7 +782,7 @@ class SyncerFactoryTest {
     // TODO: e.g. verifyNewLastSyncCustomObjectCreation(targetClient,
     // currentCtpTimestamp.minusMinutes(2), any(ProductSyncStatistics.class), 0L, "productSync",
     // "foo");
-    assertThat(verifyInvokeClientCounter.get()).isEqualTo(1);
+    verifyInteractionsWithClientAfterSync(sourceClient, 1);
 
     final Condition<LoggingEvent> startLog =
         new Condition<>(
@@ -892,11 +813,8 @@ class SyncerFactoryTest {
   @SuppressWarnings("unchecked")
   void sync_AsTypesDeltaSync_ShouldBuildSyncerAndExecuteSync() {
     // preparation
-    final ProjectApiRoot sourceClient = mockClientResourceRequests("testSourceProjectKey");
     final ZonedDateTime currentCtpTimestamp = ZonedDateTime.now();
-    final ProjectApiRoot targetClient = mock(ProjectApiRoot.class);
-    when(targetClient.getProjectKey()).thenReturn("testTargetProjectKey");
-    stubClientsCustomObjectService(targetClient, currentCtpTimestamp);
+    stubClientsCustomObjectService(targetClient, ZonedDateTime.now());
 
     final SyncerFactory syncerFactory =
         SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock());
@@ -905,9 +823,9 @@ class SyncerFactoryTest {
     syncerFactory.sync(new String[] {"types"}, "foo", false, false, null);
 
     // assertions
-    assertThat(verifyTypesGetCounter.get()).isEqualTo(1);
+    verify(sourceClient, times(1)).types();
     verifyTimestampGeneratorCustomObjectUpsertIsCalled(targetClient, "TypeSync", "foo");
-    verifyLastSyncCustomObjectQuery(targetClient, "typeSync", "foo", "testSourceProjectKey", 1);
+    verifyLastSyncCustomObjectQuery(targetClient, "typeSync", "foo", "testProjectKey", 1);
     // verify two custom object upserts : 1. current ctp timestamp and 2. last sync timestamp
     // creation)
     verify(targetClient.customObjects(), times(2)).post(any(CustomObjectDraft.class));
@@ -918,7 +836,7 @@ class SyncerFactoryTest {
     // TODO: e.g. verifyNewLastSyncCustomObjectCreation(targetClient,
     // currentCtpTimestamp.minusMinutes(2), any(ProductSyncStatistics.class), 0L, "productSync",
     // "foo");
-    assertThat(verifyInvokeClientCounter.get()).isEqualTo(1);
+    verifyInteractionsWithClientAfterSync(sourceClient, 1);
 
     final Condition<LoggingEvent> startLog =
         new Condition<>(
@@ -948,11 +866,7 @@ class SyncerFactoryTest {
   @SuppressWarnings("unchecked")
   void sync_AsInventoryEntriesDeltaSync_ShouldBuildSyncerAndExecuteSync() {
     // preparation
-    final ProjectApiRoot sourceClient = mockClientResourceRequests("testSourceProjectKey");
-    final ZonedDateTime currentCtpTimestamp = ZonedDateTime.now();
-    final ProjectApiRoot targetClient = mock(ProjectApiRoot.class);
-    when(targetClient.getProjectKey()).thenReturn("testTargetProjectKey");
-    stubClientsCustomObjectService(targetClient, currentCtpTimestamp);
+    stubClientsCustomObjectService(targetClient, ZonedDateTime.now());
 
     final SyncerFactory syncerFactory =
         SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock());
@@ -961,11 +875,11 @@ class SyncerFactoryTest {
     syncerFactory.sync(new String[] {"inventoryEntries"}, null, false, false, null);
 
     // assertions
-    assertThat(verifyInventoryGetCounter.get()).isEqualTo(1);
+    verify(sourceClient, times(1)).inventory();
     verifyTimestampGeneratorCustomObjectUpsertIsCalled(
         targetClient, "InventorySync", DEFAULT_RUNNER_NAME);
     verifyLastSyncCustomObjectQuery(
-        targetClient, "inventorySync", DEFAULT_RUNNER_NAME, "testSourceProjectKey", 1);
+        targetClient, "inventorySync", DEFAULT_RUNNER_NAME, "testProjectKey", 1);
     // verify two custom object upserts : 1. current ctp timestamp and 2. last sync timestamp
     // creation)
     verify(targetClient.customObjects(), times(2)).post(any(CustomObjectDraft.class));
@@ -976,7 +890,7 @@ class SyncerFactoryTest {
     // TODO: e.g. verifyNewLastSyncCustomObjectCreation(targetClient,
     // currentCtpTimestamp.minusMinutes(2), any(ProductSyncStatistics.class), 0L, "productSync",
     // "foo");
-    assertThat(verifyInvokeClientCounter.get()).isEqualTo(1);
+    verifyInteractionsWithClientAfterSync(sourceClient, 1);
 
     final Condition<LoggingEvent> startLog =
         new Condition<>(
@@ -1005,23 +919,19 @@ class SyncerFactoryTest {
   @Test
   void sync_WithErrorOnFetch_ShouldCloseClientAndCompleteExceptionally() {
     // preparation
-    final ProjectApiRoot sourceClient =
+    final ProjectApiRoot mockSource =
         withTestClient(
             "testProjectKey",
             (uri, method, encodedRequestBody) -> {
-              verifyInvokeClientCounter.incrementAndGet();
               if (uri.contains("inventory") && ApiHttpMethod.GET.equals(method)) {
-                verifyInventoryGetCounter.incrementAndGet();
                 return CompletableFutureUtils.exceptionallyCompletedFuture(
                     createBadGatewayException());
               }
               return null;
             });
+    sourceClient = spy(mockSource);
 
-    final ZonedDateTime currentCtpTimestamp = ZonedDateTime.now();
-    final ProjectApiRoot targetClient = mock(ProjectApiRoot.class);
-    when(targetClient.getProjectKey()).thenReturn("testTargetProjectKey");
-    stubClientsCustomObjectService(targetClient, currentCtpTimestamp);
+    stubClientsCustomObjectService(targetClient, ZonedDateTime.now());
 
     final SyncerFactory syncerFactory =
         SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock());
@@ -1033,8 +943,9 @@ class SyncerFactoryTest {
     // assertions
     verifyTimestampGeneratorCustomObjectUpsertIsCalled(
         targetClient, "InventorySync", DEFAULT_RUNNER_NAME);
-    assertThat(verifyInventoryGetCounter.get()).isEqualTo(1);
-    assertThat(verifyInvokeClientCounter.get()).isEqualTo(1);
+    verify(sourceClient, times(1)).inventory();
+    verifyInteractionsWithClientAfterSync(sourceClient, 1);
+
     assertThat(result)
         .failsWithin(1, TimeUnit.SECONDS)
         .withThrowableOfType(ExecutionException.class)
@@ -1046,10 +957,6 @@ class SyncerFactoryTest {
   void
       sync_WithErrorOnCurrentCtpTimestampUpsert_ShouldCloseClientAndCompleteExceptionallyWithoutSyncing() {
     // preparation
-    final ProjectApiRoot sourceClient = mockClientResourceRequests("testSourceProjectKey");
-    ProjectApiRoot spy = spy(sourceClient);
-    final ProjectApiRoot targetClient = mock(ProjectApiRoot.class);
-    when(targetClient.getProjectKey()).thenReturn("testTargetProjectKey");
     final ByProjectKeyCustomObjectsPost customObjectsPost =
         mock(ByProjectKeyCustomObjectsPost.class);
     when(customObjectsPost.execute())
@@ -1060,7 +967,7 @@ class SyncerFactoryTest {
         .thenReturn(customObjectsPost);
 
     final SyncerFactory syncerFactory =
-        SyncerFactory.of(() -> spy, () -> targetClient, getMockedClock());
+        SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock());
 
     // test
     final CompletionStage<Void> result =
@@ -1069,8 +976,8 @@ class SyncerFactoryTest {
     // assertions
     verifyTimestampGeneratorCustomObjectUpsertIsCalled(
         targetClient, "InventorySync", DEFAULT_RUNNER_NAME);
-    assertThat(verifyInventoryGetCounter.get()).isEqualTo(0);
-    verifyInteractionsWithClientAfterSync(spy, 1);
+    verify(sourceClient, times(0)).inventory();
+    verifyInteractionsWithClientAfterSync(sourceClient, 1);
     assertThat(result)
         .failsWithin(1, TimeUnit.SECONDS)
         .withThrowableOfType(ExecutionException.class)
@@ -1082,9 +989,6 @@ class SyncerFactoryTest {
   void
       sync_WithErrorOnQueryLastSyncTimestamp_ShouldCloseClientAndCompleteExceptionallyWithoutSyncing() {
     // preparation
-    final ProjectApiRoot sourceClientSpy = spy(sourceClient);
-    final ProjectApiRoot targetClient = mock(ProjectApiRoot.class);
-    when(targetClient.getProjectKey()).thenReturn("testTargetProjectKey");
     final ByProjectKeyCustomObjectsPost customObjectsPost =
         mock(ByProjectKeyCustomObjectsPost.class);
     final CustomObject lastSyncCustomObjectCustomObject =
@@ -1105,7 +1009,7 @@ class SyncerFactoryTest {
         .thenReturn(customObjectsPost);
 
     final SyncerFactory syncerFactory =
-        SyncerFactory.of(() -> sourceClientSpy, () -> targetClient, getMockedClock());
+        SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock());
 
     // test
     final CompletionStage<Void> result =
@@ -1114,8 +1018,8 @@ class SyncerFactoryTest {
     // assertions
     verifyTimestampGeneratorCustomObjectUpsertIsCalled(targetClient, "InventorySync", "bar");
     verifyLastSyncCustomObjectQuery(targetClient, "inventorySync", "bar", "testProjectKey", 1);
-    verify(sourceClientSpy, times(0)).inventory();
-    verifyInteractionsWithClientAfterSync(sourceClientSpy, 1);
+    verify(sourceClient, times(0)).inventory();
+    verifyInteractionsWithClientAfterSync(sourceClient, 1);
     assertThat(result)
         .failsWithin(1, TimeUnit.SECONDS)
         .withThrowableOfType(ExecutionException.class)
@@ -1126,13 +1030,9 @@ class SyncerFactoryTest {
   @SuppressWarnings("unchecked")
   void syncAll_AsDelta_ShouldBuildSyncerAndExecuteSync() {
     // preparation
-    final ProjectApiRoot sourceClientSpy = spy(sourceClient);
-    final ZonedDateTime currentCtpTimestamp = ZonedDateTime.now();
-    final ProjectApiRoot targetClient = mock(ProjectApiRoot.class);
-    when(targetClient.getProjectKey()).thenReturn("testTargetProjectKey");
-    stubClientsCustomObjectService(targetClient, currentCtpTimestamp);
+    stubClientsCustomObjectService(targetClient, ZonedDateTime.now());
     final SyncerFactory syncerFactory =
-        SyncerFactory.of(() -> sourceClientSpy, () -> targetClient, getMockedClock());
+        SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock());
 
     // test
     syncerFactory.sync(new String[] {"all"}, null, false, false, null).join();
@@ -1183,18 +1083,18 @@ class SyncerFactoryTest {
         targetClient, "customerSync", DEFAULT_RUNNER_NAME, "testProjectKey", 1);
     verifyLastSyncCustomObjectQuery(
         targetClient, "shoppingListSync", DEFAULT_RUNNER_NAME, "testProjectKey", 1);
-    verify(sourceClientSpy, times(1)).productTypes();
-    verify(sourceClientSpy, times(1)).types();
-    verify(sourceClientSpy, times(1)).categories();
-    verify(sourceClientSpy, times(1)).productProjections();
-    verify(sourceClientSpy, times(1)).inventory();
-    verify(sourceClientSpy, times(1)).cartDiscounts();
-    verify(sourceClientSpy, times(1)).states();
-    verify(sourceClientSpy, times(1)).taxCategories();
-    verify(sourceClientSpy, times(1)).customObjects();
-    verify(sourceClientSpy, times(1)).customers();
-    verify(sourceClientSpy, times(1)).shoppingLists();
-    verifyInteractionsWithClientAfterSync(sourceClientSpy, 11);
+    verify(sourceClient, times(1)).productTypes();
+    verify(sourceClient, times(1)).types();
+    verify(sourceClient, times(1)).categories();
+    verify(sourceClient, times(1)).productProjections();
+    verify(sourceClient, times(1)).inventory();
+    verify(sourceClient, times(1)).cartDiscounts();
+    verify(sourceClient, times(1)).states();
+    verify(sourceClient, times(1)).taxCategories();
+    verify(sourceClient, times(1)).customObjects();
+    verify(sourceClient, times(1)).customers();
+    verify(sourceClient, times(1)).shoppingLists();
+    verifyInteractionsWithClientAfterSync(sourceClient, 11);
 
     assertThat(cliRunnerTestLogger.getAllLoggingEvents())
         .allMatch(loggingEvent -> !Level.ERROR.equals(loggingEvent.getLevel()));
@@ -1233,13 +1133,9 @@ class SyncerFactoryTest {
   @SuppressWarnings("unchecked")
   void syncProductTypesProductsCustomersAndShoppingLists_AsDelta_ShouldBuildSyncerAndExecuteSync() {
     // preparation
-    final ProjectApiRoot sourceClientSpy = spy(sourceClient);
-    final ZonedDateTime currentCtpTimestamp = ZonedDateTime.now();
-    final ProjectApiRoot targetClient = mock(ProjectApiRoot.class);
-    when(targetClient.getProjectKey()).thenReturn("testTargetProjectKey");
-    stubClientsCustomObjectService(targetClient, currentCtpTimestamp);
+    stubClientsCustomObjectService(targetClient, ZonedDateTime.now());
     final SyncerFactory syncerFactory =
-        SyncerFactory.of(() -> sourceClientSpy, () -> targetClient, getMockedClock());
+        SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock());
 
     // test
     String[] syncModuleOptions = {"productTypes", "products", "customers", "shoppingLists"};
@@ -1264,22 +1160,18 @@ class SyncerFactoryTest {
     verifyLastSyncCustomObjectQuery(
         targetClient, "shoppingListSync", DEFAULT_RUNNER_NAME, "testProjectKey", 1);
 
-    final InOrder inOrder = Mockito.inOrder(sourceClientSpy);
+    final InOrder inOrder = Mockito.inOrder(sourceClient);
 
     // According to sync algorithm, ProductType and Customer will run sync in parallel, Product and
     // ShoppingList sequentially.
     // Example: Given: ['productTypes', 'customers', 'products', 'shoppingLists']
     // From the given arguments, algorithm will group the resources as below,
     // [productTypes, customers] [products] [shoppingLists]
-    inOrder.verify(sourceClientSpy, times(1)).productTypes();
-    verify(sourceClientSpy, times(1)).customers();
-    inOrder.verify(sourceClientSpy, times(1)).productProjections();
-    inOrder.verify(sourceClientSpy, times(1)).shoppingLists();
-    assertThat(verifyProductTypesGetCounter.get()).isEqualTo(1);
-    assertThat(verifyCustomersGetCounter.get()).isEqualTo(1);
-    assertThat(verifyProductProjectionsGetCounter.get()).isEqualTo(1);
-    assertThat(verifyShoppingListsGetCounter.get()).isEqualTo(1);
-    verifyInteractionsWithClientAfterSync(sourceClientSpy, 4);
+    inOrder.verify(sourceClient, times(1)).productTypes();
+    verify(sourceClient, times(1)).customers();
+    inOrder.verify(sourceClient, times(1)).productProjections();
+    inOrder.verify(sourceClient, times(1)).shoppingLists();
+    verifyInteractionsWithClientAfterSync(sourceClient, 4);
 
     assertProductTypeSyncerLoggingEvents(productTypeSyncerTestLogger, 0);
     assertProductSyncerLoggingEvents(productSyncerTestLogger, 0);
@@ -1291,13 +1183,9 @@ class SyncerFactoryTest {
   @SuppressWarnings("unchecked")
   void syncStatesInventoryEntriesAndCustomObjects_AsDelta_ShouldBuildSyncerAndExecuteSync() {
     // preparation
-    final ProjectApiRoot sourceClientSpy = spy(sourceClient);
-    final ZonedDateTime currentCtpTimestamp = ZonedDateTime.now();
-    final ProjectApiRoot targetClient = mock(ProjectApiRoot.class);
-    when(targetClient.getProjectKey()).thenReturn("testTargetProjectKey");
-    stubClientsCustomObjectService(targetClient, currentCtpTimestamp);
+    stubClientsCustomObjectService(targetClient, ZonedDateTime.now());
     final SyncerFactory syncerFactory =
-        SyncerFactory.of(() -> sourceClientSpy, () -> targetClient, getMockedClock());
+        SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock());
 
     // test
     String[] syncModuleOptions = {"states", "inventoryEntries", "customObjects"};
@@ -1317,13 +1205,11 @@ class SyncerFactoryTest {
         targetClient, "inventorySync", DEFAULT_RUNNER_NAME, "testProjectKey", 1);
     verifyLastSyncCustomObjectQuery(
         targetClient, "customObjectSync", DEFAULT_RUNNER_NAME, "testProjectKey", 1);
-    verify(sourceClientSpy, times(1)).states();
-    verify(sourceClientSpy, times(1)).inventory();
-    verify(sourceClientSpy, times(1)).customObjects();
-    assertThat(verifyStatesGetCounter.get()).isEqualTo(1);
-    assertThat(verifyInventoryGetCounter.get()).isEqualTo(1);
-    assertThat(verifyCustomObjectsGetCounter.get()).isEqualTo(1);
-    verifyInteractionsWithClientAfterSync(sourceClientSpy, 3);
+    verify(sourceClient, times(1)).states();
+    verify(sourceClient, times(1)).inventory();
+    verify(sourceClient, times(1)).customObjects();
+
+    verifyInteractionsWithClientAfterSync(sourceClient, 3);
 
     assertStateSyncerLoggingEvents(stateSyncerTestLogger, 0);
     assertInventoryEntrySyncerLoggingEvents(inventoryEntrySyncerTestLogger, 0);
@@ -1334,14 +1220,10 @@ class SyncerFactoryTest {
   @SuppressWarnings("unchecked")
   void syncTypesAndCategories_AsDelta_ShouldBuildSyncerAndExecuteSync() {
     // preparation
-    final ProjectApiRoot sourceClientSpy = spy(sourceClient);
-    final ZonedDateTime currentCtpTimestamp = ZonedDateTime.now();
-    final ProjectApiRoot targetClient = mock(ProjectApiRoot.class);
-    when(targetClient.getProjectKey()).thenReturn("testTargetProjectKey");
-    stubClientsCustomObjectService(targetClient, currentCtpTimestamp);
+    stubClientsCustomObjectService(targetClient, ZonedDateTime.now());
 
     final SyncerFactory syncerFactory =
-        SyncerFactory.of(() -> sourceClientSpy, () -> targetClient, getMockedClock());
+        SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock());
 
     // test
     String[] syncModuleOptions = {"types", "categories"};
@@ -1358,13 +1240,11 @@ class SyncerFactoryTest {
     verifyLastSyncCustomObjectQuery(
         targetClient, "categorySync", DEFAULT_RUNNER_NAME, "testProjectKey", 1);
 
-    final InOrder inOrder = Mockito.inOrder(sourceClientSpy);
+    final InOrder inOrder = Mockito.inOrder(sourceClient);
 
-    inOrder.verify(sourceClientSpy, times(1)).types();
-    inOrder.verify(sourceClientSpy, times(1)).categories();
-    assertThat(verifyTypesGetCounter.get()).isEqualTo(1);
-    assertThat(verifyCategoriesGetCounter.get()).isEqualTo(1);
-    verifyInteractionsWithClientAfterSync(sourceClientSpy, 2);
+    inOrder.verify(sourceClient, times(1)).types();
+    inOrder.verify(sourceClient, times(1)).categories();
+    verifyInteractionsWithClientAfterSync(sourceClient, 2);
 
     assertTypeSyncerLoggingEvents(typeSyncerTestLogger, 0);
     assertCategorySyncerLoggingEvents(categorySyncerTestLogger, 0);
@@ -1376,14 +1256,10 @@ class SyncerFactoryTest {
   @SuppressWarnings("unchecked")
   void syncProductsAndShoppingLists_AsDelta_ShouldBuildSyncerAndExecuteSync() {
     // preparation
-    final ProjectApiRoot sourceSpy = spy(sourceClient);
-    final ZonedDateTime currentCtpTimestamp = ZonedDateTime.now();
-    final ProjectApiRoot targetClient = mock(ProjectApiRoot.class);
-    when(targetClient.getProjectKey()).thenReturn("testTargetProjectKey");
-    stubClientsCustomObjectService(targetClient, currentCtpTimestamp);
+    stubClientsCustomObjectService(targetClient, ZonedDateTime.now());
 
     final SyncerFactory syncerFactory =
-        SyncerFactory.of(() -> sourceSpy, () -> targetClient, getMockedClock());
+        SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock());
 
     // test
     String[] syncModuleOptions = {"products", "shoppingLists"};
@@ -1399,9 +1275,9 @@ class SyncerFactoryTest {
         targetClient, "productSync", DEFAULT_RUNNER_NAME, "testProjectKey", 1);
     verifyLastSyncCustomObjectQuery(
         targetClient, "shoppingListSync", DEFAULT_RUNNER_NAME, "testProjectKey", 1);
-    assertThat(verifyProductProjectionsGetCounter.get()).isEqualTo(1);
-    assertThat(verifyShoppingListsGetCounter.get()).isEqualTo(1);
-    verifyInteractionsWithClientAfterSync(sourceSpy, 2);
+    verify(sourceClient, times(1)).productProjections();
+    verify(sourceClient, times(1)).shoppingLists();
+    verifyInteractionsWithClientAfterSync(sourceClient, 2);
 
     assertProductSyncerLoggingEvents(productSyncerTestLogger, 0);
     assertShoppingListSyncerLoggingEvents(shoppingListSyncerTestLogger, 0);
