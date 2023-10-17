@@ -19,23 +19,26 @@ import static com.commercetools.project.sync.util.TestUtils.createBadGatewayExce
 import static com.commercetools.project.sync.util.TestUtils.getMockedClock;
 import static com.commercetools.project.sync.util.TestUtils.mockLastSyncCustomObject;
 import static com.commercetools.project.sync.util.TestUtils.readObjectFromResource;
+import static com.commercetools.project.sync.util.TestUtils.readStringFromFile;
 import static com.commercetools.project.sync.util.TestUtils.stubClientsCustomObjectService;
-import static com.commercetools.project.sync.util.TestUtils.verifyInteractionsWithClientAfterSync;
+import static com.commercetools.project.sync.util.TestUtils.withTestClient;
 import static java.lang.String.format;
-import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.reset;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
+import com.commercetools.api.client.ByProjectKeyCustomObjectsPost;
+import com.commercetools.api.client.ByProjectKeyProductsPost;
 import com.commercetools.api.client.ProjectApiRoot;
 import com.commercetools.api.defaultconfig.ApiRootBuilder;
-import com.commercetools.api.models.common.PagedQueryResponse;
+import com.commercetools.api.models.ResourcePagedQueryResponse;
 import com.commercetools.api.models.custom_object.CustomObject;
 import com.commercetools.api.models.custom_object.CustomObjectDraft;
 import com.commercetools.api.models.graph_ql.GraphQLRequest;
@@ -82,6 +85,7 @@ import javax.annotation.Nonnull;
 import org.assertj.core.api.Condition;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InOrder;
@@ -121,40 +125,36 @@ class SyncerFactoryTest {
 
   private ProjectApiRoot sourceClient;
   private ProjectApiRoot targetClient;
-  private ApiHttpResponse apiHttpResponse;
+
+  private AtomicInteger verifyProductTypesGetCounter,
+      verifyTypesGetCounter,
+      verifyStatesGetCounter,
+      verifyTaxCategoriesGetCounter,
+      verifyCategoriesGetCounter,
+      verifyInventoryGetCounter,
+      verifyProductProjectionsGetCounter,
+      verifyCartDiscountsGetCounter,
+      verifyCustomersGetCounter,
+      verifyCustomObjectsGetCounter,
+      verifyShoppingListsGetCounter,
+      verifyInvokeClientCounter;
 
   @BeforeEach
   void setupTest() {
-    sourceClient = mock(ProjectApiRoot.class);
+    verifyProductTypesGetCounter = new AtomicInteger(0);
+    verifyTypesGetCounter = new AtomicInteger(0);
+    verifyStatesGetCounter = new AtomicInteger(0);
+    verifyTaxCategoriesGetCounter = new AtomicInteger(0);
+    verifyCategoriesGetCounter = new AtomicInteger(0);
+    verifyInventoryGetCounter = new AtomicInteger(0);
+    verifyProductProjectionsGetCounter = new AtomicInteger(0);
+    verifyCustomObjectsGetCounter = new AtomicInteger(0);
+    verifyCustomersGetCounter = new AtomicInteger(0);
+    verifyCartDiscountsGetCounter = new AtomicInteger(0);
+    verifyShoppingListsGetCounter = new AtomicInteger(0);
+    verifyInvokeClientCounter = new AtomicInteger(0);
+    sourceClient = mockClientResourceRequests("testProjectKey");
     targetClient = mock(ProjectApiRoot.class);
-    apiHttpResponse = mock(ApiHttpResponse.class);
-    final PagedQueryResponse pagedQueryResponseEmptyResults = mock(PagedQueryResponse.class);
-    when(pagedQueryResponseEmptyResults.getResults()).thenReturn(emptyList());
-    when(apiHttpResponse.getBody()).thenReturn(pagedQueryResponseEmptyResults);
-
-    // mock source client queries by default with empty result
-    when(sourceClient.productTypes().get().execute())
-        .thenReturn(CompletableFuture.completedFuture(apiHttpResponse));
-    when(sourceClient.types().get().execute())
-        .thenReturn(CompletableFuture.completedFuture(apiHttpResponse));
-    when(sourceClient.states().get().execute())
-        .thenReturn(CompletableFuture.completedFuture(apiHttpResponse));
-    when(sourceClient.taxCategories().get().execute())
-        .thenReturn(CompletableFuture.completedFuture(apiHttpResponse));
-    when(sourceClient.categories().get().execute())
-        .thenReturn(CompletableFuture.completedFuture(apiHttpResponse));
-    when(sourceClient.inventory().get().execute())
-        .thenReturn(CompletableFuture.completedFuture(apiHttpResponse));
-    when(sourceClient.productProjections().get().execute())
-        .thenReturn(CompletableFuture.completedFuture(apiHttpResponse));
-    when(sourceClient.cartDiscounts().get().execute())
-        .thenReturn(CompletableFuture.completedFuture(apiHttpResponse));
-    when(sourceClient.customObjects().get().execute())
-        .thenReturn(CompletableFuture.completedFuture(apiHttpResponse));
-    when(sourceClient.customers().get().execute())
-        .thenReturn(CompletableFuture.completedFuture(apiHttpResponse));
-    when(sourceClient.shoppingLists().get().execute())
-        .thenReturn(CompletableFuture.completedFuture(apiHttpResponse));
   }
 
   @AfterEach
@@ -171,7 +171,50 @@ class SyncerFactoryTest {
     categorySyncerTestLogger.clearAll();
     cartDiscountSyncerTestLogger.clearAll();
     taxCategorySyncerTestLogger.clearAll();
-    reset(sourceClient, targetClient, apiHttpResponse);
+  }
+
+  private ProjectApiRoot mockClientResourceRequests(final String projectKey) {
+    return withTestClient(
+        projectKey,
+        (uri, method, encodedRequetsBody) -> {
+          final String responseString = "{\"results\":[]}";
+          if (uri.contains("product-types") && ApiHttpMethod.GET.equals(method)) {
+            verifyProductTypesGetCounter.incrementAndGet();
+          }
+          if (uri.contains("types") && ApiHttpMethod.GET.equals(method)) {
+            verifyTypesGetCounter.incrementAndGet();
+          }
+          if (uri.contains("states") && ApiHttpMethod.GET.equals(method)) {
+            verifyStatesGetCounter.incrementAndGet();
+          }
+          if (uri.contains("tax-categories") && ApiHttpMethod.GET.equals(method)) {
+            verifyTaxCategoriesGetCounter.incrementAndGet();
+          }
+          if (uri.contains("categories") && ApiHttpMethod.GET.equals(method)) {
+            verifyCategoriesGetCounter.incrementAndGet();
+          }
+          if (uri.contains("inventory?") && ApiHttpMethod.GET.equals(method)) {
+            verifyInventoryGetCounter.incrementAndGet();
+          }
+          if (uri.contains("product-projections") && ApiHttpMethod.GET.equals(method)) {
+            verifyProductProjectionsGetCounter.incrementAndGet();
+          }
+          if (uri.contains("cart-discounts") && ApiHttpMethod.GET.equals(method)) {
+            verifyCartDiscountsGetCounter.incrementAndGet();
+          }
+          if (uri.contains("custom-objects") && ApiHttpMethod.GET.equals(method)) {
+            verifyCustomObjectsGetCounter.incrementAndGet();
+          }
+          if (uri.contains("customers") && ApiHttpMethod.GET.equals(method)) {
+            verifyCustomersGetCounter.incrementAndGet();
+          }
+          if (uri.contains("shopping-lists") && ApiHttpMethod.GET.equals(method)) {
+            verifyShoppingListsGetCounter.incrementAndGet();
+          }
+          verifyInvokeClientCounter.incrementAndGet();
+          return CompletableFuture.completedFuture(
+              new ApiHttpResponse<>(200, null, responseString.getBytes(StandardCharsets.UTF_8)));
+        });
   }
 
   @Test
@@ -222,23 +265,29 @@ class SyncerFactoryTest {
   @SuppressWarnings("unchecked")
   void sync_AsProductsDeltaSync_ShouldBuildSyncerAndExecuteSync() {
     // preparation
-    final SyncerFactory syncerFactory =
-        SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock());
-
+    final ProjectApiRoot sourceClientSpy = spy(sourceClient);
     final ZonedDateTime currentCtpTimestamp = ZonedDateTime.now();
-    stubClientsCustomObjectService(targetClient, currentCtpTimestamp);
+    final ProjectApiRoot targetClientMock = mock(ProjectApiRoot.class);
+    when(targetClientMock.getProjectKey()).thenReturn("testProjectKey");
+    stubClientsCustomObjectService(targetClientMock, currentCtpTimestamp);
+
+    final SyncerFactory syncerFactory =
+        SyncerFactory.of(() -> sourceClientSpy, () -> targetClientMock, getMockedClock());
 
     // test
     syncerFactory.sync(new String[] {"products"}, "myRunnerName", false, false, null);
 
     // assertions
-    verify(sourceClient, times(1)).productProjections().get().execute();
-
-    verifyTimestampGeneratorCustomObjectUpsertIsCalled(targetClient, "ProductSync", "myRunnerName");
-    verifyLastSyncCustomObjectQuery(targetClient, "productSync", "myRunnerName", "foo", 1);
+    // verify product-projections are queried once
+    verify(sourceClientSpy, times(1)).productProjections();
+    assertThat(verifyProductProjectionsGetCounter.get()).isEqualTo(1);
+    verifyTimestampGeneratorCustomObjectUpsertIsCalled(
+        targetClientMock, "ProductSync", "myRunnerName");
+    verifyLastSyncCustomObjectQuery(
+        targetClientMock, "productSync", "myRunnerName", "testProjectKey", 1);
     // verify two custom object upserts : 1. current ctp timestamp and 2. last sync timestamp
     // creation)
-    verify(targetClient, times(2)).customObjects().post(any(CustomObjectDraft.class)).execute();
+    verify(targetClientMock.customObjects(), times(2)).post(any(CustomObjectDraft.class));
     // TODO: Assert on actual last sync timestamp creation in detail after Statistics classes in
     // java-sync library
     // TODO: override #equals method:
@@ -246,7 +295,7 @@ class SyncerFactoryTest {
     // TODO: e.g. verifyNewLastSyncCustomObjectCreation(targetClient,
     // currentCtpTimestamp.minusMinutes(2), any(ProductSyncStatistics.class), 0L, "productSync",
     // "foo");
-    verifyInteractionsWithClientAfterSync(sourceClient, 1);
+    verifyInteractionsWithClientAfterSync(sourceClientSpy, 1);
 
     final Condition<LoggingEvent> startLog =
         new Condition<>(
@@ -276,23 +325,27 @@ class SyncerFactoryTest {
   @SuppressWarnings("unchecked")
   void sync_AsProductsFullSync_ShouldBuildSyncerAndExecuteSync() {
     // preparation
-    final SyncerFactory syncerFactory =
-        SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock());
-
+    final ProjectApiRoot sourceClientSpy = spy(sourceClient);
     final ZonedDateTime currentCtpTimestamp = ZonedDateTime.now();
+    final ProjectApiRoot targetClient = mock(ProjectApiRoot.class);
+    when(targetClient.getProjectKey()).thenReturn("testTargetProjectKey");
     stubClientsCustomObjectService(targetClient, currentCtpTimestamp);
+
+    final SyncerFactory syncerFactory =
+        SyncerFactory.of(() -> sourceClientSpy, () -> targetClient, getMockedClock());
 
     // test
     syncerFactory.sync(new String[] {"products"}, "myRunnerName", true, false, null);
 
     // assertions
-    verify(sourceClient, times(1)).productProjections().get().execute();
+    verify(sourceClientSpy, times(1)).productProjections();
+    assertThat(verifyProductProjectionsGetCounter.get()).isEqualTo(1);
 
     verifyTimestampGeneratorCustomObjectUpsertIsNotCalled(
         targetClient, "ProductSync", "myRunnerName");
     verifyLastSyncCustomObjectQuery(targetClient, "productSync", "myRunnerName", "foo", 0);
-    verify(targetClient, times(0)).customObjects().post(any(CustomObjectDraft.class)).execute();
-    verifyInteractionsWithClientAfterSync(sourceClient, 1);
+    verify(targetClient.customObjects(), times(0)).post(any(CustomObjectDraft.class));
+    verifyInteractionsWithClientAfterSync(sourceClientSpy, 1);
 
     final Condition<LoggingEvent> startLog =
         new Condition<>(
@@ -331,30 +384,57 @@ class SyncerFactoryTest {
             readObjectFromResource("product-key-6.json", Product.class),
             ProductProjectionType.STAGED);
     final ProductProjectionPagedQueryResponse twoProductResult =
-        ProductProjectionPagedQueryResponseBuilder.of().results(product5, product6).build();
+        ProductProjectionPagedQueryResponseBuilder.of()
+            .results(product5, product6)
+            .limit(10L)
+            .count(2L)
+            .offset(0L)
+            .total(2L)
+            .build();
 
-    when(apiHttpResponse.getBody()).thenReturn(twoProductResult);
-    when(sourceClient.productProjections().get().execute())
-        .thenReturn(CompletableFuture.completedFuture(apiHttpResponse));
-
-    when(targetClient.productProjections().get().execute())
-        .thenReturn(CompletableFuture.completedFuture(null));
     final BadGatewayException badGatewayException = createBadGatewayException();
-    when(targetClient.products().post(any(ProductDraft.class)).execute())
-        .thenReturn(CompletableFutureUtils.failed(badGatewayException));
-    when(sourceClient.graphql().post(any(GraphQLRequest.class)).execute())
-        .thenReturn(CompletableFutureUtils.failed(badGatewayException));
+    final ProjectApiRoot sourceClient =
+        withTestClient(
+            "testProjectKey",
+            (uri, method, encodedRequetsBody) -> {
+              if (uri.contains("graphql") && ApiHttpMethod.POST.equals(method)) {
+                return CompletableFutureUtils.failed(badGatewayException);
+              }
+              verifyInvokeClientCounter.incrementAndGet();
+              if (uri.contains("product-projections") && ApiHttpMethod.GET.equals(method)) {
+                if (verifyProductProjectionsGetCounter.get() == 0) {
+                  verifyProductProjectionsGetCounter.incrementAndGet();
+                  final String jsonString =
+                      createJsonStringFromPagedQueryResponse(twoProductResult);
+                  return CompletableFuture.completedFuture(
+                      new ApiHttpResponse<>(
+                          200, null, jsonString.getBytes(StandardCharsets.UTF_8)));
+                }
+              }
+              return null;
+            });
 
+    final ProjectApiRoot targetClient = mock(ProjectApiRoot.class);
+    when(targetClient.getProjectKey()).thenReturn("testTargetProjectKey");
+    stubClientsCustomObjectService(targetClient, ZonedDateTime.now());
+    final ByProjectKeyProductsPost byProjectKeyProductsPost = mock(ByProjectKeyProductsPost.class);
+    when(byProjectKeyProductsPost.execute())
+        .thenReturn(CompletableFutureUtils.failed(badGatewayException));
+    when(targetClient.products()).thenReturn(mock());
+    when(targetClient.products().post(any(ProductDraft.class)))
+        .thenReturn(byProjectKeyProductsPost);
+
+    final ProjectApiRoot sourceSpy = spy(sourceClient);
     final SyncerFactory syncerFactory =
-        SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock());
+        SyncerFactory.of(() -> sourceSpy, () -> targetClient, getMockedClock());
 
     // test
     syncerFactory.sync(new String[] {"products"}, "myRunnerName", true, false, null);
 
     // assertions
-    verify(sourceClient, times(1)).productProjections().get().execute();
-    verify(sourceClient, times(3)).graphql().post(any(GraphQLRequest.class)).execute();
-    verifyInteractionsWithClientAfterSync(sourceClient, 1);
+    verify(sourceSpy, times(1)).productProjections();
+    verify(sourceSpy, times(3)).graphql();
+    verifyInteractionsWithClientAfterSync(sourceSpy, 1);
 
     final Condition<LoggingEvent> startLog =
         new Condition<>(
@@ -394,11 +474,13 @@ class SyncerFactoryTest {
             });
   }
 
+  // TODO: Enable test when issue with java-sync (NPE) is solved.
+  // See https://github.com/commercetools/commercetools-sync-java/issues/1101
+  @Disabled
   @Test
   void
       sync_AsProductsFullSyncWithExceptionDuringAttributeReferenceReplacement_ShouldContinueWithPages() {
     // preparation
-    final AtomicInteger sourceProductProjectionGetCounter = new AtomicInteger(0);
     final AtomicInteger sourceGraphQLPostCounter = new AtomicInteger(0);
     final ProductProjection product1 =
         ProductMixin.toProjection(
@@ -416,87 +498,93 @@ class SyncerFactoryTest {
     final List<ProductProjection> fullPageOfProducts =
         IntStream.range(0, 500).mapToObj(o -> product1).collect(Collectors.toList());
 
+    final Long pageSize = Long.valueOf(fullPageOfProducts.size());
+
     final ProductProjectionPagedQueryResponse fullPageResponse =
-        ProductProjectionPagedQueryResponseBuilder.of().results(fullPageOfProducts).build();
+        ProductProjectionPagedQueryResponseBuilder.of()
+            .results(fullPageOfProducts)
+            .limit(10L)
+            .count(pageSize)
+            .offset(0L)
+            .total(pageSize)
+            .build();
     final ProductProjectionPagedQueryResponse twoProductResult =
-        ProductProjectionPagedQueryResponseBuilder.of().results(product3, product2).build();
+        ProductProjectionPagedQueryResponseBuilder.of()
+            .results(product3, product2)
+            .limit(10L)
+            .count(2L)
+            .offset(0L)
+            .total(2L)
+            .build();
 
     final ProjectApiRoot srcClient =
-        ApiRootBuilder.of(
-                request -> {
-                  final String uri = request.getUri() != null ? request.getUri().toString() : "";
-                  final ApiHttpMethod method = request.getMethod();
-                  final Charset charsetUTF8 = Charset.forName(StandardCharsets.UTF_8.name());
-                  if (uri.contains("graphql") && ApiHttpMethod.POST.equals(method)) {
-                    final String encodedRequestBody =
-                        new String(request.getBody(), StandardCharsets.UTF_8);
-                    ObjectMapper objectMapper = JsonUtils.getConfiguredObjectMapper();
-                    GraphQLRequest graphQLRequest;
-                    try {
-                      graphQLRequest =
-                          objectMapper.readValue(encodedRequestBody, GraphQLRequest.class);
-                    } catch (JsonProcessingException e) {
-                      graphQLRequest = GraphQLRequestBuilder.of().build();
-                    }
-                    final String graphQLRequestQuery = graphQLRequest.getQuery();
-                    final String bodyData = "{\"data\": %s}";
-                    String result = String.format(bodyData, "{}");
-                    if (graphQLRequestQuery != null) {
-                      int graphQlPostCounter = sourceGraphQLPostCounter.getAndIncrement();
-                      if (graphQlPostCounter < 3) {
-                        return CompletableFutureUtils.exceptionallyCompletedFuture(
-                            createBadGatewayException());
-                      }
-                      if (graphQLRequestQuery.contains("products")) {
-                        final String jsonAsString =
-                            "{\"results\":[{\"id\":\"53c4a8b4-865f-4b95-b6f2-3e1e70e3d0c1\",\"key\":\"productKey3\"}]}";
-                        result = String.format(bodyData, jsonAsString);
-                        return CompletableFuture.completedFuture(
-                            new ApiHttpResponse<>(200, null, result.getBytes(charsetUTF8)));
-                      } else if (graphQLRequestQuery.contains("productTypes")) {
-                        final String jsonAsString =
-                            "{\"results\":[{\"id\":\"53c4a8b4-865f-4b95-b6f2-3e1e70e3d0c2\",\"key\":\"prodType1\"}]}";
-                        result = String.format(bodyData, jsonAsString);
-                        return CompletableFuture.completedFuture(
-                            new ApiHttpResponse<>(200, null, result.getBytes(charsetUTF8)));
-                      } else if (graphQLRequestQuery.contains("categories")) {
-                        final String jsonAsString =
-                            "{\"results\":[{\"id\":\"53c4a8b4-865f-4b95-b6f2-3e1e70e3d0c3\",\"key\":\"cat1\"}]}";
-                        result = String.format(bodyData, jsonAsString);
-                        return CompletableFuture.completedFuture(
-                            new ApiHttpResponse<>(200, null, result.getBytes(charsetUTF8)));
-                      } else {
-                        return CompletableFuture.completedFuture(
-                            new ApiHttpResponse<>(200, null, result.getBytes(charsetUTF8)));
-                      }
-                    }
+        withTestClient(
+            "testProjectKey",
+            (uri, method, encodedRequestBody) -> {
+              final Charset charsetUTF8 = Charset.forName(StandardCharsets.UTF_8.name());
+              if (uri.contains("graphql") && ApiHttpMethod.POST.equals(method)) {
+                final ObjectMapper objectMapper = JsonUtils.getConfiguredObjectMapper();
+                GraphQLRequest graphQLRequest;
+                try {
+                  graphQLRequest = objectMapper.readValue(encodedRequestBody, GraphQLRequest.class);
+                } catch (JsonProcessingException e) {
+                  graphQLRequest = GraphQLRequestBuilder.of().build();
+                }
+                final String graphQLRequestQuery = graphQLRequest.getQuery();
+                final String bodyData = "{\"data\": %s}";
+                String result = String.format(bodyData, "{}");
+                if (graphQLRequestQuery != null) {
+                  int graphQlPostCounter = sourceGraphQLPostCounter.getAndIncrement();
+                  if (graphQlPostCounter < 3) {
+                    return CompletableFutureUtils.failed(createBadGatewayException());
                   }
-                  if (uri.contains("product-projections") && ApiHttpMethod.GET.equals(method)) {
-                    int sourceGetCounter = sourceProductProjectionGetCounter.getAndIncrement();
-                    if (sourceGetCounter == 0) {
-                      byte[] fullPageResponseAsBytes =
-                          fullPageResponse.toString().getBytes(charsetUTF8);
-                      return CompletableFuture.completedFuture(
-                          new ApiHttpResponse<>(200, null, fullPageResponseAsBytes));
-                    } else if (sourceGetCounter == 1) {
-                      byte[] twoResultsResponseAsBytes =
-                          twoProductResult.toString().getBytes(charsetUTF8);
-                      return CompletableFuture.completedFuture(
-                          new ApiHttpResponse<>(200, null, twoResultsResponseAsBytes));
-
-                    } else {
-                      final String emptyResultsAsString = "{\"results\":[]}";
-                      return CompletableFuture.completedFuture(
-                          new ApiHttpResponse<>(
-                              200, null, emptyResultsAsString.getBytes(charsetUTF8)));
-                    }
+                  if (graphQLRequestQuery.contains("products")) {
+                    final String jsonAsString =
+                        "{\"results\":[{\"id\":\"53c4a8b4-865f-4b95-b6f2-3e1e70e3d0c1\",\"key\":\"productKey3\"}]}";
+                    result = String.format(bodyData, jsonAsString);
+                    return CompletableFuture.completedFuture(
+                        new ApiHttpResponse<>(200, null, result.getBytes(charsetUTF8)));
+                  } else if (graphQLRequestQuery.contains("productTypes")) {
+                    final String jsonAsString =
+                        "{\"results\":[{\"id\":\"53c4a8b4-865f-4b95-b6f2-3e1e70e3d0c2\",\"key\":\"prodType1\"}]}";
+                    result = String.format(bodyData, jsonAsString);
+                    return CompletableFuture.completedFuture(
+                        new ApiHttpResponse<>(200, null, result.getBytes(charsetUTF8)));
+                  } else if (graphQLRequestQuery.contains("categories")) {
+                    final String jsonAsString =
+                        "{\"results\":[{\"id\":\"53c4a8b4-865f-4b95-b6f2-3e1e70e3d0c3\",\"key\":\"cat1\"}]}";
+                    result = String.format(bodyData, jsonAsString);
+                    return CompletableFuture.completedFuture(
+                        new ApiHttpResponse<>(200, null, result.getBytes(charsetUTF8)));
+                  } else {
+                    return CompletableFuture.completedFuture(
+                        new ApiHttpResponse<>(200, null, result.getBytes(charsetUTF8)));
                   }
-                  return null;
-                })
-            .withApiBaseUrl("testBaseUrl")
-            .build("testClient");
+                }
+              }
+              if (uri.contains("product-projections") && ApiHttpMethod.GET.equals(method)) {
+                int sourceGetCounter = verifyProductProjectionsGetCounter.getAndIncrement();
+                if (sourceGetCounter == 0) {
+                  final String fullPageResponseAsString =
+                      createJsonStringFromPagedQueryResponse(fullPageResponse);
+                  return CompletableFuture.completedFuture(
+                      new ApiHttpResponse<>(
+                          200, null, fullPageResponseAsString.getBytes(charsetUTF8)));
+                } else if (sourceGetCounter == 1) {
+                  final String twoResultsResponseAsString =
+                      createJsonStringFromPagedQueryResponse(twoProductResult);
+                  return CompletableFuture.completedFuture(
+                      new ApiHttpResponse<>(
+                          200, null, twoResultsResponseAsString.getBytes(charsetUTF8)));
 
-    final Product product4 = readObjectFromResource("product-key-8.json", Product.class);
+                } else {
+                  final String emptyResultsAsString = "{\"results\":[]}";
+                  return CompletableFuture.completedFuture(
+                      new ApiHttpResponse<>(200, null, emptyResultsAsString.getBytes(charsetUTF8)));
+                }
+              }
+              return null;
+            });
 
     final ProjectApiRoot trgClient =
         ApiRootBuilder.of(
@@ -517,9 +605,8 @@ class SyncerFactoryTest {
                     }
                     final String graphQLRequestQuery = graphQLRequest.getQuery();
                     final String bodyData = "{\"data\": %s}";
-                    String result = String.format(bodyData, "{}");
-                    if (graphQLRequestQuery != null
-                        && graphQLRequestQuery.contains("fetchKeyToId")) {
+                    String result;
+                    if (graphQLRequestQuery != null) {
                       if (graphQLRequestQuery.contains("products")) {
                         final String jsonAsString =
                             "{\"results\":[{\"id\":\"53c4a8b4-865f-4b95-b6f2-3e1e70e3d0c1\",\"key\":\"productKey3\"}]}";
@@ -527,15 +614,17 @@ class SyncerFactoryTest {
                         return CompletableFuture.completedFuture(
                             new ApiHttpResponse<>(200, null, result.getBytes(charsetUTF8)));
                       } else {
+                        result = String.format(bodyData, "{\"results\": []}");
                         return CompletableFuture.completedFuture(
                             new ApiHttpResponse<>(200, null, result.getBytes(charsetUTF8)));
                       }
                     }
                   }
                   if (uri.contains("products") && ApiHttpMethod.POST.equals(method)) {
-                    byte[] productsResultAsBytes = product4.toString().getBytes(charsetUTF8);
+                    final String productsResultAsString = readStringFromFile("product-key-8.json");
                     return CompletableFuture.completedFuture(
-                        new ApiHttpResponse<>(200, null, productsResultAsBytes));
+                        new ApiHttpResponse<>(
+                            200, null, productsResultAsString.getBytes(charsetUTF8)));
 
                   } else {
                     final String emptyResultsAsString = "{\"results\":[]}";
@@ -545,18 +634,21 @@ class SyncerFactoryTest {
                   }
                 })
             .withApiBaseUrl("testBaseUrl")
-            .build("testClient");
+            .build("testProjectKey2");
+
+    final ProjectApiRoot sourceClientSpy = spy(srcClient);
+    final ProjectApiRoot targetClientSpy = spy(trgClient);
 
     final SyncerFactory syncerFactory =
-        SyncerFactory.of(() -> srcClient, () -> trgClient, getMockedClock());
+        SyncerFactory.of(() -> sourceClientSpy, () -> targetClientSpy, getMockedClock());
 
     // test
     syncerFactory.sync(new String[] {"products"}, "myRunnerName", true, false, null);
 
     // assertions
-    verify(srcClient, times(2)).productProjections().get().execute();
-    verify(srcClient, times(9)).graphql().post(any(GraphQLRequest.class)).execute();
-    verifyInteractionsWithClientAfterSync(trgClient, 1);
+    assertThat(verifyProductProjectionsGetCounter.get()).isEqualTo(2);
+    verify(sourceClientSpy, times(9)).graphql();
+    verifyInteractionsWithClientAfterSync(sourceClientSpy, 1);
 
     final Condition<LoggingEvent> startLog =
         new Condition<>(
@@ -631,10 +723,7 @@ class SyncerFactoryTest {
     final ArgumentCaptor<CustomObjectDraft> customObjectDraftArgumentCaptor =
         ArgumentCaptor.forClass(CustomObjectDraft.class);
 
-    verify(client, atLeast(0))
-        .customObjects()
-        .post(customObjectDraftArgumentCaptor.capture())
-        .execute();
+    verify(client.customObjects(), atLeast(0)).post(customObjectDraftArgumentCaptor.capture());
     final List<CustomObjectDraft> allValues = customObjectDraftArgumentCaptor.getAllValues();
     final CustomObjectDraft customObjectDraft =
         allValues.stream()
@@ -666,34 +755,47 @@ class SyncerFactoryTest {
     final String container =
         format("commercetools-project-sync.%s.%s", syncRunnerName, syncModuleName);
 
-    verify(client, times(expectedInvocations))
-        .customObjects()
-        .withContainerAndKey(eq(container), eq(sourceProjectKey))
-        .get()
-        .execute();
+    if (expectedInvocations > 0) {
+      verify(client.customObjects(), times(expectedInvocations))
+          .withContainerAndKey(container, sourceProjectKey);
+    } else {
+      verifyNoInteractions(
+          client.customObjects().withContainerAndKey(anyString(), anyString()).get());
+    }
+  }
+
+  private static <T> String createJsonStringFromPagedQueryResponse(
+      final ResourcePagedQueryResponse<T> pagedQueryResponse) {
+    try {
+      return JsonUtils.toJsonString(pagedQueryResponse);
+    } catch (JsonProcessingException e) {
+      return "{\"results\": []}";
+    }
   }
 
   @Test
   @SuppressWarnings("unchecked")
   void sync_AsCategoriesDeltaSync_ShouldBuildSyncerAndExecuteSync() {
     // preparation
-    final SyncerFactory syncerFactory =
-        SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock());
-
+    final ProjectApiRoot sourceClient = mockClientResourceRequests("testSourceProjectKey");
     final ZonedDateTime currentCtpTimestamp = ZonedDateTime.now();
+    final ProjectApiRoot targetClient = mock(ProjectApiRoot.class);
+    when(targetClient.getProjectKey()).thenReturn("testTargetProjectKey");
     stubClientsCustomObjectService(targetClient, currentCtpTimestamp);
 
+    final SyncerFactory syncerFactory =
+        SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock());
     // test
     syncerFactory.sync(new String[] {"categories"}, null, false, false, null);
 
     // assertions
-    verify(sourceClient, times(1)).categories().get().execute();
+    assertThat(verifyCategoriesGetCounter.get()).isEqualTo(1);
     verifyTimestampGeneratorCustomObjectUpsertIsCalled(
         targetClient, "CategorySync", DEFAULT_RUNNER_NAME);
-    verifyLastSyncCustomObjectQuery(targetClient, "categorySync", DEFAULT_RUNNER_NAME, "foo", 1);
+    verifyLastSyncCustomObjectQuery(
+        targetClient, "categorySync", DEFAULT_RUNNER_NAME, "testSourceProjectKey", 1);
     // verify two custom object upserts : 1. current ctp timestamp and 2. last sync timestamp
-    // creation)
-    verify(targetClient, times(2)).customObjects().post(any(CustomObjectDraft.class)).execute();
+    verify(targetClient.customObjects(), times(2)).post(any(CustomObjectDraft.class));
     // TODO: Assert on actual last sync timestamp creation in detail after Statistics classes in
     // java-sync library
     // TODO: override #equals method:
@@ -701,7 +803,7 @@ class SyncerFactoryTest {
     // TODO: e.g. verifyNewLastSyncCustomObjectCreation(targetClient,
     // currentCtpTimestamp.minusMinutes(2), any(ProductSyncStatistics.class), 0L, "productSync",
     // "foo");
-    verifyInteractionsWithClientAfterSync(sourceClient, 1);
+    assertThat(verifyInvokeClientCounter.get()).isEqualTo(1);
 
     final Condition<LoggingEvent> startLog =
         new Condition<>(
@@ -731,23 +833,27 @@ class SyncerFactoryTest {
   @SuppressWarnings("unchecked")
   void sync_AsProductTypesDeltaSync_ShouldBuildSyncerAndExecuteSync() {
     // preparation
+    final ProjectApiRoot sourceClient = mockClientResourceRequests("testSourceProjectKey");
+    final ZonedDateTime currentCtpTimestamp = ZonedDateTime.now();
+    final ProjectApiRoot targetClient = mock(ProjectApiRoot.class);
+    when(targetClient.getProjectKey()).thenReturn("testTargetProjectKey");
+    stubClientsCustomObjectService(targetClient, currentCtpTimestamp);
+
     final SyncerFactory syncerFactory =
         SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock());
-
-    final ZonedDateTime currentCtpTimestamp = ZonedDateTime.now();
-    stubClientsCustomObjectService(targetClient, currentCtpTimestamp);
 
     // test
     syncerFactory.sync(new String[] {"productTypes"}, "", false, false, null);
 
     // assertions
-    verify(sourceClient, times(1)).productTypes().get().execute();
+    assertThat(verifyProductTypesGetCounter.get()).isEqualTo(1);
     verifyTimestampGeneratorCustomObjectUpsertIsCalled(
         targetClient, "ProductTypeSync", DEFAULT_RUNNER_NAME);
-    verifyLastSyncCustomObjectQuery(targetClient, "productTypeSync", DEFAULT_RUNNER_NAME, "foo", 1);
+    verifyLastSyncCustomObjectQuery(
+        targetClient, "productTypeSync", DEFAULT_RUNNER_NAME, "testSourceProjectKey", 1);
     // verify two custom object upserts : 1. current ctp timestamp and 2. last sync timestamp
     // creation)
-    verify(targetClient, times(2)).customObjects().post(any(CustomObjectDraft.class)).execute();
+    verify(targetClient.customObjects(), times(2)).post(any(CustomObjectDraft.class));
     // TODO: Assert on actual last sync timestamp creation in detail after Statistics classes in
     // java-sync library
     // TODO: override #equals method:
@@ -755,7 +861,7 @@ class SyncerFactoryTest {
     // TODO: e.g. verifyNewLastSyncCustomObjectCreation(targetClient,
     // currentCtpTimestamp.minusMinutes(2), any(ProductSyncStatistics.class), 0L, "productSync",
     // "foo");
-    verifyInteractionsWithClientAfterSync(sourceClient, 1);
+    assertThat(verifyInvokeClientCounter.get()).isEqualTo(1);
 
     final Condition<LoggingEvent> startLog =
         new Condition<>(
@@ -786,7 +892,10 @@ class SyncerFactoryTest {
   @SuppressWarnings("unchecked")
   void sync_AsTypesDeltaSync_ShouldBuildSyncerAndExecuteSync() {
     // preparation
+    final ProjectApiRoot sourceClient = mockClientResourceRequests("testSourceProjectKey");
     final ZonedDateTime currentCtpTimestamp = ZonedDateTime.now();
+    final ProjectApiRoot targetClient = mock(ProjectApiRoot.class);
+    when(targetClient.getProjectKey()).thenReturn("testTargetProjectKey");
     stubClientsCustomObjectService(targetClient, currentCtpTimestamp);
 
     final SyncerFactory syncerFactory =
@@ -796,12 +905,12 @@ class SyncerFactoryTest {
     syncerFactory.sync(new String[] {"types"}, "foo", false, false, null);
 
     // assertions
-    verify(sourceClient, times(1)).types().get().execute();
+    assertThat(verifyTypesGetCounter.get()).isEqualTo(1);
     verifyTimestampGeneratorCustomObjectUpsertIsCalled(targetClient, "TypeSync", "foo");
-    verifyLastSyncCustomObjectQuery(targetClient, "typeSync", "foo", "foo", 1);
+    verifyLastSyncCustomObjectQuery(targetClient, "typeSync", "foo", "testSourceProjectKey", 1);
     // verify two custom object upserts : 1. current ctp timestamp and 2. last sync timestamp
     // creation)
-    verify(targetClient, times(2)).customObjects().post(any(CustomObjectDraft.class)).execute();
+    verify(targetClient.customObjects(), times(2)).post(any(CustomObjectDraft.class));
     // TODO: Assert on actual last sync timestamp creation in detail after Statistics classes in
     // java-sync library
     // TODO: override #equals method:
@@ -809,7 +918,7 @@ class SyncerFactoryTest {
     // TODO: e.g. verifyNewLastSyncCustomObjectCreation(targetClient,
     // currentCtpTimestamp.minusMinutes(2), any(ProductSyncStatistics.class), 0L, "productSync",
     // "foo");
-    verifyInteractionsWithClientAfterSync(sourceClient, 1);
+    assertThat(verifyInvokeClientCounter.get()).isEqualTo(1);
 
     final Condition<LoggingEvent> startLog =
         new Condition<>(
@@ -839,7 +948,10 @@ class SyncerFactoryTest {
   @SuppressWarnings("unchecked")
   void sync_AsInventoryEntriesDeltaSync_ShouldBuildSyncerAndExecuteSync() {
     // preparation
+    final ProjectApiRoot sourceClient = mockClientResourceRequests("testSourceProjectKey");
     final ZonedDateTime currentCtpTimestamp = ZonedDateTime.now();
+    final ProjectApiRoot targetClient = mock(ProjectApiRoot.class);
+    when(targetClient.getProjectKey()).thenReturn("testTargetProjectKey");
     stubClientsCustomObjectService(targetClient, currentCtpTimestamp);
 
     final SyncerFactory syncerFactory =
@@ -849,13 +961,14 @@ class SyncerFactoryTest {
     syncerFactory.sync(new String[] {"inventoryEntries"}, null, false, false, null);
 
     // assertions
-    verify(sourceClient, times(1)).inventory().get().execute();
+    assertThat(verifyInventoryGetCounter.get()).isEqualTo(1);
     verifyTimestampGeneratorCustomObjectUpsertIsCalled(
         targetClient, "InventorySync", DEFAULT_RUNNER_NAME);
-    verifyLastSyncCustomObjectQuery(targetClient, "inventorySync", DEFAULT_RUNNER_NAME, "foo", 1);
+    verifyLastSyncCustomObjectQuery(
+        targetClient, "inventorySync", DEFAULT_RUNNER_NAME, "testSourceProjectKey", 1);
     // verify two custom object upserts : 1. current ctp timestamp and 2. last sync timestamp
     // creation)
-    verify(targetClient, times(2)).customObjects().post(any(CustomObjectDraft.class)).execute();
+    verify(targetClient.customObjects(), times(2)).post(any(CustomObjectDraft.class));
     // TODO: Assert on actual last sync timestamp creation in detail after Statistics classes in
     // java-sync library
     // TODO: override #equals method:
@@ -863,7 +976,7 @@ class SyncerFactoryTest {
     // TODO: e.g. verifyNewLastSyncCustomObjectCreation(targetClient,
     // currentCtpTimestamp.minusMinutes(2), any(ProductSyncStatistics.class), 0L, "productSync",
     // "foo");
-    verifyInteractionsWithClientAfterSync(sourceClient, 1);
+    assertThat(verifyInvokeClientCounter.get()).isEqualTo(1);
 
     final Condition<LoggingEvent> startLog =
         new Condition<>(
@@ -892,11 +1005,22 @@ class SyncerFactoryTest {
   @Test
   void sync_WithErrorOnFetch_ShouldCloseClientAndCompleteExceptionally() {
     // preparation
-    when(sourceClient.inventory().get().execute())
-        .thenReturn(
-            CompletableFutureUtils.exceptionallyCompletedFuture(createBadGatewayException()));
+    final ProjectApiRoot sourceClient =
+        withTestClient(
+            "testProjectKey",
+            (uri, method, encodedRequestBody) -> {
+              verifyInvokeClientCounter.incrementAndGet();
+              if (uri.contains("inventory") && ApiHttpMethod.GET.equals(method)) {
+                verifyInventoryGetCounter.incrementAndGet();
+                return CompletableFutureUtils.exceptionallyCompletedFuture(
+                    createBadGatewayException());
+              }
+              return null;
+            });
 
     final ZonedDateTime currentCtpTimestamp = ZonedDateTime.now();
+    final ProjectApiRoot targetClient = mock(ProjectApiRoot.class);
+    when(targetClient.getProjectKey()).thenReturn("testTargetProjectKey");
     stubClientsCustomObjectService(targetClient, currentCtpTimestamp);
 
     final SyncerFactory syncerFactory =
@@ -909,8 +1033,8 @@ class SyncerFactoryTest {
     // assertions
     verifyTimestampGeneratorCustomObjectUpsertIsCalled(
         targetClient, "InventorySync", DEFAULT_RUNNER_NAME);
-    verify(sourceClient, times(1)).inventory().get().execute();
-    verifyInteractionsWithClientAfterSync(sourceClient, 1);
+    assertThat(verifyInventoryGetCounter.get()).isEqualTo(1);
+    assertThat(verifyInvokeClientCounter.get()).isEqualTo(1);
     assertThat(result)
         .failsWithin(1, TimeUnit.SECONDS)
         .withThrowableOfType(ExecutionException.class)
@@ -922,12 +1046,21 @@ class SyncerFactoryTest {
   void
       sync_WithErrorOnCurrentCtpTimestampUpsert_ShouldCloseClientAndCompleteExceptionallyWithoutSyncing() {
     // preparation
-    when(targetClient.customObjects().post(any(CustomObjectDraft.class)).execute())
+    final ProjectApiRoot sourceClient = mockClientResourceRequests("testSourceProjectKey");
+    ProjectApiRoot spy = spy(sourceClient);
+    final ProjectApiRoot targetClient = mock(ProjectApiRoot.class);
+    when(targetClient.getProjectKey()).thenReturn("testTargetProjectKey");
+    final ByProjectKeyCustomObjectsPost customObjectsPost =
+        mock(ByProjectKeyCustomObjectsPost.class);
+    when(customObjectsPost.execute())
         .thenReturn(
             CompletableFutureUtils.exceptionallyCompletedFuture(createBadGatewayException()));
+    when(targetClient.customObjects()).thenReturn(mock());
+    when(targetClient.customObjects().post(any(CustomObjectDraft.class)))
+        .thenReturn(customObjectsPost);
 
     final SyncerFactory syncerFactory =
-        SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock());
+        SyncerFactory.of(() -> spy, () -> targetClient, getMockedClock());
 
     // test
     final CompletionStage<Void> result =
@@ -936,8 +1069,8 @@ class SyncerFactoryTest {
     // assertions
     verifyTimestampGeneratorCustomObjectUpsertIsCalled(
         targetClient, "InventorySync", DEFAULT_RUNNER_NAME);
-    verify(sourceClient, times(0)).inventory().get().execute();
-    verifyInteractionsWithClientAfterSync(sourceClient, 1);
+    assertThat(verifyInventoryGetCounter.get()).isEqualTo(0);
+    verifyInteractionsWithClientAfterSync(spy, 1);
     assertThat(result)
         .failsWithin(1, TimeUnit.SECONDS)
         .withThrowableOfType(ExecutionException.class)
@@ -949,18 +1082,30 @@ class SyncerFactoryTest {
   void
       sync_WithErrorOnQueryLastSyncTimestamp_ShouldCloseClientAndCompleteExceptionallyWithoutSyncing() {
     // preparation
-    when(targetClient.customObjects().post(any(CustomObjectDraft.class)).execute())
-        .thenReturn(
-            CompletableFutureUtils.exceptionallyCompletedFuture(createBadGatewayException()));
-
+    final ProjectApiRoot sourceClientSpy = spy(sourceClient);
+    final ProjectApiRoot targetClient = mock(ProjectApiRoot.class);
+    when(targetClient.getProjectKey()).thenReturn("testTargetProjectKey");
+    final ByProjectKeyCustomObjectsPost customObjectsPost =
+        mock(ByProjectKeyCustomObjectsPost.class);
     final CustomObject lastSyncCustomObjectCustomObject =
         mockLastSyncCustomObject(ZonedDateTime.now());
+    final ApiHttpResponse apiHttpResponse = mock(ApiHttpResponse.class);
     when(apiHttpResponse.getBody()).thenReturn(lastSyncCustomObjectCustomObject);
-    when(targetClient.customObjects().post(any(CustomObjectDraft.class)).execute())
+    when(customObjectsPost.execute())
         .thenReturn(CompletableFuture.completedFuture(apiHttpResponse));
+    when(targetClient.customObjects()).thenReturn(mock());
+    when(targetClient.customObjects().withContainerAndKey(anyString(), anyString()))
+        .thenReturn(mock());
+    when(targetClient.customObjects().withContainerAndKey(anyString(), anyString()).get())
+        .thenReturn(mock());
+    when(targetClient.customObjects().withContainerAndKey(anyString(), anyString()).get().execute())
+        .thenReturn(
+            CompletableFutureUtils.exceptionallyCompletedFuture(createBadGatewayException()));
+    when(targetClient.customObjects().post(any(CustomObjectDraft.class)))
+        .thenReturn(customObjectsPost);
 
     final SyncerFactory syncerFactory =
-        SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock());
+        SyncerFactory.of(() -> sourceClientSpy, () -> targetClient, getMockedClock());
 
     // test
     final CompletionStage<Void> result =
@@ -968,9 +1113,9 @@ class SyncerFactoryTest {
 
     // assertions
     verifyTimestampGeneratorCustomObjectUpsertIsCalled(targetClient, "InventorySync", "bar");
-    verifyLastSyncCustomObjectQuery(targetClient, "inventorySync", "bar", "foo", 1);
-    verify(sourceClient, times(0)).inventory().get().execute();
-    verifyInteractionsWithClientAfterSync(sourceClient, 1);
+    verifyLastSyncCustomObjectQuery(targetClient, "inventorySync", "bar", "testProjectKey", 1);
+    verify(sourceClientSpy, times(0)).inventory();
+    verifyInteractionsWithClientAfterSync(sourceClientSpy, 1);
     assertThat(result)
         .failsWithin(1, TimeUnit.SECONDS)
         .withThrowableOfType(ExecutionException.class)
@@ -981,11 +1126,13 @@ class SyncerFactoryTest {
   @SuppressWarnings("unchecked")
   void syncAll_AsDelta_ShouldBuildSyncerAndExecuteSync() {
     // preparation
+    final ProjectApiRoot sourceClientSpy = spy(sourceClient);
     final ZonedDateTime currentCtpTimestamp = ZonedDateTime.now();
+    final ProjectApiRoot targetClient = mock(ProjectApiRoot.class);
+    when(targetClient.getProjectKey()).thenReturn("testTargetProjectKey");
     stubClientsCustomObjectService(targetClient, currentCtpTimestamp);
-
     final SyncerFactory syncerFactory =
-        SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock());
+        SyncerFactory.of(() -> sourceClientSpy, () -> targetClient, getMockedClock());
 
     // test
     syncerFactory.sync(new String[] {"all"}, null, false, false, null).join();
@@ -1013,33 +1160,41 @@ class SyncerFactoryTest {
         targetClient, "CustomerSync", DEFAULT_RUNNER_NAME);
     verifyTimestampGeneratorCustomObjectUpsertIsCalled(
         targetClient, "ShoppingListSync", DEFAULT_RUNNER_NAME);
-    verify(targetClient, times(22)).customObjects().post(any(CustomObjectDraft.class)).execute();
-    verifyLastSyncCustomObjectQuery(targetClient, "inventorySync", DEFAULT_RUNNER_NAME, "foo", 1);
-    verifyLastSyncCustomObjectQuery(targetClient, "productTypeSync", DEFAULT_RUNNER_NAME, "foo", 1);
-    verifyLastSyncCustomObjectQuery(targetClient, "productSync", DEFAULT_RUNNER_NAME, "foo", 1);
-    verifyLastSyncCustomObjectQuery(targetClient, "categorySync", DEFAULT_RUNNER_NAME, "foo", 1);
-    verifyLastSyncCustomObjectQuery(targetClient, "typeSync", DEFAULT_RUNNER_NAME, "foo", 1);
+    verify(targetClient.customObjects(), times(22)).post(any(CustomObjectDraft.class));
     verifyLastSyncCustomObjectQuery(
-        targetClient, "cartDiscountSync", DEFAULT_RUNNER_NAME, "foo", 1);
-    verifyLastSyncCustomObjectQuery(targetClient, "stateSync", DEFAULT_RUNNER_NAME, "foo", 1);
-    verifyLastSyncCustomObjectQuery(targetClient, "taxCategorySync", DEFAULT_RUNNER_NAME, "foo", 1);
+        targetClient, "inventorySync", DEFAULT_RUNNER_NAME, "testProjectKey", 1);
     verifyLastSyncCustomObjectQuery(
-        targetClient, "customObjectSync", DEFAULT_RUNNER_NAME, "foo", 1);
-    verifyLastSyncCustomObjectQuery(targetClient, "customerSync", DEFAULT_RUNNER_NAME, "foo", 1);
+        targetClient, "productTypeSync", DEFAULT_RUNNER_NAME, "testProjectKey", 1);
     verifyLastSyncCustomObjectQuery(
-        targetClient, "shoppingListSync", DEFAULT_RUNNER_NAME, "foo", 1);
-    verify(sourceClient, times(1)).productTypes().get().execute();
-    verify(sourceClient, times(1)).types().get().execute();
-    verify(sourceClient, times(1)).categories().get().execute();
-    verify(sourceClient, times(1)).productProjections().get().execute();
-    verify(sourceClient, times(1)).inventory().get().execute();
-    verify(sourceClient, times(1)).cartDiscounts().get().execute();
-    verify(sourceClient, times(1)).states().get().execute();
-    verify(sourceClient, times(1)).taxCategories().get().execute();
-    verify(sourceClient, times(1)).customObjects().get().execute();
-    verify(sourceClient, times(1)).customers().get().execute();
-    verify(sourceClient, times(1)).shoppingLists().get().execute();
-    verifyInteractionsWithClientAfterSync(sourceClient, 11);
+        targetClient, "productSync", DEFAULT_RUNNER_NAME, "testProjectKey", 1);
+    verifyLastSyncCustomObjectQuery(
+        targetClient, "categorySync", DEFAULT_RUNNER_NAME, "testProjectKey", 1);
+    verifyLastSyncCustomObjectQuery(
+        targetClient, "typeSync", DEFAULT_RUNNER_NAME, "testProjectKey", 1);
+    verifyLastSyncCustomObjectQuery(
+        targetClient, "cartDiscountSync", DEFAULT_RUNNER_NAME, "testProjectKey", 1);
+    verifyLastSyncCustomObjectQuery(
+        targetClient, "stateSync", DEFAULT_RUNNER_NAME, "testProjectKey", 1);
+    verifyLastSyncCustomObjectQuery(
+        targetClient, "taxCategorySync", DEFAULT_RUNNER_NAME, "testProjectKey", 1);
+    verifyLastSyncCustomObjectQuery(
+        targetClient, "customObjectSync", DEFAULT_RUNNER_NAME, "testProjectKey", 1);
+    verifyLastSyncCustomObjectQuery(
+        targetClient, "customerSync", DEFAULT_RUNNER_NAME, "testProjectKey", 1);
+    verifyLastSyncCustomObjectQuery(
+        targetClient, "shoppingListSync", DEFAULT_RUNNER_NAME, "testProjectKey", 1);
+    verify(sourceClientSpy, times(1)).productTypes();
+    verify(sourceClientSpy, times(1)).types();
+    verify(sourceClientSpy, times(1)).categories();
+    verify(sourceClientSpy, times(1)).productProjections();
+    verify(sourceClientSpy, times(1)).inventory();
+    verify(sourceClientSpy, times(1)).cartDiscounts();
+    verify(sourceClientSpy, times(1)).states();
+    verify(sourceClientSpy, times(1)).taxCategories();
+    verify(sourceClientSpy, times(1)).customObjects();
+    verify(sourceClientSpy, times(1)).customers();
+    verify(sourceClientSpy, times(1)).shoppingLists();
+    verifyInteractionsWithClientAfterSync(sourceClientSpy, 11);
 
     assertThat(cliRunnerTestLogger.getAllLoggingEvents())
         .allMatch(loggingEvent -> !Level.ERROR.equals(loggingEvent.getLevel()));
@@ -1078,11 +1233,13 @@ class SyncerFactoryTest {
   @SuppressWarnings("unchecked")
   void syncProductTypesProductsCustomersAndShoppingLists_AsDelta_ShouldBuildSyncerAndExecuteSync() {
     // preparation
+    final ProjectApiRoot sourceClientSpy = spy(sourceClient);
     final ZonedDateTime currentCtpTimestamp = ZonedDateTime.now();
+    final ProjectApiRoot targetClient = mock(ProjectApiRoot.class);
+    when(targetClient.getProjectKey()).thenReturn("testTargetProjectKey");
     stubClientsCustomObjectService(targetClient, currentCtpTimestamp);
-
     final SyncerFactory syncerFactory =
-        SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock());
+        SyncerFactory.of(() -> sourceClientSpy, () -> targetClient, getMockedClock());
 
     // test
     String[] syncModuleOptions = {"productTypes", "products", "customers", "shoppingLists"};
@@ -1097,27 +1254,32 @@ class SyncerFactoryTest {
         targetClient, "CustomerSync", DEFAULT_RUNNER_NAME);
     verifyTimestampGeneratorCustomObjectUpsertIsCalled(
         targetClient, "ShoppingListSync", DEFAULT_RUNNER_NAME);
-    verify(targetClient, times(8)).customObjects().post(any(CustomObjectDraft.class)).execute();
-    verifyLastSyncCustomObjectQuery(targetClient, "productTypeSync", DEFAULT_RUNNER_NAME, "foo", 1);
-    verifyLastSyncCustomObjectQuery(targetClient, "productSync", DEFAULT_RUNNER_NAME, "foo", 1);
-    verifyLastSyncCustomObjectQuery(targetClient, "customerSync", DEFAULT_RUNNER_NAME, "foo", 1);
+    verify(targetClient.customObjects(), times(8)).post(any(CustomObjectDraft.class));
     verifyLastSyncCustomObjectQuery(
-        targetClient, "shoppingListSync", DEFAULT_RUNNER_NAME, "foo", 1);
+        targetClient, "productTypeSync", DEFAULT_RUNNER_NAME, "testProjectKey", 1);
+    verifyLastSyncCustomObjectQuery(
+        targetClient, "productSync", DEFAULT_RUNNER_NAME, "testProjectKey", 1);
+    verifyLastSyncCustomObjectQuery(
+        targetClient, "customerSync", DEFAULT_RUNNER_NAME, "testProjectKey", 1);
+    verifyLastSyncCustomObjectQuery(
+        targetClient, "shoppingListSync", DEFAULT_RUNNER_NAME, "testProjectKey", 1);
 
-    final InOrder inOrder = Mockito.inOrder(sourceClient);
+    final InOrder inOrder = Mockito.inOrder(sourceClientSpy);
 
     // According to sync algorithm, ProductType and Customer will run sync in parallel, Product and
     // ShoppingList sequentially.
     // Example: Given: ['productTypes', 'customers', 'products', 'shoppingLists']
     // From the given arguments, algorithm will group the resources as below,
     // [productTypes, customers] [products] [shoppingLists]
-    inOrder.verify(sourceClient, times(1)).productTypes().get().execute();
-    verify(sourceClient, times(1)).customers().get().execute();
-
-    inOrder.verify(sourceClient, times(1)).productProjections().get().execute();
-
-    inOrder.verify(sourceClient, times(1)).shoppingLists().get().execute();
-    verifyInteractionsWithClientAfterSync(sourceClient, 4);
+    inOrder.verify(sourceClientSpy, times(1)).productTypes();
+    verify(sourceClientSpy, times(1)).customers();
+    inOrder.verify(sourceClientSpy, times(1)).productProjections();
+    inOrder.verify(sourceClientSpy, times(1)).shoppingLists();
+    assertThat(verifyProductTypesGetCounter.get()).isEqualTo(1);
+    assertThat(verifyCustomersGetCounter.get()).isEqualTo(1);
+    assertThat(verifyProductProjectionsGetCounter.get()).isEqualTo(1);
+    assertThat(verifyShoppingListsGetCounter.get()).isEqualTo(1);
+    verifyInteractionsWithClientAfterSync(sourceClientSpy, 4);
 
     assertProductTypeSyncerLoggingEvents(productTypeSyncerTestLogger, 0);
     assertProductSyncerLoggingEvents(productSyncerTestLogger, 0);
@@ -1129,11 +1291,13 @@ class SyncerFactoryTest {
   @SuppressWarnings("unchecked")
   void syncStatesInventoryEntriesAndCustomObjects_AsDelta_ShouldBuildSyncerAndExecuteSync() {
     // preparation
+    final ProjectApiRoot sourceClientSpy = spy(sourceClient);
     final ZonedDateTime currentCtpTimestamp = ZonedDateTime.now();
+    final ProjectApiRoot targetClient = mock(ProjectApiRoot.class);
+    when(targetClient.getProjectKey()).thenReturn("testTargetProjectKey");
     stubClientsCustomObjectService(targetClient, currentCtpTimestamp);
-
     final SyncerFactory syncerFactory =
-        SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock());
+        SyncerFactory.of(() -> sourceClientSpy, () -> targetClient, getMockedClock());
 
     // test
     String[] syncModuleOptions = {"states", "inventoryEntries", "customObjects"};
@@ -1146,15 +1310,20 @@ class SyncerFactoryTest {
         targetClient, "InventorySync", DEFAULT_RUNNER_NAME);
     verifyTimestampGeneratorCustomObjectUpsertIsCalled(
         targetClient, "CustomObjectSync", DEFAULT_RUNNER_NAME);
-    verify(targetClient, times(6)).customObjects().post(any(CustomObjectDraft.class)).execute();
-    verifyLastSyncCustomObjectQuery(targetClient, "stateSync", DEFAULT_RUNNER_NAME, "foo", 1);
-    verifyLastSyncCustomObjectQuery(targetClient, "inventorySync", DEFAULT_RUNNER_NAME, "foo", 1);
+    verify(targetClient.customObjects(), times(6)).post(any(CustomObjectDraft.class));
     verifyLastSyncCustomObjectQuery(
-        targetClient, "customObjectSync", DEFAULT_RUNNER_NAME, "foo", 1);
-    verify(sourceClient, times(1)).states().get().execute();
-    verify(sourceClient, times(1)).inventory().get().execute();
-    verify(sourceClient, times(1)).customObjects().get().execute();
-    verifyInteractionsWithClientAfterSync(sourceClient, 3);
+        targetClient, "stateSync", DEFAULT_RUNNER_NAME, "testProjectKey", 1);
+    verifyLastSyncCustomObjectQuery(
+        targetClient, "inventorySync", DEFAULT_RUNNER_NAME, "testProjectKey", 1);
+    verifyLastSyncCustomObjectQuery(
+        targetClient, "customObjectSync", DEFAULT_RUNNER_NAME, "testProjectKey", 1);
+    verify(sourceClientSpy, times(1)).states();
+    verify(sourceClientSpy, times(1)).inventory();
+    verify(sourceClientSpy, times(1)).customObjects();
+    assertThat(verifyStatesGetCounter.get()).isEqualTo(1);
+    assertThat(verifyInventoryGetCounter.get()).isEqualTo(1);
+    assertThat(verifyCustomObjectsGetCounter.get()).isEqualTo(1);
+    verifyInteractionsWithClientAfterSync(sourceClientSpy, 3);
 
     assertStateSyncerLoggingEvents(stateSyncerTestLogger, 0);
     assertInventoryEntrySyncerLoggingEvents(inventoryEntrySyncerTestLogger, 0);
@@ -1165,11 +1334,14 @@ class SyncerFactoryTest {
   @SuppressWarnings("unchecked")
   void syncTypesAndCategories_AsDelta_ShouldBuildSyncerAndExecuteSync() {
     // preparation
+    final ProjectApiRoot sourceClientSpy = spy(sourceClient);
     final ZonedDateTime currentCtpTimestamp = ZonedDateTime.now();
+    final ProjectApiRoot targetClient = mock(ProjectApiRoot.class);
+    when(targetClient.getProjectKey()).thenReturn("testTargetProjectKey");
     stubClientsCustomObjectService(targetClient, currentCtpTimestamp);
 
     final SyncerFactory syncerFactory =
-        SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock());
+        SyncerFactory.of(() -> sourceClientSpy, () -> targetClient, getMockedClock());
 
     // test
     String[] syncModuleOptions = {"types", "categories"};
@@ -1180,15 +1352,19 @@ class SyncerFactoryTest {
         targetClient, "TypeSync", DEFAULT_RUNNER_NAME);
     verifyTimestampGeneratorCustomObjectUpsertIsCalled(
         targetClient, "CategorySync", DEFAULT_RUNNER_NAME);
-    verify(targetClient, times(4)).customObjects().post(any(CustomObjectDraft.class)).execute();
-    verifyLastSyncCustomObjectQuery(targetClient, "typeSync", DEFAULT_RUNNER_NAME, "foo", 1);
-    verifyLastSyncCustomObjectQuery(targetClient, "categorySync", DEFAULT_RUNNER_NAME, "foo", 1);
+    verify(targetClient.customObjects(), times(4)).post(any(CustomObjectDraft.class));
+    verifyLastSyncCustomObjectQuery(
+        targetClient, "typeSync", DEFAULT_RUNNER_NAME, "testProjectKey", 1);
+    verifyLastSyncCustomObjectQuery(
+        targetClient, "categorySync", DEFAULT_RUNNER_NAME, "testProjectKey", 1);
 
-    final InOrder inOrder = Mockito.inOrder(sourceClient);
+    final InOrder inOrder = Mockito.inOrder(sourceClientSpy);
 
-    inOrder.verify(sourceClient, times(1)).types().get().execute();
-    inOrder.verify(sourceClient, times(1)).categories().get().execute();
-    verifyInteractionsWithClientAfterSync(sourceClient, 2);
+    inOrder.verify(sourceClientSpy, times(1)).types();
+    inOrder.verify(sourceClientSpy, times(1)).categories();
+    assertThat(verifyTypesGetCounter.get()).isEqualTo(1);
+    assertThat(verifyCategoriesGetCounter.get()).isEqualTo(1);
+    verifyInteractionsWithClientAfterSync(sourceClientSpy, 2);
 
     assertTypeSyncerLoggingEvents(typeSyncerTestLogger, 0);
     assertCategorySyncerLoggingEvents(categorySyncerTestLogger, 0);
@@ -1200,11 +1376,14 @@ class SyncerFactoryTest {
   @SuppressWarnings("unchecked")
   void syncProductsAndShoppingLists_AsDelta_ShouldBuildSyncerAndExecuteSync() {
     // preparation
+    final ProjectApiRoot sourceSpy = spy(sourceClient);
     final ZonedDateTime currentCtpTimestamp = ZonedDateTime.now();
+    final ProjectApiRoot targetClient = mock(ProjectApiRoot.class);
+    when(targetClient.getProjectKey()).thenReturn("testTargetProjectKey");
     stubClientsCustomObjectService(targetClient, currentCtpTimestamp);
 
     final SyncerFactory syncerFactory =
-        SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock());
+        SyncerFactory.of(() -> sourceSpy, () -> targetClient, getMockedClock());
 
     // test
     String[] syncModuleOptions = {"products", "shoppingLists"};
@@ -1215,13 +1394,14 @@ class SyncerFactoryTest {
         targetClient, "ProductSync", DEFAULT_RUNNER_NAME);
     verifyTimestampGeneratorCustomObjectUpsertIsCalled(
         targetClient, "ShoppingListSync", DEFAULT_RUNNER_NAME);
-    verify(targetClient, times(4)).customObjects().post(any(CustomObjectDraft.class)).execute();
-    verifyLastSyncCustomObjectQuery(targetClient, "productSync", DEFAULT_RUNNER_NAME, "foo", 1);
+    verify(targetClient.customObjects(), times(4)).post(any(CustomObjectDraft.class));
     verifyLastSyncCustomObjectQuery(
-        targetClient, "shoppingListSync", DEFAULT_RUNNER_NAME, "foo", 1);
-    verify(sourceClient, times(1)).productProjections().get().execute();
-    verify(sourceClient, times(1)).shoppingLists().get().execute();
-    verifyInteractionsWithClientAfterSync(sourceClient, 2);
+        targetClient, "productSync", DEFAULT_RUNNER_NAME, "testProjectKey", 1);
+    verifyLastSyncCustomObjectQuery(
+        targetClient, "shoppingListSync", DEFAULT_RUNNER_NAME, "testProjectKey", 1);
+    assertThat(verifyProductProjectionsGetCounter.get()).isEqualTo(1);
+    assertThat(verifyShoppingListsGetCounter.get()).isEqualTo(1);
+    verifyInteractionsWithClientAfterSync(sourceSpy, 2);
 
     assertProductSyncerLoggingEvents(productSyncerTestLogger, 0);
     assertShoppingListSyncerLoggingEvents(shoppingListSyncerTestLogger, 0);
@@ -1270,5 +1450,14 @@ class SyncerFactoryTest {
         .withThrowableOfType(ExecutionException.class)
         .withCauseExactlyInstanceOf(CliException.class)
         .withMessageContaining(errorMessage);
+  }
+
+  private void verifyInteractionsWithClientAfterSync(
+      @Nonnull final ProjectApiRoot client, final int numberOfGetConfigInvocations) {
+
+    verify(client, times(1)).close();
+    // Verify config is accessed for the success message after sync:
+    // " example: Syncing products from CTP project with key 'x' to project with key 'y' is done","
+    verify(client, times(numberOfGetConfigInvocations)).getProjectKey();
   }
 }

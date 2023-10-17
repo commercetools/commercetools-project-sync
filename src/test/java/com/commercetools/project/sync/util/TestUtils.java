@@ -11,7 +11,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
+import com.commercetools.api.client.ByProjectKeyCustomObjectsPost;
 import com.commercetools.api.client.ProjectApiRoot;
+import com.commercetools.api.defaultconfig.ApiRootBuilder;
 import com.commercetools.api.models.custom_object.CustomObject;
 import com.commercetools.api.models.custom_object.CustomObjectDraft;
 import com.commercetools.api.models.error.ErrorResponse;
@@ -24,8 +26,10 @@ import com.commercetools.sync.products.helpers.ProductSyncStatistics;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
+import io.vrap.rmf.base.client.ApiHttpMethod;
 import io.vrap.rmf.base.client.ApiHttpResponse;
 import io.vrap.rmf.base.client.error.BadGatewayException;
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.time.Clock;
@@ -33,7 +37,9 @@ import java.time.ZonedDateTime;
 import java.util.Collections;
 import java.util.concurrent.CompletableFuture;
 import javax.annotation.Nonnull;
+import org.apache.commons.lang3.StringUtils;
 import org.assertj.core.api.Condition;
+import org.assertj.core.util.TriFunction;
 import uk.org.lidalia.slf4jext.Level;
 import uk.org.lidalia.slf4jtest.LoggingEvent;
 import uk.org.lidalia.slf4jtest.TestLogger;
@@ -205,6 +211,16 @@ public final class TestUtils {
     return fromInputStream(resourceAsStream, objectType);
   }
 
+  public static String readStringFromFile(final String resourcePath) {
+    final InputStream resourceAsStream =
+        Thread.currentThread().getContextClassLoader().getResourceAsStream(resourcePath);
+    try {
+      return new String(resourceAsStream.readAllBytes(), StandardCharsets.UTF_8);
+    } catch (IOException e) {
+      return StringUtils.EMPTY;
+    }
+  }
+
   @SuppressWarnings("unchecked")
   public static void stubClientsCustomObjectService(
       @Nonnull final ProjectApiRoot client, @Nonnull final ZonedDateTime currentCtpTimestamp) {
@@ -212,10 +228,39 @@ public final class TestUtils {
     final CustomObject customObject = mockLastSyncCustomObject(currentCtpTimestamp);
     final ApiHttpResponse apiHttpResponse = mock(ApiHttpResponse.class);
     when(apiHttpResponse.getBody()).thenReturn(customObject);
-    when(client.customObjects().post(any(CustomObjectDraft.class)).execute())
+    final ByProjectKeyCustomObjectsPost customObjectsPost =
+        mock(ByProjectKeyCustomObjectsPost.class);
+    when(customObjectsPost.execute())
         .thenReturn(CompletableFuture.completedFuture(apiHttpResponse));
+    when(client.customObjects()).thenReturn(mock());
+    when(client.customObjects().post(any(CustomObjectDraft.class))).thenReturn(customObjectsPost);
+    when(client.customObjects().withContainerAndKey(anyString(), anyString())).thenReturn(mock());
+    when(client.customObjects().withContainerAndKey(anyString(), anyString()).get())
+        .thenReturn(mock());
     when(client.customObjects().withContainerAndKey(anyString(), anyString()).get().execute())
         .thenReturn(CompletableFuture.completedFuture(apiHttpResponse));
+  }
+
+  public static ProjectApiRoot withTestClient(
+      final String projectKey,
+      TriFunction<String, ApiHttpMethod, String, CompletableFuture<ApiHttpResponse<byte[]>>> fn) {
+    return ApiRootBuilder.of(
+            request -> {
+              final String uri = request.getUri() != null ? request.getUri().toString() : "";
+              final ApiHttpMethod method = request.getMethod();
+              final String encodedRequestBody =
+                  uri.contains("graphql")
+                      ? new String(request.getBody(), StandardCharsets.UTF_8)
+                      : "";
+              final CompletableFuture<ApiHttpResponse<byte[]>> response =
+                  fn.apply(uri, method, encodedRequestBody);
+              if (response != null) {
+                return response;
+              }
+              return null;
+            })
+        .withApiBaseUrl("testBaseUri")
+        .build(projectKey);
   }
 
   @Nonnull
