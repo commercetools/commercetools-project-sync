@@ -16,11 +16,13 @@ import static com.commercetools.project.sync.util.SyncUtils.APPLICATION_DEFAULT_
 import static com.commercetools.project.sync.util.SyncUtils.APPLICATION_DEFAULT_VERSION;
 import static com.commercetools.project.sync.util.TestUtils.getMockedClock;
 import static com.commercetools.project.sync.util.TestUtils.stubClientsCustomObjectService;
+import static com.commercetools.project.sync.util.TestUtils.withTestClient;
 import static java.lang.String.format;
-import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.reset;
@@ -29,6 +31,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.commercetools.api.client.ByProjectKeyProductProjectionsGet;
 import com.commercetools.api.client.ProjectApiRoot;
 import com.commercetools.project.sync.exception.CliException;
 import com.google.common.base.Optional;
@@ -36,6 +39,7 @@ import io.vrap.rmf.base.client.ApiHttpResponse;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.time.ZonedDateTime;
 import java.util.concurrent.CompletableFuture;
 import org.junit.jupiter.api.AfterAll;
@@ -55,7 +59,6 @@ class CliRunnerTest {
   private static PrintStream originalSystemOut;
   private ProjectApiRoot sourceClient;
   private ProjectApiRoot targetClient;
-  private ApiHttpResponse apiHttpResponse;
 
   @BeforeAll
   static void setupSuite() throws UnsupportedEncodingException {
@@ -71,15 +74,27 @@ class CliRunnerTest {
 
   @BeforeEach
   void setupTest() {
-    sourceClient = mock(ProjectApiRoot.class);
+    final ProjectApiRoot sourceClientWithEmtpyResults =
+        mockClientResourceGetRequestsWithEmptyResult("testProjectKey");
+    sourceClient = spy(sourceClientWithEmtpyResults);
     targetClient = mock(ProjectApiRoot.class);
-    apiHttpResponse = mock(ApiHttpResponse.class);
+    when(targetClient.getProjectKey()).thenReturn("testTargetProjectKey");
   }
 
   @AfterEach
   void tearDownTest() {
     testLogger.clearAll();
-    reset(sourceClient, targetClient, apiHttpResponse);
+    reset(sourceClient, targetClient);
+  }
+
+  private ProjectApiRoot mockClientResourceGetRequestsWithEmptyResult(final String projectKey) {
+    return withTestClient(
+        projectKey,
+        (uri, method, encodedRequetsBody) -> {
+          final String responseString = "{\"results\":[]}";
+          return CompletableFuture.completedFuture(
+              new ApiHttpResponse<>(200, null, responseString.getBytes(StandardCharsets.UTF_8)));
+        });
   }
 
   @Test
@@ -149,8 +164,7 @@ class CliRunnerTest {
       throws UnsupportedEncodingException {
     // preparation
     final SyncerFactory syncerFactory =
-        SyncerFactory.of(
-            () -> mock(ProjectApiRoot.class), () -> mock(ProjectApiRoot.class), getMockedClock());
+        SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock());
 
     // test
     CliRunner.of().run(new String[] {"-v"}, syncerFactory);
@@ -227,61 +241,55 @@ class CliRunnerTest {
   @Test
   void run_AsProductDeltaSync_ShouldBuildSyncerAndExecuteSync() {
     // preparation
-    when(apiHttpResponse.getBody()).thenReturn(emptyList());
-    when(sourceClient.productProjections().get().execute())
-        .thenReturn(CompletableFuture.completedFuture(apiHttpResponse));
+    stubClientsCustomObjectService(targetClient, ZonedDateTime.now());
 
     final SyncerFactory syncerFactory =
         spy(SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock()));
-
-    stubClientsCustomObjectService(targetClient, ZonedDateTime.now());
 
     // test
     CliRunner.of().run(new String[] {"-s", "products"}, syncerFactory);
 
     // assertions
     verify(syncerFactory, times(1)).sync(new String[] {"products"}, null, false, false, null);
-    verify(sourceClient, times(1)).productProjections().get().execute();
+    verify(sourceClient, times(1)).productProjections();
   }
 
   @Test
   void run_AsProductFullSync_ShouldBuildSyncerAndExecuteSync() {
     // preparation
-    when(apiHttpResponse.getBody()).thenReturn(emptyList());
-    when(sourceClient.productProjections().get().execute())
-        .thenReturn(CompletableFuture.completedFuture(apiHttpResponse));
+    stubClientsCustomObjectService(targetClient, ZonedDateTime.now());
 
     final SyncerFactory syncerFactory =
         spy(SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock()));
-
-    stubClientsCustomObjectService(targetClient, ZonedDateTime.now());
 
     // test
     CliRunner.of().run(new String[] {"-s", "products", "-f"}, syncerFactory);
 
     // assertions
     verify(syncerFactory, times(1)).sync(new String[] {"products"}, null, true, false, null);
-    verify(sourceClient, times(1)).productProjections().get().execute();
+    verify(sourceClient, times(1)).productProjections();
   }
 
   @Test
   void
       run_AsProductSyncWithCustomProductQueriesAndLimit_ShouldBuildSyncerAndExecuteQuerySuccessfully() {
     // preparation
-    when(apiHttpResponse.getBody()).thenReturn(emptyList());
-    when(sourceClient.productProjections().get().execute())
-        .thenReturn(CompletableFuture.completedFuture(apiHttpResponse));
+    stubClientsCustomObjectService(targetClient, ZonedDateTime.now());
+    final ByProjectKeyProductProjectionsGet getMock = mock(ByProjectKeyProductProjectionsGet.class);
+    when(getMock.addStaged(anyBoolean())).thenReturn(getMock);
+    when(getMock.withLimit(anyLong())).thenReturn(getMock);
+    when(getMock.withWhere(anyString())).thenReturn(getMock);
+    when(sourceClient.productProjections()).thenReturn(mock());
+    when(sourceClient.productProjections().get()).thenReturn(getMock);
 
     final Long limit = 100L;
     final String customQuery =
-        "\"published=true AND masterData(masterVariant(attributes(name= \\\"abc\\\" AND value=123)))\"";
+        "published=true AND masterData(masterVariant(attributes(name=abc AND value=123)))";
     final String productQueryParametersValue =
-        "{\"limit\": " + limit + ", \"where\": " + customQuery + "}";
+        "{\"limit\": " + limit + ", \"where\": \"" + customQuery + "\"}";
 
     final SyncerFactory syncerFactory =
         spy(SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock()));
-
-    stubClientsCustomObjectService(targetClient, ZonedDateTime.now());
     // test
     CliRunner.of()
         .run(
@@ -291,16 +299,22 @@ class CliRunnerTest {
             syncerFactory);
 
     // assertions
-    verify(sourceClient, times(1)).productProjections().get().execute();
+    verify(sourceClient.productProjections(), times(1)).get();
+    verify(getMock, times(1)).withLimit(limit);
+    verify(getMock, times(1)).withWhere(customQuery);
   }
 
   @Test
   void
       run_AsProductSyncWithProductQueryParametersAndOnlyLimit_ShouldBuildSyncerAndExecuteQuerySuccessfully() {
     // preparation
-    when(apiHttpResponse.getBody()).thenReturn(emptyList());
-    when(sourceClient.productProjections().get().execute())
-        .thenReturn(CompletableFuture.completedFuture(apiHttpResponse));
+    stubClientsCustomObjectService(targetClient, ZonedDateTime.now());
+    final ByProjectKeyProductProjectionsGet getMock = mock(ByProjectKeyProductProjectionsGet.class);
+    when(getMock.addStaged(anyBoolean())).thenReturn(getMock);
+    when(getMock.withLimit(anyLong())).thenReturn(getMock);
+    when(getMock.withWhere(anyString())).thenReturn(getMock);
+    when(sourceClient.productProjections()).thenReturn(mock());
+    when(sourceClient.productProjections().get()).thenReturn(getMock);
 
     final Long limit = 100L;
     final String productQueryParametersValue = "{\"limit\": " + limit + "}";
@@ -308,7 +322,6 @@ class CliRunnerTest {
     final SyncerFactory syncerFactory =
         spy(SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock()));
 
-    stubClientsCustomObjectService(targetClient, ZonedDateTime.now());
     // test
     CliRunner.of()
         .run(
@@ -318,25 +331,31 @@ class CliRunnerTest {
             syncerFactory);
 
     // assertions
-    verify(sourceClient, times(1)).productProjections().get().execute();
+    verify(sourceClient.productProjections(), times(1)).get();
+    verify(getMock, times(1)).withLimit(limit);
+    verify(getMock, times(0)).withWhere("");
   }
 
   @Test
   void
       run_AsProductSyncWithProductQueryParametersAndOnlyWhere_ShouldBuildSyncerAndExecuteQuerySuccessfully() {
     // preparation
-    when(apiHttpResponse.getBody()).thenReturn(emptyList());
-    when(sourceClient.productProjections().get().execute())
-        .thenReturn(CompletableFuture.completedFuture(apiHttpResponse));
+    stubClientsCustomObjectService(targetClient, ZonedDateTime.now());
+
+    final ByProjectKeyProductProjectionsGet getMock = mock(ByProjectKeyProductProjectionsGet.class);
+    when(getMock.addStaged(anyBoolean())).thenReturn(getMock);
+    when(getMock.withLimit(anyLong())).thenReturn(getMock);
+    when(getMock.withWhere(anyString())).thenReturn(getMock);
+    when(sourceClient.productProjections()).thenReturn(mock());
+    when(sourceClient.productProjections().get()).thenReturn(getMock);
 
     final String customQuery =
-        "\"published=true AND masterVariant(attributes(name= \\\"abc\\\" AND value=123))\"";
-    final String productQueryParametersValue = "{\"where\": " + customQuery + "}";
+        "published=true AND masterVariant(attributes(name= \\\"abc\\\" AND value=123))";
+    final String productQueryParametersValue = "{\"where\": \"" + customQuery + "\"}";
 
     final SyncerFactory syncerFactory =
         spy(SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock()));
 
-    stubClientsCustomObjectService(targetClient, ZonedDateTime.now());
     // test
     CliRunner.of()
         .run(
@@ -346,7 +365,10 @@ class CliRunnerTest {
             syncerFactory);
 
     // assertions
-    verify(sourceClient, times(1)).productProjections().get().execute();
+    verify(sourceClient.productProjections(), times(1)).get();
+    verify(getMock, times(0)).withLimit(1L);
+    verify(getMock, times(1))
+        .withWhere("published=true AND masterVariant(attributes(name= \"abc\" AND value=123))");
   }
 
   @Test
@@ -426,162 +448,129 @@ class CliRunnerTest {
   @Test
   void run_AsTaxCategoryDeltaSync_ShouldBuildSyncerAndExecuteSync() {
     // preparation
-    when(apiHttpResponse.getBody()).thenReturn(emptyList());
-    when(sourceClient.productProjections().get().execute())
-        .thenReturn(CompletableFuture.completedFuture(apiHttpResponse));
-
+    stubClientsCustomObjectService(targetClient, ZonedDateTime.now());
     final SyncerFactory syncerFactory =
         spy(SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock()));
-
-    stubClientsCustomObjectService(targetClient, ZonedDateTime.now());
 
     // test
     CliRunner.of().run(new String[] {"-s", "taxCategories"}, syncerFactory);
 
     // assertions
     verify(syncerFactory, times(1)).sync(new String[] {"taxCategories"}, null, false, false, null);
-    verify(sourceClient, times(1)).taxCategories().get().execute();
+    verify(sourceClient, times(1)).taxCategories();
   }
 
   @Test
   void run_AsTaxCategoryFullSync_ShouldBuildSyncerAndExecuteSync() {
     // preparation
-    when(apiHttpResponse.getBody()).thenReturn(emptyList());
-    when(sourceClient.taxCategories().get().execute())
-        .thenReturn(CompletableFuture.completedFuture(apiHttpResponse));
+    stubClientsCustomObjectService(targetClient, ZonedDateTime.now());
 
     final SyncerFactory syncerFactory =
         spy(SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock()));
-
-    stubClientsCustomObjectService(targetClient, ZonedDateTime.now());
 
     // test
     CliRunner.of().run(new String[] {"-s", "taxCategories", "-f"}, syncerFactory);
 
     // assertions
     verify(syncerFactory, times(1)).sync(new String[] {"taxCategories"}, null, true, false, null);
-    verify(sourceClient, times(1)).taxCategories().get().execute();
+    verify(sourceClient, times(1)).taxCategories();
   }
 
   @Test
   void run_AsCustomerDeltaSync_ShouldBuildSyncerAndExecuteSync() {
     // preparation
+    stubClientsCustomObjectService(targetClient, ZonedDateTime.now());
     final SyncerFactory syncerFactory =
         spy(SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock()));
-
-    stubClientsCustomObjectService(targetClient, ZonedDateTime.now());
 
     // test
     CliRunner.of().run(new String[] {"-s", "customers"}, syncerFactory);
 
     // assertions
     verify(syncerFactory, times(1)).sync(new String[] {"customers"}, null, false, false, null);
-    verify(sourceClient, times(1)).customers().get().execute();
+    verify(sourceClient, times(1)).customers();
   }
 
   @Test
   void run_AsCustomerFullSync_ShouldBuildSyncerAndExecuteSync() {
     // preparation
-    when(apiHttpResponse.getBody()).thenReturn(emptyList());
-    when(sourceClient.customers().get().execute())
-        .thenReturn(CompletableFuture.completedFuture(apiHttpResponse));
-
+    stubClientsCustomObjectService(targetClient, ZonedDateTime.now());
     final SyncerFactory syncerFactory =
         spy(SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock()));
-
-    stubClientsCustomObjectService(targetClient, ZonedDateTime.now());
 
     // test
     CliRunner.of().run(new String[] {"-s", "customers", "-f"}, syncerFactory);
 
     // assertions
     verify(syncerFactory, times(1)).sync(new String[] {"customers"}, null, true, false, null);
-    verify(sourceClient, times(1)).customers().get().execute();
+    verify(sourceClient, times(1)).customers();
   }
 
   @Test
   void run_AsShoppingListDeltaSync_ShouldBuildSyncerAndExecuteSync() {
     // preparation
+    stubClientsCustomObjectService(targetClient, ZonedDateTime.now());
     final SyncerFactory syncerFactory =
         spy(SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock()));
-
-    stubClientsCustomObjectService(targetClient, ZonedDateTime.now());
 
     // test
     CliRunner.of().run(new String[] {"-s", "shoppingLists"}, syncerFactory);
 
     // assertions
     verify(syncerFactory, times(1)).sync(new String[] {"shoppingLists"}, null, false, false, null);
-    verify(sourceClient, times(1)).shoppingLists().get().execute();
+    verify(sourceClient, times(1)).shoppingLists();
   }
 
   @Test
   void run_AsShoppingListFullSync_ShouldBuildSyncerAndExecuteSync() {
     // preparation
-    when(apiHttpResponse.getBody()).thenReturn(emptyList());
-    when(sourceClient.shoppingLists().get().execute())
-        .thenReturn(CompletableFuture.completedFuture(apiHttpResponse));
+    stubClientsCustomObjectService(targetClient, ZonedDateTime.now());
 
     final SyncerFactory syncerFactory =
         spy(SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock()));
-
-    stubClientsCustomObjectService(targetClient, ZonedDateTime.now());
 
     // test
     CliRunner.of().run(new String[] {"-s", "shoppingLists", "-f"}, syncerFactory);
 
     // assertions
     verify(syncerFactory, times(1)).sync(new String[] {"shoppingLists"}, null, true, false, null);
-    verify(sourceClient, times(1)).shoppingLists().get().execute();
+    verify(sourceClient, times(1)).shoppingLists();
   }
 
   @Test
   void run_AsCustomObjectDeltaSync_ShouldBuildSyncerAndExecuteSync() {
     // preparation
-    when(apiHttpResponse.getBody()).thenReturn(emptyList());
-    when(sourceClient.customObjects().get().execute())
-        .thenReturn(CompletableFuture.completedFuture(apiHttpResponse));
+    stubClientsCustomObjectService(targetClient, ZonedDateTime.now());
 
     final SyncerFactory syncerFactory =
         spy(SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock()));
-
-    stubClientsCustomObjectService(targetClient, ZonedDateTime.now());
 
     // test
     CliRunner.of().run(new String[] {"-s", "customObjects"}, syncerFactory);
 
     // assertions
     verify(syncerFactory, times(1)).sync(new String[] {"customObjects"}, null, false, false, null);
-    verify(sourceClient, times(1)).customObjects().get().execute();
+    verify(sourceClient, times(1)).customObjects();
   }
 
   @Test
   void run_AsCustomObjectFullSync_ShouldBuildSyncerAndExecuteSync() {
     // preparation
-    when(apiHttpResponse.getBody()).thenReturn(emptyList());
-    when(sourceClient.customObjects().get().execute())
-        .thenReturn(CompletableFuture.completedFuture(apiHttpResponse));
-
+    stubClientsCustomObjectService(targetClient, ZonedDateTime.now());
     final SyncerFactory syncerFactory =
         spy(SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock()));
-
-    stubClientsCustomObjectService(targetClient, ZonedDateTime.now());
 
     // test
     CliRunner.of().run(new String[] {"-s", "customObjects", "-f"}, syncerFactory);
 
     // assertions
     verify(syncerFactory, times(1)).sync(new String[] {"customObjects"}, null, true, false, null);
-    verify(sourceClient, times(1)).customObjects().get().execute();
+    verify(sourceClient, times(1)).customObjects();
   }
 
   @Test
   void run_AsCartDiscountFullSync_ShouldBuildSyncerAndExecuteSync() {
     // preparation
-    when(apiHttpResponse.getBody()).thenReturn(emptyList());
-    when(sourceClient.cartDiscounts().get().execute())
-        .thenReturn(CompletableFuture.completedFuture(apiHttpResponse));
-
     final SyncerFactory syncerFactory =
         spy(SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock()));
 
@@ -592,60 +581,46 @@ class CliRunnerTest {
 
     // assertions
     verify(syncerFactory, times(1)).sync(new String[] {"cartDiscounts"}, null, true, false, null);
-    verify(sourceClient, times(1)).cartDiscounts().get().execute();
+    verify(sourceClient, times(1)).cartDiscounts();
   }
 
   @Test
   void run_AsStateFullSync_ShouldBuildSyncerAndExecuteSync() {
     // preparation
-    when(apiHttpResponse.getBody()).thenReturn(emptyList());
-    when(sourceClient.states().get().execute())
-        .thenReturn(CompletableFuture.completedFuture(apiHttpResponse));
-
+    stubClientsCustomObjectService(targetClient, ZonedDateTime.now());
     final SyncerFactory syncerFactory =
         spy(SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock()));
-
-    stubClientsCustomObjectService(targetClient, ZonedDateTime.now());
 
     // test
     CliRunner.of().run(new String[] {"-s", "states", "-f"}, syncerFactory);
 
     // assertions
     verify(syncerFactory, times(1)).sync(new String[] {"states"}, null, true, false, null);
-    verify(sourceClient, times(1)).states().get().execute();
+    verify(sourceClient, times(1)).states();
   }
 
   @Test
   void run_WithSyncAsLongArgument_ShouldBuildSyncerAndExecuteSync() {
     // preparation
-    when(apiHttpResponse.getBody()).thenReturn(emptyList());
-    when(sourceClient.productProjections().get().execute())
-        .thenReturn(CompletableFuture.completedFuture(apiHttpResponse));
-
+    stubClientsCustomObjectService(targetClient, ZonedDateTime.now());
     final SyncerFactory syncerFactory =
         spy(SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock()));
-
-    stubClientsCustomObjectService(targetClient, ZonedDateTime.now());
 
     // test
     CliRunner.of().run(new String[] {"--sync", "products"}, syncerFactory);
 
     // assertions
     verify(syncerFactory, times(1)).sync(new String[] {"products"}, null, false, false, null);
-    verify(sourceClient, times(1)).productProjections().get().execute();
+    verify(sourceClient, times(1)).productProjections();
   }
 
   @Test
   void run_WithRunnerName_ShouldProcessSyncOption() {
     // preparation
-    when(apiHttpResponse.getBody()).thenReturn(emptyList());
-    when(sourceClient.productProjections().get().execute())
-        .thenReturn(CompletableFuture.completedFuture(apiHttpResponse));
+    stubClientsCustomObjectService(targetClient, ZonedDateTime.now());
 
     final SyncerFactory syncerFactory =
         spy(SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock()));
-
-    stubClientsCustomObjectService(targetClient, ZonedDateTime.now());
 
     // test
     CliRunner.of().run(new String[] {"--sync", "products", "-r", "Runner123"}, syncerFactory);
@@ -653,20 +628,16 @@ class CliRunnerTest {
     // assertions
     verify(syncerFactory, times(1))
         .sync(new String[] {"products"}, "Runner123", false, false, null);
-    verify(sourceClient, times(1)).productProjections().get().execute();
+    verify(sourceClient, times(1)).productProjections();
   }
 
   @Test
   void run_WithRunnerNameLong_ShouldProcessSyncOption() {
     // preparation
-    when(apiHttpResponse.getBody()).thenReturn(emptyList());
-    when(sourceClient.productProjections().get().execute())
-        .thenReturn(CompletableFuture.completedFuture(apiHttpResponse));
+    stubClientsCustomObjectService(targetClient, ZonedDateTime.now());
 
     final SyncerFactory syncerFactory =
         spy(SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock()));
-
-    stubClientsCustomObjectService(targetClient, ZonedDateTime.now());
 
     // test
     CliRunner.of()
@@ -676,7 +647,7 @@ class CliRunnerTest {
 
     // assertions
     verify(syncerFactory, times(1)).sync(new String[] {"products"}, "Runner123", true, false, null);
-    verify(sourceClient, times(1)).productProjections().get().execute();
+    verify(sourceClient, times(1)).productProjections();
   }
 
   @Test
@@ -740,30 +711,6 @@ class CliRunnerTest {
   @Test
   void run_WithSyncAsArgumentWithAllArg_ShouldExecuteAllSyncers() {
     // preparation
-    when(apiHttpResponse.getBody()).thenReturn(emptyList());
-    when(sourceClient.productTypes().get().execute())
-        .thenReturn(CompletableFuture.completedFuture(apiHttpResponse));
-    when(sourceClient.types().get().execute())
-        .thenReturn(CompletableFuture.completedFuture(apiHttpResponse));
-    when(sourceClient.categories().get().execute())
-        .thenReturn(CompletableFuture.completedFuture(apiHttpResponse));
-    when(sourceClient.inventory().get().execute())
-        .thenReturn(CompletableFuture.completedFuture(apiHttpResponse));
-    when(sourceClient.productProjections().get().execute())
-        .thenReturn(CompletableFuture.completedFuture(apiHttpResponse));
-    when(sourceClient.cartDiscounts().get().execute())
-        .thenReturn(CompletableFuture.completedFuture(apiHttpResponse));
-    when(sourceClient.states().get().execute())
-        .thenReturn(CompletableFuture.completedFuture(apiHttpResponse));
-    when(sourceClient.taxCategories().get().execute())
-        .thenReturn(CompletableFuture.completedFuture(apiHttpResponse));
-    when(sourceClient.customObjects().get().execute())
-        .thenReturn(CompletableFuture.completedFuture(apiHttpResponse));
-    when(sourceClient.customers().get().execute())
-        .thenReturn(CompletableFuture.completedFuture(apiHttpResponse));
-    when(sourceClient.shoppingLists().get().execute())
-        .thenReturn(CompletableFuture.completedFuture(apiHttpResponse));
-
     stubClientsCustomObjectService(targetClient, ZonedDateTime.now());
 
     final SyncerFactory syncerFactory =
@@ -774,46 +721,22 @@ class CliRunnerTest {
 
     // assertions
     verify(syncerFactory, times(1)).sync(new String[] {"all"}, null, false, false, null);
-    verify(sourceClient, times(1)).productTypes().get().execute();
-    verify(sourceClient, times(1)).types().get().execute();
-    verify(sourceClient, times(1)).taxCategories().get().execute();
-    verify(sourceClient, times(1)).categories().get().execute();
-    verify(sourceClient, times(1)).productProjections().get().execute();
-    verify(sourceClient, times(1)).inventory().get().execute();
-    verify(sourceClient, times(1)).cartDiscounts().get().execute();
-    verify(sourceClient, times(1)).states().get().execute();
-    verify(sourceClient, times(1)).customObjects().get().execute();
-    verify(sourceClient, times(1)).customers().get().execute();
-    verify(sourceClient, times(1)).shoppingLists().get().execute();
+    verify(sourceClient, times(1)).productTypes();
+    verify(sourceClient, times(1)).types();
+    verify(sourceClient, times(1)).taxCategories();
+    verify(sourceClient, times(1)).categories();
+    verify(sourceClient, times(1)).productProjections();
+    verify(sourceClient, times(1)).inventory();
+    verify(sourceClient, times(1)).cartDiscounts();
+    verify(sourceClient, times(1)).states();
+    verify(sourceClient, times(1)).customObjects();
+    verify(sourceClient, times(1)).customers();
+    verify(sourceClient, times(1)).shoppingLists();
   }
 
   @Test
   void run_WithSyncAsArgumentWithAllArgWithRunnerName_ShouldExecuteAllSyncers() {
     // preparation
-    when(apiHttpResponse.getBody()).thenReturn(emptyList());
-    when(sourceClient.productTypes().get().execute())
-        .thenReturn(CompletableFuture.completedFuture(apiHttpResponse));
-    when(sourceClient.types().get().execute())
-        .thenReturn(CompletableFuture.completedFuture(apiHttpResponse));
-    when(sourceClient.categories().get().execute())
-        .thenReturn(CompletableFuture.completedFuture(apiHttpResponse));
-    when(sourceClient.inventory().get().execute())
-        .thenReturn(CompletableFuture.completedFuture(apiHttpResponse));
-    when(sourceClient.productProjections().get().execute())
-        .thenReturn(CompletableFuture.completedFuture(apiHttpResponse));
-    when(sourceClient.cartDiscounts().get().execute())
-        .thenReturn(CompletableFuture.completedFuture(apiHttpResponse));
-    when(sourceClient.states().get().execute())
-        .thenReturn(CompletableFuture.completedFuture(apiHttpResponse));
-    when(sourceClient.taxCategories().get().execute())
-        .thenReturn(CompletableFuture.completedFuture(apiHttpResponse));
-    when(sourceClient.customObjects().get().execute())
-        .thenReturn(CompletableFuture.completedFuture(apiHttpResponse));
-    when(sourceClient.customers().get().execute())
-        .thenReturn(CompletableFuture.completedFuture(apiHttpResponse));
-    when(sourceClient.shoppingLists().get().execute())
-        .thenReturn(CompletableFuture.completedFuture(apiHttpResponse));
-
     stubClientsCustomObjectService(targetClient, ZonedDateTime.now());
 
     final SyncerFactory syncerFactory =
@@ -824,45 +747,22 @@ class CliRunnerTest {
 
     // assertions
     verify(syncerFactory, times(1)).sync(new String[] {"all"}, "myRunner", false, false, null);
-    verify(sourceClient, times(1)).productTypes().get().execute();
-    verify(sourceClient, times(1)).types().get().execute();
-    verify(sourceClient, times(1)).taxCategories().get().execute();
-    verify(sourceClient, times(1)).categories().get().execute();
-    verify(sourceClient, times(1)).productProjections().get().execute();
-    verify(sourceClient, times(1)).inventory().get().execute();
-    verify(sourceClient, times(1)).cartDiscounts().get().execute();
-    verify(sourceClient, times(1)).states().get().execute();
-    verify(sourceClient, times(1)).customObjects().get().execute();
-    verify(sourceClient, times(1)).customers().get().execute();
-    verify(sourceClient, times(1)).shoppingLists().get().execute();
+    verify(sourceClient, times(1)).productTypes();
+    verify(sourceClient, times(1)).types();
+    verify(sourceClient, times(1)).taxCategories();
+    verify(sourceClient, times(1)).categories();
+    verify(sourceClient, times(1)).productProjections();
+    verify(sourceClient, times(1)).inventory();
+    verify(sourceClient, times(1)).cartDiscounts();
+    verify(sourceClient, times(1)).states();
+    verify(sourceClient, times(1)).customObjects();
+    verify(sourceClient, times(1)).customers();
+    verify(sourceClient, times(1)).shoppingLists();
   }
 
   @Test
   void run_WithSyncAsArgumentWithAllArg_ShouldExecuteAllSyncersInCorrectOrder() {
     // preparation
-    when(sourceClient.productTypes().get().execute())
-        .thenReturn(CompletableFuture.completedFuture(apiHttpResponse));
-    when(sourceClient.types().get().execute())
-        .thenReturn(CompletableFuture.completedFuture(apiHttpResponse));
-    when(sourceClient.categories().get().execute())
-        .thenReturn(CompletableFuture.completedFuture(apiHttpResponse));
-    when(sourceClient.inventory().get().execute())
-        .thenReturn(CompletableFuture.completedFuture(apiHttpResponse));
-    when(sourceClient.productProjections().get().execute())
-        .thenReturn(CompletableFuture.completedFuture(apiHttpResponse));
-    when(sourceClient.cartDiscounts().get().execute())
-        .thenReturn(CompletableFuture.completedFuture(apiHttpResponse));
-    when(sourceClient.states().get().execute())
-        .thenReturn(CompletableFuture.completedFuture(apiHttpResponse));
-    when(sourceClient.taxCategories().get().execute())
-        .thenReturn(CompletableFuture.completedFuture(apiHttpResponse));
-    when(sourceClient.customObjects().get().execute())
-        .thenReturn(CompletableFuture.completedFuture(apiHttpResponse));
-    when(sourceClient.customers().get().execute())
-        .thenReturn(CompletableFuture.completedFuture(apiHttpResponse));
-    when(sourceClient.shoppingLists().get().execute())
-        .thenReturn(CompletableFuture.completedFuture(apiHttpResponse));
-
     stubClientsCustomObjectService(targetClient, ZonedDateTime.now());
 
     final SyncerFactory syncerFactory =
@@ -879,20 +779,20 @@ class CliRunnerTest {
     // Resources are grouped based on their references count.
     // Each group will run sequentially but the sync within the group runs in parallel.
     // So verifying the order of one resource in each group.
-    inOrder.verify(sourceClient).productTypes().get().execute();
-    verify(sourceClient, times(1)).types().get().execute();
-    verify(sourceClient, times(1)).customObjects().get().execute();
-    verify(sourceClient, times(1)).states().get().execute();
-    verify(sourceClient, times(1)).taxCategories().get().execute();
+    inOrder.verify(sourceClient).productTypes();
+    verify(sourceClient, times(1)).types();
+    verify(sourceClient, times(1)).customObjects();
+    verify(sourceClient, times(1)).states();
+    verify(sourceClient, times(1)).taxCategories();
 
-    inOrder.verify(sourceClient).inventory().get().execute();
-    verify(sourceClient, times(1)).categories().get().execute();
-    verify(sourceClient, times(1)).cartDiscounts().get().execute();
-    verify(sourceClient, times(1)).customers().get().execute();
+    inOrder.verify(sourceClient).inventory();
+    verify(sourceClient, times(1)).categories();
+    verify(sourceClient, times(1)).cartDiscounts();
+    verify(sourceClient, times(1)).customers();
 
-    inOrder.verify(sourceClient).productProjections().get().execute();
+    inOrder.verify(sourceClient).productProjections();
 
-    inOrder.verify(sourceClient).shoppingLists().get().execute();
+    inOrder.verify(sourceClient).shoppingLists();
 
     verify(sourceClient, times(1)).close();
     //    verify(sourceClient, times(11)).getConfig
