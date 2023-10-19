@@ -29,6 +29,7 @@ import com.fasterxml.jackson.databind.ObjectWriter;
 import io.vrap.rmf.base.client.ApiHttpMethod;
 import io.vrap.rmf.base.client.ApiHttpResponse;
 import io.vrap.rmf.base.client.error.BadGatewayException;
+import io.vrap.rmf.base.client.utils.json.JsonUtils;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -209,6 +210,12 @@ public final class TestUtils {
     final InputStream resourceAsStream =
         Thread.currentThread().getContextClassLoader().getResourceAsStream(resourcePath);
     return fromInputStream(resourceAsStream, objectType);
+  }
+
+  public static <T> T readObject(final String jsonString, final Class<T> objectType)
+      throws JsonProcessingException {
+    final ObjectMapper objectMapper = JsonUtils.getConfiguredObjectMapper();
+    return objectMapper.readValue(jsonString, objectType);
   }
 
   public static String readStringFromFile(final String resourcePath) {
