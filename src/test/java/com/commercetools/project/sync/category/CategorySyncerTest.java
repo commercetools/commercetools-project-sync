@@ -86,11 +86,11 @@ class CategorySyncerTest {
     final String jsonStringCustomTypes =
         "{\"data\":{\"typeDefinitions\":{\"results\":[{\"id\":\"53c4a8b4-754f-4b95-b6f2-3e1e70e3d0c3\",\"key\":\"cat1\"}]}}}";
 
-    final GraphQLResponse categoriesResult =
+    final GraphQLResponse customTypesResult =
         readObject(jsonStringCustomTypes, GraphQLResponse.class);
 
     final ApiHttpResponse<GraphQLResponse> response = mock(ApiHttpResponse.class);
-    when(response.getBody()).thenReturn(categoriesResult);
+    when(response.getBody()).thenReturn(customTypesResult);
 
     final ByProjectKeyGraphqlRequestBuilder byProjectKeyGraphqlRequestBuilder = mock();
     when(sourceClient.graphql()).thenReturn(byProjectKeyGraphqlRequestBuilder);
