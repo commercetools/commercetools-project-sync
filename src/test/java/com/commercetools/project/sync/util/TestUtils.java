@@ -12,6 +12,8 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import com.commercetools.api.client.ByProjectKeyCustomObjectsPost;
+import com.commercetools.api.client.ByProjectKeyGraphqlPost;
+import com.commercetools.api.client.ByProjectKeyGraphqlRequestBuilder;
 import com.commercetools.api.client.ProjectApiRoot;
 import com.commercetools.api.defaultconfig.ApiRootBuilder;
 import com.commercetools.api.models.custom_object.CustomObject;
@@ -290,14 +292,28 @@ public final class TestUtils {
     return clock;
   }
 
-  public static void mockResourceIdsGraphQlRequest(ProjectApiRoot client, String id, String key) {
+  public static void mockResourceIdsGraphQlRequest(
+      ProjectApiRoot client, String resource, String id, String key) {
     final String jsonResponseString =
-        "{\"results\":[{\"id\":\"" + id + "\"," + "\"key\":\"" + key + "\"}]}";
+        "{\"data\":{\""
+            + resource
+            + "\":{\"results\":[{\"id\":\""
+            + id
+            + "\","
+            + "\"key\":\""
+            + key
+            + "\"}]}}}";
     final GraphQLResponse result = GraphQLResponseBuilder.of().data(jsonResponseString).build();
 
-    final ApiHttpResponse apiHttpResponse = mock(ApiHttpResponse.class);
+    final ApiHttpResponse<GraphQLResponse> apiHttpResponse = mock(ApiHttpResponse.class);
+
     when(apiHttpResponse.getBody()).thenReturn(result);
-    when(client.graphql().post(any(GraphQLRequest.class)).execute())
+    final ByProjectKeyGraphqlRequestBuilder byProjectKeyGraphqlRequestBuilder = mock();
+    when(client.graphql()).thenReturn(byProjectKeyGraphqlRequestBuilder);
+    final ByProjectKeyGraphqlPost byProjectKeyGraphqlPost = mock();
+    when(byProjectKeyGraphqlRequestBuilder.post(any(GraphQLRequest.class)))
+        .thenReturn(byProjectKeyGraphqlPost);
+    when(byProjectKeyGraphqlPost.execute())
         .thenReturn(CompletableFuture.completedFuture(apiHttpResponse));
   }
 
