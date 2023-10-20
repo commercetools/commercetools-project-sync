@@ -130,7 +130,7 @@ class InventoryEntrySyncerTest {
 
   @Test
   @Disabled("https://commercetools.atlassian.net/browse/DEVX-275")
-  void syncWithError_ShouldCallErrorCallback() {
+  void syncWithError_ShouldCallErrorCallback() throws JsonProcessingException {
     // preparation: inventory entry with no key is synced
     final ProjectApiRoot sourceClient = mock(ProjectApiRoot.class);
     final ProjectApiRoot targetClient = mock(ProjectApiRoot.class);

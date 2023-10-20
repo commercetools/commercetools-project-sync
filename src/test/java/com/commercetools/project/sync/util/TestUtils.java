@@ -22,7 +22,6 @@ import com.commercetools.api.models.error.ErrorResponse;
 import com.commercetools.api.models.error.ErrorResponseBuilder;
 import com.commercetools.api.models.graph_ql.GraphQLRequest;
 import com.commercetools.api.models.graph_ql.GraphQLResponse;
-import com.commercetools.api.models.graph_ql.GraphQLResponseBuilder;
 import com.commercetools.project.sync.model.response.LastSyncCustomObject;
 import com.commercetools.sync.products.helpers.ProductSyncStatistics;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -293,7 +292,8 @@ public final class TestUtils {
   }
 
   public static void mockResourceIdsGraphQlRequest(
-      ProjectApiRoot client, String resource, String id, String key) {
+      ProjectApiRoot client, String resource, String id, String key)
+      throws JsonProcessingException {
     final String jsonResponseString =
         "{\"data\":{\""
             + resource
@@ -303,7 +303,7 @@ public final class TestUtils {
             + "\"key\":\""
             + key
             + "\"}]}}}";
-    final GraphQLResponse result = GraphQLResponseBuilder.of().data(jsonResponseString).build();
+    final GraphQLResponse result = readObject(jsonResponseString, GraphQLResponse.class);
 
     final ApiHttpResponse<GraphQLResponse> apiHttpResponse = mock(ApiHttpResponse.class);
 

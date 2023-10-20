@@ -13,15 +13,11 @@ import com.commercetools.api.client.ByProjectKeyCategoriesGet;
 import com.commercetools.api.client.ByProjectKeyCategoriesKeyByKeyGet;
 import com.commercetools.api.client.ByProjectKeyCategoriesKeyByKeyRequestBuilder;
 import com.commercetools.api.client.ByProjectKeyCategoriesRequestBuilder;
-import com.commercetools.api.client.ByProjectKeyGraphqlPost;
-import com.commercetools.api.client.ByProjectKeyGraphqlRequestBuilder;
 import com.commercetools.api.client.ProjectApiRoot;
 import com.commercetools.api.models.category.Category;
 import com.commercetools.api.models.category.CategoryDraft;
 import com.commercetools.api.models.category.CategoryPagedQueryResponse;
 import com.commercetools.api.models.category.CategoryPagedQueryResponseBuilder;
-import com.commercetools.api.models.graph_ql.GraphQLRequest;
-import com.commercetools.api.models.graph_ql.GraphQLResponse;
 import com.commercetools.sync.categories.CategorySync;
 import com.commercetools.sync.commons.utils.CaffeineReferenceIdToKeyCacheImpl;
 import com.commercetools.sync.commons.utils.ReferenceIdToKeyCache;
@@ -83,21 +79,8 @@ class CategorySyncerTest {
             .map(category -> category.getCustom().getType().getId())
             .collect(Collectors.toList());
 
-    final String jsonStringCustomTypes =
-        "{\"data\":{\"typeDefinitions\":{\"results\":[{\"id\":\"53c4a8b4-754f-4b95-b6f2-3e1e70e3d0c3\",\"key\":\"cat1\"}]}}}";
-
-    final GraphQLResponse customTypesResult =
-        readObject(jsonStringCustomTypes, GraphQLResponse.class);
-
-    final ApiHttpResponse<GraphQLResponse> response = mock(ApiHttpResponse.class);
-    when(response.getBody()).thenReturn(customTypesResult);
-
-    final ByProjectKeyGraphqlRequestBuilder byProjectKeyGraphqlRequestBuilder = mock();
-    when(sourceClient.graphql()).thenReturn(byProjectKeyGraphqlRequestBuilder);
-    final ByProjectKeyGraphqlPost byProjectKeyGraphqlPost = mock();
-    when(byProjectKeyGraphqlRequestBuilder.post(any(GraphQLRequest.class)))
-        .thenReturn(byProjectKeyGraphqlPost);
-    when(byProjectKeyGraphqlPost.execute()).thenReturn(CompletableFuture.completedFuture(response));
+    mockResourceIdsGraphQlRequest(
+        sourceClient, "typeDefinitions", "53c4a8b4-754f-4b95-b6f2-3e1e70e3d0c3", "cat1");
 
     // test
     final CompletionStage<List<CategoryDraft>> draftsFromPageStage =
@@ -229,22 +212,8 @@ class CategorySyncerTest {
     when(byProjectKeyCategoriesGetTarget.execute())
         .thenReturn(CompletableFuture.completedFuture(targetResponse));
 
-    final String jsonStringCustomTypes =
-        "{\"data\":{\"categories\":{\"results\":[{\"id\":\"ba81a6da-cf83-435b-a89e-2afab579846f\",\"key\":\"categoryKey2\"}]}}}";
-
-    final GraphQLResponse customTypesResult =
-        readObject(jsonStringCustomTypes, GraphQLResponse.class);
-
-    final ApiHttpResponse<GraphQLResponse> graphQLResponse = mock(ApiHttpResponse.class);
-    when(graphQLResponse.getBody()).thenReturn(customTypesResult);
-
-    final ByProjectKeyGraphqlRequestBuilder byProjectKeyGraphqlRequestBuilder = mock();
-    when(targetClient.graphql()).thenReturn(byProjectKeyGraphqlRequestBuilder);
-    final ByProjectKeyGraphqlPost byProjectKeyGraphqlPost = mock();
-    when(byProjectKeyGraphqlRequestBuilder.post(any(GraphQLRequest.class)))
-        .thenReturn(byProjectKeyGraphqlPost);
-    when(byProjectKeyGraphqlPost.execute())
-        .thenReturn(CompletableFuture.completedFuture(graphQLResponse));
+    mockResourceIdsGraphQlRequest(
+        targetClient, "categories", "ba81a6da-cf83-435b-a89e-2afab579846f", "categoryKey2");
 
     // test
     final CategorySyncer categorySyncer =
