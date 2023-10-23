@@ -243,7 +243,7 @@ public final class TestUtils {
 
   public static ProjectApiRoot withTestClient(
       final String projectKey,
-      TriFunction<String, ApiHttpMethod, String, CompletableFuture<ApiHttpResponse<byte[]>>> fn) {
+      final TriFunction<String, ApiHttpMethod, String, CompletableFuture<ApiHttpResponse<byte[]>>> fn) {
     return ApiRootBuilder.of(
             request -> {
               final String uri = request.getUri() != null ? request.getUri().toString() : "";
