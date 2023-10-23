@@ -41,8 +41,6 @@ import javax.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-// This class compiles but not tested yet
-// TODO: Test class and adjust logic if needed
 public final class ProductSyncer
     extends Syncer<
         ProductProjection,
@@ -184,16 +182,16 @@ public final class ProductSyncer
   @Nonnull
   @Override
   protected ByProjectKeyProductProjectionsGet getQuery() {
-    final ByProjectKeyProductProjectionsGet productProjectionsGet =
+    ByProjectKeyProductProjectionsGet productProjectionsGet =
         getSourceClient().productProjections().get().addStaged(true);
     if (productSyncCustomRequest == null) {
       return productProjectionsGet;
     }
     if (null != productSyncCustomRequest.getLimit()) {
-      productProjectionsGet.withLimit(productSyncCustomRequest.getLimit());
+      productProjectionsGet = productProjectionsGet.withLimit(productSyncCustomRequest.getLimit());
     }
     if (null != productSyncCustomRequest.getWhere()) {
-      productProjectionsGet.withWhere(productSyncCustomRequest.getWhere());
+      productProjectionsGet = productProjectionsGet.withWhere(productSyncCustomRequest.getWhere());
     }
 
     return productProjectionsGet;
