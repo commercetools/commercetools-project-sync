@@ -29,9 +29,9 @@ import com.fasterxml.jackson.databind.ObjectWriter;
 import io.vrap.rmf.base.client.ApiHttpMethod;
 import io.vrap.rmf.base.client.ApiHttpResponse;
 import io.vrap.rmf.base.client.error.BadGatewayException;
-import io.vrap.rmf.base.client.utils.json.JsonUtils;
 import java.io.IOException;
 import java.io.InputStream;
+import io.vrap.rmf.base.client.utils.json.JsonUtils;
 import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 import java.time.ZonedDateTime;
@@ -250,7 +250,7 @@ public final class TestUtils {
 
   public static ProjectApiRoot withTestClient(
       final String projectKey,
-      TriFunction<String, ApiHttpMethod, String, CompletableFuture<ApiHttpResponse<byte[]>>> fn) {
+      final TriFunction<String, ApiHttpMethod, String, CompletableFuture<ApiHttpResponse<byte[]>>> fn) {
     return ApiRootBuilder.of(
             request -> {
               final String uri = request.getUri() != null ? request.getUri().toString() : "";

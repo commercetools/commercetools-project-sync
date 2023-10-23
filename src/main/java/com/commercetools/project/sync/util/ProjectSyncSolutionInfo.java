@@ -1,6 +1,6 @@
 package com.commercetools.project.sync.util;
 
-import io.sphere.sdk.client.SolutionInfo;
+import io.vrap.rmf.base.client.SolutionInfo;
 
 public final class ProjectSyncSolutionInfo extends SolutionInfo {
   private static final String LIB_NAME = "commercetools-project-sync";

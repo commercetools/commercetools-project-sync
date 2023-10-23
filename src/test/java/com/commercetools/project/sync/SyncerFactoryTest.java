@@ -813,6 +813,7 @@ class SyncerFactoryTest {
   @SuppressWarnings("unchecked")
   void sync_AsTypesDeltaSync_ShouldBuildSyncerAndExecuteSync() {
     // preparation
+    final ZonedDateTime currentCtpTimestamp = ZonedDateTime.now();
     stubClientsCustomObjectService(targetClient, ZonedDateTime.now());
 
     final SyncerFactory syncerFactory =
