@@ -302,7 +302,8 @@ public final class TestUtils {
             + "\"key\":\""
             + key
             + "\"}]}}}";
-    final GraphQLResponse result = JsonUtils.fromJsonString(jsonResponseString, GraphQLResponse.class);
+    final GraphQLResponse result =
+        JsonUtils.fromJsonString(jsonResponseString, GraphQLResponse.class);
 
     final ApiHttpResponse<GraphQLResponse> apiHttpResponse = mock(ApiHttpResponse.class);
 
