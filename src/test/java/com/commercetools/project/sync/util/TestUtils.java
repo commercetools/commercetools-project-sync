@@ -292,8 +292,7 @@ public final class TestUtils {
   }
 
   public static void mockResourceIdsGraphQlRequest(
-      ProjectApiRoot client, String resource, String id, String key)
-      throws JsonProcessingException {
+      ProjectApiRoot client, String resource, String id, String key) {
     final String jsonResponseString =
         "{\"data\":{\""
             + resource
@@ -303,7 +302,7 @@ public final class TestUtils {
             + "\"key\":\""
             + key
             + "\"}]}}}";
-    final GraphQLResponse result = readObject(jsonResponseString, GraphQLResponse.class);
+    final GraphQLResponse result = JsonUtils.fromJsonString(jsonResponseString, GraphQLResponse.class);
 
     final ApiHttpResponse<GraphQLResponse> apiHttpResponse = mock(ApiHttpResponse.class);
 
