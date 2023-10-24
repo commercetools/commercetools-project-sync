@@ -8,6 +8,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import com.commercetools.api.client.ByProjectKeyCustomObjectsPost;
@@ -201,7 +202,8 @@ public final class TestUtils {
     verify(client, times(1)).close();
     // Verify config is accessed for the success message after sync:
     // " example: Syncing products from CTP project with key 'x' to project with key 'y' is done","
-    verify(client.getProjectKey(), times(numberOfGetConfigInvocations));
+    verify(client, times(numberOfGetConfigInvocations)).getProjectKey();
+    verifyNoMoreInteractions(client);
   }
 
   public static <T> T readObjectFromResource(final String resourcePath, final Class<T> objectType) {
