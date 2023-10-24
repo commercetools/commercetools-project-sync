@@ -43,7 +43,8 @@ public final class CtpClientUtils {
         properties = loadFromEnvVars(propertiesPrefix);
       }
       if (properties.isEmpty()) {
-        throw new InvalidPropertiesFormatException("Please provide CTP credentials for running project sync.");
+        throw new InvalidPropertiesFormatException(
+            "Please provide CTP credentials for running project sync.");
       }
 
       final String projectKey =
@@ -52,7 +53,7 @@ public final class CtpClientUtils {
           extract(properties, propertiesPrefix, PROPERTIES_KEY_CLIENT_ID_SUFFIX);
       final String clientSecret =
           extract(properties, propertiesPrefix, PROPERTIES_KEY_CLIENT_SECRET_SUFFIX);
-       final String apiUrl =
+      final String apiUrl =
           extract(
               properties,
               propertiesPrefix,
