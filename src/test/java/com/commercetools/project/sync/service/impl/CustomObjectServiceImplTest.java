@@ -34,6 +34,7 @@ import java.util.concurrent.ExecutionException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
@@ -122,6 +123,7 @@ class CustomObjectServiceImplTest {
   }
 
   @Test
+  @Disabled("https://commercetools.atlassian.net/browse/DEVX-272")
   void
       getLastSyncCustomObject_OnSuccessfulQueryWithResults_ShouldCompleteWithLastSyncCustomObject() {
     // preparation
