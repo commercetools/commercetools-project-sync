@@ -102,7 +102,6 @@ class CategorySyncerTest {
   void syncWithError_ShouldCallErrorCallback() {
     // preparation: category with no key is synced
     final ProjectApiRoot sourceClient = mock(ProjectApiRoot.class);
-    final ProjectApiRoot targetClient = mock(ProjectApiRoot.class);
     final ByProjectKeyCategoriesRequestBuilder byProjectKeyCategoriesRequestBuilder = mock();
     when(sourceClient.categories()).thenReturn(byProjectKeyCategoriesRequestBuilder);
     final ByProjectKeyCategoriesGet byProjectKeyCategoriesGet = mock();
@@ -127,7 +126,7 @@ class CategorySyncerTest {
 
     // test
     final CategorySyncer categorySyncer =
-        CategorySyncer.of(sourceClient, targetClient, mock(Clock.class));
+        CategorySyncer.of(sourceClient, mock(ProjectApiRoot.class), mock(Clock.class));
     categorySyncer.sync(null, true).toCompletableFuture().join();
 
     // assertion

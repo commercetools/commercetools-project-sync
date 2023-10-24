@@ -209,8 +209,7 @@ class SyncerFactoryTest {
   @SuppressWarnings("unchecked")
   void sync_AsProductsDeltaSync_ShouldBuildSyncerAndExecuteSync() {
     // preparation
-    final ZonedDateTime currentCtpTimestamp = ZonedDateTime.now();
-    stubClientsCustomObjectService(targetClient, currentCtpTimestamp);
+    stubClientsCustomObjectService(targetClient, ZonedDateTime.now());
 
     final SyncerFactory syncerFactory =
         SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock());
@@ -265,8 +264,7 @@ class SyncerFactoryTest {
   @SuppressWarnings("unchecked")
   void sync_AsProductsFullSync_ShouldBuildSyncerAndExecuteSync() {
     // preparation
-    final ZonedDateTime currentCtpTimestamp = ZonedDateTime.now();
-    stubClientsCustomObjectService(targetClient, currentCtpTimestamp);
+    stubClientsCustomObjectService(targetClient, ZonedDateTime.now());
 
     final SyncerFactory syncerFactory =
         SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock());
@@ -704,8 +702,7 @@ class SyncerFactoryTest {
   @SuppressWarnings("unchecked")
   void sync_AsCategoriesDeltaSync_ShouldBuildSyncerAndExecuteSync() {
     // preparation
-    final ZonedDateTime currentCtpTimestamp = ZonedDateTime.now();
-    stubClientsCustomObjectService(targetClient, currentCtpTimestamp);
+    stubClientsCustomObjectService(targetClient, ZonedDateTime.now());
 
     final SyncerFactory syncerFactory =
         SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock());
@@ -757,8 +754,7 @@ class SyncerFactoryTest {
   @SuppressWarnings("unchecked")
   void sync_AsProductTypesDeltaSync_ShouldBuildSyncerAndExecuteSync() {
     // preparation
-    final ZonedDateTime currentCtpTimestamp = ZonedDateTime.now();
-    stubClientsCustomObjectService(targetClient, currentCtpTimestamp);
+    stubClientsCustomObjectService(targetClient, ZonedDateTime.now());
 
     final SyncerFactory syncerFactory =
         SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock());
