@@ -21,7 +21,6 @@ import static com.commercetools.project.sync.util.TestUtils.mockLastSyncCustomOb
 import static com.commercetools.project.sync.util.TestUtils.readObjectFromResource;
 import static com.commercetools.project.sync.util.TestUtils.readStringFromFile;
 import static com.commercetools.project.sync.util.TestUtils.stubClientsCustomObjectService;
-import static com.commercetools.project.sync.util.TestUtils.verifyInteractionsWithClientAfterSync;
 import static com.commercetools.project.sync.util.TestUtils.withTestClient;
 import static java.lang.String.format;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -210,7 +209,8 @@ class SyncerFactoryTest {
   @SuppressWarnings("unchecked")
   void sync_AsProductsDeltaSync_ShouldBuildSyncerAndExecuteSync() {
     // preparation
-    stubClientsCustomObjectService(targetClient, ZonedDateTime.now());
+    final ZonedDateTime currentCtpTimestamp = ZonedDateTime.now();
+    stubClientsCustomObjectService(targetClient, currentCtpTimestamp);
 
     final SyncerFactory syncerFactory =
         SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock());
@@ -265,7 +265,8 @@ class SyncerFactoryTest {
   @SuppressWarnings("unchecked")
   void sync_AsProductsFullSync_ShouldBuildSyncerAndExecuteSync() {
     // preparation
-    stubClientsCustomObjectService(targetClient, ZonedDateTime.now());
+    final ZonedDateTime currentCtpTimestamp = ZonedDateTime.now();
+    stubClientsCustomObjectService(targetClient, currentCtpTimestamp);
 
     final SyncerFactory syncerFactory =
         SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock());
@@ -682,9 +683,8 @@ class SyncerFactoryTest {
         format("commercetools-project-sync.%s.%s", syncRunnerName, syncModuleName);
 
     if (expectedInvocations > 0) {
-      verify(
-          client.customObjects().withContainerAndKey(container, sourceProjectKey),
-          times(expectedInvocations));
+      verify(client.customObjects(), times(expectedInvocations))
+          .withContainerAndKey(container, sourceProjectKey);
     } else {
       verifyNoInteractions(
           client.customObjects().withContainerAndKey(anyString(), anyString()).get());
@@ -704,7 +704,8 @@ class SyncerFactoryTest {
   @SuppressWarnings("unchecked")
   void sync_AsCategoriesDeltaSync_ShouldBuildSyncerAndExecuteSync() {
     // preparation
-    stubClientsCustomObjectService(targetClient, ZonedDateTime.now());
+    final ZonedDateTime currentCtpTimestamp = ZonedDateTime.now();
+    stubClientsCustomObjectService(targetClient, currentCtpTimestamp);
 
     final SyncerFactory syncerFactory =
         SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock());
@@ -756,7 +757,8 @@ class SyncerFactoryTest {
   @SuppressWarnings("unchecked")
   void sync_AsProductTypesDeltaSync_ShouldBuildSyncerAndExecuteSync() {
     // preparation
-    stubClientsCustomObjectService(targetClient, ZonedDateTime.now());
+    final ZonedDateTime currentCtpTimestamp = ZonedDateTime.now();
+    stubClientsCustomObjectService(targetClient, currentCtpTimestamp);
 
     final SyncerFactory syncerFactory =
         SyncerFactory.of(() -> sourceClient, () -> targetClient, getMockedClock());
@@ -811,6 +813,7 @@ class SyncerFactoryTest {
   @SuppressWarnings("unchecked")
   void sync_AsTypesDeltaSync_ShouldBuildSyncerAndExecuteSync() {
     // preparation
+    final ZonedDateTime currentCtpTimestamp = ZonedDateTime.now();
     stubClientsCustomObjectService(targetClient, ZonedDateTime.now());
 
     final SyncerFactory syncerFactory =
@@ -1323,5 +1326,14 @@ class SyncerFactoryTest {
         .withThrowableOfType(ExecutionException.class)
         .withCauseExactlyInstanceOf(CliException.class)
         .withMessageContaining(errorMessage);
+  }
+
+  private void verifyInteractionsWithClientAfterSync(
+      @Nonnull final ProjectApiRoot client, final int numberOfGetConfigInvocations) {
+
+    verify(client, times(1)).close();
+    // Verify config is accessed for the success message after sync:
+    // " example: Syncing products from CTP project with key 'x' to project with key 'y' is done","
+    verify(client, times(numberOfGetConfigInvocations)).getProjectKey();
   }
 }
