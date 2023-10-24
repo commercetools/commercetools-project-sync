@@ -457,6 +457,7 @@ public final class IntegrationTestUtils {
   }
 
   private static void deleteProductTypeAttributes(@Nonnull final ProjectApiRoot ctpClient) {
+    // todo: add retry
     QueryUtils.queryAll(
             ctpClient.productTypes().get(),
             productTypes -> {
