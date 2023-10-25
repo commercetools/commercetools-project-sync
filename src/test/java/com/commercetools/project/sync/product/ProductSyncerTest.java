@@ -2,6 +2,7 @@ package com.commercetools.project.sync.product;
 
 import static com.commercetools.project.sync.util.TestUtils.createBadGatewayException;
 import static com.commercetools.project.sync.util.TestUtils.getMockedClock;
+import static com.commercetools.project.sync.util.TestUtils.mockResourceIdsGraphQlRequest;
 import static com.commercetools.project.sync.util.TestUtils.readObjectFromResource;
 import static com.commercetools.project.sync.util.TestUtils.withTestClient;
 import static java.util.Collections.singletonList;
@@ -16,7 +17,6 @@ import com.commercetools.api.client.ByProjectKeyProductProjectionsGet;
 import com.commercetools.api.client.ProjectApiRoot;
 import com.commercetools.api.defaultconfig.ApiRootBuilder;
 import com.commercetools.api.models.graph_ql.GraphQLRequest;
-import com.commercetools.api.models.graph_ql.GraphQLResponse;
 import com.commercetools.api.models.product.Product;
 import com.commercetools.api.models.product.ProductDraft;
 import com.commercetools.api.models.product.ProductMixin;
@@ -205,21 +205,8 @@ class ProductSyncerTest {
             readObjectFromResource("product-key-10.json", Product.class),
             ProductProjectionType.STAGED);
 
-    final String jsonStringProductTypes =
-        "{\"data\":{\"productTypes\":{\"results\":[{\"id\":\"53c4a8b4-754f-4b95-b6f2-3e1e70e3d0d3\","
-            + "\"key\":\"prodType1\"}]}}}";
-    final GraphQLResponse graphQLResponse =
-        JsonUtils.fromJsonString(jsonStringProductTypes, GraphQLResponse.class);
-    final ApiHttpResponse apiHttpResponse = mock(ApiHttpResponse.class);
-    when(apiHttpResponse.getBody()).thenReturn(graphQLResponse);
-
-    final ByProjectKeyGraphqlPost byProjectKeyGraphqlPost = mock(ByProjectKeyGraphqlPost.class);
-    when(byProjectKeyGraphqlPost.execute())
-        .thenReturn(CompletableFuture.completedFuture(apiHttpResponse));
-
-    when(sourceClient.graphql()).thenReturn(mock());
-    when(sourceClient.graphql().post(any(GraphQLRequest.class)))
-        .thenReturn(byProjectKeyGraphqlPost);
+    mockResourceIdsGraphQlRequest(
+        sourceClient, "productTypes", "53c4a8b4-754f-4b95-b6f2-3e1e70e3d0d3", "prodType1");
 
     // test
     final List<ProductDraft> draftsFromPageStage =
