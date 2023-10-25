@@ -1,310 +1,259 @@
-// package com.commercetools.project.sync;
-//
-// import static com.commercetools.project.sync.util.CtpClientUtils.CTP_SOURCE_CLIENT;
-// import static com.commercetools.project.sync.util.CtpClientUtils.CTP_TARGET_CLIENT;
-// import static com.commercetools.project.sync.util.IntegrationTestUtils.assertCategoryExists;
-// import static com.commercetools.project.sync.util.IntegrationTestUtils.assertProductExists;
-// import static com.commercetools.project.sync.util.IntegrationTestUtils.assertProductTypeExists;
-// import static com.commercetools.project.sync.util.IntegrationTestUtils.cleanUpProjects;
-// import static com.commercetools.project.sync.util.IntegrationTestUtils.createITSyncerFactory;
-// import static com.neovisionaries.i18n.CountryCode.DE;
-// import static io.sphere.sdk.models.DefaultCurrencyUnits.EUR;
-// import static io.sphere.sdk.models.LocalizedString.ofEnglish;
-// import static java.lang.String.format;
-// import static java.util.Arrays.asList;
-// import static java.util.Collections.emptyList;
-// import static java.util.Collections.emptyMap;
-// import static java.util.Collections.singleton;
-// import static java.util.Collections.singletonList;
-// import static java.util.Optional.ofNullable;
-// import static org.assertj.core.api.Assertions.assertThat;
-//
-// import com.commercetools.project.sync.product.ProductSyncer;
-// import com.neovisionaries.i18n.CountryCode;
-// import io.sphere.sdk.categories.CategoryDraft;
-// import io.sphere.sdk.categories.CategoryDraftBuilder;
-// import io.sphere.sdk.categories.commands.CategoryCreateCommand;
-// import io.sphere.sdk.channels.Channel;
-// import io.sphere.sdk.channels.ChannelDraft;
-// import io.sphere.sdk.channels.ChannelDraftBuilder;
-// import io.sphere.sdk.channels.ChannelRole;
-// import io.sphere.sdk.channels.commands.ChannelCreateCommand;
-// import io.sphere.sdk.client.SphereClient;
-// import io.sphere.sdk.customergroups.CustomerGroup;
-// import io.sphere.sdk.customergroups.CustomerGroupDraft;
-// import io.sphere.sdk.customergroups.CustomerGroupDraftBuilder;
-// import io.sphere.sdk.customergroups.commands.CustomerGroupCreateCommand;
-// import io.sphere.sdk.models.AssetDraft;
-// import io.sphere.sdk.models.AssetDraftBuilder;
-// import io.sphere.sdk.models.AssetSourceBuilder;
-// import io.sphere.sdk.models.LocalizedString;
-// import io.sphere.sdk.models.ResourceIdentifier;
-// import io.sphere.sdk.models.TextInputHint;
-// import io.sphere.sdk.products.Price;
-// import io.sphere.sdk.products.PriceDraft;
-// import io.sphere.sdk.products.PriceDraftBuilder;
-// import io.sphere.sdk.products.ProductDraft;
-// import io.sphere.sdk.products.ProductDraftBuilder;
-// import io.sphere.sdk.products.ProductVariantDraft;
-// import io.sphere.sdk.products.ProductVariantDraftBuilder;
-// import io.sphere.sdk.products.commands.ProductCreateCommand;
-// import io.sphere.sdk.producttypes.ProductType;
-// import io.sphere.sdk.producttypes.ProductTypeDraft;
-// import io.sphere.sdk.producttypes.ProductTypeDraftBuilder;
-// import io.sphere.sdk.producttypes.commands.ProductTypeCreateCommand;
-// import io.sphere.sdk.queries.PagedQueryResult;
-// import io.sphere.sdk.queries.QueryPredicate;
-// import io.sphere.sdk.states.State;
-// import io.sphere.sdk.states.StateDraft;
-// import io.sphere.sdk.states.StateDraftBuilder;
-// import io.sphere.sdk.states.StateType;
-// import io.sphere.sdk.states.commands.StateCreateCommand;
-// import io.sphere.sdk.taxcategories.TaxCategory;
-// import io.sphere.sdk.taxcategories.TaxCategoryDraft;
-// import io.sphere.sdk.taxcategories.TaxCategoryDraftBuilder;
-// import io.sphere.sdk.taxcategories.TaxRateDraft;
-// import io.sphere.sdk.taxcategories.TaxRateDraftBuilder;
-// import io.sphere.sdk.taxcategories.commands.TaxCategoryCreateCommand;
-// import io.sphere.sdk.taxcategories.queries.TaxCategoryQuery;
-// import io.sphere.sdk.types.CustomFieldsDraft;
-// import io.sphere.sdk.types.FieldDefinition;
-// import io.sphere.sdk.types.ResourceTypeIdsSetBuilder;
-// import io.sphere.sdk.types.StringFieldType;
-// import io.sphere.sdk.types.Type;
-// import io.sphere.sdk.types.TypeDraft;
-// import io.sphere.sdk.types.TypeDraftBuilder;
-// import io.sphere.sdk.types.commands.TypeCreateCommand;
-// import java.math.BigDecimal;
-// import java.time.ZonedDateTime;
-// import java.util.Arrays;
-// import java.util.Collections;
-// import javax.annotation.Nonnull;
-// import javax.annotation.Nullable;
-// import javax.money.CurrencyUnit;
-// import org.junit.jupiter.api.AfterAll;
-// import org.junit.jupiter.api.BeforeEach;
-// import org.junit.jupiter.api.Test;
-// import uk.org.lidalia.slf4jext.Level;
-// import uk.org.lidalia.slf4jtest.TestLogger;
-// import uk.org.lidalia.slf4jtest.TestLoggerFactory;
-//
-//// This will suppress MoreThanOneLogger warnings in this class
-// @SuppressWarnings("PMD.MoreThanOneLogger")
-// public class ProductSyncWithReferenceResolutionIT {
-//
-//  private static final TestLogger cliRunnerTestLogger =
-//      TestLoggerFactory.getTestLogger(CliRunner.class);
-//  private static final TestLogger productSyncerTestLogger =
-//      TestLoggerFactory.getTestLogger(ProductSyncer.class);
-//  private static final String RESOURCE_KEY = "foo";
-//  private static final String TYPE_KEY = "typeKey";
-//
-//  @BeforeEach
-//  void setup() {
-//    cliRunnerTestLogger.clearAll();
-//    productSyncerTestLogger.clearAll();
-//    cleanUpProjects(CTP_SOURCE_CLIENT, CTP_TARGET_CLIENT);
-//    setupSourceProjectData(CTP_SOURCE_CLIENT);
-//  }
-//
-//  private void setupSourceProjectData(SphereClient sourceProjectClient) {
-//    final ProductTypeDraft productTypeDraft =
-//        ProductTypeDraftBuilder.of(
-//                RESOURCE_KEY, "sample-product-type", "a productType for t-shirts", emptyList())
-//            .build();
-//
-//    final ProductType productType =
-//        sourceProjectClient
-//            .execute(ProductTypeCreateCommand.of(productTypeDraft))
-//            .toCompletableFuture()
-//            .join();
-//
-//    final FieldDefinition FIELD_DEFINITION_1 =
-//        FieldDefinition.of(
-//            StringFieldType.of(),
-//            "field_name_1",
-//            LocalizedString.ofEnglish("label_1"),
-//            false,
-//            TextInputHint.SINGLE_LINE);
-//
-//    final TypeDraft typeDraft =
-//        TypeDraftBuilder.of(
-//                TYPE_KEY,
-//                LocalizedString.ofEnglish("name_1"),
-//                ResourceTypeIdsSetBuilder.of().addCategories().addPrices().addAssets().build())
-//            .description(LocalizedString.ofEnglish("description_1"))
-//            .fieldDefinitions(Arrays.asList(FIELD_DEFINITION_1))
-//            .build();
-//
-//    final Type type =
-//        sourceProjectClient.execute(TypeCreateCommand.of(typeDraft)).toCompletableFuture().join();
-//
-//    final CategoryDraft categoryDraft =
-//        CategoryDraftBuilder.of(ofEnglish("t-shirts"), ofEnglish("t-shirts"))
-//            .key(RESOURCE_KEY)
-//            .build();
-//
-//    sourceProjectClient
-//        .execute(CategoryCreateCommand.of(categoryDraft))
-//        .toCompletableFuture()
-//        .join();
-//
-//    final StateDraft stateDraft =
-//        StateDraftBuilder.of(RESOURCE_KEY, StateType.PRODUCT_STATE)
-//            .roles(Collections.emptySet())
-//            .description(ofEnglish("State 1"))
-//            .name(ofEnglish("State 1"))
-//            .initial(true)
-//            .transitions(Collections.emptySet())
-//            .build();
-//    final State state =
-//
-// sourceProjectClient.execute(StateCreateCommand.of(stateDraft)).toCompletableFuture().join();
-//
-//    final TaxRateDraft taxRateDraft =
-//        TaxRateDraftBuilder.of("Tax-Rate-Name-1", 0.3, false, CountryCode.DE).build();
-//
-//    final TaxCategoryDraft taxCategoryDraft =
-//        TaxCategoryDraftBuilder.of(
-//                "Tax-Category-Name-1", singletonList(taxRateDraft), "Tax-Category-Description-1")
-//            .key(RESOURCE_KEY)
-//            .build();
-//
-//    final TaxCategory taxCategory =
-//        sourceProjectClient
-//            .execute(TaxCategoryCreateCommand.of(taxCategoryDraft))
-//            .toCompletableFuture()
-//            .join();
-//
-//    final CustomerGroupDraft customerGroupDraft =
-//        CustomerGroupDraftBuilder.of("customerGroupName").key("customerGroupKey").build();
-//
-//    CustomerGroup customerGroup =
-//        sourceProjectClient
-//            .execute(CustomerGroupCreateCommand.of(customerGroupDraft))
-//            .toCompletableFuture()
-//            .join();
-//
-//    CTP_TARGET_CLIENT
-//        .execute(CustomerGroupCreateCommand.of(customerGroupDraft))
-//        .toCompletableFuture()
-//        .join();
-//
-//    CustomFieldsDraft customFieldsDraft =
-//        CustomFieldsDraft.ofTypeKeyAndJson(type.getKey(), emptyMap());
-//
-//    final ChannelDraft draft =
-//
-// ChannelDraftBuilder.of("channelKey").roles(singleton(ChannelRole.INVENTORY_SUPPLY)).build();
-//    sourceProjectClient.execute(ChannelCreateCommand.of(draft)).toCompletableFuture().join();
-//    CTP_TARGET_CLIENT.execute(ChannelCreateCommand.of(draft)).toCompletableFuture().join();
-//
-//    final PriceDraft priceBuilder =
-//        PriceDraftBuilder.of(
-//                getPriceDraft(
-//                    BigDecimal.valueOf(222),
-//                    EUR,
-//                    DE,
-//                    customerGroup.getId(),
-//                    null,
-//                    null,
-//                    null,
-//                    null))
-//            .customerGroup(customerGroup)
-//            .custom(customFieldsDraft)
-//            .channel(ResourceIdentifier.ofKey("channelKey"))
-//            .build();
-//
-//    final AssetDraft assetDraft =
-//        AssetDraftBuilder.of(emptyList(), LocalizedString.ofEnglish("assetName"))
-//            .key("assetKey")
-//            .sources(singletonList(AssetSourceBuilder.ofUri("sourceUri").build()))
-//            .custom(customFieldsDraft)
-//            .build();
-//
-//    final ProductVariantDraft variantDraft1 =
-//        ProductVariantDraftBuilder.of()
-//            .key("variantKey")
-//            .sku("sku1")
-//            .prices(priceBuilder)
-//            .assets(asList(assetDraft))
-//            .build();
-//
-//    final ProductDraft productDraft =
-//        ProductDraftBuilder.of(
-//                productType,
-//                ofEnglish("V-neck Tee"),
-//                ofEnglish("v-neck-tee"),
-//                ProductVariantDraftBuilder.of().key(RESOURCE_KEY).sku(RESOURCE_KEY).build())
-//            .state(State.referenceOfId(state.getId()))
-//            .taxCategory(TaxCategory.referenceOfId(taxCategory.getId()))
-//            .productType(ProductType.referenceOfId(productType.getId()))
-//            .variants(asList(variantDraft1))
-//            .key(RESOURCE_KEY)
-//            .publish(true)
-//            .build();
-//
-//
-// sourceProjectClient.execute(ProductCreateCommand.of(productDraft)).toCompletableFuture().join();
-//  }
-//
-//  @AfterAll
-//  static void tearDownSuite() {
-//    cleanUpProjects(CTP_SOURCE_CLIENT, CTP_TARGET_CLIENT);
-//  }
-//
-//  @Test
-//  void run_WithSyncAsArgumentWithAllArgAsFullSync_ShouldResolveReferencesAndExecuteSyncers() {
-//    // test
-//    CliRunner.of().run(new String[] {"-s", "all", "-f"}, createITSyncerFactory());
-//    // assertions
-//    assertThat(cliRunnerTestLogger.getAllLoggingEvents())
-//        .allMatch(loggingEvent -> !Level.ERROR.equals(loggingEvent.getLevel()));
-//
-//    assertThat(productSyncerTestLogger.getAllLoggingEvents())
-//        .allMatch(loggingEvent -> !Level.ERROR.equals(loggingEvent.getLevel()));
-//
-//    assertAllResourcesAreSyncedToTarget(CTP_TARGET_CLIENT);
-//  }
-//
-//  private static void assertAllResourcesAreSyncedToTarget(
-//      @Nonnull final SphereClient targetClient) {
-//
-//    assertProductTypeExists(targetClient, RESOURCE_KEY);
-//    assertCategoryExists(targetClient, RESOURCE_KEY);
-//    assertProductExists(targetClient, RESOURCE_KEY, RESOURCE_KEY, RESOURCE_KEY);
-//
-//    final String queryPredicate = format("key=\"%s\"", RESOURCE_KEY);
-//
-//    final PagedQueryResult<TaxCategory> taxCategoryQueryResult =
-//        targetClient
-//            .execute(TaxCategoryQuery.of().withPredicates(QueryPredicate.of(queryPredicate)))
-//            .toCompletableFuture()
-//            .join();
-//    assertThat(taxCategoryQueryResult.getResults())
-//        .hasSize(1)
-//        .singleElement()
-//        .satisfies(taxCategory -> assertThat(taxCategory.getKey()).isEqualTo(RESOURCE_KEY));
-//  }
-//
-//  @Nonnull
-//  public static PriceDraft getPriceDraft(
-//      @Nonnull final BigDecimal value,
-//      @Nonnull final CurrencyUnit currencyUnits,
-//      @Nullable final CountryCode countryCode,
-//      @Nullable final String customerGroupId,
-//      @Nullable final ZonedDateTime validFrom,
-//      @Nullable final ZonedDateTime validUntil,
-//      @Nullable final String channelId,
-//      @Nullable final CustomFieldsDraft customFieldsDraft) {
-//    return PriceDraftBuilder.of(Price.of(value, currencyUnits))
-//        .country(countryCode)
-//        .customerGroup(
-//            ofNullable(customerGroupId).map(ResourceIdentifier::<CustomerGroup>ofId).orElse(null))
-//        .validFrom(validFrom)
-//        .validUntil(validUntil)
-//        .channel(ofNullable(channelId).map(ResourceIdentifier::<Channel>ofId).orElse(null))
-//        .custom(customFieldsDraft)
-//        .build();
-//  }
-// }
+package com.commercetools.project.sync;
+
+import static com.commercetools.api.models.common.LocalizedString.ofEnglish;
+import static com.commercetools.project.sync.ProductSyncWithDiscountedPrice.getPriceDraft;
+import static com.commercetools.project.sync.util.CtpClientUtils.CTP_SOURCE_CLIENT;
+import static com.commercetools.project.sync.util.CtpClientUtils.CTP_TARGET_CLIENT;
+import static com.commercetools.project.sync.util.IntegrationTestUtils.assertCategoryExists;
+import static com.commercetools.project.sync.util.IntegrationTestUtils.assertProductExists;
+import static com.commercetools.project.sync.util.IntegrationTestUtils.assertProductTypeExists;
+import static com.commercetools.project.sync.util.IntegrationTestUtils.cleanUpProjects;
+import static com.commercetools.project.sync.util.IntegrationTestUtils.createITSyncerFactory;
+import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
+
+import com.commercetools.api.client.ProjectApiRoot;
+import com.commercetools.api.models.category.CategoryDraft;
+import com.commercetools.api.models.category.CategoryDraftBuilder;
+import com.commercetools.api.models.channel.ChannelDraft;
+import com.commercetools.api.models.channel.ChannelDraftBuilder;
+import com.commercetools.api.models.channel.ChannelRoleEnum;
+import com.commercetools.api.models.common.AssetDraft;
+import com.commercetools.api.models.common.AssetDraftBuilder;
+import com.commercetools.api.models.common.AssetSourceBuilder;
+import com.commercetools.api.models.common.PriceDraft;
+import com.commercetools.api.models.common.PriceDraftBuilder;
+import com.commercetools.api.models.customer_group.CustomerGroup;
+import com.commercetools.api.models.customer_group.CustomerGroupDraft;
+import com.commercetools.api.models.customer_group.CustomerGroupDraftBuilder;
+import com.commercetools.api.models.product.ProductDraft;
+import com.commercetools.api.models.product.ProductDraftBuilder;
+import com.commercetools.api.models.product.ProductVariantDraft;
+import com.commercetools.api.models.product.ProductVariantDraftBuilder;
+import com.commercetools.api.models.product_type.ProductType;
+import com.commercetools.api.models.product_type.ProductTypeDraft;
+import com.commercetools.api.models.product_type.ProductTypeDraftBuilder;
+import com.commercetools.api.models.state.State;
+import com.commercetools.api.models.state.StateDraft;
+import com.commercetools.api.models.state.StateDraftBuilder;
+import com.commercetools.api.models.state.StateTypeEnum;
+import com.commercetools.api.models.tax_category.TaxCategory;
+import com.commercetools.api.models.tax_category.TaxCategoryDraft;
+import com.commercetools.api.models.tax_category.TaxCategoryDraftBuilder;
+import com.commercetools.api.models.tax_category.TaxRateDraft;
+import com.commercetools.api.models.tax_category.TaxRateDraftBuilder;
+import com.commercetools.api.models.type.CustomFieldsDraft;
+import com.commercetools.api.models.type.CustomFieldsDraftBuilder;
+import com.commercetools.api.models.type.FieldDefinition;
+import com.commercetools.api.models.type.FieldDefinitionBuilder;
+import com.commercetools.api.models.type.FieldTypeBuilder;
+import com.commercetools.api.models.type.ResourceTypeId;
+import com.commercetools.api.models.type.Type;
+import com.commercetools.api.models.type.TypeDraft;
+import com.commercetools.api.models.type.TypeDraftBuilder;
+import com.commercetools.api.models.type.TypeTextInputHint;
+import com.commercetools.project.sync.product.ProductSyncer;
+import io.vrap.rmf.base.client.ApiHttpResponse;
+import io.vrap.rmf.base.client.http.HttpStatusCode;
+import java.util.List;
+import javax.annotation.Nonnull;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import uk.org.lidalia.slf4jext.Level;
+import uk.org.lidalia.slf4jtest.TestLogger;
+import uk.org.lidalia.slf4jtest.TestLoggerFactory;
+
+// This will suppress MoreThanOneLogger warnings in this class
+@SuppressWarnings("PMD.MoreThanOneLogger")
+public class ProductSyncWithReferenceResolutionIT {
+
+  private static final TestLogger cliRunnerTestLogger =
+      TestLoggerFactory.getTestLogger(CliRunner.class);
+  private static final TestLogger productSyncerTestLogger =
+      TestLoggerFactory.getTestLogger(ProductSyncer.class);
+  private static final String RESOURCE_KEY = "foo";
+  private static final String TYPE_KEY = "typeKey";
+
+  @BeforeEach
+  void setup() {
+    cliRunnerTestLogger.clearAll();
+    productSyncerTestLogger.clearAll();
+    cleanUpProjects(CTP_SOURCE_CLIENT, CTP_TARGET_CLIENT);
+    setupSourceProjectData(CTP_SOURCE_CLIENT);
+  }
+
+  private void setupSourceProjectData(final ProjectApiRoot sourceProjectClient) {
+    final ProductTypeDraft productTypeDraft =
+        ProductTypeDraftBuilder.of()
+            .key(RESOURCE_KEY)
+            .name("sample-product-type")
+            .description("a productType for t-shirts")
+            .build();
+
+    final ProductType productType =
+        sourceProjectClient.productTypes().post(productTypeDraft).executeBlocking().getBody();
+
+    final FieldDefinition FIELD_DEFINITION_1 =
+        FieldDefinitionBuilder.of()
+            .type(FieldTypeBuilder::stringBuilder)
+            .name("field_name_1")
+            .label(ofEnglish("label_1"))
+            .required(false)
+            .inputHint(TypeTextInputHint.SINGLE_LINE)
+            .build();
+
+    final TypeDraft typeDraft =
+        TypeDraftBuilder.of()
+            .key(TYPE_KEY)
+            .name(ofEnglish("name_1"))
+            .resourceTypeIds(
+                ResourceTypeId.CATEGORY, ResourceTypeId.PRODUCT_PRICE, ResourceTypeId.ASSET)
+            .description(ofEnglish("description_1"))
+            .fieldDefinitions(FIELD_DEFINITION_1)
+            .build();
+
+    final Type type = sourceProjectClient.types().post(typeDraft).executeBlocking().getBody();
+
+    final CategoryDraft categoryDraft =
+        CategoryDraftBuilder.of()
+            .name(ofEnglish("t-shirts"))
+            .slug(ofEnglish("t-shirts"))
+            .key(RESOURCE_KEY)
+            .build();
+
+    sourceProjectClient.categories().post(categoryDraft).executeBlocking();
+
+    final StateDraft stateDraft =
+        StateDraftBuilder.of()
+            .key(RESOURCE_KEY)
+            .type(StateTypeEnum.PRODUCT_STATE)
+            .roles(List.of())
+            .description(ofEnglish("State 1"))
+            .name(ofEnglish("State 1"))
+            .initial(true)
+            .transitions(List.of())
+            .build();
+    final State state = sourceProjectClient.states().post(stateDraft).executeBlocking().getBody();
+
+    final TaxRateDraft taxRateDraft =
+        TaxRateDraftBuilder.of()
+            .name("Tax-Rate-Name-1")
+            .amount(0.3)
+            .includedInPrice(false)
+            .country("DE")
+            .build();
+
+    final TaxCategoryDraft taxCategoryDraft =
+        TaxCategoryDraftBuilder.of()
+            .name("Tax-Category-Name-1")
+            .rates(taxRateDraft)
+            .description("Tax-Category-Description-1")
+            .key(RESOURCE_KEY)
+            .build();
+
+    final TaxCategory taxCategory =
+        sourceProjectClient.taxCategories().post(taxCategoryDraft).executeBlocking().getBody();
+
+    final CustomerGroupDraft customerGroupDraft =
+        CustomerGroupDraftBuilder.of()
+            .groupName("customerGroupName")
+            .key("customerGroupKey")
+            .build();
+
+    final CustomerGroup customerGroup =
+        sourceProjectClient.customerGroups().post(customerGroupDraft).executeBlocking().getBody();
+
+    CTP_TARGET_CLIENT.customerGroups().post(customerGroupDraft).executeBlocking().getBody();
+
+    CustomFieldsDraft customFieldsDraft =
+        CustomFieldsDraftBuilder.of().type(type.toResourceIdentifier()).build();
+
+    final ChannelDraft draft =
+        ChannelDraftBuilder.of().key("channelKey").roles(ChannelRoleEnum.INVENTORY_SUPPLY).build();
+    sourceProjectClient.channels().post(draft).executeBlocking().getBody();
+    CTP_TARGET_CLIENT.channels().post(draft).executeBlocking().getBody();
+
+    final PriceDraft priceDraft =
+        PriceDraftBuilder.of(getPriceDraft(22200L, "EUR", "DE", null, null, null))
+            .customerGroup(customerGroup.toResourceIdentifier())
+            .custom(customFieldsDraft)
+            .channel(
+                channelResourceIdentifierBuilder ->
+                    channelResourceIdentifierBuilder.key("channelKey"))
+            .build();
+
+    final AssetDraft assetDraft =
+        AssetDraftBuilder.of()
+            .name(ofEnglish("assetName"))
+            .key("assetKey")
+            .sources(AssetSourceBuilder.of().uri("sourceUri").build())
+            .custom(customFieldsDraft)
+            .build();
+
+    final ProductVariantDraft variantDraft1 =
+        ProductVariantDraftBuilder.of()
+            .key("variantKey")
+            .sku("sku1")
+            .prices(priceDraft)
+            .assets(assetDraft)
+            .build();
+
+    final ProductDraft productDraft =
+        ProductDraftBuilder.of()
+            .productType(productType.toResourceIdentifier())
+            .name(ofEnglish("V-Neck Tee"))
+            .slug(ofEnglish("v-neck-tee"))
+            .masterVariant(
+                ProductVariantDraftBuilder.of().key(RESOURCE_KEY).sku(RESOURCE_KEY).build())
+            .state(state.toResourceIdentifier())
+            .taxCategory(taxCategory.toResourceIdentifier())
+            .productType(productType.toResourceIdentifier())
+            .variants(asList(variantDraft1))
+            .key(RESOURCE_KEY)
+            .publish(true)
+            .build();
+
+    sourceProjectClient.products().post(productDraft).executeBlocking();
+  }
+
+  @AfterAll
+  static void tearDownSuite() {
+    cleanUpProjects(CTP_SOURCE_CLIENT, CTP_TARGET_CLIENT);
+  }
+
+  @Test
+  void run_WithSyncAsArgumentWithAllArgAsFullSync_ShouldResolveReferencesAndExecuteSyncers() {
+    // test
+    CliRunner.of().run(new String[] {"-s", "all", "-f"}, createITSyncerFactory());
+    // assertions
+    assertThat(cliRunnerTestLogger.getAllLoggingEvents())
+        .allMatch(loggingEvent -> !Level.ERROR.equals(loggingEvent.getLevel()));
+
+    assertThat(productSyncerTestLogger.getAllLoggingEvents())
+        .allMatch(loggingEvent -> !Level.ERROR.equals(loggingEvent.getLevel()));
+
+    assertAllResourcesAreSyncedToTarget(CTP_TARGET_CLIENT);
+  }
+
+  private static void assertAllResourcesAreSyncedToTarget(
+      @Nonnull final ProjectApiRoot targetClient) {
+
+    assertProductTypeExists(targetClient, RESOURCE_KEY);
+    assertCategoryExists(targetClient, RESOURCE_KEY);
+    assertProductExists(targetClient, RESOURCE_KEY, RESOURCE_KEY, RESOURCE_KEY);
+
+    final ApiHttpResponse<TaxCategory> taxCategoryApiHttpResponse =
+        targetClient
+            .taxCategories()
+            .withKey(RESOURCE_KEY)
+            .get()
+            .execute()
+            .toCompletableFuture()
+            .join();
+
+    assertThat(taxCategoryApiHttpResponse.getStatusCode()).isEqualTo(HttpStatusCode.OK_200);
+    assertThat(taxCategoryApiHttpResponse.getBody()).isNotNull();
+    assertThat(taxCategoryApiHttpResponse.getBody().getKey()).isEqualTo(RESOURCE_KEY);
+  }
+}
