@@ -12,6 +12,8 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import com.commercetools.api.client.ByProjectKeyCustomObjectsPost;
+import com.commercetools.api.client.ByProjectKeyGraphqlPost;
+import com.commercetools.api.client.ByProjectKeyGraphqlRequestBuilder;
 import com.commercetools.api.client.ProjectApiRoot;
 import com.commercetools.api.defaultconfig.ApiRootBuilder;
 import com.commercetools.api.models.custom_object.CustomObject;
@@ -20,7 +22,6 @@ import com.commercetools.api.models.error.ErrorResponse;
 import com.commercetools.api.models.error.ErrorResponseBuilder;
 import com.commercetools.api.models.graph_ql.GraphQLRequest;
 import com.commercetools.api.models.graph_ql.GraphQLResponse;
-import com.commercetools.api.models.graph_ql.GraphQLResponseBuilder;
 import com.commercetools.project.sync.model.response.LastSyncCustomObject;
 import com.commercetools.sync.products.helpers.ProductSyncStatistics;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -291,14 +292,29 @@ public final class TestUtils {
     return clock;
   }
 
-  public static void mockResourceIdsGraphQlRequest(ProjectApiRoot client, String id, String key) {
+  public static void mockResourceIdsGraphQlRequest(
+      ProjectApiRoot client, String resource, String id, String key) {
     final String jsonResponseString =
-        "{\"results\":[{\"id\":\"" + id + "\"," + "\"key\":\"" + key + "\"}]}";
-    final GraphQLResponse result = GraphQLResponseBuilder.of().data(jsonResponseString).build();
+        "{\"data\":{\""
+            + resource
+            + "\":{\"results\":[{\"id\":\""
+            + id
+            + "\","
+            + "\"key\":\""
+            + key
+            + "\"}]}}}";
+    final GraphQLResponse result =
+        JsonUtils.fromJsonString(jsonResponseString, GraphQLResponse.class);
 
-    final ApiHttpResponse apiHttpResponse = mock(ApiHttpResponse.class);
+    final ApiHttpResponse<GraphQLResponse> apiHttpResponse = mock(ApiHttpResponse.class);
+
     when(apiHttpResponse.getBody()).thenReturn(result);
-    when(client.graphql().post(any(GraphQLRequest.class)).execute())
+    final ByProjectKeyGraphqlRequestBuilder byProjectKeyGraphqlRequestBuilder = mock();
+    when(client.graphql()).thenReturn(byProjectKeyGraphqlRequestBuilder);
+    final ByProjectKeyGraphqlPost byProjectKeyGraphqlPost = mock();
+    when(byProjectKeyGraphqlRequestBuilder.post(any(GraphQLRequest.class)))
+        .thenReturn(byProjectKeyGraphqlPost);
+    when(byProjectKeyGraphqlPost.execute())
         .thenReturn(CompletableFuture.completedFuture(apiHttpResponse));
   }
 
