@@ -3,10 +3,12 @@ package com.commercetools.project.sync.util;
 import static java.lang.String.format;
 
 import com.commercetools.api.client.ProjectApiRoot;
+import com.commercetools.api.defaultconfig.ApiRootBuilder;
 import com.commercetools.api.defaultconfig.ServiceRegion;
-import com.commercetools.sync.commons.utils.ClientConfigurationUtils;
+import com.commercetools.http.okhttp4.CtOkHttp4Client;
 import io.vrap.rmf.base.client.oauth2.ClientCredentials;
 import java.io.InputStream;
+import java.util.Arrays;
 import java.util.InvalidPropertiesFormatException;
 import java.util.Properties;
 import javax.annotation.Nonnull;
@@ -80,7 +82,7 @@ public final class CtpClientUtils {
               .withScopes(scopes)
               .build();
 
-      return ClientConfigurationUtils.createClient(projectKey, credentials, authUrl, apiUrl);
+      return createCtpClient(authUrl, apiUrl, credentials, projectKey);
     } catch (Exception exception) {
       throw new IllegalStateException(
           format(
@@ -89,6 +91,17 @@ public final class CtpClientUtils {
               CTP_CREDENTIALS_PROPERTIES, propertiesPrefix),
           exception);
     }
+  }
+
+  private static ProjectApiRoot createCtpClient(
+      @Nonnull String authUrl,
+      @Nonnull String apiUrl,
+      @Nonnull ClientCredentials credentials,
+      @Nonnull String projectKey) {
+    return ApiRootBuilder.of(new CtOkHttp4Client(200, 200))
+        .defaultClient(credentials, authUrl, apiUrl)
+        .withRetryMiddleware(5, Arrays.asList(500, 502, 503, 504))
+        .build(projectKey);
   }
 
   private static Properties loadFromEnvVars(String propertiesPrefix) {

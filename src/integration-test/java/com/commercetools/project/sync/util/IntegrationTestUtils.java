@@ -10,23 +10,19 @@ import com.commercetools.api.client.ByProjectKeyCustomObjectsGet;
 import com.commercetools.api.client.ProjectApiRoot;
 import com.commercetools.api.client.QueryUtils;
 import com.commercetools.api.models.category.Category;
-import com.commercetools.api.models.category.CategoryPagedQueryResponse;
 import com.commercetools.api.models.customer.Customer;
-import com.commercetools.api.models.customer.CustomerPagedQueryResponse;
 import com.commercetools.api.models.product.Product;
-import com.commercetools.api.models.product.ProductPagedQueryResponse;
 import com.commercetools.api.models.product.ProductUnpublishActionBuilder;
 import com.commercetools.api.models.product.ProductVariant;
 import com.commercetools.api.models.product_type.ProductType;
-import com.commercetools.api.models.product_type.ProductTypePagedQueryResponse;
 import com.commercetools.api.models.product_type.ProductTypeRemoveAttributeDefinitionActionBuilder;
 import com.commercetools.api.models.state.State;
-import com.commercetools.api.models.state.StatePagedQueryResponse;
 import com.commercetools.project.sync.SyncerFactory;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.vrap.rmf.base.client.ApiHttpResponse;
+import io.vrap.rmf.base.client.http.HttpStatusCode;
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.List;
@@ -495,85 +491,53 @@ public final class IntegrationTestUtils {
   @Nonnull
   public static ProductType assertProductTypeExists(
       @Nonnull final ProjectApiRoot ctpClient, @Nonnull final String key) {
-    final ProductTypePagedQueryResponse productTypePagedQueryResponse =
-        ctpClient
-            .productTypes()
-            .get()
-            .withWhere("key=:key")
-            .withPredicateVar("key", key)
-            .execute()
-            .thenApply(ApiHttpResponse::getBody)
-            .join();
+    final ApiHttpResponse<ProductType> productTypeApiHttpResponse =
+        ctpClient.productTypes().withKey(key).get().execute().toCompletableFuture().join();
 
-    assertThat(productTypePagedQueryResponse.getResults())
-        .hasSize(1)
-        .singleElement()
-        .satisfies(productType -> assertThat(productType.getKey()).isEqualTo(key));
+    assertThat(productTypeApiHttpResponse.getStatusCode()).isEqualTo(HttpStatusCode.OK_200);
+    assertThat(productTypeApiHttpResponse.getBody()).isNotNull();
+    assertThat(productTypeApiHttpResponse.getBody().getKey()).isEqualTo(key);
 
-    return productTypePagedQueryResponse.getResults().get(0);
+    return productTypeApiHttpResponse.getBody();
   }
 
   @Nonnull
   public static Category assertCategoryExists(
       @Nonnull final ProjectApiRoot ctpClient, @Nonnull final String key) {
-    final CategoryPagedQueryResponse categoryPagedQueryResponse =
-        ctpClient
-            .categories()
-            .get()
-            .withWhere("key=:key")
-            .withPredicateVar("key", key)
-            .execute()
-            .thenApply(ApiHttpResponse::getBody)
-            .join();
+    final ApiHttpResponse<Category> categoryApiHttpResponse =
+        ctpClient.categories().withKey(key).get().execute().toCompletableFuture().join();
 
-    assertThat(categoryPagedQueryResponse.getResults())
-        .hasSize(1)
-        .singleElement()
-        .satisfies(category -> assertThat(category.getKey()).isEqualTo(key));
+    assertThat(categoryApiHttpResponse.getStatusCode()).isEqualTo(HttpStatusCode.OK_200);
+    assertThat(categoryApiHttpResponse.getBody()).isNotNull();
+    assertThat(categoryApiHttpResponse.getBody().getKey()).isEqualTo(key);
 
-    return categoryPagedQueryResponse.getResults().get(0);
+    return categoryApiHttpResponse.getBody();
   }
 
   @Nonnull
   public static State assertStateExists(
       @Nonnull final ProjectApiRoot ctpClient, @Nonnull final String key) {
-    final StatePagedQueryResponse statePagedQueryResponse =
-        ctpClient
-            .states()
-            .get()
-            .withWhere("key=:key")
-            .withPredicateVar("key", key)
-            .execute()
-            .thenApply(ApiHttpResponse::getBody)
-            .join();
+    final ApiHttpResponse<State> stateApiHttpResponse =
+        ctpClient.states().withKey(key).get().execute().toCompletableFuture().join();
 
-    assertThat(statePagedQueryResponse.getResults())
-        .hasSize(1)
-        .singleElement()
-        .satisfies(state -> assertThat(state.getKey()).isEqualTo(key));
+    assertThat(stateApiHttpResponse.getStatusCode()).isEqualTo(HttpStatusCode.OK_200);
+    assertThat(stateApiHttpResponse.getBody()).isNotNull();
+    assertThat(stateApiHttpResponse.getBody().getKey()).isEqualTo(key);
 
-    return statePagedQueryResponse.getResults().get(0);
+    return stateApiHttpResponse.getBody();
   }
 
   @Nonnull
   public static Customer assertCustomerExists(
       @Nonnull final ProjectApiRoot ctpClient, @Nonnull final String key) {
-    final CustomerPagedQueryResponse customerPagedQueryResponse =
-        ctpClient
-            .customers()
-            .get()
-            .withWhere("key=:key")
-            .withPredicateVar("key", key)
-            .execute()
-            .thenApply(ApiHttpResponse::getBody)
-            .join();
+    final ApiHttpResponse<Customer> customerApiHttpResponse =
+        ctpClient.customers().withKey(key).get().execute().toCompletableFuture().join();
 
-    assertThat(customerPagedQueryResponse.getResults())
-        .hasSize(1)
-        .singleElement()
-        .satisfies(customer -> assertThat(customer.getKey()).isEqualTo(key));
+    assertThat(customerApiHttpResponse.getStatusCode()).isEqualTo(HttpStatusCode.OK_200);
+    assertThat(customerApiHttpResponse.getBody()).isNotNull();
+    assertThat(customerApiHttpResponse.getBody().getKey()).isEqualTo(key);
 
-    return customerPagedQueryResponse.getResults().get(0);
+    return customerApiHttpResponse.getBody();
   }
 
   @Nonnull
@@ -582,19 +546,12 @@ public final class IntegrationTestUtils {
       @Nonnull final String productKey,
       @Nonnull final String masterVariantKey,
       @Nonnull final String masterVariantSku) {
-    final ProductPagedQueryResponse productPagedQueryResponse =
-        ctpClient
-            .products()
-            .get()
-            .withWhere("key=:key")
-            .withPredicateVar("key", productKey)
-            .execute()
-            .thenApply(ApiHttpResponse::getBody)
-            .join();
+    final ApiHttpResponse<Product> productApiHttpResponse =
+        ctpClient.products().withKey(productKey).get().execute().toCompletableFuture().join();
 
-    assertThat(productPagedQueryResponse.getResults())
-        .hasSize(1)
-        .singleElement()
+    assertThat(productApiHttpResponse.getStatusCode()).isEqualTo(HttpStatusCode.OK_200);
+    assertThat(productApiHttpResponse.getBody()).isNotNull();
+    assertThat(productApiHttpResponse.getBody())
         .satisfies(
             product -> {
               assertThat(product.getKey()).isEqualTo(productKey);
@@ -604,11 +561,11 @@ public final class IntegrationTestUtils {
               assertThat(stagedMasterVariant.getSku()).isEqualTo(masterVariantSku);
             });
 
-    return productPagedQueryResponse.getResults().get(0);
+    return productApiHttpResponse.getBody();
   }
 
   @Nonnull
-  public static ObjectNode createReferenceObject(
+  public static ObjectNode createReferenceOfType(
       @Nonnull final String typeId, @Nonnull final String id) {
     final ObjectNode referenceObject = JsonNodeFactory.instance.objectNode();
     referenceObject.set("typeId", JsonNodeFactory.instance.textNode(typeId));
