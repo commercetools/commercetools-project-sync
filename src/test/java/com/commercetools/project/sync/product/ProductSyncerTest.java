@@ -272,9 +272,11 @@ class ProductSyncerTest {
   @Test
   void getQuery_ShouldBuildProductQueryWithoutAnyExpansionPaths() {
     // preparation
-    final ProductSyncer productSyncer =
-        ProductSyncer.of(
-            mock(ProjectApiRoot.class), mock(ProjectApiRoot.class), getMockedClock(), null);
+    ProjectApiRoot apiRoot = mock(ProjectApiRoot.class);
+    when(apiRoot.productProjections()).thenReturn(mock());
+    when(apiRoot.productProjections().get()).thenReturn(mock());
+    when(apiRoot.productProjections().get().addStaged(anyBoolean())).thenReturn(mock());
+    final ProductSyncer productSyncer = ProductSyncer.of(apiRoot, apiRoot, getMockedClock(), null);
 
     // test
     final ByProjectKeyProductProjectionsGet query = productSyncer.getQuery();
