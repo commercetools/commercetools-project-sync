@@ -164,15 +164,15 @@ public class ProductSyncWithReferenceResolutionIT {
     final CustomerGroup customerGroup =
         sourceProjectClient.customerGroups().post(customerGroupDraft).executeBlocking().getBody();
 
-    CTP_TARGET_CLIENT.customerGroups().post(customerGroupDraft).executeBlocking().getBody();
+    CTP_TARGET_CLIENT.customerGroups().post(customerGroupDraft).executeBlocking();
 
     CustomFieldsDraft customFieldsDraft =
         CustomFieldsDraftBuilder.of().type(type.toResourceIdentifier()).build();
 
     final ChannelDraft draft =
         ChannelDraftBuilder.of().key("channelKey").roles(ChannelRoleEnum.INVENTORY_SUPPLY).build();
-    sourceProjectClient.channels().post(draft).executeBlocking().getBody();
-    CTP_TARGET_CLIENT.channels().post(draft).executeBlocking().getBody();
+    sourceProjectClient.channels().post(draft).executeBlocking();
+    CTP_TARGET_CLIENT.channels().post(draft).executeBlocking();
 
     final PriceDraft priceDraft =
         PriceDraftBuilder.of(getPriceDraft(22200L, "EUR", "DE", null, null, null))
