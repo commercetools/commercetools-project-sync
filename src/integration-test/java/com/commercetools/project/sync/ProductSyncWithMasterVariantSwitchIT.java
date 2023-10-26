@@ -26,10 +26,7 @@ import org.junit.jupiter.api.Test;
 import uk.org.lidalia.slf4jext.Level;
 import uk.org.lidalia.slf4jtest.TestLogger;
 import uk.org.lidalia.slf4jtest.TestLoggerFactory;
-//
-// This will suppress MoreThanOneLogger warnings in this class
 
-@SuppressWarnings("PMD.MoreThanOneLogger")
 class ProductSyncWithMasterVariantSwitchIT {
   private static final TestLogger cliRunnerTestLogger =
       TestLoggerFactory.getTestLogger(CliRunner.class);
