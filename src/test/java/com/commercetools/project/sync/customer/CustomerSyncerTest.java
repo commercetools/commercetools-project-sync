@@ -94,14 +94,13 @@ class CustomerSyncerTest {
   void syncWithError_ShouldCallErrorCallback() {
     // preparation: customer with no key is synced
     final ProjectApiRoot sourceClient = mock(ProjectApiRoot.class);
-    final ProjectApiRoot targetClient = mock(ProjectApiRoot.class);
     final List<Customer> customers =
         Collections.singletonList(readObjectFromResource("customer-no-key.json", Customer.class));
     mockProjectApiRootGetRequest(sourceClient, customers);
 
     // test
     final CustomerSyncer customerSyncer =
-        CustomerSyncer.of(sourceClient, targetClient, mock(Clock.class));
+        CustomerSyncer.of(sourceClient, mock(ProjectApiRoot.class), mock(Clock.class));
     customerSyncer.sync(null, true).toCompletableFuture().join();
 
     // assertion
