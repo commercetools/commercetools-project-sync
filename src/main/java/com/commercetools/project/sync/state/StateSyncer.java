@@ -28,8 +28,6 @@ import javax.annotation.Nonnull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-// This class compiles but not tested yet
-// TODO: Test class and adjust logic if needed
 public final class StateSyncer
     extends Syncer<
         State,
@@ -77,7 +75,16 @@ public final class StateSyncer
   @Nonnull
   @Override
   protected CompletionStage<List<StateDraft>> transform(@Nonnull List<State> states) {
-    return toStateDrafts(getSourceClient(), referenceIdToKeyCache, states);
+    return toStateDrafts(getSourceClient(), referenceIdToKeyCache, states)
+        .handle(
+            (drafts, exception) -> {
+              if (exception != null) {
+                final SyncException syncException = new SyncException(exception.getCause());
+                logErrorCallback(LOGGER, "state", syncException, Optional.empty(), List.of());
+                return List.of();
+              }
+              return drafts;
+            });
   }
 
   @Nonnull
