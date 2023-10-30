@@ -200,9 +200,10 @@ class CustomObjectServiceImplTest {
         .withThrowableOfType(ExecutionException.class)
         .withCauseExactlyInstanceOf(RuntimeException.class)
         .satisfies(
-            exception -> assertThat(exception.getCause().getCause())
-                .isInstanceOf(BadGatewayException.class)
-                .hasMessageContaining("test"));
+            exception ->
+                assertThat(exception.getCause().getCause())
+                    .isInstanceOf(BadGatewayException.class)
+                    .hasMessageContaining("test"));
   }
 
   @Test
