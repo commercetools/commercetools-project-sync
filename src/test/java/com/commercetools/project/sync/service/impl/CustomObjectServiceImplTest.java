@@ -198,8 +198,11 @@ class CustomObjectServiceImplTest {
     assertThat(lastSyncCustomObject)
         .failsWithin(Duration.ZERO)
         .withThrowableOfType(ExecutionException.class)
-        .withCauseExactlyInstanceOf(BadGatewayException.class)
-        .withMessageContaining("test");
+        .withCauseExactlyInstanceOf(RuntimeException.class)
+        .satisfies(
+            exception -> assertThat(exception.getCause().getCause())
+                .isInstanceOf(BadGatewayException.class)
+                .hasMessageContaining("test"));
   }
 
   @Test

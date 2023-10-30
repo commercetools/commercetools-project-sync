@@ -11,6 +11,7 @@ import com.commercetools.project.sync.model.response.LastSyncCustomObject;
 import com.commercetools.project.sync.service.CustomObjectService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.vrap.rmf.base.client.ApiHttpResponse;
+import io.vrap.rmf.base.client.error.NotFoundException;
 import io.vrap.rmf.base.client.utils.json.JsonUtils;
 import java.time.ZonedDateTime;
 import java.util.Optional;
@@ -77,16 +78,25 @@ public class CustomObjectServiceImpl implements CustomObjectService {
         .withContainerAndKey(containerName, sourceProjectKey)
         .get()
         .execute()
-        .thenApply(
-            (customObjectApiHttpResponse) -> {
-              final CustomObject responseBody = customObjectApiHttpResponse.getBody();
-              final ObjectMapper objectMapper = JsonUtils.getConfiguredObjectMapper();
-              final LastSyncCustomObject lastSyncCustomObject =
-                  responseBody == null
-                      ? null
-                      : objectMapper.convertValue(
-                          responseBody.getValue(), LastSyncCustomObject.class);
-              return Optional.ofNullable(lastSyncCustomObject);
+        .handle(
+            (customObjectApiHttpResponse, throwable) -> {
+              if (throwable != null) {
+                if (throwable.getCause() != null
+                    && throwable.getCause().getClass().equals(NotFoundException.class)) {
+                  return Optional.empty();
+                } else {
+                  throw new RuntimeException(throwable);
+                }
+              } else {
+                final CustomObject responseBody = customObjectApiHttpResponse.getBody();
+                final ObjectMapper objectMapper = JsonUtils.getConfiguredObjectMapper();
+                final LastSyncCustomObject lastSyncCustomObject =
+                    responseBody == null
+                        ? null
+                        : objectMapper.convertValue(
+                            responseBody.getValue(), LastSyncCustomObject.class);
+                return Optional.ofNullable(lastSyncCustomObject);
+              }
             });
   }
 
