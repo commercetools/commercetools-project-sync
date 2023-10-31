@@ -36,8 +36,6 @@ import javax.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-// This class compiles but not tested yet
-// TODO: Test class and adjust logic if needed
 public final class CustomObjectSyncer
     extends Syncer<
         CustomObject,

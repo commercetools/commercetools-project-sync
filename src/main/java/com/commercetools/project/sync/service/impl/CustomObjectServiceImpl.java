@@ -19,8 +19,6 @@ import java.util.concurrent.CompletableFuture;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-// This class compiles but not tested yet
-// TODO: Test class and adjust logic if needed
 public class CustomObjectServiceImpl implements CustomObjectService {
 
   public static final String TIMESTAMP_GENERATOR_KEY = "timestampGenerator";
