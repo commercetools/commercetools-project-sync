@@ -22,10 +22,8 @@ import com.commercetools.api.models.state.StatePagedQueryResponse;
 import com.commercetools.api.models.state.StatePagedQueryResponseBuilder;
 import com.commercetools.api.models.state.StateResourceIdentifierBuilder;
 import com.commercetools.api.models.state.StateTypeEnum;
-import com.commercetools.sync.commons.exceptions.ReferenceTransformException;
 import com.commercetools.sync.states.StateSync;
 import io.vrap.rmf.base.client.ApiHttpResponse;
-
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -100,17 +98,13 @@ class StateSyncerTest {
   @Test
   void getQuery_ShouldBuildStateQuery() {
     // preparation
-
     final ProjectApiRoot apiRoot =
         ApiRootBuilder.of().withApiBaseUrl("apiBaseUrl").build("testProjectKey");
     final StateSyncer stateSyncer =
         StateSyncer.of(apiRoot, mock(ProjectApiRoot.class), getMockedClock());
 
-    // test
-    final ByProjectKeyStatesGet query = stateSyncer.getQuery();
-
-    // assertion
-    assertThat(query).isInstanceOf(ByProjectKeyStatesGet.class);
+    // test + assertion
+    assertThat(stateSyncer.getQuery()).isInstanceOf(ByProjectKeyStatesGet.class);
   }
 
   @Test
@@ -123,7 +117,8 @@ class StateSyncerTest {
     // test
     final StateSyncer stateSyncer =
         StateSyncer.of(sourceClient, mock(ProjectApiRoot.class), getMockedClock());
-    final CompletableFuture<List<StateDraft>> stateDrafts = stateSyncer.transform(stateTypePage).toCompletableFuture();
+    final CompletableFuture<List<StateDraft>> stateDrafts =
+        stateSyncer.transform(stateTypePage).toCompletableFuture();
 
     // assertion
     assertThat(stateDrafts).isCompletedWithValue(Collections.emptyList());
