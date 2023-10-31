@@ -108,7 +108,7 @@ class StateSyncerTest {
   }
 
   @Test
-  void syncWithError_WhenNoKeyIsProvided_ShouldContinueAndLogError() {
+  void transform_WhenNoKeyIsProvided_ShouldContinueAndLogError() {
     // preparation
     final ProjectApiRoot sourceClient = mock(ProjectApiRoot.class);
     final List<State> stateTypePage =
@@ -125,12 +125,9 @@ class StateSyncerTest {
     assertThat(syncerTestLogger.getAllLoggingEvents())
         .anySatisfy(
             loggingEvent -> {
-              assertThat(loggingEvent.getMessage())
-                  .contains(
-                      NullPointerException.class.getCanonicalName()
-                          + ": StateDraft: key is missing");
+              assertThat(loggingEvent.getMessage()).contains("StateDraft: key is missing");
               assertThat(loggingEvent.getThrowable().isPresent()).isTrue();
-              assertThat(loggingEvent.getThrowable().get().getCause().getCause())
+              assertThat(loggingEvent.getThrowable().get())
                   .isInstanceOf(NullPointerException.class);
             });
   }
