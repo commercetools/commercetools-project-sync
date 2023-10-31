@@ -11,11 +11,10 @@ import com.commercetools.api.models.WithKey;
 import com.commercetools.sync.commons.exceptions.SyncException;
 import com.commercetools.sync.products.ProductSync;
 import com.commercetools.sync.types.TypeSync;
+import io.vrap.rmf.base.client.error.BadGatewayException;
 import java.util.Arrays;
 import java.util.Optional;
 import java.util.concurrent.CompletionException;
-
-import io.vrap.rmf.base.client.error.BadGatewayException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import uk.org.lidalia.slf4jtest.LoggingEvent;

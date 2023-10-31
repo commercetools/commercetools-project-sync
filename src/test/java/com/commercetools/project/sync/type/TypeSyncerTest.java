@@ -21,6 +21,7 @@ import com.commercetools.api.models.type.TypePagedQueryResponse;
 import com.commercetools.api.models.type.TypePagedQueryResponseBuilder;
 import com.commercetools.sync.types.TypeSync;
 import io.vrap.rmf.base.client.ApiHttpResponse;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
@@ -99,14 +100,40 @@ class TypeSyncerTest {
   }
 
   @Test
-  void syncWithError_WhenNoKeyIsProvided_ShouldCallErrorCallback() {
+  void transform_WhenNoKeyIsProvided_ShouldLogErrorAndContinue() {
     // preparation
     final ProjectApiRoot sourceClient = mock(ProjectApiRoot.class);
     final List<Type> typePage =
         List.of(readObjectFromResource("type-without-key.json", Type.class));
+
+    // test
+    final TypeSyncer typeSyncer =
+        TypeSyncer.of(sourceClient, mock(ProjectApiRoot.class), getMockedClock());
+    final CompletableFuture<List<TypeDraft>> typeDrafts =
+        typeSyncer.transform(typePage).toCompletableFuture();
+
+    // assertion
+    assertThat(typeDrafts).isCompletedWithValue(Collections.emptyList());
+    assertThat(syncerTestLogger.getAllLoggingEvents())
+        .anySatisfy(
+            loggingEvent -> {
+              assertThat(loggingEvent.getMessage()).contains("TypeDraft: key is missing");
+              assertThat(loggingEvent.getThrowable().isPresent()).isTrue();
+              assertThat(loggingEvent.getThrowable().get())
+                  .isInstanceOf(NullPointerException.class);
+            });
+  }
+
+  @Test
+  void sync_whenKeyIsBlank_shouldCallErrorCallback() {
+    // preparation
+    final ProjectApiRoot sourceClient = mock(ProjectApiRoot.class);
+    Type type = readObjectFromResource("type-key-1.json", Type.class);
+    type.setKey("");
+
     final TypePagedQueryResponse response =
         TypePagedQueryResponseBuilder.of()
-            .results(typePage)
+            .results(List.of(type))
             .limit(20L)
             .offset(0L)
             .count(1L)
@@ -126,16 +153,17 @@ class TypeSyncerTest {
     // test
     final TypeSyncer typeSyncer =
         TypeSyncer.of(sourceClient, mock(ProjectApiRoot.class), getMockedClock());
-    typeSyncer.sync(null, true).toCompletableFuture().join();
+    typeSyncer.sync(null, true);
 
-    // assertion
+    // assertions
     final LoggingEvent errorLog = syncerTestLogger.getAllLoggingEvents().get(1);
     assertThat(errorLog.getMessage())
         .isEqualTo(
-            "Error when trying to sync types. Existing key: <<not present>>. Update actions: []");
+            "Error when trying to sync type. Existing key: <<not present>>. Update actions: []");
     assertThat(errorLog.getThrowable().get().getMessage())
-        .containsIgnoringCase("TypeDraft: key is missing");
+        .isEqualTo(
+            format(
+                "TypeDraft with name: %s doesn't have a key. Please make sure all type drafts have keys.",
+                type.getName()));
   }
-
-  //TODO: Add test for batchValidator if possible / and caching empty keys?
 }
