@@ -11,6 +11,7 @@ import com.commercetools.sync.commons.BaseSync;
 import com.commercetools.sync.commons.exceptions.SyncException;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletionException;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -110,6 +111,14 @@ public final class SyncUtils {
               "Warning when trying to sync %s. Existing key: %s", resourceName, resourceIdentifier),
           exception);
     }
+  }
+
+  @Nonnull
+  public static Throwable getCompletionExceptionCause(@Nonnull final Throwable exception) {
+    if (exception instanceof CompletionException) {
+      return getCompletionExceptionCause(exception.getCause());
+    }
+    return exception;
   }
 
   @Nonnull

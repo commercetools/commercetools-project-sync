@@ -1,6 +1,7 @@
 package com.commercetools.project.sync.util;
 
 import static com.commercetools.project.sync.util.SyncUtils.*;
+import static com.commercetools.project.sync.util.TestUtils.createBadGatewayException;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -12,6 +13,9 @@ import com.commercetools.sync.products.ProductSync;
 import com.commercetools.sync.types.TypeSync;
 import java.util.Arrays;
 import java.util.Optional;
+import java.util.concurrent.CompletionException;
+
+import io.vrap.rmf.base.client.error.BadGatewayException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import uk.org.lidalia.slf4jtest.LoggingEvent;
@@ -174,5 +178,20 @@ class SyncUtilsTest {
         .isEqualTo("Warning when trying to sync test resource. Existing key: test identifier");
     assertThat(loggingEvent.getThrowable().isPresent()).isTrue();
     assertThat(loggingEvent.getThrowable().get()).isInstanceOf(SyncException.class);
+  }
+
+  @Test
+  void getCompletionExceptionCause_WithCompletionException_ShouldReturnDifferentException() {
+    final BadGatewayException wrappedException = createBadGatewayException();
+    final CompletionException completionException = new CompletionException(wrappedException);
+
+    assertThat(getCompletionExceptionCause(completionException)).isEqualTo(wrappedException);
+  }
+
+  @Test
+  void getCompletionExceptionCause_WithBadGatewayException_ShouldReturnException() {
+    final BadGatewayException badGatewayException = createBadGatewayException();
+
+    assertThat(getCompletionExceptionCause(badGatewayException)).isEqualTo(badGatewayException);
   }
 }
