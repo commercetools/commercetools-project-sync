@@ -22,8 +22,11 @@ import com.commercetools.api.models.state.StatePagedQueryResponse;
 import com.commercetools.api.models.state.StatePagedQueryResponseBuilder;
 import com.commercetools.api.models.state.StateResourceIdentifierBuilder;
 import com.commercetools.api.models.state.StateTypeEnum;
+import com.commercetools.sync.commons.exceptions.ReferenceTransformException;
 import com.commercetools.sync.states.StateSync;
 import io.vrap.rmf.base.client.ApiHttpResponse;
+
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
@@ -111,41 +114,30 @@ class StateSyncerTest {
   }
 
   @Test
-  void syncWithError_WhenNoKeyIsProvided_ShouldCallErrorCallback() {
+  void syncWithError_WhenNoKeyIsProvided_ShouldContinueAndLogError() {
     // preparation
     final ProjectApiRoot sourceClient = mock(ProjectApiRoot.class);
     final List<State> stateTypePage =
         List.of(readObjectFromResource("state-without-key.json", State.class));
-    final StatePagedQueryResponse queryResponse =
-        StatePagedQueryResponseBuilder.of()
-            .results(stateTypePage)
-            .limit(20L)
-            .offset(0L)
-            .count(1L)
-            .build();
-    final ApiHttpResponse apiHttpResponse = mock(ApiHttpResponse.class);
-    when(apiHttpResponse.getBody()).thenReturn(queryResponse);
-    final ByProjectKeyStatesGet byProjectKeyStatesGet = mock(ByProjectKeyStatesGet.class);
-    when(byProjectKeyStatesGet.withLimit(anyInt())).thenReturn(byProjectKeyStatesGet);
-    when(byProjectKeyStatesGet.withWithTotal(anyBoolean())).thenReturn(byProjectKeyStatesGet);
-    when(byProjectKeyStatesGet.withSort(anyString())).thenReturn(byProjectKeyStatesGet);
-    when(byProjectKeyStatesGet.execute())
-        .thenReturn(CompletableFuture.completedFuture(apiHttpResponse));
-    when(sourceClient.states()).thenReturn(mock());
-    when(sourceClient.states().get()).thenReturn(byProjectKeyStatesGet);
 
     // test
     final StateSyncer stateSyncer =
         StateSyncer.of(sourceClient, mock(ProjectApiRoot.class), getMockedClock());
-    stateSyncer.sync(null, true).toCompletableFuture().join();
+    final CompletableFuture<List<StateDraft>> stateDrafts = stateSyncer.transform(stateTypePage).toCompletableFuture();
 
     // assertion
-    final LoggingEvent errorLog = syncerTestLogger.getAllLoggingEvents().get(1);
-    assertThat(errorLog.getMessage())
-        .isEqualTo(
-            "Error when trying to sync state. Existing key: <<not present>>. Update actions: []");
-    assertThat(errorLog.getThrowable().get().getMessage())
-        .containsIgnoringCase("StateDraft: key is missing");
+    assertThat(stateDrafts).isCompletedWithValue(Collections.emptyList());
+    assertThat(syncerTestLogger.getAllLoggingEvents())
+        .anySatisfy(
+            loggingEvent -> {
+              assertThat(loggingEvent.getMessage())
+                  .contains(
+                      NullPointerException.class.getCanonicalName()
+                          + ": StateDraft: key is missing");
+              assertThat(loggingEvent.getThrowable().isPresent()).isTrue();
+              assertThat(loggingEvent.getThrowable().get().getCause().getCause())
+                  .isInstanceOf(NullPointerException.class);
+            });
   }
 
   /*

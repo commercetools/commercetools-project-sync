@@ -23,6 +23,7 @@ import com.commercetools.sync.states.helpers.StateSyncStatistics;
 import java.time.Clock;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.CompletionStage;
 import javax.annotation.Nonnull;
 import org.slf4j.Logger;
@@ -77,14 +78,23 @@ public final class StateSyncer
   protected CompletionStage<List<StateDraft>> transform(@Nonnull List<State> states) {
     return toStateDrafts(getSourceClient(), referenceIdToKeyCache, states)
         .handle(
-            (drafts, exception) -> {
-              if (exception != null) {
-                final SyncException syncException = new SyncException(exception.getCause());
-                logErrorCallback(LOGGER, "state", syncException, Optional.empty(), List.of());
+            (stateDrafts, throwable) -> {
+              if (throwable != null) {
+                if (LOGGER.isWarnEnabled()) {
+                  LOGGER.warn(throwable.getMessage(), getCompletionExceptionCause(throwable));
+                }
                 return List.of();
               }
-              return drafts;
+              return stateDrafts;
             });
+  }
+
+  @Nonnull
+  private static Throwable getCompletionExceptionCause(@Nonnull final Throwable exception) {
+    if (exception instanceof CompletionException) {
+      return getCompletionExceptionCause(exception.getCause());
+    }
+    return exception;
   }
 
   @Nonnull
