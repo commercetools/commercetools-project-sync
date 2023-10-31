@@ -1,6 +1,7 @@
 package com.commercetools.project.sync.product;
 
 import static com.commercetools.project.sync.util.SyncUtils.IDENTIFIER_NOT_PRESENT;
+import static com.commercetools.project.sync.util.SyncUtils.getCompletionExceptionCause;
 import static com.commercetools.project.sync.util.SyncUtils.logErrorCallback;
 import static com.commercetools.project.sync.util.SyncUtils.logWarningCallback;
 import static com.commercetools.sync.products.utils.ProductTransformUtils.toProductDrafts;
@@ -33,7 +34,6 @@ import java.time.Clock;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.CompletionException;
 import java.util.concurrent.CompletionStage;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
@@ -169,14 +169,6 @@ public final class ProductSyncer
               .collect(Collectors.toList());
     }
     return ProductVariantDraftBuilder.of(productVariantDraft).prices(priceDrafts).build();
-  }
-
-  @Nonnull
-  private static Throwable getCompletionExceptionCause(@Nonnull final Throwable exception) {
-    if (exception instanceof CompletionException) {
-      return getCompletionExceptionCause(exception.getCause());
-    }
-    return exception;
   }
 
   @Nonnull
