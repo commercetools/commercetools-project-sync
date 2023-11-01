@@ -431,7 +431,6 @@ public final class IntegrationTestUtils {
   }
 
   private static void deleteProductTypesWithRetry(@Nonnull final ProjectApiRoot ctpClient) {
-    // todo: add retry
     QueryUtils.queryAll(
             ctpClient.productTypes().get(),
             productTypes -> {
@@ -447,6 +446,13 @@ public final class IntegrationTestUtils {
                           .map(CompletionStage::toCompletableFuture)
                           .toArray(CompletableFuture[]::new))
                   .join();
+            })
+        .handle(
+            (unused, throwable) -> {
+              if (throwable != null) {
+                deleteProductTypesWithRetry(ctpClient);
+              }
+              return null;
             })
         .toCompletableFuture()
         .join();
