@@ -18,6 +18,7 @@ import com.commercetools.api.models.product.ProductProjectionPagedQueryResponse;
 import com.commercetools.api.models.product.ProductUpdateAction;
 import com.commercetools.api.models.product.ProductVariantDraft;
 import com.commercetools.api.models.product.ProductVariantDraftBuilder;
+import com.commercetools.api.predicates.query.product.ProductProjectionQueryBuilderDsl;
 import com.commercetools.project.sync.Syncer;
 import com.commercetools.project.sync.model.ProductSyncCustomRequest;
 import com.commercetools.project.sync.service.CustomObjectService;
@@ -46,6 +47,7 @@ public final class ProductSyncer
         ProductProjection,
         ProductUpdateAction,
         ProductDraft,
+        ProductProjectionQueryBuilderDsl,
         ProductSyncStatistics,
         ProductSyncOptions,
         ByProjectKeyProductProjectionsGet,

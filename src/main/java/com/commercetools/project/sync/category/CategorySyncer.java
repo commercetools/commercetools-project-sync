@@ -10,6 +10,7 @@ import com.commercetools.api.models.category.Category;
 import com.commercetools.api.models.category.CategoryDraft;
 import com.commercetools.api.models.category.CategoryPagedQueryResponse;
 import com.commercetools.api.models.category.CategoryUpdateAction;
+import com.commercetools.api.predicates.query.category.CategoryQueryBuilderDsl;
 import com.commercetools.project.sync.Syncer;
 import com.commercetools.project.sync.service.CustomObjectService;
 import com.commercetools.project.sync.service.impl.CustomObjectServiceImpl;
@@ -33,6 +34,7 @@ public final class CategorySyncer
         Category,
         CategoryUpdateAction,
         CategoryDraft,
+        CategoryQueryBuilderDsl,
         CategorySyncStatistics,
         CategorySyncOptions,
         ByProjectKeyCategoriesGet,
