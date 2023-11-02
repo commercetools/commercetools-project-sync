@@ -92,11 +92,8 @@ class TypeSyncerTest {
     final TypeSyncer typeSyncer =
         TypeSyncer.of(apiRoot, mock(ProjectApiRoot.class), getMockedClock());
 
-    // test
-    final ByProjectKeyTypesGet query = typeSyncer.getQuery();
-
-    // assertion
-    assertThat(query).isInstanceOf(ByProjectKeyTypesGet.class);
+    // test + assertion
+    assertThat(typeSyncer.getQuery()).isInstanceOf(ByProjectKeyTypesGet.class);
   }
 
   @Test
@@ -128,7 +125,7 @@ class TypeSyncerTest {
   void sync_whenKeyIsBlank_shouldCallErrorCallback() {
     // preparation
     final ProjectApiRoot sourceClient = mock(ProjectApiRoot.class);
-    Type type = readObjectFromResource("type-key-1.json", Type.class);
+    final Type type = readObjectFromResource("type-key-1.json", Type.class);
     type.setKey("");
 
     final TypePagedQueryResponse response =
