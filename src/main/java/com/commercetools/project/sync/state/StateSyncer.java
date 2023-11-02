@@ -1,5 +1,6 @@
 package com.commercetools.project.sync.state;
 
+import static com.commercetools.project.sync.util.SyncUtils.getCompletionExceptionCause;
 import static com.commercetools.project.sync.util.SyncUtils.logErrorCallback;
 import static com.commercetools.project.sync.util.SyncUtils.logWarningCallback;
 import static com.commercetools.sync.states.utils.StateTransformUtils.toStateDrafts;
@@ -23,7 +24,6 @@ import com.commercetools.sync.states.helpers.StateSyncStatistics;
 import java.time.Clock;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.CompletionException;
 import java.util.concurrent.CompletionStage;
 import javax.annotation.Nonnull;
 import org.slf4j.Logger;
@@ -87,14 +87,6 @@ public final class StateSyncer
               }
               return stateDrafts;
             });
-  }
-
-  @Nonnull
-  private static Throwable getCompletionExceptionCause(@Nonnull final Throwable exception) {
-    if (exception instanceof CompletionException) {
-      return getCompletionExceptionCause(exception.getCause());
-    }
-    return exception;
   }
 
   @Nonnull
