@@ -23,13 +23,12 @@ import com.commercetools.sync.states.helpers.StateSyncStatistics;
 import java.time.Clock;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.CompletionStage;
 import javax.annotation.Nonnull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-// This class compiles but not tested yet
-// TODO: Test class and adjust logic if needed
 public final class StateSyncer
     extends Syncer<
         State,
@@ -77,7 +76,25 @@ public final class StateSyncer
   @Nonnull
   @Override
   protected CompletionStage<List<StateDraft>> transform(@Nonnull List<State> states) {
-    return toStateDrafts(getSourceClient(), referenceIdToKeyCache, states);
+    return toStateDrafts(getSourceClient(), referenceIdToKeyCache, states)
+        .handle(
+            (stateDrafts, throwable) -> {
+              if (throwable != null) {
+                if (LOGGER.isWarnEnabled()) {
+                  LOGGER.warn(throwable.getMessage(), getCompletionExceptionCause(throwable));
+                }
+                return List.of();
+              }
+              return stateDrafts;
+            });
+  }
+
+  @Nonnull
+  private static Throwable getCompletionExceptionCause(@Nonnull final Throwable exception) {
+    if (exception instanceof CompletionException) {
+      return getCompletionExceptionCause(exception.getCause());
+    }
+    return exception;
   }
 
   @Nonnull
