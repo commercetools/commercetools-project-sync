@@ -33,8 +33,6 @@ import javax.annotation.Nullable;
 import net.logstash.logback.marker.Markers;
 import org.slf4j.Logger;
 
-// This class compiles but not tested yet
-// TODO: Test class and adjust logic if needed
 /**
  * Base class of the syncer that handles syncing a resource from a source CTP project to a target
  * CTP project.
@@ -144,7 +142,7 @@ public abstract class Syncer<
       syncStage =
           customObjectService
               .getCurrentCtpTimestamp(runnerName, syncModuleName)
-              .thenCompose(
+              .thenAccept(
                   currentCtpTimestamp ->
                       syncResourcesSinceLastSync(
                           sourceProjectKey, syncModuleName, runnerName, currentCtpTimestamp));
@@ -207,11 +205,11 @@ public abstract class Syncer<
   private PagedQueryT getQueryWithTimeBoundedPredicate(
       @Nonnull final ZonedDateTime lowerBound, @Nonnull final ZonedDateTime upperBound) {
 
+    final String queryPredicate = format(
+        "lastModifiedAt >= \"%s\" AND lastModifiedAt <= \"%s\"", lowerBound, upperBound);
     return (PagedQueryT)
         getQuery()
-            .withWhere("lastModifiedAt >= \":lower\" AND lastModifiedAt <= \":upper\"")
-            .withPredicateVar("lower", lowerBound)
-            .withPredicateVar("upper", upperBound);
+            .withWhere(queryPredicate);
   }
 
   @Nonnull
