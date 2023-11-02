@@ -24,8 +24,9 @@ import io.vrap.rmf.base.client.ApiHttpResponse;
 import io.vrap.rmf.base.client.error.BadGatewayException;
 import io.vrap.rmf.base.client.utils.CompletableFutureUtils;
 import java.time.Duration;
-import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
@@ -45,7 +46,7 @@ class CustomObjectServiceImplTest {
 
   private static final CustomObject STRING_CUSTOM_OBJECT = mock(CustomObject.class);
 
-  private static final LastSyncCustomObject<ProductSyncStatistics> LAST_SYNC_CUSTOM_OBJECT =
+  private static final LastSyncCustomObject<ProductSyncStatistics> LAST_SYNC_CUSTOM_OBJECT_VALUE =
       LastSyncCustomObject.of(now, new ProductSyncStatistics(), 0);
 
   private final ByProjectKeyCustomObjectsRequestBuilder byProjectKeyCustomObjectsRequestBuilder =
@@ -59,7 +60,7 @@ class CustomObjectServiceImplTest {
   @BeforeAll
   static void setup() {
     when(STRING_CUSTOM_OBJECT.getLastModifiedAt()).thenReturn(now);
-    when(STRING_CUSTOM_OBJECT.getValue()).thenReturn(LAST_SYNC_CUSTOM_OBJECT);
+    when(STRING_CUSTOM_OBJECT.getValue()).thenReturn(LAST_SYNC_CUSTOM_OBJECT_VALUE);
   }
 
   @BeforeEach
@@ -85,7 +86,6 @@ class CustomObjectServiceImplTest {
   }
 
   @Test
-  @SuppressWarnings("unchecked")
   void getCurrentCtpTimestamp_OnSuccessfulUpsert_ShouldCompleteWithCtpTimestamp() {
     // preparation
     when(apiHttpResponse.getBody()).thenReturn(STRING_CUSTOM_OBJECT);
@@ -102,7 +102,6 @@ class CustomObjectServiceImplTest {
   }
 
   @Test
-  @SuppressWarnings("unchecked")
   void getCurrentCtpTimestamp_OnFailedUpsert_ShouldCompleteExceptionally() {
     // preparation
     final BadGatewayException badGatewayException = TestUtils.createBadGatewayException();
@@ -124,7 +123,6 @@ class CustomObjectServiceImplTest {
   }
 
   @Test
-  @SuppressWarnings("unchecked")
   @Disabled("https://commercetools.atlassian.net/browse/DEVX-272")
   void
       getLastSyncCustomObject_OnSuccessfulQueryWithResults_ShouldCompleteWithLastSyncCustomObject() {
@@ -137,31 +135,29 @@ class CustomObjectServiceImplTest {
     final CustomObjectService customObjectService = new CustomObjectServiceImpl(ctpClient);
 
     // test
-    final CompletionStage<Optional<LastSyncCustomObject>> lastSyncCustomObjectCompletionStage =
-        customObjectService.getLastSyncCustomObject("foo", "bar", DEFAULT_RUNNER_NAME);
-
     final LastSyncCustomObject lastSyncCustomObject =
-        lastSyncCustomObjectCompletionStage.toCompletableFuture().join().get();
+        customObjectService.getLastSyncCustomObject("foo", "bar", DEFAULT_RUNNER_NAME).join().get();
 
     // assertions
+    assertThat(lastSyncCustomObject.getLastSyncDurationInMillis())
+        .isEqualTo(LAST_SYNC_CUSTOM_OBJECT_VALUE.getLastSyncDurationInMillis());
+    assertThat(lastSyncCustomObject.getLastSyncStatistics())
+        .isEqualTo(LAST_SYNC_CUSTOM_OBJECT_VALUE.getLastSyncStatistics());
+    assertThat(lastSyncCustomObject.getApplicationVersion())
+        .isEqualTo(LAST_SYNC_CUSTOM_OBJECT_VALUE.getApplicationVersion());
     assertThat(
             lastSyncCustomObject
                 .getLastSyncTimestamp()
-                .withZoneSameInstant(ZoneId.of("Etc/UTC"))
-                .withNano(0))
+                .truncatedTo(ChronoUnit.SECONDS)
+                .withZoneSameInstant(ZoneOffset.UTC))
         .isEqualTo(
-            LAST_SYNC_CUSTOM_OBJECT
+            LAST_SYNC_CUSTOM_OBJECT_VALUE
                 .getLastSyncTimestamp()
-                .withZoneSameInstant(ZoneId.of("Etc/UTC"))
-                .withNano(0));
-    assertThat(lastSyncCustomObject.getLastSyncStatistics())
-        .isEqualTo(LAST_SYNC_CUSTOM_OBJECT.getLastSyncStatistics());
-    assertThat(lastSyncCustomObject.getLastSyncDurationInMillis())
-        .isEqualTo(LAST_SYNC_CUSTOM_OBJECT.getLastSyncDurationInMillis());
+                .truncatedTo(ChronoUnit.SECONDS)
+                .withZoneSameInstant(ZoneOffset.UTC));
   }
 
   @Test
-  @SuppressWarnings("unchecked")
   void getLastSyncCustomObject_OnSuccessfulQueryWithNoResults_ShouldCompleteWithEmptyOptional() {
     // preparation
     when(apiHttpResponse.getBody()).thenReturn(null);
@@ -180,7 +176,6 @@ class CustomObjectServiceImplTest {
   }
 
   @Test
-  @SuppressWarnings("unchecked")
   void getLastSyncCustomObject_OnFailedQuery_ShouldCompleteExceptionally() {
     // preparation
     when(byProjectKeyCustomObjectsByContainerByKeyGet.execute())
@@ -198,12 +193,15 @@ class CustomObjectServiceImplTest {
     assertThat(lastSyncCustomObject)
         .failsWithin(Duration.ZERO)
         .withThrowableOfType(ExecutionException.class)
-        .withCauseExactlyInstanceOf(BadGatewayException.class)
-        .withMessageContaining("test");
+        .withCauseExactlyInstanceOf(RuntimeException.class)
+        .satisfies(
+            exception ->
+                assertThat(exception.getCause().getCause())
+                    .isInstanceOf(BadGatewayException.class)
+                    .hasMessageContaining("test"));
   }
 
   @Test
-  @SuppressWarnings("unchecked")
   void createLastSyncCustomObject_OnSuccessfulCreation_ShouldCompleteWithLastSyncCustomObject() {
     // preparation
     when(apiHttpResponse.getBody()).thenReturn(STRING_CUSTOM_OBJECT);
@@ -228,11 +226,10 @@ class CustomObjectServiceImplTest {
         (LastSyncCustomObject) createdCustomObject.getValue();
 
     // assertions
-    assertThat(customObjectValue).isEqualTo(LAST_SYNC_CUSTOM_OBJECT);
+    assertThat(customObjectValue).isEqualTo(LAST_SYNC_CUSTOM_OBJECT_VALUE);
   }
 
   @Test
-  @SuppressWarnings("unchecked")
   void createLastSyncCustomObject_OnFailedCreation_ShouldCompleteExceptionally() {
     // preparation
     when(byProjectKeyCustomObjectsPost.execute())
@@ -245,7 +242,7 @@ class CustomObjectServiceImplTest {
     // test
     final CompletableFuture<ApiHttpResponse<CustomObject>> createdCustomObject =
         customObjectService.createLastSyncCustomObject(
-            "foo", "bar", DEFAULT_RUNNER_NAME, LAST_SYNC_CUSTOM_OBJECT);
+            "foo", "bar", DEFAULT_RUNNER_NAME, LAST_SYNC_CUSTOM_OBJECT_VALUE);
 
     // assertions
     assertThat(createdCustomObject)
@@ -256,7 +253,6 @@ class CustomObjectServiceImplTest {
   }
 
   @Test
-  @SuppressWarnings("unchecked")
   void createLastSyncCustomObject_WithValidTestRunnerName_ShouldCreateCorrectCustomObjectDraft() {
     // preparation
     final ArgumentCaptor<CustomObjectDraft> arg = ArgumentCaptor.forClass(CustomObjectDraft.class);
@@ -283,7 +279,6 @@ class CustomObjectServiceImplTest {
   }
 
   @Test
-  @SuppressWarnings("unchecked")
   void createLastSyncCustomObject_WithEmptyRunnerName_ShouldCreateCorrectCustomObjectDraft() {
     // preparation
     final ArgumentCaptor<CustomObjectDraft> arg = ArgumentCaptor.forClass(CustomObjectDraft.class);
@@ -308,7 +303,6 @@ class CustomObjectServiceImplTest {
   }
 
   @Test
-  @SuppressWarnings("unchecked")
   void createLastSyncCustomObject_WithNullRunnerName_ShouldCreateCorrectCustomObjectDraft() {
     // preparation
     final ArgumentCaptor<CustomObjectDraft> arg = ArgumentCaptor.forClass(CustomObjectDraft.class);

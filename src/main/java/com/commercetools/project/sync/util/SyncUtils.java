@@ -51,7 +51,7 @@ public final class SyncUtils {
       @Nonnull final Optional<T> resource,
       @Nullable final List<U> updateActions) {
     String updateActionsString = "[]";
-    if (updateActions != null) {
+    if (updateActions != null && !updateActions.isEmpty()) {
       updateActionsString =
           updateActions.stream().map(Object::toString).collect(Collectors.joining(","));
     }
@@ -73,7 +73,7 @@ public final class SyncUtils {
       @Nonnull final String resourceIdentifier,
       @Nullable final List<U> updateActions) {
     String updateActionsString = "[]";
-    if (updateActions != null) {
+    if (updateActions != null && !updateActions.isEmpty()) {
       updateActionsString =
           updateActions.stream().map(Object::toString).collect(Collectors.joining(","));
     }

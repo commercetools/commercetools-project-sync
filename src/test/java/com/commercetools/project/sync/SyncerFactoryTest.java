@@ -1018,7 +1018,12 @@ class SyncerFactoryTest {
     assertThat(result)
         .failsWithin(1, TimeUnit.SECONDS)
         .withThrowableOfType(ExecutionException.class)
-        .withCauseExactlyInstanceOf(BadGatewayException.class);
+        .withCauseExactlyInstanceOf(RuntimeException.class)
+        .satisfies(
+            exception ->
+                assertThat(exception.getCause().getCause())
+                    .isInstanceOf(BadGatewayException.class)
+                    .hasMessageContaining("test"));
   }
 
   @Test
