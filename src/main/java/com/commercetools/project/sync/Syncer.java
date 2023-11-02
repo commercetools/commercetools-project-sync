@@ -4,9 +4,9 @@ import static com.commercetools.api.client.QueryUtils.queryAll;
 import static com.commercetools.project.sync.util.SyncUtils.getSyncModuleName;
 import static java.lang.String.format;
 
+import com.commercetools.api.client.PagedQueryResourceRequest;
 import com.commercetools.api.client.ProjectApiRoot;
 import com.commercetools.api.models.DomainResource;
-import com.commercetools.api.models.PagedQueryResourceRequest;
 import com.commercetools.api.models.ResourcePagedQueryResponse;
 import com.commercetools.api.models.ResourceUpdateAction;
 import com.commercetools.api.models.category.Category;
@@ -43,6 +43,8 @@ import org.slf4j.Logger;
  *     com.commercetools.api.models.product.ProductUpdateAction})
  * @param <ResourceDraftT> The type of the resource draft (e.g. {@link ProductDraft}, {@link
  *     CategoryDraft}, etc..)
+ * @param <QueryBuilderDslT> The type of the query builder dsl class (e.g. {@link
+ *     com.commercetools.api.predicates.query.state.StateQueryBuilderDsl})
  * @param <SyncStatisticsT> The type of the sync statistics resulting from the sync process (e.g.
  *     {@link com.commercetools.sync.products.helpers.ProductSyncStatistics}, {@link
  *     com.commercetools.sync.categories.helpers.CategorySyncStatistics}, etc..)
@@ -60,9 +62,11 @@ public abstract class Syncer<
     ResourceT extends BaseResource & DomainResource<ResourceT>,
     ResourceUpdateActionT extends ResourceUpdateAction<ResourceUpdateActionT>,
     ResourceDraftT,
+    QueryBuilderDslT,
     SyncStatisticsT extends BaseSyncStatistics,
     SyncOptionsT extends BaseSyncOptions<ResourceT, ResourceDraftT, ResourceUpdateActionT>,
-    PagedQueryT extends PagedQueryResourceRequest<PagedQueryT, PagedQueryResponseT>,
+    PagedQueryT extends
+        PagedQueryResourceRequest<PagedQueryT, PagedQueryResponseT, QueryBuilderDslT>,
     PagedQueryResponseT extends ResourcePagedQueryResponse<ResourceT>,
     BaseSyncT extends
         BaseSync<ResourceT, ResourceDraftT, ResourceUpdateActionT, SyncStatisticsT, SyncOptionsT>> {

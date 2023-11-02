@@ -8,8 +8,8 @@ import static io.vrap.rmf.base.client.utils.CompletableFutureUtils.exceptionally
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import com.commercetools.api.client.PagedQueryResourceRequest;
 import com.commercetools.api.client.ProjectApiRoot;
-import com.commercetools.api.models.PagedQueryResourceRequest;
 import com.commercetools.api.models.ResourcePagedQueryResponse;
 import com.commercetools.api.models.ResourceUpdateAction;
 import com.commercetools.api.models.common.BaseResource;
@@ -131,9 +131,10 @@ public final class SyncerFactory {
               ? extends BaseResource,
               ? extends ResourceUpdateAction<?>,
               ?,
+              ?,
               ? extends BaseSyncStatistics,
               ? extends BaseSyncOptions<?, ?, ?>,
-              ? extends PagedQueryResourceRequest<?, ?>,
+              ? extends PagedQueryResourceRequest<?, ?, ?>,
               ? extends ResourcePagedQueryResponse<?>,
               ? extends BaseSync<?, ?, ?, ?, ?>>
           syncer =
@@ -290,9 +291,10 @@ public final class SyncerFactory {
           ? extends BaseResource,
           ? extends ResourceUpdateAction<?>,
           ?,
+          ?,
           ? extends BaseSyncStatistics,
           ? extends BaseSyncOptions<?, ?, ?>,
-          ? extends PagedQueryResourceRequest<?, ?>,
+          ? extends PagedQueryResourceRequest<?, ?, ?>,
           ? extends ResourcePagedQueryResponse<?>,
           ? extends BaseSync<?, ?, ?, ?, ?>>
       buildSyncer(
@@ -305,9 +307,10 @@ public final class SyncerFactory {
             ? extends BaseResource,
             ? extends ResourceUpdateAction<?>,
             ?,
+            ?,
             ? extends BaseSyncStatistics,
             ? extends BaseSyncOptions<?, ?, ?>,
-            ? extends PagedQueryResourceRequest<?, ?>,
+            ? extends PagedQueryResourceRequest<?, ?, ?>,
             ? extends ResourcePagedQueryResponse<?>,
             ? extends BaseSync<?, ?, ?, ?, ?>>
         syncer = null;
