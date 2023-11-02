@@ -13,6 +13,7 @@ import com.commercetools.api.models.tax_category.TaxCategoryUpdateAction;
 import com.commercetools.api.models.tax_category.TaxRate;
 import com.commercetools.api.models.tax_category.TaxRateDraft;
 import com.commercetools.api.models.tax_category.TaxRateDraftBuilder;
+import com.commercetools.api.predicates.query.tax_category.TaxCategoryQueryBuilderDsl;
 import com.commercetools.project.sync.Syncer;
 import com.commercetools.project.sync.service.CustomObjectService;
 import com.commercetools.project.sync.service.impl.CustomObjectServiceImpl;
@@ -33,13 +34,12 @@ import javax.annotation.Nonnull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-// This class compiles but not tested yet
-// TODO: Test class and adjust logic if needed
 public final class TaxCategorySyncer
     extends Syncer<
         TaxCategory,
         TaxCategoryUpdateAction,
         TaxCategoryDraft,
+        TaxCategoryQueryBuilderDsl,
         TaxCategorySyncStatistics,
         TaxCategorySyncOptions,
         ByProjectKeyTaxCategoriesGet,

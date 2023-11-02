@@ -10,6 +10,7 @@ import com.commercetools.api.models.customer.Customer;
 import com.commercetools.api.models.customer.CustomerDraft;
 import com.commercetools.api.models.customer.CustomerPagedQueryResponse;
 import com.commercetools.api.models.customer.CustomerUpdateAction;
+import com.commercetools.api.predicates.query.customer.CustomerQueryBuilderDsl;
 import com.commercetools.project.sync.Syncer;
 import com.commercetools.project.sync.service.CustomObjectService;
 import com.commercetools.project.sync.service.impl.CustomObjectServiceImpl;
@@ -33,6 +34,7 @@ public final class CustomerSyncer
         Customer,
         CustomerUpdateAction,
         CustomerDraft,
+        CustomerQueryBuilderDsl,
         CustomerSyncStatistics,
         CustomerSyncOptions,
         ByProjectKeyCustomersGet,

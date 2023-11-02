@@ -10,6 +10,7 @@ import com.commercetools.api.models.custom_object.CustomObject;
 import com.commercetools.api.models.custom_object.CustomObjectDraft;
 import com.commercetools.api.models.custom_object.CustomObjectDraftBuilder;
 import com.commercetools.api.models.custom_object.CustomObjectPagedQueryResponse;
+import com.commercetools.api.predicates.query.custom_object.CustomObjectQueryBuilderDsl;
 import com.commercetools.project.sync.SyncModuleOption;
 import com.commercetools.project.sync.Syncer;
 import com.commercetools.project.sync.service.CustomObjectService;
@@ -41,6 +42,7 @@ public final class CustomObjectSyncer
         CustomObject,
         NoopResourceUpdateAction,
         CustomObjectDraft,
+        CustomObjectQueryBuilderDsl,
         CustomObjectSyncStatistics,
         CustomObjectSyncOptions,
         ByProjectKeyCustomObjectsGet,

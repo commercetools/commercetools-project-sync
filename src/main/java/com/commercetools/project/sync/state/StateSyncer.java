@@ -1,5 +1,6 @@
 package com.commercetools.project.sync.state;
 
+import static com.commercetools.project.sync.util.SyncUtils.getCompletionExceptionCause;
 import static com.commercetools.project.sync.util.SyncUtils.logErrorCallback;
 import static com.commercetools.project.sync.util.SyncUtils.logWarningCallback;
 import static com.commercetools.sync.states.utils.StateTransformUtils.toStateDrafts;
@@ -10,6 +11,7 @@ import com.commercetools.api.models.state.State;
 import com.commercetools.api.models.state.StateDraft;
 import com.commercetools.api.models.state.StatePagedQueryResponse;
 import com.commercetools.api.models.state.StateUpdateAction;
+import com.commercetools.api.predicates.query.state.StateQueryBuilderDsl;
 import com.commercetools.project.sync.Syncer;
 import com.commercetools.project.sync.service.CustomObjectService;
 import com.commercetools.project.sync.service.impl.CustomObjectServiceImpl;
@@ -28,13 +30,12 @@ import javax.annotation.Nonnull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-// This class compiles but not tested yet
-// TODO: Test class and adjust logic if needed
 public final class StateSyncer
     extends Syncer<
         State,
         StateUpdateAction,
         StateDraft,
+        StateQueryBuilderDsl,
         StateSyncStatistics,
         StateSyncOptions,
         ByProjectKeyStatesGet,
@@ -77,7 +78,17 @@ public final class StateSyncer
   @Nonnull
   @Override
   protected CompletionStage<List<StateDraft>> transform(@Nonnull List<State> states) {
-    return toStateDrafts(getSourceClient(), referenceIdToKeyCache, states);
+    return toStateDrafts(getSourceClient(), referenceIdToKeyCache, states)
+        .handle(
+            (stateDrafts, throwable) -> {
+              if (throwable != null) {
+                if (LOGGER.isWarnEnabled()) {
+                  LOGGER.warn(throwable.getMessage(), getCompletionExceptionCause(throwable));
+                }
+                return List.of();
+              }
+              return stateDrafts;
+            });
   }
 
   @Nonnull

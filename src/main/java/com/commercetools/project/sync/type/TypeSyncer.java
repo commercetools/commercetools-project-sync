@@ -1,5 +1,6 @@
 package com.commercetools.project.sync.type;
 
+import static com.commercetools.project.sync.util.SyncUtils.getCompletionExceptionCause;
 import static com.commercetools.project.sync.util.SyncUtils.logErrorCallback;
 import static com.commercetools.project.sync.util.SyncUtils.logWarningCallback;
 
@@ -10,6 +11,7 @@ import com.commercetools.api.models.type.TypeDraft;
 import com.commercetools.api.models.type.TypeDraftBuilder;
 import com.commercetools.api.models.type.TypePagedQueryResponse;
 import com.commercetools.api.models.type.TypeUpdateAction;
+import com.commercetools.api.predicates.query.type.TypeQueryBuilderDsl;
 import com.commercetools.project.sync.Syncer;
 import com.commercetools.project.sync.service.CustomObjectService;
 import com.commercetools.project.sync.service.impl.CustomObjectServiceImpl;
@@ -27,6 +29,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,6 +40,7 @@ public final class TypeSyncer
         Type,
         TypeUpdateAction,
         TypeDraft,
+        TypeQueryBuilderDsl,
         TypeSyncStatistics,
         TypeSyncOptions,
         ByProjectKeyTypesGet,
@@ -96,11 +100,21 @@ public final class TypeSyncer
   @Nonnull
   @Override
   protected CompletionStage<List<TypeDraft>> transform(@Nonnull final List<Type> page) {
-    return CompletableFuture.completedFuture(
-        page.stream().map(TypeSyncer::typeToDraft).collect(Collectors.toList()));
+    return CompletableFuture.supplyAsync(
+            () -> page.stream().map(TypeSyncer::typeToDraft).collect(Collectors.toList()))
+        .handle(
+            ((typeDrafts, throwable) -> {
+              if (throwable != null) {
+                if (LOGGER.isWarnEnabled()) {
+                  LOGGER.warn(throwable.getMessage(), getCompletionExceptionCause(throwable));
+                }
+                return List.of();
+              }
+              return typeDrafts;
+            }));
   }
 
-  @Nonnull
+  @Nullable
   private static TypeDraft typeToDraft(@Nonnull final Type type) {
     return TypeDraftBuilder.of()
         .key(type.getKey())
