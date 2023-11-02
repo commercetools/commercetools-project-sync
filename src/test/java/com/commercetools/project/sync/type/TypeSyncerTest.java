@@ -24,7 +24,6 @@ import io.vrap.rmf.base.client.ApiHttpResponse;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import uk.org.lidalia.slf4jtest.LoggingEvent;
@@ -66,11 +65,12 @@ class TypeSyncerTest {
             readObjectFromResource("type-key-2.json", Type.class));
 
     // test
-    final CompletionStage<List<TypeDraft>> draftsFromPageStage = typeSyncer.transform(typePage);
+    final List<TypeDraft> draftsFromPageStage =
+        typeSyncer.transform(typePage).toCompletableFuture().join();
 
     // assertions
     assertThat(draftsFromPageStage)
-        .isCompletedWithValue(
+        .isEqualTo(
             typePage.stream()
                 .map(
                     type ->
@@ -106,11 +106,10 @@ class TypeSyncerTest {
     // test
     final TypeSyncer typeSyncer =
         TypeSyncer.of(sourceClient, mock(ProjectApiRoot.class), getMockedClock());
-    final CompletableFuture<List<TypeDraft>> typeDrafts =
-        typeSyncer.transform(typePage).toCompletableFuture();
+    final List<TypeDraft> typeDrafts = typeSyncer.transform(typePage).toCompletableFuture().join();
 
     // assertion
-    assertThat(typeDrafts).isCompletedWithValue(Collections.emptyList());
+    assertThat(typeDrafts).isEqualTo(Collections.emptyList());
     assertThat(syncerTestLogger.getAllLoggingEvents())
         .anySatisfy(
             loggingEvent -> {
