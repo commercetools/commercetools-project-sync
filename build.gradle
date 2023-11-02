@@ -34,8 +34,8 @@ ext {
     assertjVersion = '3.24.2'
     pmdVersion = '6.55.0'
     jacocoVersion = '0.8.10'
-    commercetoolsSyncJava = '10.0.0-beta.3'
-    httpClientVersion = '14.7.0'
+    commercetoolsSyncJava = '10.0.0-beta.4'
+    httpClientVersion = '17.0.0'
     apacheCliVersion = '1.5.0'
     jupiterApiVersion = '5.10.0'
     logbackVersion = '1.4.11'
@@ -65,7 +65,7 @@ tasks.withType(SpotlessTask) {
 
 dependencies {
     implementation "com.commercetools:commercetools-sync-java:${commercetoolsSyncJava}"
-    implementation "com.commercetools.sdk:commercetools-http-client:${httpClientVersion}"
+    implementation "com.commercetools.sdk:commercetools-okhttp-client4:${httpClientVersion}"
     implementation "commons-cli:commons-cli:${apacheCliVersion}"
     implementation "ch.qos.logback:logback-classic:${logbackVersion}"
     implementation "ch.qos.logback:logback-core:${logbackVersion}"

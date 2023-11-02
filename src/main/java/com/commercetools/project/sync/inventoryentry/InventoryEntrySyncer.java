@@ -11,6 +11,7 @@ import com.commercetools.api.models.inventory.InventoryEntry;
 import com.commercetools.api.models.inventory.InventoryEntryDraft;
 import com.commercetools.api.models.inventory.InventoryEntryUpdateAction;
 import com.commercetools.api.models.inventory.InventoryPagedQueryResponse;
+import com.commercetools.api.predicates.query.inventory.InventoryEntryQueryBuilderDsl;
 import com.commercetools.project.sync.Syncer;
 import com.commercetools.project.sync.service.CustomObjectService;
 import com.commercetools.project.sync.service.impl.CustomObjectServiceImpl;
@@ -34,6 +35,7 @@ public final class InventoryEntrySyncer
         InventoryEntry,
         InventoryEntryUpdateAction,
         InventoryEntryDraft,
+        InventoryEntryQueryBuilderDsl,
         InventorySyncStatistics,
         InventorySyncOptions,
         ByProjectKeyInventoryGet,

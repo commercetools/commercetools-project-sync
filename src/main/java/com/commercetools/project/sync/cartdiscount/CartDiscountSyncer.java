@@ -10,6 +10,7 @@ import com.commercetools.api.models.cart_discount.CartDiscount;
 import com.commercetools.api.models.cart_discount.CartDiscountDraft;
 import com.commercetools.api.models.cart_discount.CartDiscountPagedQueryResponse;
 import com.commercetools.api.models.cart_discount.CartDiscountUpdateAction;
+import com.commercetools.api.predicates.query.cart_discount.CartDiscountQueryBuilderDsl;
 import com.commercetools.project.sync.Syncer;
 import com.commercetools.project.sync.service.CustomObjectService;
 import com.commercetools.project.sync.service.impl.CustomObjectServiceImpl;
@@ -33,6 +34,7 @@ public final class CartDiscountSyncer
         CartDiscount,
         CartDiscountUpdateAction,
         CartDiscountDraft,
+        CartDiscountQueryBuilderDsl,
         CartDiscountSyncStatistics,
         CartDiscountSyncOptions,
         ByProjectKeyCartDiscountsGet,

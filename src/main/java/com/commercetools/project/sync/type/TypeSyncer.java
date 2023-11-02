@@ -11,6 +11,7 @@ import com.commercetools.api.models.type.TypeDraft;
 import com.commercetools.api.models.type.TypeDraftBuilder;
 import com.commercetools.api.models.type.TypePagedQueryResponse;
 import com.commercetools.api.models.type.TypeUpdateAction;
+import com.commercetools.api.predicates.query.type.TypeQueryBuilderDsl;
 import com.commercetools.project.sync.Syncer;
 import com.commercetools.project.sync.service.CustomObjectService;
 import com.commercetools.project.sync.service.impl.CustomObjectServiceImpl;
@@ -39,6 +40,7 @@ public final class TypeSyncer
         Type,
         TypeUpdateAction,
         TypeDraft,
+        TypeQueryBuilderDsl,
         TypeSyncStatistics,
         TypeSyncOptions,
         ByProjectKeyTypesGet,

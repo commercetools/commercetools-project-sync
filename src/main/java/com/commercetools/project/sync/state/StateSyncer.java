@@ -11,6 +11,7 @@ import com.commercetools.api.models.state.State;
 import com.commercetools.api.models.state.StateDraft;
 import com.commercetools.api.models.state.StatePagedQueryResponse;
 import com.commercetools.api.models.state.StateUpdateAction;
+import com.commercetools.api.predicates.query.state.StateQueryBuilderDsl;
 import com.commercetools.project.sync.Syncer;
 import com.commercetools.project.sync.service.CustomObjectService;
 import com.commercetools.project.sync.service.impl.CustomObjectServiceImpl;
@@ -34,6 +35,7 @@ public final class StateSyncer
         State,
         StateUpdateAction,
         StateDraft,
+        StateQueryBuilderDsl,
         StateSyncStatistics,
         StateSyncOptions,
         ByProjectKeyStatesGet,

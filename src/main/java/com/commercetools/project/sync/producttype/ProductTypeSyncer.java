@@ -9,6 +9,7 @@ import com.commercetools.api.models.product_type.ProductType;
 import com.commercetools.api.models.product_type.ProductTypeDraft;
 import com.commercetools.api.models.product_type.ProductTypePagedQueryResponse;
 import com.commercetools.api.models.product_type.ProductTypeUpdateAction;
+import com.commercetools.api.predicates.query.product_type.ProductTypeQueryBuilderDsl;
 import com.commercetools.project.sync.Syncer;
 import com.commercetools.project.sync.service.CustomObjectService;
 import com.commercetools.project.sync.service.impl.CustomObjectServiceImpl;
@@ -33,6 +34,7 @@ public final class ProductTypeSyncer
         ProductType,
         ProductTypeUpdateAction,
         ProductTypeDraft,
+        ProductTypeQueryBuilderDsl,
         ProductTypeSyncStatistics,
         ProductTypeSyncOptions,
         ByProjectKeyProductTypesGet,

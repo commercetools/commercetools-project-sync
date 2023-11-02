@@ -13,6 +13,7 @@ import com.commercetools.api.models.tax_category.TaxCategoryUpdateAction;
 import com.commercetools.api.models.tax_category.TaxRate;
 import com.commercetools.api.models.tax_category.TaxRateDraft;
 import com.commercetools.api.models.tax_category.TaxRateDraftBuilder;
+import com.commercetools.api.predicates.query.tax_category.TaxCategoryQueryBuilderDsl;
 import com.commercetools.project.sync.Syncer;
 import com.commercetools.project.sync.service.CustomObjectService;
 import com.commercetools.project.sync.service.impl.CustomObjectServiceImpl;
@@ -38,6 +39,7 @@ public final class TaxCategorySyncer
         TaxCategory,
         TaxCategoryUpdateAction,
         TaxCategoryDraft,
+        TaxCategoryQueryBuilderDsl,
         TaxCategorySyncStatistics,
         TaxCategorySyncOptions,
         ByProjectKeyTaxCategoriesGet,
