@@ -9,6 +9,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.commercetools.api.client.ByProjectKeyCustomObjectsGet;
 import com.commercetools.api.client.ProjectApiRoot;
 import com.commercetools.api.client.QueryUtils;
+import com.commercetools.api.client.error.ConcurrentModificationException;
 import com.commercetools.api.models.category.Category;
 import com.commercetools.api.models.customer.Customer;
 import com.commercetools.api.models.product.Product;
@@ -31,6 +32,8 @@ import java.util.concurrent.CompletionStage;
 import javax.annotation.Nonnull;
 
 public final class IntegrationTestUtils {
+
+  private static final int MAX_RETRY = 10;
 
   public static SyncerFactory createITSyncerFactory() {
     return SyncerFactory.of(
@@ -431,61 +434,75 @@ public final class IntegrationTestUtils {
   }
 
   private static void deleteProductTypesWithRetry(@Nonnull final ProjectApiRoot ctpClient) {
-    // todo: add retry
-    QueryUtils.queryAll(
-            ctpClient.productTypes().get(),
-            productTypes -> {
-              CompletableFuture.allOf(
-                      productTypes.stream()
-                          .map(
-                              productType ->
-                                  ctpClient
-                                      .productTypes()
-                                      .delete(productType)
-                                      .execute()
-                                      .thenApply(ApiHttpResponse::getBody))
-                          .map(CompletionStage::toCompletableFuture)
-                          .toArray(CompletableFuture[]::new))
-                  .join();
-            })
-        .toCompletableFuture()
-        .join();
+    withRetry(
+        () ->
+            QueryUtils.queryAll(
+                    ctpClient.productTypes().get(),
+                    productTypes -> {
+                      CompletableFuture.allOf(
+                              productTypes.stream()
+                                  .map(
+                                      productType ->
+                                          ctpClient
+                                              .productTypes()
+                                              .delete(productType)
+                                              .execute()
+                                              .thenApply(ApiHttpResponse::getBody))
+                                  .map(CompletionStage::toCompletableFuture)
+                                  .toArray(CompletableFuture[]::new))
+                          .join();
+                    })
+                .toCompletableFuture()
+                .join());
   }
 
   private static void deleteProductTypeAttributes(@Nonnull final ProjectApiRoot ctpClient) {
-    // todo: add retry
-    QueryUtils.queryAll(
-            ctpClient.productTypes().get(),
-            productTypes -> {
-              CompletableFuture.allOf(
-                      productTypes.stream()
-                          .map(
-                              productType ->
-                                  ctpClient
-                                      .productTypes()
-                                      .update(productType)
-                                      .with(
-                                          builder -> {
-                                            productType
-                                                .getAttributes()
-                                                .forEach(
-                                                    attributeDefinition ->
-                                                        builder.plus(
-                                                            ProductTypeRemoveAttributeDefinitionActionBuilder
-                                                                .of()
-                                                                .name(
-                                                                    attributeDefinition
-                                                                        .getName())));
-                                            return builder;
-                                          })
-                                      .execute()
-                                      .thenApply(ApiHttpResponse::getBody))
-                          .map(CompletionStage::toCompletableFuture)
-                          .toArray(CompletableFuture[]::new))
-                  .join();
-            })
-        .toCompletableFuture()
-        .join();
+    withRetry(
+        () ->
+            QueryUtils.queryAll(
+                    ctpClient.productTypes().get(),
+                    productTypes -> {
+                      CompletableFuture.allOf(
+                              productTypes.stream()
+                                  .map(
+                                      productType ->
+                                          ctpClient
+                                              .productTypes()
+                                              .update(productType)
+                                              .with(
+                                                  builder -> {
+                                                    productType
+                                                        .getAttributes()
+                                                        .forEach(
+                                                            attributeDefinition ->
+                                                                builder.plus(
+                                                                    ProductTypeRemoveAttributeDefinitionActionBuilder
+                                                                        .of()
+                                                                        .name(
+                                                                            attributeDefinition
+                                                                                .getName())));
+                                                    return builder;
+                                                  })
+                                              .execute()
+                                              .thenApply(ApiHttpResponse::getBody))
+                                  .map(CompletionStage::toCompletableFuture)
+                                  .toArray(CompletableFuture[]::new))
+                          .join();
+                    })
+                .toCompletableFuture()
+                .join());
+  }
+
+  private static void withRetry(final Runnable action) {
+    for (int i = 0; i < MAX_RETRY; i++) {
+      try {
+        action.run();
+      } catch (Exception e) {
+        if (!e.getCause().getClass().equals(ConcurrentModificationException.class)) {
+          throw e;
+        }
+      }
+    }
   }
 
   @Nonnull
