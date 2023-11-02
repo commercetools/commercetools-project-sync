@@ -209,11 +209,9 @@ public abstract class Syncer<
   private PagedQueryT getQueryWithTimeBoundedPredicate(
       @Nonnull final ZonedDateTime lowerBound, @Nonnull final ZonedDateTime upperBound) {
 
-    final String queryPredicate = format(
-        "lastModifiedAt >= \"%s\" AND lastModifiedAt <= \"%s\"", lowerBound, upperBound);
-    return (PagedQueryT)
-        getQuery()
-            .withWhere(queryPredicate);
+    final String queryPredicate =
+        format("lastModifiedAt >= \"%s\" AND lastModifiedAt <= \"%s\"", lowerBound, upperBound);
+    return (PagedQueryT) getQuery().withWhere(queryPredicate);
   }
 
   @Nonnull

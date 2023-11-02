@@ -92,17 +92,13 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.vrap.rmf.base.client.ApiHttpResponse;
 import io.vrap.rmf.base.client.utils.json.JsonUtils;
-
-import java.time.Duration;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 import javax.annotation.Nonnull;
 import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import uk.org.lidalia.slf4jext.Level;
@@ -363,14 +359,10 @@ class CliRunnerIT {
   @Test
   void run_WithSyncAsArgumentWithAllArg_ShouldExecuteAllSyncers() {
     // test
-    assertEventually(Duration.ofSeconds(5), Duration.ofSeconds(5), () ->{
     CliRunner.of().run(new String[] {"-s", "all"}, createITSyncerFactory());
-        // assertions
-        assertAllSyncersLoggingEvents(1);
-        assertAllResourcesAreSyncedToTarget(CTP_TARGET_CLIENT);
-    }
-        );
-
+    // assertions
+    assertAllSyncersLoggingEvents(1);
+    assertAllResourcesAreSyncedToTarget(CTP_TARGET_CLIENT);
   }
 
   @Test
@@ -586,17 +578,14 @@ class CliRunnerIT {
     final CustomObjectPagedQueryResponse lastSyncResult =
         fetchLastSyncCustomObject(targetClient, syncModuleName, runnerName);
 
-    return lastSyncResult.getResults().isEmpty() ? null : lastSyncResult.getResults().get(0).getLastModifiedAt();
+    return lastSyncResult.getResults().isEmpty()
+        ? null
+        : lastSyncResult.getResults().get(0).getLastModifiedAt();
   }
 
   private void updateCustomerSourceObject(@Nonnull final ProjectApiRoot sourceProjectClient) {
     final Customer customer =
-        sourceProjectClient
-            .customers()
-            .withKey(RESOURCE_KEY)
-            .get()
-            .executeBlocking()
-            .getBody();
+        sourceProjectClient.customers().withKey(RESOURCE_KEY).get().executeBlocking().getBody();
 
     sourceProjectClient
         .customers()
@@ -665,23 +654,23 @@ class CliRunnerIT {
 
   private void prepareDataForShoppingListSync(ProjectApiRoot sourceClient) {
     QueryUtils.queryAll(
-        sourceClient.shoppingLists().get(),
-        shoppingLists -> {
-          CompletableFuture.allOf(
-              shoppingLists.stream()
-                           .map(
-                               shoppingList ->
-                                   sourceClient
-                                       .shoppingLists()
-                                       .delete(shoppingList)
-                                       .execute()
-                                       .thenApply(ApiHttpResponse::getBody))
-                           .map(CompletionStage::toCompletableFuture)
-                           .toArray(CompletableFuture[]::new))
-                           .join();
-        })
-              .toCompletableFuture()
-              .join();
+            sourceClient.shoppingLists().get(),
+            shoppingLists -> {
+              CompletableFuture.allOf(
+                      shoppingLists.stream()
+                          .map(
+                              shoppingList ->
+                                  sourceClient
+                                      .shoppingLists()
+                                      .delete(shoppingList)
+                                      .execute()
+                                      .thenApply(ApiHttpResponse::getBody))
+                          .map(CompletionStage::toCompletableFuture)
+                          .toArray(CompletableFuture[]::new))
+                  .join();
+            })
+        .toCompletableFuture()
+        .join();
 
     final ShoppingListDraft shoppingListDraft =
         ShoppingListDraftBuilder.of()
@@ -1120,8 +1109,6 @@ class CliRunnerIT {
 
     assertCustomersAreSyncedCorrectly(targetClient);
     assertShoppingListsAreSyncedCorrectly(targetClient);
-  }
-
   }
 
   public static void assertAllSyncersLoggingEvents(final int numberOfResources) {

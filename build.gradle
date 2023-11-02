@@ -66,6 +66,7 @@ tasks.withType(SpotlessTask) {
 dependencies {
     implementation "com.commercetools:commercetools-sync-java:${commercetoolsSyncJava}"
     implementation "com.commercetools.sdk:commercetools-okhttp-client4:${httpClientVersion}"
+    implementation "com.commercetools.sdk:commercetools-async-http-client:${httpClientVersion}"
     implementation "commons-cli:commons-cli:${apacheCliVersion}"
     implementation "ch.qos.logback:logback-classic:${logbackVersion}"
     implementation "ch.qos.logback:logback-core:${logbackVersion}"
