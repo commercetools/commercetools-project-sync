@@ -146,7 +146,7 @@ public abstract class Syncer<
       syncStage =
           customObjectService
               .getCurrentCtpTimestamp(runnerName, syncModuleName)
-              .thenAccept(
+              .thenCompose(
                   currentCtpTimestamp ->
                       syncResourcesSinceLastSync(
                           sourceProjectKey, syncModuleName, runnerName, currentCtpTimestamp));

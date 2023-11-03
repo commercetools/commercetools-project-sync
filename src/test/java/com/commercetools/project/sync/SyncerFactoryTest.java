@@ -406,9 +406,6 @@ class SyncerFactoryTest {
             });
   }
 
-  // TODO: Enable test when issue with java-sync (NPE) is solved.
-  // See https://github.com/commercetools/commercetools-sync-java/issues/1101
-  @Disabled
   @Test
   void
       sync_AsProductsFullSyncWithExceptionDuringAttributeReferenceReplacement_ShouldContinueWithPages() {

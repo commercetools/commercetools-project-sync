@@ -108,10 +108,9 @@ public final class CustomObjectSyncer
       return customObjectQuery;
     } else {
       final List<String> excludedContainerNames = getExcludedContainerNames();
-      final String asStringList = excludedContainerNames.stream().collect(Collectors.joining(","));
       return customObjectQuery
-          .withWhere("container not in (:excludedNames)")
-          .withPredicateVar("excludedNames", asStringList);
+          .withWhere("container not in :excludedNames")
+          .withPredicateVar("excludedNames", excludedContainerNames);
     }
   }
 
