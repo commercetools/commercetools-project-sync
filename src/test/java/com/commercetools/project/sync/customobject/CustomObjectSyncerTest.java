@@ -42,8 +42,8 @@ public class CustomObjectSyncerTest {
   void of_ShouldCreateCustomObjectSyncerInstance() {
     final String runnerName = "";
 
-    final String[] argument = {""};
-    when(byProjectKeyCustomObjectsGet.withPredicateVar(eq("excludedNames"), anyString()))
+    final List<String>[] argument = new List[1];
+    when(byProjectKeyCustomObjectsGet.withPredicateVar(eq("excludedNames"), anyCollection()))
         .then(
             invocation -> {
               argument[0] = invocation.getArgument(1);
@@ -60,7 +60,7 @@ public class CustomObjectSyncerTest {
 
     assertThat(customObjectSyncer).isNotNull();
     assertThat(customObjectSyncer.getQuery()).isEqualTo(byProjectKeyCustomObjectsGet);
-    assertThat(argument[0]).isEqualTo(String.join(",", excludedContainerNames));
+    assertThat(argument[0]).isEqualTo(excludedContainerNames);
     assertThat(customObjectSyncer.getSync()).isExactlyInstanceOf(CustomObjectSync.class);
   }
 

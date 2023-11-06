@@ -85,7 +85,6 @@ import javax.annotation.Nonnull;
 import org.assertj.core.api.Condition;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InOrder;
@@ -406,9 +405,6 @@ class SyncerFactoryTest {
             });
   }
 
-  // TODO: Enable test when issue with java-sync (NPE) is solved.
-  // See https://github.com/commercetools/commercetools-sync-java/issues/1101
-  @Disabled
   @Test
   void
       sync_AsProductsFullSyncWithExceptionDuringAttributeReferenceReplacement_ShouldContinueWithPages() {
