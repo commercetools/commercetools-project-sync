@@ -1,18 +1,20 @@
 package com.commercetools.project.sync.util;
 
 import static com.commercetools.project.sync.util.SyncUtils.*;
+import static com.commercetools.project.sync.util.TestUtils.createBadGatewayException;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import com.commercetools.api.models.ResourceUpdateAction;
+import com.commercetools.api.models.WithKey;
 import com.commercetools.sync.commons.exceptions.SyncException;
 import com.commercetools.sync.products.ProductSync;
 import com.commercetools.sync.types.TypeSync;
-import io.sphere.sdk.commands.UpdateAction;
-import io.sphere.sdk.models.ResourceView;
-import io.sphere.sdk.models.WithKey;
+import io.vrap.rmf.base.client.error.BadGatewayException;
 import java.util.Arrays;
 import java.util.Optional;
+import java.util.concurrent.CompletionException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import uk.org.lidalia.slf4jtest.LoggingEvent;
@@ -62,9 +64,9 @@ class SyncUtilsTest {
   void logErrorCallbackWithStringResourceIdentifier_ShouldLogErrorWithCorrectMessage() {
     final TestLogger testLogger = TestLoggerFactory.getTestLogger(SyncUtilsTest.class);
     SyncException exception = new SyncException("test sync exception");
-    UpdateAction<ResourceView> updateAction1 = mock(UpdateAction.class);
+    ResourceUpdateAction updateAction1 = mock(ResourceUpdateAction.class);
     when(updateAction1.toString()).thenReturn("updateAction1");
-    UpdateAction<ResourceView> updateAction2 = mock(UpdateAction.class);
+    ResourceUpdateAction updateAction2 = mock(ResourceUpdateAction.class);
     when(updateAction2.toString()).thenReturn("updateAction2");
 
     logErrorCallback(
@@ -104,9 +106,9 @@ class SyncUtilsTest {
   void logErrorCallbackWithResource_ShouldLogErrorWithCorrectMessage() {
     final TestLogger testLogger = TestLoggerFactory.getTestLogger(SyncUtilsTest.class);
     final SyncException exception = new SyncException("test sync exception");
-    final UpdateAction<WithKey> updateAction1 = mock(UpdateAction.class);
+    final ResourceUpdateAction updateAction1 = mock(ResourceUpdateAction.class);
     when(updateAction1.toString()).thenReturn("updateAction1");
-    final UpdateAction<WithKey> updateAction2 = mock(UpdateAction.class);
+    final ResourceUpdateAction updateAction2 = mock(ResourceUpdateAction.class);
     when(updateAction2.toString()).thenReturn("updateAction2");
     final WithKey resource = mock(WithKey.class);
     when(resource.getKey()).thenReturn("test identifier");
@@ -175,5 +177,20 @@ class SyncUtilsTest {
         .isEqualTo("Warning when trying to sync test resource. Existing key: test identifier");
     assertThat(loggingEvent.getThrowable().isPresent()).isTrue();
     assertThat(loggingEvent.getThrowable().get()).isInstanceOf(SyncException.class);
+  }
+
+  @Test
+  void getCompletionExceptionCause_WithCompletionException_ShouldReturnDifferentException() {
+    final BadGatewayException wrappedException = createBadGatewayException();
+    final CompletionException completionException = new CompletionException(wrappedException);
+
+    assertThat(getCompletionExceptionCause(completionException)).isEqualTo(wrappedException);
+  }
+
+  @Test
+  void getCompletionExceptionCause_WithBadGatewayException_ShouldReturnException() {
+    final BadGatewayException badGatewayException = createBadGatewayException();
+
+    assertThat(getCompletionExceptionCause(badGatewayException)).isEqualTo(badGatewayException);
   }
 }

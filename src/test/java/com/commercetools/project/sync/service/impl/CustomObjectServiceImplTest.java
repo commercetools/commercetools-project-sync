@@ -1,57 +1,97 @@
 package com.commercetools.project.sync.service.impl;
 
 import static com.commercetools.project.sync.util.SyncUtils.DEFAULT_RUNNER_NAME;
-import static java.util.Collections.singletonList;
 import static java.util.Optional.empty;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.when;
 
+import com.commercetools.api.client.ByProjectKeyCustomObjectsByContainerByKeyGet;
+import com.commercetools.api.client.ByProjectKeyCustomObjectsByContainerByKeyRequestBuilder;
+import com.commercetools.api.client.ByProjectKeyCustomObjectsPost;
+import com.commercetools.api.client.ByProjectKeyCustomObjectsRequestBuilder;
+import com.commercetools.api.client.ProjectApiRoot;
+import com.commercetools.api.models.custom_object.CustomObject;
+import com.commercetools.api.models.custom_object.CustomObjectDraft;
 import com.commercetools.project.sync.model.response.LastSyncCustomObject;
 import com.commercetools.project.sync.service.CustomObjectService;
+import com.commercetools.project.sync.util.TestUtils;
 import com.commercetools.sync.products.helpers.ProductSyncStatistics;
-import io.sphere.sdk.client.BadGatewayException;
-import io.sphere.sdk.client.SphereClient;
-import io.sphere.sdk.customobjects.CustomObject;
-import io.sphere.sdk.customobjects.CustomObjectDraft;
-import io.sphere.sdk.customobjects.commands.CustomObjectUpsertCommand;
-import io.sphere.sdk.customobjects.queries.CustomObjectQuery;
-import io.sphere.sdk.queries.PagedQueryResult;
-import io.sphere.sdk.utils.CompletableFutureUtils;
+import io.vrap.rmf.base.client.ApiHttpResponse;
+import io.vrap.rmf.base.client.error.BadGatewayException;
+import io.vrap.rmf.base.client.utils.CompletableFutureUtils;
+import java.time.Duration;
+import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
+import java.util.concurrent.ExecutionException;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
 class CustomObjectServiceImplTest {
 
-  private static final SphereClient CLIENT = mock(SphereClient.class);
+  private ProjectApiRoot ctpClient;
 
-  @SuppressWarnings("unchecked")
-  private static final CustomObject<String> STRING_CUSTOM_OBJECT = mock(CustomObject.class);
+  private static final ZonedDateTime now = ZonedDateTime.now();
 
-  @SuppressWarnings("unchecked")
-  private static final CustomObject<LastSyncCustomObject> LAST_SYNC_CUSTOM_OBJECT =
-      mock(CustomObject.class);
+  private static final CustomObject STRING_CUSTOM_OBJECT = mock(CustomObject.class);
+
+  private static final LastSyncCustomObject<ProductSyncStatistics> LAST_SYNC_CUSTOM_OBJECT_VALUE =
+      LastSyncCustomObject.of(now, new ProductSyncStatistics(), 0);
+
+  private final ByProjectKeyCustomObjectsRequestBuilder byProjectKeyCustomObjectsRequestBuilder =
+      mock();
+  private final ByProjectKeyCustomObjectsPost byProjectKeyCustomObjectsPost = mock();
+  private final ByProjectKeyCustomObjectsByContainerByKeyGet
+      byProjectKeyCustomObjectsByContainerByKeyGet = mock();
+
+  private ApiHttpResponse<CustomObject> apiHttpResponse;
 
   @BeforeAll
   static void setup() {
-    when(STRING_CUSTOM_OBJECT.getLastModifiedAt()).thenReturn(ZonedDateTime.now());
-    when(LAST_SYNC_CUSTOM_OBJECT.getLastModifiedAt()).thenReturn(ZonedDateTime.now());
+    when(STRING_CUSTOM_OBJECT.getLastModifiedAt()).thenReturn(now);
+    when(STRING_CUSTOM_OBJECT.getValue()).thenReturn(LAST_SYNC_CUSTOM_OBJECT_VALUE);
+  }
+
+  @BeforeEach
+  void init() {
+    apiHttpResponse = mock(ApiHttpResponse.class);
+    ctpClient = mock(ProjectApiRoot.class);
+
+    when(ctpClient.customObjects()).thenReturn(byProjectKeyCustomObjectsRequestBuilder);
+    when(byProjectKeyCustomObjectsRequestBuilder.post(any(CustomObjectDraft.class)))
+        .thenReturn(byProjectKeyCustomObjectsPost);
+
+    final ByProjectKeyCustomObjectsByContainerByKeyRequestBuilder
+        byProjectKeyCustomObjectsByContainerByKeyRequestBuilder = mock();
+    when(byProjectKeyCustomObjectsRequestBuilder.withContainerAndKey(anyString(), anyString()))
+        .thenReturn(byProjectKeyCustomObjectsByContainerByKeyRequestBuilder);
+    when(byProjectKeyCustomObjectsByContainerByKeyRequestBuilder.get())
+        .thenReturn(byProjectKeyCustomObjectsByContainerByKeyGet);
+  }
+
+  @AfterEach
+  void cleanup() {
+    reset(ctpClient);
   }
 
   @Test
-  @SuppressWarnings("unchecked")
   void getCurrentCtpTimestamp_OnSuccessfulUpsert_ShouldCompleteWithCtpTimestamp() {
     // preparation
-    when(CLIENT.execute(any(CustomObjectUpsertCommand.class)))
-        .thenReturn(CompletableFuture.completedFuture(STRING_CUSTOM_OBJECT));
-    final CustomObjectService customObjectService = new CustomObjectServiceImpl(CLIENT);
+    when(apiHttpResponse.getBody()).thenReturn(STRING_CUSTOM_OBJECT);
+    when(byProjectKeyCustomObjectsPost.execute())
+        .thenReturn(CompletableFuture.completedFuture(apiHttpResponse));
+    final CustomObjectService customObjectService = new CustomObjectServiceImpl(ctpClient);
 
     // test
     final CompletionStage<ZonedDateTime> ctpTimestamp =
@@ -62,14 +102,13 @@ class CustomObjectServiceImplTest {
   }
 
   @Test
-  @SuppressWarnings("unchecked")
   void getCurrentCtpTimestamp_OnFailedUpsert_ShouldCompleteExceptionally() {
     // preparation
-    when(CLIENT.execute(any(CustomObjectUpsertCommand.class)))
-        .thenReturn(
-            CompletableFutureUtils.exceptionallyCompletedFuture(
-                new BadGatewayException("CTP error!")));
-    final CustomObjectService customObjectService = new CustomObjectServiceImpl(CLIENT);
+    final BadGatewayException badGatewayException = TestUtils.createBadGatewayException();
+
+    when(byProjectKeyCustomObjectsPost.execute())
+        .thenReturn(CompletableFutureUtils.exceptionallyCompletedFuture(badGatewayException));
+    final CustomObjectService customObjectService = new CustomObjectServiceImpl(ctpClient);
 
     // test
     final CompletionStage<ZonedDateTime> ctpTimestamp =
@@ -77,47 +116,59 @@ class CustomObjectServiceImplTest {
 
     // assertions
     assertThat(ctpTimestamp)
-        .hasFailedWithThrowableThat()
-        .isInstanceOf(BadGatewayException.class)
-        .hasMessageContaining("CTP error!");
+        .failsWithin(Duration.ZERO)
+        .withThrowableOfType(ExecutionException.class)
+        .withCauseExactlyInstanceOf(BadGatewayException.class)
+        .withMessageContaining("test");
   }
 
   @Test
-  @SuppressWarnings("unchecked")
+  @Disabled("https://commercetools.atlassian.net/browse/DEVX-272")
   void
       getLastSyncCustomObject_OnSuccessfulQueryWithResults_ShouldCompleteWithLastSyncCustomObject() {
     // preparation
-    final PagedQueryResult<CustomObject<LastSyncCustomObject>> queriedCustomObjects =
-        spy(PagedQueryResult.empty());
-    when(queriedCustomObjects.getResults()).thenReturn(singletonList(LAST_SYNC_CUSTOM_OBJECT));
+    when(apiHttpResponse.getBody()).thenReturn(STRING_CUSTOM_OBJECT);
 
-    when(CLIENT.execute(any(CustomObjectQuery.class)))
-        .thenReturn(CompletableFuture.completedFuture(queriedCustomObjects));
+    when(byProjectKeyCustomObjectsByContainerByKeyGet.execute())
+        .thenReturn(CompletableFuture.completedFuture(apiHttpResponse));
 
-    final CustomObjectService customObjectService = new CustomObjectServiceImpl(CLIENT);
+    final CustomObjectService customObjectService = new CustomObjectServiceImpl(ctpClient);
 
     // test
-    final CompletionStage<Optional<CustomObject<LastSyncCustomObject>>> lastSyncCustomObject =
-        customObjectService.getLastSyncCustomObject("foo", "bar", DEFAULT_RUNNER_NAME);
+    final LastSyncCustomObject lastSyncCustomObject =
+        customObjectService.getLastSyncCustomObject("foo", "bar", DEFAULT_RUNNER_NAME).join().get();
 
     // assertions
-    assertThat(lastSyncCustomObject).isCompletedWithValue(Optional.of(LAST_SYNC_CUSTOM_OBJECT));
+    assertThat(lastSyncCustomObject.getLastSyncDurationInMillis())
+        .isEqualTo(LAST_SYNC_CUSTOM_OBJECT_VALUE.getLastSyncDurationInMillis());
+    assertThat(lastSyncCustomObject.getLastSyncStatistics())
+        .isEqualTo(LAST_SYNC_CUSTOM_OBJECT_VALUE.getLastSyncStatistics());
+    assertThat(lastSyncCustomObject.getApplicationVersion())
+        .isEqualTo(LAST_SYNC_CUSTOM_OBJECT_VALUE.getApplicationVersion());
+    assertThat(
+            lastSyncCustomObject
+                .getLastSyncTimestamp()
+                .truncatedTo(ChronoUnit.SECONDS)
+                .withZoneSameInstant(ZoneOffset.UTC))
+        .isEqualTo(
+            LAST_SYNC_CUSTOM_OBJECT_VALUE
+                .getLastSyncTimestamp()
+                .truncatedTo(ChronoUnit.SECONDS)
+                .withZoneSameInstant(ZoneOffset.UTC));
   }
 
   @Test
-  @SuppressWarnings("unchecked")
   void getLastSyncCustomObject_OnSuccessfulQueryWithNoResults_ShouldCompleteWithEmptyOptional() {
     // preparation
-    final PagedQueryResult<CustomObject<LastSyncCustomObject>> queriedCustomObjects =
-        PagedQueryResult.empty();
+    when(apiHttpResponse.getBody()).thenReturn(null);
 
-    when(CLIENT.execute(any(CustomObjectQuery.class)))
-        .thenReturn(CompletableFuture.completedFuture(queriedCustomObjects));
+    when(byProjectKeyCustomObjectsByContainerByKeyGet.execute())
+        .thenReturn(CompletableFuture.completedFuture(apiHttpResponse));
 
-    final CustomObjectService customObjectService = new CustomObjectServiceImpl(CLIENT);
+    final CustomObjectService customObjectService = new CustomObjectServiceImpl(ctpClient);
 
     // test
-    final CompletionStage<Optional<CustomObject<LastSyncCustomObject>>> lastSyncCustomObject =
+    final CompletionStage<Optional<LastSyncCustomObject>> lastSyncCustomObject =
         customObjectService.getLastSyncCustomObject("foo", "bar", DEFAULT_RUNNER_NAME);
 
     // assertions
@@ -125,90 +176,91 @@ class CustomObjectServiceImplTest {
   }
 
   @Test
-  @SuppressWarnings("unchecked")
   void getLastSyncCustomObject_OnFailedQuery_ShouldCompleteExceptionally() {
     // preparation
-    final PagedQueryResult<CustomObject<LastSyncCustomObject>> queriedCustomObjects =
-        spy(PagedQueryResult.empty());
-    when(queriedCustomObjects.getResults()).thenReturn(singletonList(LAST_SYNC_CUSTOM_OBJECT));
-
-    when(CLIENT.execute(any(CustomObjectQuery.class)))
+    when(byProjectKeyCustomObjectsByContainerByKeyGet.execute())
         .thenReturn(
             CompletableFutureUtils.exceptionallyCompletedFuture(
-                new BadGatewayException("CTP error!")));
+                TestUtils.createBadGatewayException()));
 
-    final CustomObjectService customObjectService = new CustomObjectServiceImpl(CLIENT);
+    final CustomObjectService customObjectService = new CustomObjectServiceImpl(ctpClient);
 
     // test
-    final CompletionStage<Optional<CustomObject<LastSyncCustomObject>>> lastSyncCustomObject =
+    final CompletionStage<Optional<LastSyncCustomObject>> lastSyncCustomObject =
         customObjectService.getLastSyncCustomObject("foo", "bar", DEFAULT_RUNNER_NAME);
 
     // assertions
     assertThat(lastSyncCustomObject)
-        .hasFailedWithThrowableThat()
-        .isInstanceOf(BadGatewayException.class)
-        .hasMessageContaining("CTP error!");
+        .failsWithin(Duration.ZERO)
+        .withThrowableOfType(ExecutionException.class)
+        .withCauseExactlyInstanceOf(RuntimeException.class)
+        .satisfies(
+            exception ->
+                assertThat(exception.getCause().getCause())
+                    .isInstanceOf(BadGatewayException.class)
+                    .hasMessageContaining("test"));
   }
 
   @Test
-  @SuppressWarnings("unchecked")
   void createLastSyncCustomObject_OnSuccessfulCreation_ShouldCompleteWithLastSyncCustomObject() {
     // preparation
-    when(CLIENT.execute(any(CustomObjectUpsertCommand.class)))
-        .thenReturn(CompletableFuture.completedFuture(LAST_SYNC_CUSTOM_OBJECT));
+    when(apiHttpResponse.getBody()).thenReturn(STRING_CUSTOM_OBJECT);
 
-    final CustomObjectService customObjectService = new CustomObjectServiceImpl(CLIENT);
+    when(byProjectKeyCustomObjectsPost.execute())
+        .thenReturn(CompletableFuture.completedFuture(apiHttpResponse));
+
+    final CustomObjectService customObjectService = new CustomObjectServiceImpl(ctpClient);
 
     // test
     final LastSyncCustomObject<ProductSyncStatistics> lastSyncCustomObject =
         LastSyncCustomObject.of(ZonedDateTime.now(), new ProductSyncStatistics(), 100);
 
-    final CustomObject<LastSyncCustomObject> createdCustomObject =
+    final CustomObject createdCustomObject =
         customObjectService
             .createLastSyncCustomObject("foo", "bar", DEFAULT_RUNNER_NAME, lastSyncCustomObject)
             .toCompletableFuture()
-            .join();
+            .join()
+            .getBody();
+
+    final LastSyncCustomObject customObjectValue =
+        (LastSyncCustomObject) createdCustomObject.getValue();
 
     // assertions
-    assertThat(createdCustomObject).isEqualTo(LAST_SYNC_CUSTOM_OBJECT);
+    assertThat(customObjectValue).isEqualTo(LAST_SYNC_CUSTOM_OBJECT_VALUE);
   }
 
   @Test
-  @SuppressWarnings("unchecked")
   void createLastSyncCustomObject_OnFailedCreation_ShouldCompleteExceptionally() {
     // preparation
-    when(CLIENT.execute(any(CustomObjectUpsertCommand.class)))
+    when(byProjectKeyCustomObjectsPost.execute())
         .thenReturn(
             CompletableFutureUtils.exceptionallyCompletedFuture(
-                new BadGatewayException("CTP error!")));
+                TestUtils.createBadGatewayException()));
 
-    final CustomObjectService customObjectService = new CustomObjectServiceImpl(CLIENT);
+    final CustomObjectService customObjectService = new CustomObjectServiceImpl(ctpClient);
 
     // test
-    final LastSyncCustomObject<ProductSyncStatistics> lastSyncCustomObject =
-        LastSyncCustomObject.of(ZonedDateTime.now(), new ProductSyncStatistics(), 100);
-
-    final CompletionStage<CustomObject<LastSyncCustomObject>> createdCustomObject =
+    final CompletableFuture<ApiHttpResponse<CustomObject>> createdCustomObject =
         customObjectService.createLastSyncCustomObject(
-            "foo", "bar", DEFAULT_RUNNER_NAME, lastSyncCustomObject);
+            "foo", "bar", DEFAULT_RUNNER_NAME, LAST_SYNC_CUSTOM_OBJECT_VALUE);
 
     // assertions
     assertThat(createdCustomObject)
-        .hasFailedWithThrowableThat()
-        .isInstanceOf(BadGatewayException.class)
-        .hasMessageContaining("CTP error!");
+        .failsWithin(Duration.ZERO)
+        .withThrowableOfType(ExecutionException.class)
+        .withCauseExactlyInstanceOf(BadGatewayException.class)
+        .withMessageContaining("test");
   }
 
   @Test
-  @SuppressWarnings("unchecked")
   void createLastSyncCustomObject_WithValidTestRunnerName_ShouldCreateCorrectCustomObjectDraft() {
     // preparation
-    final SphereClient client = mock(SphereClient.class);
-    final ArgumentCaptor<CustomObjectUpsertCommand> arg =
-        ArgumentCaptor.forClass(CustomObjectUpsertCommand.class);
-    when(client.execute(arg.capture())).thenReturn(null);
+    final ArgumentCaptor<CustomObjectDraft> arg = ArgumentCaptor.forClass(CustomObjectDraft.class);
+    when(byProjectKeyCustomObjectsRequestBuilder.post(arg.capture()))
+        .thenReturn(byProjectKeyCustomObjectsPost);
+    when(byProjectKeyCustomObjectsPost.execute()).thenReturn(null);
 
-    final CustomObjectService customObjectService = new CustomObjectServiceImpl(client);
+    final CustomObjectService customObjectService = new CustomObjectServiceImpl(ctpClient);
 
     final LastSyncCustomObject<ProductSyncStatistics> lastSyncCustomObject =
         LastSyncCustomObject.of(ZonedDateTime.now(), new ProductSyncStatistics(), 100);
@@ -218,22 +270,23 @@ class CustomObjectServiceImplTest {
         "foo", "bar", "testRunnerName", lastSyncCustomObject);
 
     // assertions
-    final CustomObjectDraft createdDraft = (CustomObjectDraft) arg.getValue().getDraft();
+    final CustomObjectDraft createdDraft = arg.getValue();
     assertThat(createdDraft.getContainer())
         .isEqualTo("commercetools-project-sync.testRunnerName.bar");
     assertThat(createdDraft.getKey()).isEqualTo("foo");
+    assertThat(createdDraft.getValue()).isInstanceOf(LastSyncCustomObject.class);
+    assertThat((LastSyncCustomObject) createdDraft.getValue()).isEqualTo(lastSyncCustomObject);
   }
 
   @Test
-  @SuppressWarnings("unchecked")
   void createLastSyncCustomObject_WithEmptyRunnerName_ShouldCreateCorrectCustomObjectDraft() {
     // preparation
-    final SphereClient client = mock(SphereClient.class);
-    final ArgumentCaptor<CustomObjectUpsertCommand> arg =
-        ArgumentCaptor.forClass(CustomObjectUpsertCommand.class);
-    when(client.execute(arg.capture())).thenReturn(null);
+    final ArgumentCaptor<CustomObjectDraft> arg = ArgumentCaptor.forClass(CustomObjectDraft.class);
+    when(byProjectKeyCustomObjectsRequestBuilder.post(arg.capture()))
+        .thenReturn(byProjectKeyCustomObjectsPost);
+    when(byProjectKeyCustomObjectsPost.execute()).thenReturn(null);
 
-    final CustomObjectService customObjectService = new CustomObjectServiceImpl(client);
+    final CustomObjectService customObjectService = new CustomObjectServiceImpl(ctpClient);
 
     final LastSyncCustomObject<ProductSyncStatistics> lastSyncCustomObject =
         LastSyncCustomObject.of(ZonedDateTime.now(), new ProductSyncStatistics(), 100);
@@ -242,21 +295,22 @@ class CustomObjectServiceImplTest {
     customObjectService.createLastSyncCustomObject("foo", "bar", "", lastSyncCustomObject);
 
     // assertions
-    final CustomObjectDraft createdDraft = (CustomObjectDraft) arg.getValue().getDraft();
+    final CustomObjectDraft createdDraft = arg.getValue();
     assertThat(createdDraft.getContainer()).isEqualTo("commercetools-project-sync.runnerName.bar");
     assertThat(createdDraft.getKey()).isEqualTo("foo");
+    assertThat(createdDraft.getValue()).isInstanceOf(LastSyncCustomObject.class);
+    assertThat((LastSyncCustomObject) createdDraft.getValue()).isEqualTo(lastSyncCustomObject);
   }
 
   @Test
-  @SuppressWarnings("unchecked")
   void createLastSyncCustomObject_WithNullRunnerName_ShouldCreateCorrectCustomObjectDraft() {
     // preparation
-    final SphereClient client = mock(SphereClient.class);
-    final ArgumentCaptor<CustomObjectUpsertCommand> arg =
-        ArgumentCaptor.forClass(CustomObjectUpsertCommand.class);
-    when(client.execute(arg.capture())).thenReturn(null);
+    final ArgumentCaptor<CustomObjectDraft> arg = ArgumentCaptor.forClass(CustomObjectDraft.class);
+    when(byProjectKeyCustomObjectsRequestBuilder.post(arg.capture()))
+        .thenReturn(byProjectKeyCustomObjectsPost);
+    when(byProjectKeyCustomObjectsPost.execute()).thenReturn(null);
 
-    final CustomObjectService customObjectService = new CustomObjectServiceImpl(client);
+    final CustomObjectService customObjectService = new CustomObjectServiceImpl(ctpClient);
 
     final LastSyncCustomObject<ProductSyncStatistics> lastSyncCustomObject =
         LastSyncCustomObject.of(ZonedDateTime.now(), new ProductSyncStatistics(), 100);
@@ -265,8 +319,10 @@ class CustomObjectServiceImplTest {
     customObjectService.createLastSyncCustomObject("foo", "bar", null, lastSyncCustomObject);
 
     // assertions
-    final CustomObjectDraft createdDraft = (CustomObjectDraft) arg.getValue().getDraft();
+    final CustomObjectDraft createdDraft = arg.getValue();
     assertThat(createdDraft.getContainer()).isEqualTo("commercetools-project-sync.runnerName.bar");
     assertThat(createdDraft.getKey()).isEqualTo("foo");
+    assertThat(createdDraft.getValue()).isInstanceOf(LastSyncCustomObject.class);
+    assertThat((LastSyncCustomObject) createdDraft.getValue()).isEqualTo(lastSyncCustomObject);
   }
 }

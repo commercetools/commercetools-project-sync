@@ -5,19 +5,21 @@ import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import com.commercetools.api.models.ResourceUpdateAction;
+import com.commercetools.api.models.WithKey;
 import com.commercetools.sync.commons.BaseSync;
 import com.commercetools.sync.commons.exceptions.SyncException;
-import io.sphere.sdk.commands.UpdateAction;
-import io.sphere.sdk.models.ResourceView;
-import io.sphere.sdk.models.WithKey;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletionException;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 
+// This class compiles but not tested yet
+// TODO: Test class and adjust logic if needed
 public final class SyncUtils {
 
   public static final String APPLICATION_DEFAULT_NAME = "commercetools-project-sync";
@@ -42,14 +44,14 @@ public final class SyncUtils {
     return isBlank(implementationVersion) ? APPLICATION_DEFAULT_VERSION : implementationVersion;
   }
 
-  public static <T extends WithKey> void logErrorCallback(
+  public static <T extends WithKey, U extends ResourceUpdateAction> void logErrorCallback(
       @Nonnull final Logger logger,
       @Nonnull final String resourceName,
       @Nonnull final SyncException exception,
       @Nonnull final Optional<T> resource,
-      @Nullable final List<UpdateAction<T>> updateActions) {
+      @Nullable final List<U> updateActions) {
     String updateActionsString = "[]";
-    if (updateActions != null) {
+    if (updateActions != null && !updateActions.isEmpty()) {
       updateActionsString =
           updateActions.stream().map(Object::toString).collect(Collectors.joining(","));
     }
@@ -64,14 +66,14 @@ public final class SyncUtils {
     }
   }
 
-  public static <T extends ResourceView> void logErrorCallback(
+  public static <U extends ResourceUpdateAction> void logErrorCallback(
       @Nonnull final Logger logger,
       @Nonnull final String resourceName,
       @Nonnull final SyncException exception,
       @Nonnull final String resourceIdentifier,
-      @Nullable final List<UpdateAction<T>> updateActions) {
+      @Nullable final List<U> updateActions) {
     String updateActionsString = "[]";
-    if (updateActions != null) {
+    if (updateActions != null && !updateActions.isEmpty()) {
       updateActionsString =
           updateActions.stream().map(Object::toString).collect(Collectors.joining(","));
     }
@@ -109,6 +111,14 @@ public final class SyncUtils {
               "Warning when trying to sync %s. Existing key: %s", resourceName, resourceIdentifier),
           exception);
     }
+  }
+
+  @Nonnull
+  public static Throwable getCompletionExceptionCause(@Nonnull final Throwable exception) {
+    if (exception instanceof CompletionException) {
+      return getCompletionExceptionCause(exception.getCause());
+    }
+    return exception;
   }
 
   @Nonnull

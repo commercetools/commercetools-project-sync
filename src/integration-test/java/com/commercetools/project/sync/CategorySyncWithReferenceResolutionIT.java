@@ -1,36 +1,29 @@
 package com.commercetools.project.sync;
 
-import static com.commercetools.project.sync.util.IntegrationTestUtils.assertCategoryExists;
-import static com.commercetools.project.sync.util.IntegrationTestUtils.cleanUpProjects;
-import static com.commercetools.project.sync.util.IntegrationTestUtils.createITSyncerFactory;
-import static com.commercetools.project.sync.util.SphereClientUtils.CTP_SOURCE_CLIENT;
-import static com.commercetools.project.sync.util.SphereClientUtils.CTP_TARGET_CLIENT;
-import static io.sphere.sdk.models.LocalizedString.ofEnglish;
+import static com.commercetools.api.models.common.LocalizedString.ofEnglish;
+import static com.commercetools.project.sync.util.CtpClientUtils.CTP_SOURCE_CLIENT;
+import static com.commercetools.project.sync.util.CtpClientUtils.CTP_TARGET_CLIENT;
+import static com.commercetools.project.sync.util.IntegrationTestUtils.*;
 import static java.util.Arrays.asList;
-import static java.util.Collections.emptyList;
-import static java.util.Collections.emptyMap;
-import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.commercetools.api.client.ProjectApiRoot;
+import com.commercetools.api.models.category.CategoryDraft;
+import com.commercetools.api.models.category.CategoryDraftBuilder;
+import com.commercetools.api.models.common.AssetDraft;
+import com.commercetools.api.models.common.AssetDraftBuilder;
+import com.commercetools.api.models.common.AssetSourceBuilder;
+import com.commercetools.api.models.common.LocalizedStringBuilder;
+import com.commercetools.api.models.type.CustomFieldsDraft;
+import com.commercetools.api.models.type.CustomFieldsDraftBuilder;
+import com.commercetools.api.models.type.FieldDefinition;
+import com.commercetools.api.models.type.FieldDefinitionBuilder;
+import com.commercetools.api.models.type.ResourceTypeId;
+import com.commercetools.api.models.type.Type;
+import com.commercetools.api.models.type.TypeDraft;
+import com.commercetools.api.models.type.TypeDraftBuilder;
+import com.commercetools.api.models.type.TypeTextInputHint;
 import com.commercetools.project.sync.category.CategorySyncer;
-import io.sphere.sdk.categories.CategoryDraft;
-import io.sphere.sdk.categories.CategoryDraftBuilder;
-import io.sphere.sdk.categories.commands.CategoryCreateCommand;
-import io.sphere.sdk.client.SphereClient;
-import io.sphere.sdk.models.AssetDraft;
-import io.sphere.sdk.models.AssetDraftBuilder;
-import io.sphere.sdk.models.AssetSourceBuilder;
-import io.sphere.sdk.models.LocalizedString;
-import io.sphere.sdk.models.TextInputHint;
-import io.sphere.sdk.types.CustomFieldsDraft;
-import io.sphere.sdk.types.FieldDefinition;
-import io.sphere.sdk.types.ResourceTypeIdsSetBuilder;
-import io.sphere.sdk.types.StringFieldType;
-import io.sphere.sdk.types.Type;
-import io.sphere.sdk.types.TypeDraft;
-import io.sphere.sdk.types.TypeDraftBuilder;
-import io.sphere.sdk.types.commands.TypeCreateCommand;
-import java.util.Arrays;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -52,50 +45,51 @@ public class CategorySyncWithReferenceResolutionIT {
     setupSourceProjectData(CTP_SOURCE_CLIENT);
   }
 
-  private void setupSourceProjectData(SphereClient sourceProjectClient) {
-
+  private void setupSourceProjectData(ProjectApiRoot sourceProjectClient) {
     final FieldDefinition FIELD_DEFINITION =
-        FieldDefinition.of(
-            StringFieldType.of(),
-            "field_name",
-            LocalizedString.ofEnglish("label_1"),
-            false,
-            TextInputHint.SINGLE_LINE);
-
-    final TypeDraft typeDraft =
-        TypeDraftBuilder.of(
-                TYPE_KEY,
-                LocalizedString.ofEnglish("name_1"),
-                ResourceTypeIdsSetBuilder.of().addCategories().addPrices().addAssets().build())
-            .description(LocalizedString.ofEnglish("description_1"))
-            .fieldDefinitions(Arrays.asList(FIELD_DEFINITION))
+        FieldDefinitionBuilder.of()
+            .type(fieldTypeBuilder -> fieldTypeBuilder.stringBuilder())
+            .name("field_name")
+            .label(LocalizedStringBuilder.of().addValue("en", "label_1").build())
+            .required(false)
+            .inputHint(TypeTextInputHint.SINGLE_LINE)
             .build();
 
-    final Type type =
-        sourceProjectClient.execute(TypeCreateCommand.of(typeDraft)).toCompletableFuture().join();
+    final TypeDraft typeDraft =
+        TypeDraftBuilder.of()
+            .key(TYPE_KEY)
+            .name(ofEnglish("name_1"))
+            .resourceTypeIds(
+                ResourceTypeId.CATEGORY, ResourceTypeId.PRODUCT_PRICE, ResourceTypeId.ASSET)
+            .description(ofEnglish("description_1"))
+            .fieldDefinitions(FIELD_DEFINITION)
+            .build();
 
-    CTP_TARGET_CLIENT.execute(TypeCreateCommand.of(typeDraft)).toCompletableFuture().join();
+    final Type type = sourceProjectClient.types().create(typeDraft).executeBlocking().getBody();
 
-    CustomFieldsDraft customFieldsDraft =
-        CustomFieldsDraft.ofTypeKeyAndJson(type.getKey(), emptyMap());
+    CTP_TARGET_CLIENT.types().create(typeDraft).executeBlocking();
+
+    final CustomFieldsDraft customFieldsDraft =
+        CustomFieldsDraftBuilder.of().type(type.toResourceIdentifier()).build();
 
     final AssetDraft assetDraft =
-        AssetDraftBuilder.of(emptyList(), LocalizedString.ofEnglish("assetName"))
+        AssetDraftBuilder.of()
+            .name(ofEnglish("assetName"))
             .key("assetKey")
-            .sources(singletonList(AssetSourceBuilder.ofUri("sourceUri").build()))
+            .sources(AssetSourceBuilder.of().uri("sourceUri").build())
             .custom(customFieldsDraft)
             .build();
 
     final CategoryDraft categoryDraft =
-        CategoryDraftBuilder.of(ofEnglish("t-shirts"), ofEnglish("t-shirts"))
+        CategoryDraftBuilder.of()
+            .name(ofEnglish("t-shirts"))
+            .slug(ofEnglish("t-shirts"))
             .key(RESOURCE_KEY)
             .assets(asList(assetDraft))
             .custom(customFieldsDraft)
             .build();
-    sourceProjectClient
-        .execute(CategoryCreateCommand.of(categoryDraft))
-        .toCompletableFuture()
-        .join();
+
+    sourceProjectClient.categories().create(categoryDraft).execute().toCompletableFuture().join();
   }
 
   @AfterAll

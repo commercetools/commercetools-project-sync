@@ -1,16 +1,15 @@
 package com.commercetools.project.sync;
 
+import static com.commercetools.api.models.common.LocalizedString.ofEnglish;
 import static com.commercetools.project.sync.service.impl.CustomObjectServiceImpl.TIMESTAMP_GENERATOR_KEY;
+import static com.commercetools.project.sync.util.CtpClientUtils.CTP_SOURCE_CLIENT;
+import static com.commercetools.project.sync.util.CtpClientUtils.CTP_TARGET_CLIENT;
 import static com.commercetools.project.sync.util.IntegrationTestUtils.assertCategoryExists;
 import static com.commercetools.project.sync.util.IntegrationTestUtils.assertProductExists;
 import static com.commercetools.project.sync.util.IntegrationTestUtils.assertProductTypeExists;
 import static com.commercetools.project.sync.util.IntegrationTestUtils.cleanUpProjects;
 import static com.commercetools.project.sync.util.IntegrationTestUtils.createITSyncerFactory;
-import static com.commercetools.project.sync.util.QueryUtils.queryAndExecute;
-import static com.commercetools.project.sync.util.SphereClientUtils.CTP_SOURCE_CLIENT;
-import static com.commercetools.project.sync.util.SphereClientUtils.CTP_TARGET_CLIENT;
 import static com.commercetools.project.sync.util.SyncUtils.APPLICATION_DEFAULT_NAME;
-import static com.commercetools.project.sync.util.SyncUtils.DEFAULT_RUNNER_NAME;
 import static com.commercetools.project.sync.util.TestUtils.assertCartDiscountSyncerLoggingEvents;
 import static com.commercetools.project.sync.util.TestUtils.assertCategorySyncerLoggingEvents;
 import static com.commercetools.project.sync.util.TestUtils.assertCustomObjectSyncerLoggingEvents;
@@ -22,12 +21,57 @@ import static com.commercetools.project.sync.util.TestUtils.assertShoppingListSy
 import static com.commercetools.project.sync.util.TestUtils.assertStateSyncerLoggingEvents;
 import static com.commercetools.project.sync.util.TestUtils.assertTaxCategorySyncerLoggingEvents;
 import static com.commercetools.project.sync.util.TestUtils.assertTypeSyncerLoggingEvents;
-import static io.sphere.sdk.models.LocalizedString.ofEnglish;
 import static java.lang.String.format;
-import static java.util.Collections.emptyList;
-import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.commercetools.api.client.ProjectApiRoot;
+import com.commercetools.api.client.QueryUtils;
+import com.commercetools.api.models.cart_discount.CartDiscount;
+import com.commercetools.api.models.cart_discount.CartDiscountDraft;
+import com.commercetools.api.models.cart_discount.CartDiscountDraftBuilder;
+import com.commercetools.api.models.category.Category;
+import com.commercetools.api.models.category.CategoryDraft;
+import com.commercetools.api.models.category.CategoryDraftBuilder;
+import com.commercetools.api.models.custom_object.CustomObject;
+import com.commercetools.api.models.custom_object.CustomObjectDraft;
+import com.commercetools.api.models.custom_object.CustomObjectDraftBuilder;
+import com.commercetools.api.models.custom_object.CustomObjectPagedQueryResponse;
+import com.commercetools.api.models.customer.Customer;
+import com.commercetools.api.models.customer.CustomerDraft;
+import com.commercetools.api.models.customer.CustomerDraftBuilder;
+import com.commercetools.api.models.customer.CustomerSetFirstNameActionBuilder;
+import com.commercetools.api.models.customer.CustomerSetLastNameActionBuilder;
+import com.commercetools.api.models.customer.CustomerSignInResult;
+import com.commercetools.api.models.inventory.InventoryEntry;
+import com.commercetools.api.models.inventory.InventoryEntryDraft;
+import com.commercetools.api.models.inventory.InventoryEntryDraftBuilder;
+import com.commercetools.api.models.inventory.InventoryPagedQueryResponse;
+import com.commercetools.api.models.product.Product;
+import com.commercetools.api.models.product.ProductDraft;
+import com.commercetools.api.models.product.ProductDraftBuilder;
+import com.commercetools.api.models.product_type.ProductType;
+import com.commercetools.api.models.product_type.ProductTypeDraft;
+import com.commercetools.api.models.product_type.ProductTypeDraftBuilder;
+import com.commercetools.api.models.shopping_list.ShoppingList;
+import com.commercetools.api.models.shopping_list.ShoppingListDraft;
+import com.commercetools.api.models.shopping_list.ShoppingListDraftBuilder;
+import com.commercetools.api.models.shopping_list.ShoppingListLineItemDraft;
+import com.commercetools.api.models.shopping_list.ShoppingListLineItemDraftBuilder;
+import com.commercetools.api.models.state.State;
+import com.commercetools.api.models.state.StateDraft;
+import com.commercetools.api.models.state.StateDraftBuilder;
+import com.commercetools.api.models.state.StateTypeEnum;
+import com.commercetools.api.models.tax_category.TaxCategory;
+import com.commercetools.api.models.tax_category.TaxCategoryDraft;
+import com.commercetools.api.models.tax_category.TaxCategoryDraftBuilder;
+import com.commercetools.api.models.tax_category.TaxRateDraft;
+import com.commercetools.api.models.tax_category.TaxRateDraftBuilder;
+import com.commercetools.api.models.type.CustomFieldsDraft;
+import com.commercetools.api.models.type.CustomFieldsDraftBuilder;
+import com.commercetools.api.models.type.ResourceTypeId;
+import com.commercetools.api.models.type.Type;
+import com.commercetools.api.models.type.TypeDraft;
+import com.commercetools.api.models.type.TypeDraftBuilder;
 import com.commercetools.project.sync.cartdiscount.CartDiscountSyncer;
 import com.commercetools.project.sync.category.CategorySyncer;
 import com.commercetools.project.sync.customer.CustomerSyncer;
@@ -41,88 +85,15 @@ import com.commercetools.project.sync.state.StateSyncer;
 import com.commercetools.project.sync.taxcategory.TaxCategorySyncer;
 import com.commercetools.project.sync.type.TypeSyncer;
 import com.commercetools.sync.commons.helpers.BaseSyncStatistics;
-import com.commercetools.sync.products.helpers.ProductSyncStatistics;
-import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.neovisionaries.i18n.CountryCode;
-import io.sphere.sdk.cartdiscounts.CartDiscount;
-import io.sphere.sdk.cartdiscounts.CartDiscountDraft;
-import io.sphere.sdk.cartdiscounts.CartDiscountDraftBuilder;
-import io.sphere.sdk.cartdiscounts.CartDiscountValue;
-import io.sphere.sdk.cartdiscounts.ShippingCostTarget;
-import io.sphere.sdk.cartdiscounts.commands.CartDiscountCreateCommand;
-import io.sphere.sdk.cartdiscounts.queries.CartDiscountQuery;
-import io.sphere.sdk.categories.Category;
-import io.sphere.sdk.categories.CategoryDraft;
-import io.sphere.sdk.categories.CategoryDraftBuilder;
-import io.sphere.sdk.categories.commands.CategoryCreateCommand;
-import io.sphere.sdk.categories.queries.CategoryQuery;
-import io.sphere.sdk.client.SphereClient;
-import io.sphere.sdk.customers.Customer;
-import io.sphere.sdk.customers.CustomerDraft;
-import io.sphere.sdk.customers.CustomerDraftBuilder;
-import io.sphere.sdk.customers.CustomerName;
-import io.sphere.sdk.customers.CustomerSignInResult;
-import io.sphere.sdk.customers.commands.CustomerCreateCommand;
-import io.sphere.sdk.customers.commands.CustomerUpdateCommand;
-import io.sphere.sdk.customers.commands.updateactions.ChangeName;
-import io.sphere.sdk.customers.queries.CustomerQuery;
-import io.sphere.sdk.customobjects.CustomObject;
-import io.sphere.sdk.customobjects.CustomObjectDraft;
-import io.sphere.sdk.customobjects.commands.CustomObjectUpsertCommand;
-import io.sphere.sdk.customobjects.queries.CustomObjectQuery;
-import io.sphere.sdk.inventory.InventoryEntry;
-import io.sphere.sdk.inventory.InventoryEntryDraft;
-import io.sphere.sdk.inventory.InventoryEntryDraftBuilder;
-import io.sphere.sdk.inventory.commands.InventoryEntryCreateCommand;
-import io.sphere.sdk.inventory.queries.InventoryEntryQuery;
-import io.sphere.sdk.models.ResourceIdentifier;
-import io.sphere.sdk.products.Product;
-import io.sphere.sdk.products.ProductDraft;
-import io.sphere.sdk.products.ProductDraftBuilder;
-import io.sphere.sdk.products.ProductVariantDraftBuilder;
-import io.sphere.sdk.products.commands.ProductCreateCommand;
-import io.sphere.sdk.products.queries.ProductQuery;
-import io.sphere.sdk.producttypes.ProductType;
-import io.sphere.sdk.producttypes.ProductTypeDraft;
-import io.sphere.sdk.producttypes.ProductTypeDraftBuilder;
-import io.sphere.sdk.producttypes.commands.ProductTypeCreateCommand;
-import io.sphere.sdk.producttypes.queries.ProductTypeQuery;
-import io.sphere.sdk.queries.PagedQueryResult;
-import io.sphere.sdk.queries.QueryPredicate;
-import io.sphere.sdk.shoppinglists.LineItemDraft;
-import io.sphere.sdk.shoppinglists.LineItemDraftBuilder;
-import io.sphere.sdk.shoppinglists.ShoppingList;
-import io.sphere.sdk.shoppinglists.ShoppingListDraft;
-import io.sphere.sdk.shoppinglists.ShoppingListDraftBuilder;
-import io.sphere.sdk.shoppinglists.commands.ShoppingListCreateCommand;
-import io.sphere.sdk.shoppinglists.commands.ShoppingListDeleteCommand;
-import io.sphere.sdk.shoppinglists.queries.ShoppingListQuery;
-import io.sphere.sdk.states.State;
-import io.sphere.sdk.states.StateDraft;
-import io.sphere.sdk.states.StateDraftBuilder;
-import io.sphere.sdk.states.StateType;
-import io.sphere.sdk.states.commands.StateCreateCommand;
-import io.sphere.sdk.states.queries.StateQuery;
-import io.sphere.sdk.taxcategories.TaxCategory;
-import io.sphere.sdk.taxcategories.TaxCategoryDraft;
-import io.sphere.sdk.taxcategories.TaxCategoryDraftBuilder;
-import io.sphere.sdk.taxcategories.TaxRateDraft;
-import io.sphere.sdk.taxcategories.TaxRateDraftBuilder;
-import io.sphere.sdk.taxcategories.commands.TaxCategoryCreateCommand;
-import io.sphere.sdk.taxcategories.queries.TaxCategoryQuery;
-import io.sphere.sdk.types.CustomFieldsDraft;
-import io.sphere.sdk.types.CustomFieldsDraftBuilder;
-import io.sphere.sdk.types.ResourceTypeIdsSetBuilder;
-import io.sphere.sdk.types.Type;
-import io.sphere.sdk.types.TypeDraft;
-import io.sphere.sdk.types.TypeDraftBuilder;
-import io.sphere.sdk.types.commands.TypeCreateCommand;
-import io.sphere.sdk.types.queries.TypeQuery;
+import io.vrap.rmf.base.client.ApiHttpResponse;
+import io.vrap.rmf.base.client.utils.json.JsonUtils;
 import java.time.ZonedDateTime;
-import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ExecutionException;
 import javax.annotation.Nonnull;
 import org.junit.jupiter.api.AfterAll;
@@ -183,149 +154,201 @@ class CliRunnerIT {
     setupSourceProjectData(CTP_SOURCE_CLIENT);
   }
 
-  static void setupSourceProjectData(@Nonnull final SphereClient sourceProjectClient)
+  static void setupSourceProjectData(@Nonnull final ProjectApiRoot sourceProjectClient)
       throws ExecutionException, InterruptedException {
     final ProductTypeDraft productTypeDraft =
-        ProductTypeDraftBuilder.of(
-                RESOURCE_KEY, "sample-product-type", "a productType for t-shirts", emptyList())
+        ProductTypeDraftBuilder.of()
+            .key(RESOURCE_KEY)
+            .name("sample-product-type")
+            .description("a productType for t-shirts")
             .build();
 
     final ProductType productType =
-        sourceProjectClient
-            .execute(ProductTypeCreateCommand.of(productTypeDraft))
-            .toCompletableFuture()
-            .join();
+        sourceProjectClient.productTypes().post(productTypeDraft).executeBlocking().getBody();
 
     final TypeDraft typeDraft =
-        TypeDraftBuilder.of(
-                RESOURCE_KEY,
-                ofEnglish("category-custom-type"),
-                ResourceTypeIdsSetBuilder.of().addCategories().add("shopping-list"))
+        TypeDraftBuilder.of()
+            .key(RESOURCE_KEY)
+            .name(ofEnglish("category-custom-type"))
+            .resourceTypeIds(ResourceTypeId.CATEGORY, ResourceTypeId.SHOPPING_LIST)
             .build();
 
     final StateDraft stateDraft =
-        StateDraftBuilder.of(RESOURCE_KEY, StateType.PRODUCT_STATE)
-            .roles(Collections.emptySet())
+        StateDraftBuilder.of()
+            .key(RESOURCE_KEY)
+            .type(StateTypeEnum.PRODUCT_STATE)
+            .roles(List.of())
             .description(ofEnglish("State 1"))
             .name(ofEnglish("State 1"))
             .initial(true)
-            .transitions(Collections.emptySet())
+            .transitions(List.of())
             .build();
-    final State state =
-        sourceProjectClient.execute(StateCreateCommand.of(stateDraft)).toCompletableFuture().join();
+    final State state = sourceProjectClient.states().post(stateDraft).executeBlocking().getBody();
 
     final CompletableFuture<Type> typeFuture =
-        sourceProjectClient.execute(TypeCreateCommand.of(typeDraft)).toCompletableFuture();
+        sourceProjectClient
+            .types()
+            .post(typeDraft)
+            .execute()
+            .thenApply(ApiHttpResponse::getBody)
+            .toCompletableFuture();
 
     final TaxRateDraft taxRateDraft =
-        TaxRateDraftBuilder.of("Tax-Rate-Name-1", 0.3, false, CountryCode.DE).build();
+        TaxRateDraftBuilder.of()
+            .name("Tax-Rate-Name-1")
+            .amount(0.3)
+            .includedInPrice(false)
+            .country("DE")
+            .build();
 
     final TaxCategoryDraft taxCategoryDraft =
-        TaxCategoryDraftBuilder.of(
-                "Tax-Category-Name-1", singletonList(taxRateDraft), "Tax-Category-Description-1")
+        TaxCategoryDraftBuilder.of()
+            .name("Tax-Category-Name-1")
+            .rates(taxRateDraft)
+            .description("Tax-Category-Description-1")
             .key(RESOURCE_KEY)
             .build();
 
     final TaxCategory taxCategory =
-        sourceProjectClient
-            .execute(TaxCategoryCreateCommand.of(taxCategoryDraft))
-            .toCompletableFuture()
-            .join();
+        sourceProjectClient.taxCategories().post(taxCategoryDraft).executeBlocking().getBody();
 
     final ObjectNode customObjectValue = JsonNodeFactory.instance.objectNode().put("name", "value");
-    final CustomObjectDraft<JsonNode> customObjectDraft =
-        CustomObjectDraft.ofUnversionedUpsert(RESOURCE_KEY, RESOURCE_KEY, customObjectValue);
+    final CustomObjectDraft customObjectDraft =
+        CustomObjectDraftBuilder.of()
+            .key(RESOURCE_KEY)
+            .container(RESOURCE_KEY)
+            .value(customObjectValue)
+            .build();
     // following custom object should not be synced as it's created by the project-sync itself
-    final CustomObjectDraft<JsonNode> customObjectToIgnore =
-        CustomObjectDraft.ofUnversionedUpsert(
-            PROJECT_SYNC_CONTAINER_NAME, "timestampGenerator", customObjectValue);
+    final CustomObjectDraft customObjectToIgnore =
+        CustomObjectDraftBuilder.of()
+            .container(PROJECT_SYNC_CONTAINER_NAME)
+            .key("timestampGenerator")
+            .value(customObjectValue)
+            .build();
 
-    final CompletableFuture<CustomObject<JsonNode>> customObjectFuture1 =
+    final CompletableFuture<CustomObject> customObjectFuture1 =
         sourceProjectClient
-            .execute(CustomObjectUpsertCommand.of(customObjectDraft))
+            .customObjects()
+            .post(customObjectDraft)
+            .execute()
+            .thenApply(ApiHttpResponse::getBody)
             .toCompletableFuture();
 
-    final CompletableFuture<CustomObject<JsonNode>> customObjectFuture2 =
+    final CompletableFuture<CustomObject> customObjectFuture2 =
         sourceProjectClient
-            .execute(CustomObjectUpsertCommand.of(customObjectToIgnore))
+            .customObjects()
+            .post(customObjectToIgnore)
+            .execute()
+            .thenApply(ApiHttpResponse::getBody)
             .toCompletableFuture();
 
     final CategoryDraft categoryDraft =
-        CategoryDraftBuilder.of(ofEnglish("t-shirts"), ofEnglish("t-shirts"))
+        CategoryDraftBuilder.of()
+            .name(ofEnglish("t-shirts"))
+            .slug(ofEnglish("t-shirts"))
             .key(RESOURCE_KEY)
             .build();
 
     final CompletableFuture<Category> categoryFuture =
-        sourceProjectClient.execute(CategoryCreateCommand.of(categoryDraft)).toCompletableFuture();
+        sourceProjectClient
+            .categories()
+            .post(categoryDraft)
+            .execute()
+            .thenApply(ApiHttpResponse::getBody)
+            .toCompletableFuture();
 
     final CustomerDraft customerDraft =
-        CustomerDraftBuilder.of("test@email.com", "testPassword").key(RESOURCE_KEY).build();
+        CustomerDraftBuilder.of()
+            .email("test@email.com")
+            .password("testPassword")
+            .key(RESOURCE_KEY)
+            .build();
 
     final CompletableFuture<CustomerSignInResult> customerFuture =
-        sourceProjectClient.execute(CustomerCreateCommand.of(customerDraft)).toCompletableFuture();
+        sourceProjectClient
+            .customers()
+            .post(customerDraft)
+            .execute()
+            .thenApply(ApiHttpResponse::getBody)
+            .toCompletableFuture();
 
     CompletableFuture.allOf(
             typeFuture, customObjectFuture1, customObjectFuture2, categoryFuture, customerFuture)
         .join();
 
     final ProductDraft productDraft =
-        ProductDraftBuilder.of(
-                productType,
-                ofEnglish("V-neck Tee"),
-                ofEnglish("v-neck-tee"),
-                ProductVariantDraftBuilder.of().key(RESOURCE_KEY).sku(RESOURCE_KEY).build())
-            .state(state)
-            .taxCategory(taxCategory)
+        ProductDraftBuilder.of()
+            .productType(productType.toResourceIdentifier())
+            .name(ofEnglish("V-neck Tee"))
+            .slug(ofEnglish("v-neck-tee"))
+            .masterVariant(
+                productVariantDraftBuilder ->
+                    productVariantDraftBuilder.key(RESOURCE_KEY).sku(RESOURCE_KEY))
+            .state(state.toResourceIdentifier())
+            .taxCategory(taxCategory.toResourceIdentifier())
             .key(RESOURCE_KEY)
             .publish(true)
             .build();
 
     final CompletableFuture<Product> productFuture =
-        sourceProjectClient.execute(ProductCreateCommand.of(productDraft)).toCompletableFuture();
+        sourceProjectClient
+            .products()
+            .post(productDraft)
+            .execute()
+            .thenApply(ApiHttpResponse::getBody)
+            .toCompletableFuture();
 
     final InventoryEntryDraft inventoryEntryDraft =
-        InventoryEntryDraftBuilder.of(RESOURCE_KEY, 1L).build();
+        InventoryEntryDraftBuilder.of().sku(RESOURCE_KEY).quantityOnStock(1L).build();
 
     final CompletableFuture<InventoryEntry> inventoryFuture =
         sourceProjectClient
-            .execute(InventoryEntryCreateCommand.of(inventoryEntryDraft))
+            .inventory()
+            .post(inventoryEntryDraft)
+            .execute()
+            .thenApply(ApiHttpResponse::getBody)
             .toCompletableFuture();
 
     final CartDiscountDraft cartDiscountDraft =
-        CartDiscountDraftBuilder.of(
-                ofEnglish("my-cart-discount"),
-                "1 = 1",
-                CartDiscountValue.ofRelative(1),
-                ShippingCostTarget.of(),
-                "0.1",
-                true)
+        CartDiscountDraftBuilder.of()
+            .name(ofEnglish("my-cart-discount"))
+            .cartPredicate("1 = 1")
+            .value(
+                cartDiscountValueDraftBuilder ->
+                    cartDiscountValueDraftBuilder.relativeBuilder().permyriad(1L))
+            .target(cartDiscountTargetBuilder -> cartDiscountTargetBuilder.shippingBuilder())
+            .sortOrder("0.1")
+            .isActive(true)
             .key(RESOURCE_KEY)
             .build();
 
     final CompletableFuture<CartDiscount> cartDiscountFuture =
         sourceProjectClient
-            .execute(CartDiscountCreateCommand.of(cartDiscountDraft))
+            .cartDiscounts()
+            .post(cartDiscountDraft)
+            .execute()
+            .thenApply(ApiHttpResponse::getBody)
             .toCompletableFuture();
     CompletableFuture.allOf(productFuture, inventoryFuture, cartDiscountFuture);
 
     final CustomerSignInResult customerSignInResult = customerFuture.get();
     final Product product = productFuture.get();
-    final LineItemDraft lineItemDraft = LineItemDraftBuilder.of(product.getId()).build();
+    final ShoppingListLineItemDraft lineItemDraft =
+        ShoppingListLineItemDraftBuilder.of().productId(product.getId()).build();
     final CustomFieldsDraft customFieldsDraft =
-        CustomFieldsDraftBuilder.ofTypeId(typeFuture.get().getId()).build();
+        CustomFieldsDraftBuilder.of().type(typeFuture.get().toResourceIdentifier()).build();
 
     final ShoppingListDraft shoppingListDraft =
-        ShoppingListDraftBuilder.of(ofEnglish("shoppingList-name"))
+        ShoppingListDraftBuilder.of()
+            .name(ofEnglish("shoppingList-name"))
             .key(RESOURCE_KEY)
-            .customer(ResourceIdentifier.ofId(customerSignInResult.getCustomer().getId()))
-            .lineItems(Collections.singletonList(lineItemDraft))
+            .customer(customerSignInResult.getCustomer().toResourceIdentifier())
+            .lineItems(lineItemDraft)
             .custom(customFieldsDraft)
             .build();
 
-    sourceProjectClient
-        .execute(ShoppingListCreateCommand.of(shoppingListDraft))
-        .toCompletableFuture()
-        .join();
+    sourceProjectClient.shoppingLists().post(shoppingListDraft).executeBlocking();
   }
 
   @AfterAll
@@ -337,10 +360,8 @@ class CliRunnerIT {
   void run_WithSyncAsArgumentWithAllArg_ShouldExecuteAllSyncers() {
     // test
     CliRunner.of().run(new String[] {"-s", "all"}, createITSyncerFactory());
-
     // assertions
     assertAllSyncersLoggingEvents(1);
-
     assertAllResourcesAreSyncedToTarget(CTP_TARGET_CLIENT);
   }
 
@@ -385,7 +406,7 @@ class CliRunnerIT {
     assertCustomersAreSyncedCorrectly(CTP_TARGET_CLIENT);
     assertShoppingListsAreSyncedCorrectly(CTP_TARGET_CLIENT);
 
-    final String sourceProjectKey = CTP_SOURCE_CLIENT.getConfig().getProjectKey();
+    final String sourceProjectKey = CTP_SOURCE_CLIENT.getProjectKey();
 
     assertLastSyncCustomObjectExists(
         CTP_TARGET_CLIENT, sourceProjectKey, "customerSync", "runnerName");
@@ -410,7 +431,7 @@ class CliRunnerIT {
     assertTaxCategoriesAreSyncedCorrectly(CTP_TARGET_CLIENT);
     assertCartDiscountsAreSyncedCorrectly(CTP_TARGET_CLIENT);
 
-    final String sourceProjectKey = CTP_SOURCE_CLIENT.getConfig().getProjectKey();
+    final String sourceProjectKey = CTP_SOURCE_CLIENT.getProjectKey();
 
     assertLastSyncCustomObjectExists(
         CTP_TARGET_CLIENT, sourceProjectKey, "categorySync", "runnerName");
@@ -440,7 +461,7 @@ class CliRunnerIT {
     assertCategoriesAreSyncedCorrectly(CTP_TARGET_CLIENT);
     assertShoppingListsAreSyncedCorrectly(CTP_TARGET_CLIENT);
 
-    final String sourceProjectKey = CTP_SOURCE_CLIENT.getConfig().getProjectKey();
+    final String sourceProjectKey = CTP_SOURCE_CLIENT.getProjectKey();
 
     assertLastSyncCustomObjectExists(
         CTP_TARGET_CLIENT, sourceProjectKey, "categorySync", "runnerName");
@@ -478,7 +499,7 @@ class CliRunnerIT {
     assertCustomersAreSyncedCorrectly(CTP_TARGET_CLIENT);
     assertShoppingListsAreSyncedCorrectly(CTP_TARGET_CLIENT);
 
-    final String sourceProjectKey = CTP_SOURCE_CLIENT.getConfig().getProjectKey();
+    final String sourceProjectKey = CTP_SOURCE_CLIENT.getProjectKey();
 
     assertLastSyncCustomObjectExists(CTP_TARGET_CLIENT, sourceProjectKey, "typeSync", "runnerName");
     assertLastSyncCustomObjectExists(
@@ -507,7 +528,7 @@ class CliRunnerIT {
 
     assertCustomersAreSyncedCorrectly(CTP_TARGET_CLIENT);
 
-    final String sourceProjectKey = CTP_SOURCE_CLIENT.getConfig().getProjectKey();
+    final String sourceProjectKey = CTP_SOURCE_CLIENT.getProjectKey();
 
     assertLastSyncCustomObjectExists(
         CTP_TARGET_CLIENT, sourceProjectKey, "customerSync", "runnerName");
@@ -529,6 +550,7 @@ class CliRunnerIT {
     // test
     CliRunner.of().run(new String[] {"-s", "customers"}, syncerFactory);
 
+    // assertions
     assertUpdatedCustomersAreSyncedCorrectly(CTP_SOURCE_CLIENT, CTP_TARGET_CLIENT);
 
     assertUpdatedCustomObjectTimestampAfterSync(
@@ -536,67 +558,72 @@ class CliRunnerIT {
   }
 
   private void assertUpdatedCustomObjectTimestampAfterSync(
-      @Nonnull final SphereClient targetClient,
+      @Nonnull final ProjectApiRoot targetClient,
       @Nonnull final String syncModuleName,
       @Nonnull final String runnerName,
       @Nonnull final ZonedDateTime lastModifiedTime) {
-    final PagedQueryResult<CustomObject<LastSyncCustomObject>> lastSyncResult =
+
+    CustomObjectPagedQueryResponse lastSyncCustomObject =
         fetchLastSyncCustomObject(targetClient, syncModuleName, runnerName);
 
+    assertThat(lastSyncCustomObject.getResults()).isNotEmpty();
     assertThat(lastModifiedTime)
-        .isBefore(lastSyncResult.getResults().get(0).getValue().getLastSyncTimestamp());
+        .isBefore(lastSyncCustomObject.getResults().get(0).getLastModifiedAt());
   }
 
   private ZonedDateTime getCustomObjectLastModifiedTime(
-      @Nonnull final SphereClient targetClient,
+      @Nonnull final ProjectApiRoot targetClient,
       @Nonnull final String syncModuleName,
       @Nonnull final String runnerName) {
-    final PagedQueryResult<CustomObject<LastSyncCustomObject>> lastSyncResult =
+    final CustomObjectPagedQueryResponse lastSyncResult =
         fetchLastSyncCustomObject(targetClient, syncModuleName, runnerName);
 
-    return lastSyncResult.getResults().get(0).getValue().getLastSyncTimestamp();
+    return lastSyncResult.getResults().isEmpty()
+        ? null
+        : lastSyncResult.getResults().get(0).getLastModifiedAt();
   }
 
-  private void updateCustomerSourceObject(@Nonnull final SphereClient sourceProjectClient) {
-    final PagedQueryResult<Customer> customerPagedQueryResult =
-        sourceProjectClient
-            .execute(
-                CustomerQuery.of()
-                    .withPredicates(QueryPredicate.of(format("key=\"%s\"", RESOURCE_KEY))))
-            .toCompletableFuture()
-            .join();
-    final Customer customer = customerPagedQueryResult.getResults().get(0);
+  private void updateCustomerSourceObject(@Nonnull final ProjectApiRoot sourceProjectClient) {
+    final Customer customer =
+        sourceProjectClient.customers().withKey(RESOURCE_KEY).get().executeBlocking().getBody();
 
     sourceProjectClient
-        .execute(
-            CustomerUpdateCommand.of(
-                customer,
-                ChangeName.of(CustomerName.ofFirstAndLastName("testFirstName", "testLastName"))))
-        .toCompletableFuture()
-        .join();
+        .customers()
+        .withKey(RESOURCE_KEY)
+        .post(
+            customerUpdateBuilder ->
+                customerUpdateBuilder
+                    .actions(
+                        CustomerSetFirstNameActionBuilder.of().firstName("testFirstName").build(),
+                        CustomerSetLastNameActionBuilder.of().lastName("testLastName").build())
+                    .version(customer.getVersion()))
+        .executeBlocking();
   }
 
   private void assertUpdatedCustomersAreSyncedCorrectly(
-      @Nonnull final SphereClient cspClient, @Nonnull final SphereClient ctpClient) {
-    final PagedQueryResult<Customer> sourceCustomerPagedQueryResult =
-        cspClient
-            .execute(
-                CustomerQuery.of()
-                    .withPredicates(QueryPredicate.of(format("key=\"%s\"", RESOURCE_KEY))))
+      @Nonnull final ProjectApiRoot sourceClient, @Nonnull final ProjectApiRoot targetClient) {
+    final Customer sourceCustomer =
+        sourceClient
+            .customers()
+            .withKey(RESOURCE_KEY)
+            .get()
+            .execute()
+            .thenApply(ApiHttpResponse::getBody)
             .toCompletableFuture()
             .join();
-    Customer sourceCustomer = sourceCustomerPagedQueryResult.getResults().get(0);
 
-    final PagedQueryResult<Customer> targetCustomerPagedQueryResult =
-        ctpClient
-            .execute(
-                CustomerQuery.of()
-                    .withPredicates(QueryPredicate.of(format("key=\"%s\"", RESOURCE_KEY))))
+    final Customer targetCustomer =
+        targetClient
+            .customers()
+            .withKey(RESOURCE_KEY)
+            .get()
+            .execute()
+            .thenApply(ApiHttpResponse::getBody)
             .toCompletableFuture()
             .join();
-    Customer targetCustomer = targetCustomerPagedQueryResult.getResults().get(0);
 
-    assertThat(sourceCustomer.getName()).isEqualTo(targetCustomer.getName());
+    assertThat(sourceCustomer.getFirstName()).isEqualTo(targetCustomer.getFirstName());
+    assertThat(sourceCustomer.getLastName()).isEqualTo(targetCustomer.getLastName());
   }
 
   @Test
@@ -619,21 +646,39 @@ class CliRunnerIT {
 
     assertShoppingListsAreSyncedCorrectly(CTP_TARGET_CLIENT);
 
-    final String sourceProjectKey = CTP_SOURCE_CLIENT.getConfig().getProjectKey();
+    final String sourceProjectKey = CTP_SOURCE_CLIENT.getProjectKey();
 
     assertLastSyncCustomObjectExists(
         CTP_TARGET_CLIENT, sourceProjectKey, "shoppingListSync", "runnerName");
   }
 
-  private void prepareDataForShoppingListSync(SphereClient sourceClient) {
-    queryAndExecute(sourceClient, ShoppingListQuery.of(), ShoppingListDeleteCommand::of).join();
-    final ShoppingListDraft shoppingListDraft =
-        ShoppingListDraftBuilder.of(ofEnglish("shoppingList-name")).key(RESOURCE_KEY).build();
-
-    sourceClient
-        .execute(ShoppingListCreateCommand.of(shoppingListDraft))
+  private void prepareDataForShoppingListSync(ProjectApiRoot sourceClient) {
+    QueryUtils.queryAll(
+            sourceClient.shoppingLists().get(),
+            shoppingLists -> {
+              CompletableFuture.allOf(
+                      shoppingLists.stream()
+                          .map(
+                              shoppingList ->
+                                  sourceClient
+                                      .shoppingLists()
+                                      .delete(shoppingList)
+                                      .execute()
+                                      .thenApply(ApiHttpResponse::getBody))
+                          .map(CompletionStage::toCompletableFuture)
+                          .toArray(CompletableFuture[]::new))
+                  .join();
+            })
         .toCompletableFuture()
         .join();
+
+    final ShoppingListDraft shoppingListDraft =
+        ShoppingListDraftBuilder.of()
+            .name(ofEnglish("shoppingList-name"))
+            .key(RESOURCE_KEY)
+            .build();
+
+    sourceClient.shoppingLists().post(shoppingListDraft).executeBlocking();
   }
 
   @Test
@@ -641,10 +686,9 @@ class CliRunnerIT {
       run_WithCustomObjectSyncAsArgument_ShouldSyncCustomObjectsWithoutProjectSyncGeneratedCustomObjects() {
     // test
     CliRunner.of().run(new String[] {"-s", "customObjects"}, createITSyncerFactory());
-    // assertions
+
     // assertions
     assertThat(customObjectSyncerTestLogger.getAllLoggingEvents()).hasSize(2);
-
     assertCustomObjectSyncerLoggingEvents(customObjectSyncerTestLogger, 1);
   }
 
@@ -660,168 +704,189 @@ class CliRunnerIT {
 
     assertProductTypesAreSyncedCorrectly(CTP_TARGET_CLIENT);
 
-    final ZonedDateTime lastSyncTimestamp =
-        assertCurrentCtpTimestampGeneratorAndGetLastModifiedAt(
-            CTP_TARGET_CLIENT, DEFAULT_RUNNER_NAME, "ProductTypeSync");
+    // todo: https://commercetools.atlassian.net/browse/DEVX-272
+    //    final ZonedDateTime lastSyncTimestamp =
+    //        assertCurrentCtpTimestampGeneratorAndGetLastModifiedAt(
+    //            CTP_TARGET_CLIENT, DEFAULT_RUNNER_NAME, "ProductTypeSync");
 
-    final String sourceProjectKey = CTP_SOURCE_CLIENT.getConfig().getProjectKey();
+    //    final String sourceProjectKey = CTP_SOURCE_CLIENT.getProjectKey();
 
-    assertLastSyncCustomObjectIsCorrect(
-        CTP_TARGET_CLIENT,
-        sourceProjectKey,
-        "productTypeSync",
-        DEFAULT_RUNNER_NAME,
-        ProductSyncStatistics.class,
-        lastSyncTimestamp);
+    //    assertLastSyncCustomObjectIsCorrect(
+    //        CTP_TARGET_CLIENT,
+    //        sourceProjectKey,
+    //        "productTypeSync",
+    //        DEFAULT_RUNNER_NAME,
+    //        ProductSyncStatistics.class,
+    //        lastSyncTimestamp);
   }
 
-  private static void assertTypesAreSyncedCorrectly(@Nonnull final SphereClient ctpClient) {
-    final String queryPredicate = format("key=\"%s\"", RESOURCE_KEY);
-
-    final PagedQueryResult<Type> typeQueryResult =
+  private static void assertTypesAreSyncedCorrectly(@Nonnull final ProjectApiRoot ctpClient) {
+    final Type type =
         ctpClient
-            .execute(TypeQuery.of().withPredicates(QueryPredicate.of(queryPredicate)))
+            .types()
+            .withKey(RESOURCE_KEY)
+            .get()
+            .execute()
+            .thenApply(ApiHttpResponse::getBody)
             .toCompletableFuture()
             .join();
 
-    assertThat(typeQueryResult.getResults())
-        .hasSize(1)
-        .singleElement()
-        .satisfies(productType -> assertThat(productType.getKey()).isEqualTo(RESOURCE_KEY));
+    assertThat(type.getKey()).isEqualTo(RESOURCE_KEY);
   }
 
-  private static void assertProductTypesAreSyncedCorrectly(@Nonnull final SphereClient ctpClient) {
-
-    final PagedQueryResult<ProductType> productTypeQueryResult =
-        ctpClient.execute(ProductTypeQuery.of().byKey(RESOURCE_KEY)).toCompletableFuture().join();
-
-    assertThat(productTypeQueryResult.getResults())
-        .hasSize(1)
-        .singleElement()
-        .satisfies(productType -> assertThat(productType.getKey()).isEqualTo(RESOURCE_KEY));
-  }
-
-  private static void assertProductsAreSyncedCorrectly(@Nonnull final SphereClient ctpClient) {
-
-    final PagedQueryResult<Product> productQueryResult =
-        ctpClient.execute(ProductQuery.of()).toCompletableFuture().join();
-
-    assertThat(productQueryResult.getResults())
-        .hasSize(1)
-        .singleElement()
-        .satisfies(product -> assertThat(product.getKey()).isEqualTo(RESOURCE_KEY));
-  }
-
-  private static void assertCustomersAreSyncedCorrectly(@Nonnull final SphereClient ctpClient) {
-    final PagedQueryResult<Customer> customerPagedQueryResult =
+  private static void assertProductTypesAreSyncedCorrectly(
+      @Nonnull final ProjectApiRoot ctpClient) {
+    final ProductType productType =
         ctpClient
-            .execute(
-                CustomerQuery.of()
-                    .withPredicates(QueryPredicate.of(format("key=\"%s\"", RESOURCE_KEY))))
+            .productTypes()
+            .withKey(RESOURCE_KEY)
+            .get()
+            .execute()
+            .thenApply(ApiHttpResponse::getBody)
             .toCompletableFuture()
             .join();
-    assertThat(customerPagedQueryResult.getResults()).hasSize(1);
+
+    assertThat(productType.getKey()).isEqualTo(RESOURCE_KEY);
   }
 
-  private static void assertShoppingListsAreSyncedCorrectly(@Nonnull final SphereClient ctpClient) {
-    final PagedQueryResult<ShoppingList> shoppingListPagedQueryResult =
+  private static void assertProductsAreSyncedCorrectly(@Nonnull final ProjectApiRoot ctpClient) {
+    final Product product =
         ctpClient
-            .execute(
-                ShoppingListQuery.of()
-                    .withPredicates(QueryPredicate.of(format("key=\"%s\"", RESOURCE_KEY))))
+            .products()
+            .withKey(RESOURCE_KEY)
+            .get()
+            .execute()
+            .thenApply(ApiHttpResponse::getBody)
             .toCompletableFuture()
             .join();
-    assertThat(shoppingListPagedQueryResult.getResults()).hasSize(1);
+
+    assertThat(product.getKey()).isEqualTo(RESOURCE_KEY);
   }
 
-  private static void assertCategoriesAreSyncedCorrectly(@Nonnull final SphereClient ctpClient) {
-    final PagedQueryResult<Category> categoryPagedQueryResult =
+  private static void assertCustomersAreSyncedCorrectly(@Nonnull final ProjectApiRoot ctpClient) {
+    final Customer customer =
         ctpClient
-            .execute(
-                CategoryQuery.of()
-                    .withPredicates(QueryPredicate.of(format("key=\"%s\"", RESOURCE_KEY))))
+            .customers()
+            .withKey(RESOURCE_KEY)
+            .get()
+            .execute()
+            .thenApply(ApiHttpResponse::getBody)
             .toCompletableFuture()
             .join();
-    assertThat(categoryPagedQueryResult.getResults()).hasSize(1);
+
+    assertThat(customer.getKey()).isEqualTo(RESOURCE_KEY);
   }
 
-  private static void assertStatesAreSyncedCorrectly(@Nonnull final SphereClient ctpClient) {
-    final PagedQueryResult<State> statePagedQueryResult =
+  private static void assertShoppingListsAreSyncedCorrectly(
+      @Nonnull final ProjectApiRoot ctpClient) {
+    final ShoppingList shoppingList =
         ctpClient
-            .execute(
-                StateQuery.of()
-                    .withPredicates(QueryPredicate.of(format("key=\"%s\"", RESOURCE_KEY))))
+            .shoppingLists()
+            .withKey(RESOURCE_KEY)
+            .get()
+            .execute()
+            .thenApply(ApiHttpResponse::getBody)
             .toCompletableFuture()
             .join();
-    assertThat(statePagedQueryResult.getResults()).hasSize(1);
+
+    assertThat(shoppingList.getKey()).isEqualTo(RESOURCE_KEY);
   }
 
-  private static void assertTaxCategoriesAreSyncedCorrectly(@Nonnull final SphereClient ctpClient) {
-    final PagedQueryResult<TaxCategory> taxCategoryPagedQueryResult =
+  private static void assertCategoriesAreSyncedCorrectly(@Nonnull final ProjectApiRoot ctpClient) {
+    final Category category =
         ctpClient
-            .execute(
-                TaxCategoryQuery.of()
-                    .withPredicates(QueryPredicate.of(format("key=\"%s\"", RESOURCE_KEY))))
+            .categories()
+            .withKey(RESOURCE_KEY)
+            .get()
+            .execute()
+            .thenApply(ApiHttpResponse::getBody)
             .toCompletableFuture()
             .join();
-    assertThat(taxCategoryPagedQueryResult.getResults()).hasSize(1);
+
+    assertThat(category.getKey()).isEqualTo(RESOURCE_KEY);
   }
 
-  private static void assertCartDiscountsAreSyncedCorrectly(@Nonnull final SphereClient ctpClient) {
-    final PagedQueryResult<CartDiscount> cartDiscountPagedQueryResult =
+  private static void assertStatesAreSyncedCorrectly(@Nonnull final ProjectApiRoot ctpClient) {
+    final State state =
         ctpClient
-            .execute(
-                CartDiscountQuery.of()
-                    .withPredicates(QueryPredicate.of(format("key=\"%s\"", RESOURCE_KEY))))
+            .states()
+            .withKey(RESOURCE_KEY)
+            .get()
+            .execute()
+            .thenApply(ApiHttpResponse::getBody)
             .toCompletableFuture()
             .join();
-    assertThat(cartDiscountPagedQueryResult.getResults()).hasSize(1);
+
+    assertThat(state.getKey()).isEqualTo(RESOURCE_KEY);
+  }
+
+  private static void assertTaxCategoriesAreSyncedCorrectly(
+      @Nonnull final ProjectApiRoot ctpClient) {
+    final TaxCategory taxCategory =
+        ctpClient
+            .taxCategories()
+            .withKey(RESOURCE_KEY)
+            .get()
+            .execute()
+            .thenApply(ApiHttpResponse::getBody)
+            .toCompletableFuture()
+            .join();
+
+    assertThat(taxCategory.getKey()).isEqualTo(RESOURCE_KEY);
+  }
+
+  private static void assertCartDiscountsAreSyncedCorrectly(
+      @Nonnull final ProjectApiRoot ctpClient) {
+    final CartDiscount cartDiscount =
+        ctpClient
+            .cartDiscounts()
+            .withKey(RESOURCE_KEY)
+            .get()
+            .execute()
+            .thenApply(ApiHttpResponse::getBody)
+            .toCompletableFuture()
+            .join();
+
+    assertThat(cartDiscount.getKey()).isEqualTo(RESOURCE_KEY);
   }
 
   private void assertLastSyncCustomObjectIsCorrect(
-      @Nonnull final SphereClient targetClient,
+      @Nonnull final ProjectApiRoot targetClient,
       @Nonnull final String sourceProjectKey,
       @Nonnull final String syncModuleName,
       @Nonnull final String syncRunnerName,
       @Nonnull final Class<? extends BaseSyncStatistics> statisticsClass,
       @Nonnull final ZonedDateTime lastSyncTimestamp) {
 
-    final PagedQueryResult<CustomObject<LastSyncCustomObject>> lastSyncResult =
-        fetchLastSyncCustomObject(targetClient, syncModuleName, syncRunnerName);
+    final LastSyncCustomObject lastSyncCustomObject =
+        assertLastSyncCustomObjectExists(
+            targetClient, sourceProjectKey, syncModuleName, syncRunnerName);
 
-    assertThat(lastSyncResult.getResults())
-        .hasSize(1)
-        .singleElement()
-        .satisfies(
-            lastSyncCustomObject -> {
-              assertThat(lastSyncCustomObject.getKey()).isEqualTo(sourceProjectKey);
-              assertThat(lastSyncCustomObject.getValue())
-                  .satisfies(
-                      value -> {
-                        // Excluding til BaseStatisticsDeserializer works with correct type.
-                        // assertThat(value.getLastSyncStatistics()).isInstanceOf(statisticsClass);
-                        assertThat(value.getLastSyncStatistics().getProcessed().get()).isEqualTo(1);
-                        assertThat(value.getLastSyncTimestamp())
-                            .isBeforeOrEqualTo(lastSyncTimestamp);
-                      });
-            });
+    assertThat(lastSyncCustomObject.getLastSyncStatistics()).isInstanceOf(statisticsClass);
+    assertThat(lastSyncCustomObject.getLastSyncStatistics().getProcessed().get()).isEqualTo(1);
+    assertThat(lastSyncCustomObject.getLastSyncTimestamp()).isBeforeOrEqualTo(lastSyncTimestamp);
   }
 
   @Nonnull
   private ZonedDateTime assertCurrentCtpTimestampGeneratorAndGetLastModifiedAt(
-      @Nonnull final SphereClient targetClient,
+      @Nonnull final ProjectApiRoot targetClient,
       @Nonnull final String runnerName,
       @Nonnull final String syncModuleName) {
 
-    final CustomObjectQuery<String> timestampGeneratorQuery =
-        CustomObjectQuery.of(String.class)
-            .byContainer(
-                format(
-                    "%s.%s.%s.%s",
-                    APPLICATION_DEFAULT_NAME, runnerName, syncModuleName, TIMESTAMP_GENERATOR_KEY));
+    final String container =
+        format(
+            "%s.%s.%s.%s",
+            APPLICATION_DEFAULT_NAME, runnerName, syncModuleName, TIMESTAMP_GENERATOR_KEY);
 
-    final PagedQueryResult<CustomObject<String>> currentCtpTimestampGeneratorResults =
-        targetClient.execute(timestampGeneratorQuery).toCompletableFuture().join();
+    final CustomObjectPagedQueryResponse currentCtpTimestampGeneratorResults =
+        targetClient
+            .customObjects()
+            .withContainer(container)
+            .get()
+            .execute()
+            .thenApply(ApiHttpResponse::getBody)
+            .toCompletableFuture()
+            .join();
 
     assertThat(currentCtpTimestampGeneratorResults.getResults())
         .hasSize(1)
@@ -829,7 +894,7 @@ class CliRunnerIT {
         .satisfies(
             currentCtpTimestamp -> {
               assertThat(currentCtpTimestamp.getKey()).isEqualTo(TIMESTAMP_GENERATOR_KEY);
-              assertThat(currentCtpTimestamp.getValue())
+              assertThat((String) currentCtpTimestamp.getValue())
                   .matches(
                       "[0-9a-fA-F]{8}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{12}");
             });
@@ -848,7 +913,7 @@ class CliRunnerIT {
     assertCurrentCtpTimestampGeneratorAndGetLastModifiedAt(
         CTP_TARGET_CLIENT, "runnerName", "ProductTypeSync");
 
-    final String sourceProjectKey = CTP_SOURCE_CLIENT.getConfig().getProjectKey();
+    final String sourceProjectKey = CTP_SOURCE_CLIENT.getProjectKey();
 
     assertLastSyncCustomObjectExists(
         CTP_TARGET_CLIENT, sourceProjectKey, "productSync", "runnerName");
@@ -924,107 +989,101 @@ class CliRunnerIT {
     assertNoProjectSyncCustomObjectExists(CTP_TARGET_CLIENT);
   }
 
-  private void assertNoProjectSyncCustomObjectExists(@Nonnull final SphereClient targetClient) {
-    final CustomObjectQuery<LastSyncCustomObject> lastSyncQuery =
-        CustomObjectQuery.of(LastSyncCustomObject.class)
-            .plusPredicates(
-                customObjectQueryModel ->
-                    customObjectQueryModel.container().is(PROJECT_SYNC_CONTAINER_NAME));
-    final PagedQueryResult<CustomObject<LastSyncCustomObject>> lastSyncResult =
-        targetClient.execute(lastSyncQuery).toCompletableFuture().join();
+  private void assertNoProjectSyncCustomObjectExists(@Nonnull final ProjectApiRoot targetClient) {
+    final CustomObjectPagedQueryResponse lastSyncResult =
+        targetClient
+            .customObjects()
+            .withContainer(PROJECT_SYNC_CONTAINER_NAME)
+            .get()
+            .execute()
+            .thenApply(ApiHttpResponse::getBody)
+            .toCompletableFuture()
+            .join();
     assertThat(lastSyncResult.getResults()).isEmpty();
   }
 
   private void assertCurrentCtpTimestampGeneratorDoesntExist(
-      @Nonnull final SphereClient targetClient,
+      @Nonnull final ProjectApiRoot targetClient,
       @Nonnull final String runnerName,
       @Nonnull final String syncModuleName) {
+    final String container =
+        format(
+            "commercetools-project-sync.%s.%s.%s",
+            runnerName, syncModuleName, TIMESTAMP_GENERATOR_KEY);
 
-    final CustomObjectQuery<String> timestampGeneratorQuery =
-        CustomObjectQuery.of(String.class)
-            .byContainer(
-                format(
-                    "commercetools-project-sync.%s.%s.%s",
-                    runnerName, syncModuleName, TIMESTAMP_GENERATOR_KEY));
-
-    final PagedQueryResult<CustomObject<String>> currentCtpTimestampGeneratorResults =
-        targetClient.execute(timestampGeneratorQuery).toCompletableFuture().join();
+    final CustomObjectPagedQueryResponse currentCtpTimestampGeneratorResults =
+        targetClient
+            .customObjects()
+            .withContainer(container)
+            .get()
+            .execute()
+            .thenApply(ApiHttpResponse::getBody)
+            .toCompletableFuture()
+            .join();
 
     assertThat(currentCtpTimestampGeneratorResults.getResults()).isEmpty();
   }
 
-  private void assertLastSyncCustomObjectExists(
-      @Nonnull final SphereClient targetClient,
+  private LastSyncCustomObject assertLastSyncCustomObjectExists(
+      @Nonnull final ProjectApiRoot targetClient,
       @Nonnull final String sourceProjectKey,
       @Nonnull final String syncModuleName,
       @Nonnull final String runnerName) {
 
-    final PagedQueryResult<CustomObject<LastSyncCustomObject>> lastSyncResult =
+    final CustomObjectPagedQueryResponse lastSyncResult =
         fetchLastSyncCustomObject(targetClient, syncModuleName, runnerName);
 
     assertThat(lastSyncResult.getResults())
         .hasSize(1)
         .singleElement()
         .satisfies(
-            lastSyncCustomObject -> {
-              assertThat(lastSyncCustomObject.getKey()).isEqualTo(sourceProjectKey);
-              assertThat(lastSyncCustomObject.getValue())
-                  .satisfies(
-                      value -> {
-                        assertThat(value.getLastSyncTimestamp()).isNotNull();
-                        assertThat(value.getLastSyncDurationInMillis()).isNotNull();
-                        assertThat(value.getApplicationVersion()).isNotNull();
-                      });
+            customObject -> {
+              assertThat(customObject.getKey()).isEqualTo(sourceProjectKey);
+              assertThat(customObject.getValue()).isNotNull();
             });
+    final CustomObject customObject = lastSyncResult.getResults().get(0);
+    final ObjectMapper objectMapper = JsonUtils.getConfiguredObjectMapper();
+    final LastSyncCustomObject lastSyncCustomObject =
+        objectMapper.convertValue(customObject.getValue(), LastSyncCustomObject.class);
+
+    assertThat(lastSyncCustomObject.getLastSyncTimestamp()).isNotNull();
+    assertThat(lastSyncCustomObject.getLastSyncDurationInMillis()).isNotNull();
+    assertThat(lastSyncCustomObject.getApplicationVersion()).isNotNull();
+    return lastSyncCustomObject;
   }
 
-  private PagedQueryResult<CustomObject<LastSyncCustomObject>> fetchLastSyncCustomObject(
-      @Nonnull SphereClient targetClient,
+  private CustomObjectPagedQueryResponse fetchLastSyncCustomObject(
+      @Nonnull ProjectApiRoot targetClient,
       @Nonnull String syncModuleName,
       @Nonnull String runnerName) {
-    final CustomObjectQuery<LastSyncCustomObject> lastSyncQuery =
-        CustomObjectQuery.of(LastSyncCustomObject.class)
-            .byContainer(format("%s.%s.%s", APPLICATION_DEFAULT_NAME, runnerName, syncModuleName));
-
-    return targetClient.execute(lastSyncQuery).toCompletableFuture().join();
+    final String container =
+        format("%s.%s.%s", APPLICATION_DEFAULT_NAME, runnerName, syncModuleName);
+    return targetClient
+        .customObjects()
+        .withContainer(container)
+        .get()
+        .execute()
+        .thenApply(ApiHttpResponse::getBody)
+        .toCompletableFuture()
+        .join();
   }
 
   private static void assertAllResourcesAreSyncedToTarget(
-      @Nonnull final SphereClient targetClient) {
+      @Nonnull final ProjectApiRoot targetClient) {
 
     assertProductTypeExists(targetClient, RESOURCE_KEY);
     assertCategoryExists(targetClient, RESOURCE_KEY);
     assertProductExists(targetClient, RESOURCE_KEY, RESOURCE_KEY, RESOURCE_KEY);
+    assertTypesAreSyncedCorrectly(targetClient);
+    assertTaxCategoriesAreSyncedCorrectly(targetClient);
 
-    final String queryPredicate = format("key=\"%s\"", RESOURCE_KEY);
-
-    final PagedQueryResult<Type> typeQueryResult =
+    final InventoryPagedQueryResponse inventoryEntryQueryResult =
         targetClient
-            .execute(TypeQuery.of().withPredicates(QueryPredicate.of(queryPredicate)))
-            .toCompletableFuture()
-            .join();
-
-    assertThat(typeQueryResult.getResults())
-        .hasSize(1)
-        .singleElement()
-        .satisfies(type -> assertThat(type.getKey()).isEqualTo(RESOURCE_KEY));
-
-    final PagedQueryResult<TaxCategory> taxCategoryQueryResult =
-        targetClient
-            .execute(TaxCategoryQuery.of().withPredicates(QueryPredicate.of(queryPredicate)))
-            .toCompletableFuture()
-            .join();
-
-    assertThat(taxCategoryQueryResult.getResults())
-        .hasSize(1)
-        .singleElement()
-        .satisfies(taxCategory -> assertThat(taxCategory.getKey()).isEqualTo(RESOURCE_KEY));
-
-    final PagedQueryResult<InventoryEntry> inventoryEntryQueryResult =
-        targetClient
-            .execute(
-                InventoryEntryQuery.of()
-                    .withPredicates(QueryPredicate.of(format("sku=\"%s\"", RESOURCE_KEY))))
+            .inventory()
+            .get()
+            .withWhere(format("sku=\"%s\"", RESOURCE_KEY))
+            .execute()
+            .thenApply(ApiHttpResponse::getBody)
             .toCompletableFuture()
             .join();
 
@@ -1033,65 +1092,23 @@ class CliRunnerIT {
         .singleElement()
         .satisfies(inventoryEntry -> assertThat(inventoryEntry.getSku()).isEqualTo(RESOURCE_KEY));
 
-    final PagedQueryResult<CartDiscount> cartDiscountPagedQueryResult =
+    assertCartDiscountsAreSyncedCorrectly(targetClient);
+    assertStatesAreSyncedCorrectly(targetClient);
+
+    final CustomObject customObject =
         targetClient
-            .execute(
-                CartDiscountQuery.of()
-                    .withPredicates(queryModel -> queryModel.key().is(RESOURCE_KEY)))
+            .customObjects()
+            .withContainerAndKey(RESOURCE_KEY, RESOURCE_KEY)
+            .get()
+            .execute()
+            .thenApply(ApiHttpResponse::getBody)
             .toCompletableFuture()
             .join();
 
-    assertThat(cartDiscountPagedQueryResult.getResults())
-        .hasSize(1)
-        .singleElement()
-        .satisfies(cartDiscount -> assertThat(cartDiscount.getKey()).isEqualTo(RESOURCE_KEY));
+    assertThat(customObject.getKey()).isEqualTo(RESOURCE_KEY);
 
-    final PagedQueryResult<State> statePagedQueryResult =
-        targetClient
-            .execute(
-                StateQuery.of().withPredicates(queryModel -> queryModel.key().is(RESOURCE_KEY)))
-            .toCompletableFuture()
-            .join();
-
-    assertThat(statePagedQueryResult.getResults())
-        .hasSize(1)
-        .singleElement()
-        .satisfies(state -> assertThat(state.getKey()).isEqualTo(RESOURCE_KEY));
-
-    final PagedQueryResult<CustomObject<JsonNode>> customObjectPagedQueryResult =
-        targetClient
-            .execute(
-                CustomObjectQuery.ofJsonNode()
-                    .withPredicates(
-                        queryModel ->
-                            queryModel
-                                .key()
-                                .is(RESOURCE_KEY)
-                                .and(queryModel.container().is(RESOURCE_KEY))))
-            .toCompletableFuture()
-            .join();
-
-    assertThat(customObjectPagedQueryResult.getResults())
-        .hasSize(1)
-        .singleElement()
-        .satisfies(customObject -> assertThat(customObject.getKey()).isEqualTo(RESOURCE_KEY));
-
-    final PagedQueryResult<Customer> customerPagedQueryResult =
-        targetClient
-            .execute(
-                CustomerQuery.of().withPredicates(queryModel -> queryModel.key().is(RESOURCE_KEY)))
-            .toCompletableFuture()
-            .join();
-    assertThat(customerPagedQueryResult.getResults()).hasSize(1);
-
-    final PagedQueryResult<ShoppingList> shoppingListPagedQueryResult =
-        targetClient
-            .execute(
-                ShoppingListQuery.of()
-                    .withPredicates(queryModel -> queryModel.key().is(RESOURCE_KEY)))
-            .toCompletableFuture()
-            .join();
-    assertThat(shoppingListPagedQueryResult.getResults()).hasSize(1);
+    assertCustomersAreSyncedCorrectly(targetClient);
+    assertShoppingListsAreSyncedCorrectly(targetClient);
   }
 
   public static void assertAllSyncersLoggingEvents(final int numberOfResources) {

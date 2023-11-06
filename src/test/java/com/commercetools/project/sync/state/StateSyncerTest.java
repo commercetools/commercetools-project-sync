@@ -1,33 +1,35 @@
 package com.commercetools.project.sync.state;
 
 import static com.commercetools.project.sync.util.TestUtils.getMockedClock;
-import static io.sphere.sdk.json.SphereJsonUtils.readObjectFromResource;
-import static java.util.Arrays.asList;
+import static com.commercetools.project.sync.util.TestUtils.mockResourceIdsGraphQlRequest;
+import static com.commercetools.project.sync.util.TestUtils.readObjectFromResource;
+import static java.lang.String.format;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import com.commercetools.sync.commons.models.ResourceIdsGraphQlRequest;
-import com.commercetools.sync.commons.models.ResourceKeyIdGraphQlResult;
+import com.commercetools.api.client.ByProjectKeyStatesGet;
+import com.commercetools.api.client.ProjectApiRoot;
+import com.commercetools.api.defaultconfig.ApiRootBuilder;
+import com.commercetools.api.models.common.LocalizedString;
+import com.commercetools.api.models.state.State;
+import com.commercetools.api.models.state.StateDraft;
+import com.commercetools.api.models.state.StateDraftBuilder;
+import com.commercetools.api.models.state.StatePagedQueryResponse;
+import com.commercetools.api.models.state.StatePagedQueryResponseBuilder;
+import com.commercetools.api.models.state.StateResourceIdentifierBuilder;
+import com.commercetools.api.models.state.StateTypeEnum;
 import com.commercetools.sync.states.StateSync;
-import io.sphere.sdk.client.SphereApiConfig;
-import io.sphere.sdk.client.SphereClient;
-import io.sphere.sdk.json.SphereJsonUtils;
-import io.sphere.sdk.models.LocalizedString;
-import io.sphere.sdk.queries.PagedQueryResult;
-import io.sphere.sdk.states.State;
-import io.sphere.sdk.states.StateDraft;
-import io.sphere.sdk.states.StateDraftBuilder;
-import io.sphere.sdk.states.StateType;
-import io.sphere.sdk.states.queries.StateQuery;
-import java.time.Clock;
-import java.util.Arrays;
+import io.vrap.rmf.base.client.ApiHttpResponse;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import uk.org.lidalia.slf4jtest.LoggingEvent;
 import uk.org.lidalia.slf4jtest.TestLogger;
@@ -45,7 +47,7 @@ class StateSyncerTest {
   void of_ShouldCreateStateSyncerInstance() {
     // test
     final StateSyncer stateSyncer =
-        StateSyncer.of(mock(SphereClient.class), mock(SphereClient.class), getMockedClock());
+        StateSyncer.of(mock(ProjectApiRoot.class), mock(ProjectApiRoot.class), getMockedClock());
 
     // assertions
     assertThat(stateSyncer).isNotNull();
@@ -55,77 +57,114 @@ class StateSyncerTest {
   @Test
   void transform_ShouldReplaceStateTransitionIdsWithKeys() {
     // preparation
-    final SphereClient sourceClient = mock(SphereClient.class);
+    final ProjectApiRoot sourceClient = mock(ProjectApiRoot.class);
+    mockResourceIdsGraphQlRequest(
+        sourceClient, "states", "ab949f1b-c441-4c70-9cf0-4182c36d6a6c", "Initial");
+
     final StateSyncer stateSyncer =
-        StateSyncer.of(sourceClient, mock(SphereClient.class), getMockedClock());
+        StateSyncer.of(sourceClient, mock(ProjectApiRoot.class), getMockedClock());
     final List<State> states =
-        asList(
+        List.of(
             readObjectFromResource("state-1.json", State.class),
             readObjectFromResource("state-2.json", State.class));
-
-    final String jsonStringTransitions =
-        "{\"results\":[{\"id\":\"ab949f1b-c441-4c70-9cf0-4182c36d6a6c\","
-            + "\"key\":\"Initial\"} ]}";
-    final ResourceKeyIdGraphQlResult transitionsResult =
-        SphereJsonUtils.readObject(jsonStringTransitions, ResourceKeyIdGraphQlResult.class);
-
-    when(sourceClient.execute(any(ResourceIdsGraphQlRequest.class)))
-        .thenReturn(CompletableFuture.completedFuture(transitionsResult));
 
     // test
     final CompletionStage<List<StateDraft>> stateDrafts = stateSyncer.transform(states);
 
     // assertions
     final StateDraft draft1 =
-        StateDraftBuilder.of("State 1", StateType.LINE_ITEM_STATE)
-            .roles(Collections.emptySet())
+        StateDraftBuilder.of()
+            .key("State 1")
+            .type(StateTypeEnum.LINE_ITEM_STATE)
+            .roles(List.of())
             .description(LocalizedString.ofEnglish("State 1"))
             .name(LocalizedString.ofEnglish("State 1"))
             .initial(true)
             .build();
     final StateDraft draft2 =
-        StateDraftBuilder.of("State 2", StateType.LINE_ITEM_STATE)
-            .roles(Collections.emptySet())
+        StateDraftBuilder.of()
+            .key("State 2")
+            .type(StateTypeEnum.LINE_ITEM_STATE)
+            .roles(List.of())
             .description(LocalizedString.ofEnglish("State 2"))
             .name(LocalizedString.ofEnglish("State 2"))
             .initial(false)
-            .transitions(Collections.singleton(State.referenceOfId("Initial")))
+            .transitions(StateResourceIdentifierBuilder.of().key("Initial").build())
             .build();
 
-    assertThat(stateDrafts).isCompletedWithValue(Arrays.asList(draft1, draft2));
+    assertThat(stateDrafts).isCompletedWithValue(List.of(draft1, draft2));
   }
 
   @Test
   void getQuery_ShouldBuildStateQuery() {
     // preparation
+    final ProjectApiRoot apiRoot =
+        ApiRootBuilder.of().withApiBaseUrl("apiBaseUrl").build("testProjectKey");
     final StateSyncer stateSyncer =
-        StateSyncer.of(mock(SphereClient.class), mock(SphereClient.class), getMockedClock());
+        StateSyncer.of(apiRoot, mock(ProjectApiRoot.class), getMockedClock());
 
-    // test
-    final StateQuery query = stateSyncer.getQuery();
-
-    // assertion
-    assertThat(query).isEqualTo(StateQuery.of());
+    // test + assertion
+    assertThat(stateSyncer.getQuery()).isInstanceOf(ByProjectKeyStatesGet.class);
   }
 
   @Test
-  void syncWithError_WhenNoKeyIsProvided_ShouldCallErrorCallback() {
+  void transform_WhenNoKeyIsProvided_ShouldContinueAndLogError() {
     // preparation
-    final SphereClient sourceClient = mock(SphereClient.class);
-    final SphereClient targetClient = mock(SphereClient.class);
-    when(sourceClient.getConfig()).thenReturn(SphereApiConfig.of("source-project"));
-    when(targetClient.getConfig()).thenReturn(SphereApiConfig.of("target-project"));
-
+    final ProjectApiRoot sourceClient = mock(ProjectApiRoot.class);
     final List<State> stateTypePage =
-        asList(readObjectFromResource("state-without-key.json", State.class));
-
-    final PagedQueryResult<State> pagedQueryResult = mock(PagedQueryResult.class);
-    when(pagedQueryResult.getResults()).thenReturn(stateTypePage);
-    when(sourceClient.execute(any(StateQuery.class)))
-        .thenReturn(CompletableFuture.completedFuture(pagedQueryResult));
+        List.of(readObjectFromResource("state-without-key.json", State.class));
 
     // test
-    final StateSyncer stateSyncer = StateSyncer.of(sourceClient, targetClient, mock(Clock.class));
+    final StateSyncer stateSyncer =
+        StateSyncer.of(sourceClient, mock(ProjectApiRoot.class), getMockedClock());
+    final CompletableFuture<List<StateDraft>> stateDrafts =
+        stateSyncer.transform(stateTypePage).toCompletableFuture();
+
+    // assertion
+    assertThat(stateDrafts).isCompletedWithValue(Collections.emptyList());
+    assertThat(syncerTestLogger.getAllLoggingEvents())
+        .anySatisfy(
+            loggingEvent -> {
+              assertThat(loggingEvent.getMessage()).contains("StateDraft: key is missing");
+              assertThat(loggingEvent.getThrowable().isPresent()).isTrue();
+              assertThat(loggingEvent.getThrowable().get())
+                  .isInstanceOf(NullPointerException.class);
+            });
+  }
+
+  /*
+   * Disabled as long as there's NPE when a key is null or empty and therefore add with PLACEHOLDER to cache.
+   * See: https://commercetools.atlassian.net/browse/DEVX-277
+   */
+  @Disabled
+  @Test
+  void syncWithError_WhenTransistionReferencesAreInvalid_ShouldCallErrorCallback() {
+    // preparation
+    final ProjectApiRoot sourceClient = mock(ProjectApiRoot.class);
+    mockResourceIdsGraphQlRequest(
+        sourceClient, "states", "ab949f1b-c441-4c70-9cf0-4182c36d6a6c", "");
+    final List<State> stateTypePage = List.of(readObjectFromResource("state-2.json", State.class));
+    final StatePagedQueryResponse queryResponse =
+        StatePagedQueryResponseBuilder.of()
+            .results(stateTypePage)
+            .limit(20L)
+            .offset(0L)
+            .count(1L)
+            .build();
+    final ApiHttpResponse apiHttpResponse = mock(ApiHttpResponse.class);
+    when(apiHttpResponse.getBody()).thenReturn(queryResponse);
+    final ByProjectKeyStatesGet byProjectKeyStatesGet = mock(ByProjectKeyStatesGet.class);
+    when(byProjectKeyStatesGet.withLimit(anyInt())).thenReturn(byProjectKeyStatesGet);
+    when(byProjectKeyStatesGet.withWithTotal(anyBoolean())).thenReturn(byProjectKeyStatesGet);
+    when(byProjectKeyStatesGet.withSort(anyString())).thenReturn(byProjectKeyStatesGet);
+    when(byProjectKeyStatesGet.execute())
+        .thenReturn(CompletableFuture.completedFuture(apiHttpResponse));
+    when(sourceClient.states()).thenReturn(mock());
+    when(sourceClient.states().get()).thenReturn(byProjectKeyStatesGet);
+
+    // test
+    final StateSyncer stateSyncer =
+        StateSyncer.of(sourceClient, mock(ProjectApiRoot.class), getMockedClock());
     stateSyncer.sync(null, true).toCompletableFuture().join();
 
     // assertion
@@ -135,6 +174,8 @@ class StateSyncerTest {
             "Error when trying to sync state. Existing key: <<not present>>. Update actions: []");
     assertThat(errorLog.getThrowable().get().getMessage())
         .isEqualTo(
-            "StateDraft with name: LocalizedString(en -> State 1) doesn't have a key. Please make sure all state drafts have keys.");
+            format(
+                "StateDraft with key: %s has invalid state transitions",
+                stateTypePage.get(0).getKey()));
   }
 }

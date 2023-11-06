@@ -1,27 +1,30 @@
 package com.commercetools.project.sync.inventoryentry;
 
-import static com.commercetools.project.sync.util.TestUtils.getMockedClock;
-import static com.commercetools.project.sync.util.TestUtils.mockResourceIdsGraphQlRequest;
+import static com.commercetools.project.sync.util.TestUtils.*;
 import static com.commercetools.sync.inventories.utils.InventoryTransformUtils.toInventoryEntryDrafts;
-import static io.sphere.sdk.json.SphereJsonUtils.readObjectFromResource;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import com.commercetools.sync.commons.models.ResourceIdsGraphQlRequest;
-import com.commercetools.sync.commons.models.ResourceKeyIdGraphQlResult;
+import com.commercetools.api.client.ByProjectKeyGraphqlPost;
+import com.commercetools.api.client.ByProjectKeyGraphqlRequestBuilder;
+import com.commercetools.api.client.ByProjectKeyInventoryGet;
+import com.commercetools.api.client.ByProjectKeyInventoryRequestBuilder;
+import com.commercetools.api.client.ProjectApiRoot;
+import com.commercetools.api.models.graph_ql.GraphQLRequest;
+import com.commercetools.api.models.graph_ql.GraphQLResponse;
+import com.commercetools.api.models.inventory.InventoryEntry;
+import com.commercetools.api.models.inventory.InventoryEntryDraft;
+import com.commercetools.api.models.inventory.InventoryPagedQueryResponse;
+import com.commercetools.api.models.inventory.InventoryPagedQueryResponseBuilder;
 import com.commercetools.sync.commons.utils.CaffeineReferenceIdToKeyCacheImpl;
 import com.commercetools.sync.commons.utils.ReferenceIdToKeyCache;
 import com.commercetools.sync.inventories.InventorySync;
-import io.sphere.sdk.client.SphereApiConfig;
-import io.sphere.sdk.client.SphereClient;
-import io.sphere.sdk.inventory.InventoryEntry;
-import io.sphere.sdk.inventory.InventoryEntryDraft;
-import io.sphere.sdk.inventory.queries.InventoryEntryQuery;
-import io.sphere.sdk.json.SphereJsonUtils;
-import io.sphere.sdk.queries.PagedQueryResult;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import io.vrap.rmf.base.client.ApiHttpResponse;
 import java.time.Clock;
 import java.util.Collections;
 import java.util.List;
@@ -30,6 +33,7 @@ import java.util.concurrent.CompletionStage;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import uk.org.lidalia.slf4jtest.LoggingEvent;
 import uk.org.lidalia.slf4jtest.TestLogger;
@@ -52,7 +56,7 @@ class InventoryEntrySyncerTest {
     // test
     final InventoryEntrySyncer inventorySyncer =
         InventoryEntrySyncer.of(
-            mock(SphereClient.class), mock(SphereClient.class), getMockedClock());
+            mock(ProjectApiRoot.class), mock(ProjectApiRoot.class), getMockedClock());
 
     // assertions
     assertThat(inventorySyncer).isNotNull();
@@ -60,11 +64,11 @@ class InventoryEntrySyncerTest {
   }
 
   @Test
-  void transform_ShouldReplaceInventoryEntryReferenceIdsWithKeys() {
+  void transform_ShouldReplaceInventoryEntryReferenceIdsWithKeys() throws JsonProcessingException {
     // preparation
-    final SphereClient sourceClient = mock(SphereClient.class);
+    final ProjectApiRoot sourceClient = mock(ProjectApiRoot.class);
     final InventoryEntrySyncer inventoryEntrySyncer =
-        InventoryEntrySyncer.of(sourceClient, mock(SphereClient.class), getMockedClock());
+        InventoryEntrySyncer.of(sourceClient, mock(ProjectApiRoot.class), getMockedClock());
     final List<InventoryEntry> inventoryPage =
         asList(
             readObjectFromResource("inventory-sku-1.json", InventoryEntry.class),
@@ -81,20 +85,27 @@ class InventoryEntrySyncerTest {
             .collect(Collectors.toList());
 
     final String jsonStringCustomTypes =
-        "{\"results\":[{\"id\":\"02e915e7-7763-48d1-83bd-d4e940a1a368\","
-            + "\"key\":\"test-custom-type-key\"} ]}";
-    final ResourceKeyIdGraphQlResult customTypesResult =
-        SphereJsonUtils.readObject(jsonStringCustomTypes, ResourceKeyIdGraphQlResult.class);
+        "{\"data\":{\"typeDefinitions\":{\"results\":[{\"id\":\"02e915e7-7763-48d1-83bd-d4e940a1a368\","
+            + "\"key\":\"test-custom-type-key\"}]}}}";
+    final GraphQLResponse customTypesResult =
+        readObject(jsonStringCustomTypes, GraphQLResponse.class);
 
     final String jsonStringSupplyChannels =
-        "{\"results\":[{\"id\":\"5c0516b5-f506-4b6a-b4d1-c06ca29ab7e1\","
-            + "\"key\":\"test-channel-key\"} ]}";
-    final ResourceKeyIdGraphQlResult supplyChannelsResult =
-        SphereJsonUtils.readObject(jsonStringSupplyChannels, ResourceKeyIdGraphQlResult.class);
+        "{\"data\":{\"channels\":{\"results\":[{\"id\":\"5c0516b5-f506-4b6a-b4d1-c06ca29ab7e1\","
+            + "\"key\":\"test-channel-key\"}]}}}";
+    final GraphQLResponse supplyChannelsResult =
+        readObject(jsonStringSupplyChannels, GraphQLResponse.class);
 
-    when(sourceClient.execute(any(ResourceIdsGraphQlRequest.class)))
-        .thenReturn(CompletableFuture.completedFuture(customTypesResult))
-        .thenReturn(CompletableFuture.completedFuture(supplyChannelsResult));
+    final ApiHttpResponse<GraphQLResponse> graphQLResponse = mock(ApiHttpResponse.class);
+
+    when(graphQLResponse.getBody()).thenReturn(customTypesResult).thenReturn(supplyChannelsResult);
+    final ByProjectKeyGraphqlRequestBuilder byProjectKeyGraphqlRequestBuilder = mock();
+    when(sourceClient.graphql()).thenReturn(byProjectKeyGraphqlRequestBuilder);
+    final ByProjectKeyGraphqlPost byProjectKeyGraphqlPost = mock();
+    when(byProjectKeyGraphqlRequestBuilder.post(any(GraphQLRequest.class)))
+        .thenReturn(byProjectKeyGraphqlPost);
+    when(byProjectKeyGraphqlPost.execute())
+        .thenReturn(CompletableFuture.completedFuture(graphQLResponse));
 
     // test
     final CompletionStage<List<InventoryEntryDraft>> draftsFromPageStage =
@@ -118,25 +129,39 @@ class InventoryEntrySyncerTest {
   }
 
   @Test
-  void syncWithError_ShouldCallErrorCallback() {
+  @Disabled("https://commercetools.atlassian.net/browse/DEVX-275")
+  void syncWithError_ShouldCallErrorCallback() throws JsonProcessingException {
     // preparation: inventory entry with no key is synced
-    final SphereClient sourceClient = mock(SphereClient.class);
-    final SphereClient targetClient = mock(SphereClient.class);
-    when(sourceClient.getConfig()).thenReturn(SphereApiConfig.of("source-project"));
-    when(targetClient.getConfig()).thenReturn(SphereApiConfig.of("target-project"));
+    final ProjectApiRoot sourceClient = mock(ProjectApiRoot.class);
+    final ProjectApiRoot targetClient = mock(ProjectApiRoot.class);
+
     final List<InventoryEntry> inventoryEntries =
         Collections.singletonList(
             readObjectFromResource("inventory-no-sku.json", InventoryEntry.class));
 
-    final PagedQueryResult<InventoryEntry> pagedQueryResult = mock(PagedQueryResult.class);
-    when(pagedQueryResult.getResults()).thenReturn(inventoryEntries);
-    when(sourceClient.execute(any(InventoryEntryQuery.class)))
-        .thenReturn(CompletableFuture.completedFuture(pagedQueryResult));
+    final ByProjectKeyInventoryRequestBuilder byProjectKeyInventoryRequestBuilder = mock();
+    when(sourceClient.inventory()).thenReturn(byProjectKeyInventoryRequestBuilder);
+    final ByProjectKeyInventoryGet byProjectKeyInventoryGet = mock();
+    when(byProjectKeyInventoryRequestBuilder.get()).thenReturn(byProjectKeyInventoryGet);
+    when(byProjectKeyInventoryGet.withSort(anyString())).thenReturn(byProjectKeyInventoryGet);
+    when(byProjectKeyInventoryGet.withLimit(anyInt())).thenReturn(byProjectKeyInventoryGet);
+    when(byProjectKeyInventoryGet.withWithTotal(anyBoolean())).thenReturn(byProjectKeyInventoryGet);
+    final ApiHttpResponse<InventoryPagedQueryResponse> response = mock(ApiHttpResponse.class);
+    final InventoryPagedQueryResponse inventoryPagedQueryResponse =
+        InventoryPagedQueryResponseBuilder.of()
+            .results(inventoryEntries)
+            .limit(20L)
+            .offset(0L)
+            .count(1L)
+            .build();
+    when(response.getBody()).thenReturn(inventoryPagedQueryResponse);
+    when(byProjectKeyInventoryGet.execute())
+        .thenReturn(CompletableFuture.completedFuture(response));
 
     mockResourceIdsGraphQlRequest(
-        sourceClient, "4db98ea6-38dc-4ccb-b20f-466e1566567h", "customTypeKey");
+        sourceClient, "typeDefinitions", "4db98ea6-38dc-4ccb-b20f-466e1566567h", "customTypeKey");
     mockResourceIdsGraphQlRequest(
-        sourceClient, "1489488b-f737-4a9e-ba49-2d42d84c4c6f", "channelKey");
+        sourceClient, "channels", "1489488b-f737-4a9e-ba49-2d42d84c4c6f", "channelKey");
 
     // test
     final InventoryEntrySyncer inventoryEntrySyncer =

@@ -1,24 +1,24 @@
 package com.commercetools.project.sync.cartdiscount;
 
-import static com.commercetools.project.sync.util.TestUtils.getMockedClock;
-import static com.commercetools.project.sync.util.TestUtils.mockResourceIdsGraphQlRequest;
+import static com.commercetools.project.sync.util.TestUtils.*;
 import static com.commercetools.sync.cartdiscounts.utils.CartDiscountTransformUtils.toCartDiscountDrafts;
-import static io.sphere.sdk.json.SphereJsonUtils.readObjectFromResource;
+import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import com.commercetools.api.client.ByProjectKeyCartDiscountsGet;
+import com.commercetools.api.client.ByProjectKeyCartDiscountsRequestBuilder;
+import com.commercetools.api.client.ProjectApiRoot;
+import com.commercetools.api.models.cart_discount.CartDiscount;
+import com.commercetools.api.models.cart_discount.CartDiscountDraft;
+import com.commercetools.api.models.cart_discount.CartDiscountPagedQueryResponse;
 import com.commercetools.sync.cartdiscounts.CartDiscountSync;
 import com.commercetools.sync.commons.utils.CaffeineReferenceIdToKeyCacheImpl;
 import com.commercetools.sync.commons.utils.ReferenceIdToKeyCache;
-import io.sphere.sdk.cartdiscounts.CartDiscount;
-import io.sphere.sdk.cartdiscounts.CartDiscountDraft;
-import io.sphere.sdk.cartdiscounts.queries.CartDiscountQuery;
-import io.sphere.sdk.client.SphereApiConfig;
-import io.sphere.sdk.client.SphereClient;
-import io.sphere.sdk.queries.PagedQueryResult;
+import io.vrap.rmf.base.client.ApiHttpResponse;
 import java.time.Clock;
 import java.util.Collections;
 import java.util.List;
@@ -36,22 +36,28 @@ class CartDiscountSyncerTest {
 
   @Test
   void of_ShouldCreateCartDiscountSyncerInstance() {
+    final ProjectApiRoot sourceClient = mock(ProjectApiRoot.class);
+    final ByProjectKeyCartDiscountsRequestBuilder byProjectKeyCartDiscountsRequestBuilder = mock();
+    when(sourceClient.cartDiscounts()).thenReturn(byProjectKeyCartDiscountsRequestBuilder);
+    final ByProjectKeyCartDiscountsGet byProjectKeyCartDiscountsGet = mock();
+    when(byProjectKeyCartDiscountsRequestBuilder.get()).thenReturn(byProjectKeyCartDiscountsGet);
+
     // test
     final CartDiscountSyncer cartDiscountSyncer =
-        CartDiscountSyncer.of(mock(SphereClient.class), mock(SphereClient.class), getMockedClock());
+        CartDiscountSyncer.of(sourceClient, mock(ProjectApiRoot.class), getMockedClock());
 
     // assertions
     assertThat(cartDiscountSyncer).isNotNull();
-    assertThat(cartDiscountSyncer.getQuery()).isEqualTo(CartDiscountQuery.of());
+    assertThat(cartDiscountSyncer.getQuery()).isEqualTo(byProjectKeyCartDiscountsGet);
     assertThat(cartDiscountSyncer.getSync()).isExactlyInstanceOf(CartDiscountSync.class);
   }
 
   @Test
   void transform_ShouldReplaceCartDiscountReferenceIdsWithKeys() {
     // preparation
-    final SphereClient sourceClient = mock(SphereClient.class);
+    final ProjectApiRoot sourceClient = mock(ProjectApiRoot.class);
     final CartDiscountSyncer cartDiscountSyncer =
-        CartDiscountSyncer.of(sourceClient, mock(SphereClient.class), getMockedClock());
+        CartDiscountSyncer.of(sourceClient, mock(ProjectApiRoot.class), getMockedClock());
     final List<CartDiscount> cartDiscountPage =
         asList(
             readObjectFromResource("cart-discount-key-1.json", CartDiscount.class),
@@ -62,7 +68,10 @@ class CartDiscountSyncerTest {
             .map(cartDiscount -> cartDiscount.getCustom().getType().getId())
             .collect(Collectors.toList());
     mockResourceIdsGraphQlRequest(
-        sourceClient, "4db98ea6-38dc-4ccb-b20f-466e1566fd03", "test cart discount custom type");
+        sourceClient,
+        "typeDefinitions",
+        "4db98ea6-38dc-4ccb-b20f-466e1566fd03",
+        "test cart discount custom type");
 
     // test
     final CompletionStage<List<CartDiscountDraft>> draftsFromPageStage =
@@ -80,34 +89,33 @@ class CartDiscountSyncerTest {
   }
 
   @Test
-  void getQuery_ShouldBuildCartDiscountQuery() {
-    // preparation
-    final CartDiscountSyncer cartDiscountSyncer =
-        CartDiscountSyncer.of(mock(SphereClient.class), mock(SphereClient.class), getMockedClock());
-
-    // test
-    final CartDiscountQuery query = cartDiscountSyncer.getQuery();
-
-    // assertion
-    assertThat(query).isEqualTo(CartDiscountQuery.of());
-  }
-
-  @Test
   void syncWithError_ShouldCallErrorCallback() {
     final TestLogger syncerTestLogger = TestLoggerFactory.getTestLogger(CartDiscountSyncer.class);
     // preparation: cart discount with no key is synced
-    final SphereClient sourceClient = mock(SphereClient.class);
-    final SphereClient targetClient = mock(SphereClient.class);
-    when(sourceClient.getConfig()).thenReturn(SphereApiConfig.of("source-project"));
-    when(targetClient.getConfig()).thenReturn(SphereApiConfig.of("target-project"));
+    final ProjectApiRoot sourceClient = mock(ProjectApiRoot.class);
+    final ProjectApiRoot targetClient = mock(ProjectApiRoot.class);
     final List<CartDiscount> cartDiscounts =
         Collections.singletonList(
             readObjectFromResource("cart-discount-no-key.json", CartDiscount.class));
 
-    final PagedQueryResult<CartDiscount> pagedQueryResult = mock(PagedQueryResult.class);
-    when(pagedQueryResult.getResults()).thenReturn(cartDiscounts);
-    when(sourceClient.execute(any(CartDiscountQuery.class)))
-        .thenReturn(CompletableFuture.completedFuture(pagedQueryResult));
+    final ApiHttpResponse<CartDiscountPagedQueryResponse> apiHttpResponse =
+        mock(ApiHttpResponse.class);
+    final CartDiscountPagedQueryResponse cartDiscountPagedQueryResponse =
+        mock(CartDiscountPagedQueryResponse.class);
+    when(cartDiscountPagedQueryResponse.getResults()).thenReturn(cartDiscounts);
+    when(apiHttpResponse.getBody()).thenReturn(cartDiscountPagedQueryResponse);
+
+    final ByProjectKeyCartDiscountsRequestBuilder byProjectKeyCartDiscountsRequestBuilder = mock();
+    when(sourceClient.cartDiscounts()).thenReturn(byProjectKeyCartDiscountsRequestBuilder);
+    final ByProjectKeyCartDiscountsGet byProjectKeyCartDiscountsGet = mock();
+    when(byProjectKeyCartDiscountsRequestBuilder.get()).thenReturn(byProjectKeyCartDiscountsGet);
+    when(byProjectKeyCartDiscountsGet.withLimit(anyInt())).thenReturn(byProjectKeyCartDiscountsGet);
+    when(byProjectKeyCartDiscountsGet.withSort(anyString()))
+        .thenReturn(byProjectKeyCartDiscountsGet);
+    when(byProjectKeyCartDiscountsGet.withWithTotal(anyBoolean()))
+        .thenReturn(byProjectKeyCartDiscountsGet);
+    when(byProjectKeyCartDiscountsGet.execute())
+        .thenReturn(CompletableFuture.completedFuture(apiHttpResponse));
 
     // test
     final CartDiscountSyncer cartDiscountSyncer =
@@ -121,6 +129,8 @@ class CartDiscountSyncerTest {
             "Error when trying to sync cart discount. Existing key: <<not present>>. Update actions: []");
     assertThat(errorLog.getThrowable().get().getMessage())
         .isEqualTo(
-            "CartDiscountDraft with name: LocalizedString(en -> 1-month prepay(Go Big)) doesn't have a key. Please make sure all cart discount drafts have keys.");
+            format(
+                "CartDiscountDraft with name: %s doesn't have a key. Please make sure all cart discount drafts have keys.",
+                cartDiscounts.get(0).getName().toString()));
   }
 }

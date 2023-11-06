@@ -1,25 +1,29 @@
 package com.commercetools.project.sync.shoppinglist;
 
 import static com.commercetools.project.sync.util.TestUtils.mockResourceIdsGraphQlRequest;
-import static io.sphere.sdk.json.SphereJsonUtils.readObjectFromResource;
+import static com.commercetools.project.sync.util.TestUtils.readObjectFromResource;
+import static java.lang.String.format;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import com.commercetools.api.client.ByProjectKeyShoppingListsGet;
+import com.commercetools.api.client.ByProjectKeyShoppingListsRequestBuilder;
+import com.commercetools.api.client.ProjectApiRoot;
+import com.commercetools.api.defaultconfig.ApiRootBuilder;
+import com.commercetools.api.models.shopping_list.ShoppingList;
+import com.commercetools.api.models.shopping_list.ShoppingListDraft;
+import com.commercetools.api.models.shopping_list.ShoppingListPagedQueryResponse;
+import com.commercetools.api.models.shopping_list.ShoppingListPagedQueryResponseBuilder;
 import com.commercetools.sync.commons.utils.CaffeineReferenceIdToKeyCacheImpl;
 import com.commercetools.sync.commons.utils.ReferenceIdToKeyCache;
 import com.commercetools.sync.shoppinglists.ShoppingListSync;
 import com.commercetools.sync.shoppinglists.utils.ShoppingListTransformUtils;
-import io.sphere.sdk.client.SphereApiConfig;
-import io.sphere.sdk.client.SphereClient;
-import io.sphere.sdk.expansion.ExpansionPath;
-import io.sphere.sdk.queries.PagedQueryResult;
-import io.sphere.sdk.shoppinglists.ShoppingList;
-import io.sphere.sdk.shoppinglists.ShoppingListDraft;
-import io.sphere.sdk.shoppinglists.queries.ShoppingListQuery;
+import io.vrap.rmf.base.client.ApiHttpResponse;
 import java.time.Clock;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
@@ -45,7 +49,7 @@ class ShoppingListSyncerTest {
     // test
     final ShoppingListSyncer shoppingListSyncer =
         ShoppingListSyncer.of(
-            mock(SphereClient.class), mock(SphereClient.class), mock(Clock.class));
+            mock(ProjectApiRoot.class), mock(ProjectApiRoot.class), mock(Clock.class));
 
     // assertion
     assertThat(shoppingListSyncer).isNotNull();
@@ -55,14 +59,14 @@ class ShoppingListSyncerTest {
   @Test
   void transform_ShouldReplaceShoppingListReferenceIdsWithKeys() {
     // preparation
-    final SphereClient sourceClient = mock(SphereClient.class);
+    final ProjectApiRoot sourceClient = mock(ProjectApiRoot.class);
     final ShoppingListSyncer shoppingListSyncer =
-        ShoppingListSyncer.of(sourceClient, mock(SphereClient.class), mock(Clock.class));
+        ShoppingListSyncer.of(sourceClient, mock(ProjectApiRoot.class), mock(Clock.class));
     final List<ShoppingList> shoppingList =
-        Collections.singletonList(readObjectFromResource("shopping-list.json", ShoppingList.class));
+        List.of(readObjectFromResource("shopping-list.json", ShoppingList.class));
 
     mockResourceIdsGraphQlRequest(
-        sourceClient, "5ebfa80e-f4aa-4c0b-be64-e348e09a855a", "customTypeKey");
+        sourceClient, "shoppingLists", "5ebfa80e-f4aa-4c0b-be64-e348e09a855a", "customTypeKey");
 
     // test
     final CompletionStage<List<ShoppingListDraft>> draftsFromPageStage =
@@ -78,37 +82,49 @@ class ShoppingListSyncerTest {
 
   @Test
   void getQuery_ShouldBuildShoppingListQuery() {
+    final ProjectApiRoot apiRoot =
+        ApiRootBuilder.of().withApiBaseUrl("baseUrl").build("testProjectKey");
     final ShoppingListSyncer shoppingListSyncer =
-        ShoppingListSyncer.of(
-            mock(SphereClient.class), mock(SphereClient.class), mock(Clock.class));
+        ShoppingListSyncer.of(apiRoot, apiRoot, mock(Clock.class));
 
     // assertion
-    final ShoppingListQuery query = shoppingListSyncer.getQuery();
-    assertThat(query.expansionPaths()).containsExactly(ExpansionPath.of("lineItems[*].variant"));
+    final ByProjectKeyShoppingListsGet shoppingListsGet = shoppingListSyncer.getQuery();
+
+    assertThat(shoppingListsGet.getExpand()).containsExactly("lineItems[*].variant");
   }
 
   @Test
   void syncWithError_ShouldCallErrorCallback() {
     // preparation: shoppingList with no key is synced
-    final SphereClient sourceClient = mock(SphereClient.class);
-    final SphereClient targetClient = mock(SphereClient.class);
-    when(sourceClient.getConfig()).thenReturn(SphereApiConfig.of("source-project"));
-    when(targetClient.getConfig()).thenReturn(SphereApiConfig.of("target-project"));
+    final ProjectApiRoot sourceClient = mock(ProjectApiRoot.class);
     final List<ShoppingList> shoppingLists =
-        Collections.singletonList(
-            readObjectFromResource("shopping-list-no-key.json", ShoppingList.class));
+        List.of(readObjectFromResource("shopping-list-no-key.json", ShoppingList.class));
+    final ByProjectKeyShoppingListsRequestBuilder projectKeyShoppingListsRequestBuilder = mock();
+    when(sourceClient.shoppingLists()).thenReturn(projectKeyShoppingListsRequestBuilder);
+    final ByProjectKeyShoppingListsGet shoppingListsGet = mock();
+    when(shoppingListsGet.addExpand(anyString())).thenReturn(shoppingListsGet);
+    when(shoppingListsGet.withLimit(anyInt())).thenReturn(shoppingListsGet);
+    when(shoppingListsGet.withWithTotal(anyBoolean())).thenReturn(shoppingListsGet);
+    when(shoppingListsGet.withSort(anyString())).thenReturn(shoppingListsGet);
 
-    final PagedQueryResult<ShoppingList> pagedQueryResult = mock(PagedQueryResult.class);
-    when(pagedQueryResult.getResults()).thenReturn(shoppingLists);
-    when(sourceClient.execute(any(ShoppingListQuery.class)))
-        .thenReturn(CompletableFuture.completedFuture(pagedQueryResult));
+    final ShoppingListPagedQueryResponse shoppingListPagedQueryResponse =
+        ShoppingListPagedQueryResponseBuilder.of()
+            .results(shoppingLists)
+            .limit(20L)
+            .offset(0L)
+            .count(1L)
+            .build();
+    final ApiHttpResponse apiHttpResponse = mock(ApiHttpResponse.class);
+    when(apiHttpResponse.getBody()).thenReturn(shoppingListPagedQueryResponse);
+    when(shoppingListsGet.execute()).thenReturn(CompletableFuture.completedFuture(apiHttpResponse));
+    when(sourceClient.shoppingLists().get()).thenReturn(shoppingListsGet);
 
     mockResourceIdsGraphQlRequest(
-        sourceClient, "5ebfa80e-f4aa-4c0b-be64-e348e09a855a", "customTypeKey");
+        sourceClient, "shoppingLists", "5ebfa80e-f4aa-4c0b-be64-e348e09a855a", "customTypeKey");
 
     // test
     final ShoppingListSyncer shoppingListSyncer =
-        ShoppingListSyncer.of(sourceClient, targetClient, mock(Clock.class));
+        ShoppingListSyncer.of(sourceClient, mock(ProjectApiRoot.class), mock(Clock.class));
     shoppingListSyncer.sync(null, true).toCompletableFuture().join();
 
     // assertion
@@ -118,6 +134,9 @@ class ShoppingListSyncerTest {
             "Error when trying to sync shoppingList. Existing key: <<not present>>. Update actions: []");
     assertThat(errorLog.getThrowable().get().getMessage())
         .isEqualTo(
-            "ShoppingListDraft with name: LocalizedString(en -> shoppingList-name-1) doesn't have a key. Please make sure all shopping list drafts have keys.");
+            format(
+                "ShoppingListDraft with name: %s doesn't have a key. Please make sure all shopping list drafts have keys"
+                    + ".",
+                shoppingLists.get(0).getName().toString()));
   }
 }

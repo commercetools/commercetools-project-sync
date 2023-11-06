@@ -4,6 +4,13 @@ import static com.commercetools.project.sync.util.SyncUtils.logErrorCallback;
 import static com.commercetools.project.sync.util.SyncUtils.logWarningCallback;
 import static com.commercetools.sync.categories.utils.CategoryTransformUtils.toCategoryDrafts;
 
+import com.commercetools.api.client.ByProjectKeyCategoriesGet;
+import com.commercetools.api.client.ProjectApiRoot;
+import com.commercetools.api.models.category.Category;
+import com.commercetools.api.models.category.CategoryDraft;
+import com.commercetools.api.models.category.CategoryPagedQueryResponse;
+import com.commercetools.api.models.category.CategoryUpdateAction;
+import com.commercetools.api.predicates.query.category.CategoryQueryBuilderDsl;
 import com.commercetools.project.sync.Syncer;
 import com.commercetools.project.sync.service.CustomObjectService;
 import com.commercetools.project.sync.service.impl.CustomObjectServiceImpl;
@@ -14,11 +21,6 @@ import com.commercetools.sync.categories.helpers.CategorySyncStatistics;
 import com.commercetools.sync.commons.exceptions.SyncException;
 import com.commercetools.sync.commons.utils.QuadConsumer;
 import com.commercetools.sync.commons.utils.TriConsumer;
-import io.sphere.sdk.categories.Category;
-import io.sphere.sdk.categories.CategoryDraft;
-import io.sphere.sdk.categories.queries.CategoryQuery;
-import io.sphere.sdk.client.SphereClient;
-import io.sphere.sdk.commands.UpdateAction;
 import java.time.Clock;
 import java.util.List;
 import java.util.Optional;
@@ -30,12 +32,13 @@ import org.slf4j.LoggerFactory;
 public final class CategorySyncer
     extends Syncer<
         Category,
-        Category,
+        CategoryUpdateAction,
         CategoryDraft,
-        Category,
+        CategoryQueryBuilderDsl,
         CategorySyncStatistics,
         CategorySyncOptions,
-        CategoryQuery,
+        ByProjectKeyCategoriesGet,
+        CategoryPagedQueryResponse,
         CategorySync> {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(CategorySyncer.class);
@@ -43,8 +46,8 @@ public final class CategorySyncer
   /** Instantiates a {@link Syncer} instance. */
   private CategorySyncer(
       @Nonnull final CategorySync categorySync,
-      @Nonnull final SphereClient sourceClient,
-      @Nonnull final SphereClient targetClient,
+      @Nonnull final ProjectApiRoot sourceClient,
+      @Nonnull final ProjectApiRoot targetClient,
       @Nonnull final CustomObjectService customObjectService,
       @Nonnull final Clock clock) {
     super(categorySync, sourceClient, targetClient, customObjectService, clock);
@@ -52,14 +55,11 @@ public final class CategorySyncer
 
   @Nonnull
   public static CategorySyncer of(
-      @Nonnull final SphereClient sourceClient,
-      @Nonnull final SphereClient targetClient,
+      @Nonnull final ProjectApiRoot sourceClient,
+      @Nonnull final ProjectApiRoot targetClient,
       @Nonnull final Clock clock) {
     final QuadConsumer<
-            SyncException,
-            Optional<CategoryDraft>,
-            Optional<Category>,
-            List<UpdateAction<Category>>>
+            SyncException, Optional<CategoryDraft>, Optional<Category>, List<CategoryUpdateAction>>
         logErrorCallback =
             (exception, newResourceDraft, oldResource, updateActions) ->
                 logErrorCallback(LOGGER, "category", exception, oldResource, updateActions);
@@ -88,8 +88,8 @@ public final class CategorySyncer
 
   @Nonnull
   @Override
-  protected CategoryQuery getQuery() {
-    return CategoryQuery.of();
+  protected ByProjectKeyCategoriesGet getQuery() {
+    return getSourceClient().categories().get();
   }
 
   @Nonnull

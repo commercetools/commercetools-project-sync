@@ -1,35 +1,53 @@
 package com.commercetools.project.sync.util;
 
+import static io.vrap.rmf.base.client.utils.json.JsonUtils.fromInputStream;
 import static java.lang.String.format;
-import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
+import com.commercetools.api.client.ByProjectKeyCustomObjectsPost;
+import com.commercetools.api.client.ByProjectKeyGraphqlPost;
+import com.commercetools.api.client.ByProjectKeyGraphqlRequestBuilder;
+import com.commercetools.api.client.ProjectApiRoot;
+import com.commercetools.api.defaultconfig.ApiRootBuilder;
+import com.commercetools.api.models.custom_object.CustomObject;
+import com.commercetools.api.models.custom_object.CustomObjectDraft;
+import com.commercetools.api.models.error.ErrorResponse;
+import com.commercetools.api.models.error.ErrorResponseBuilder;
+import com.commercetools.api.models.graph_ql.GraphQLRequest;
+import com.commercetools.api.models.graph_ql.GraphQLResponse;
 import com.commercetools.project.sync.model.response.LastSyncCustomObject;
-import com.commercetools.sync.commons.models.ResourceIdsGraphQlRequest;
-import com.commercetools.sync.commons.models.ResourceKeyIdGraphQlResult;
 import com.commercetools.sync.products.helpers.ProductSyncStatistics;
-import io.sphere.sdk.client.SphereClient;
-import io.sphere.sdk.customobjects.CustomObject;
-import io.sphere.sdk.customobjects.commands.CustomObjectUpsertCommand;
-import io.sphere.sdk.customobjects.queries.CustomObjectQuery;
-import io.sphere.sdk.json.SphereJsonUtils;
-import io.sphere.sdk.queries.PagedQueryResult;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
+import io.vrap.rmf.base.client.ApiHttpMethod;
+import io.vrap.rmf.base.client.ApiHttpResponse;
+import io.vrap.rmf.base.client.error.BadGatewayException;
+import io.vrap.rmf.base.client.utils.json.JsonUtils;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 import java.time.ZonedDateTime;
+import java.util.Collections;
 import java.util.concurrent.CompletableFuture;
 import javax.annotation.Nonnull;
+import org.apache.commons.lang3.StringUtils;
 import org.assertj.core.api.Condition;
+import org.assertj.core.util.TriFunction;
 import uk.org.lidalia.slf4jext.Level;
 import uk.org.lidalia.slf4jtest.LoggingEvent;
 import uk.org.lidalia.slf4jtest.TestLogger;
 
+// This utility class compiles but not used yet
+// TODO: Use the utility functions and adjust them
 public final class TestUtils {
 
   public static void assertTypeSyncerLoggingEvents(
@@ -180,39 +198,84 @@ public final class TestUtils {
   }
 
   public static void verifyInteractionsWithClientAfterSync(
-      @Nonnull final SphereClient client, final int numberOfGetConfigInvocations) {
+      @Nonnull final ProjectApiRoot client, final int numberOfGetConfigInvocations) {
 
     verify(client, times(1)).close();
     // Verify config is accessed for the success message after sync:
     // " example: Syncing products from CTP project with key 'x' to project with key 'y' is done","
-    verify(client, times(numberOfGetConfigInvocations)).getConfig();
+    verify(client, times(numberOfGetConfigInvocations)).getProjectKey();
     verifyNoMoreInteractions(client);
+  }
+
+  public static <T> T readObjectFromResource(final String resourcePath, final Class<T> objectType) {
+    final InputStream resourceAsStream =
+        Thread.currentThread().getContextClassLoader().getResourceAsStream(resourcePath);
+    return fromInputStream(resourceAsStream, objectType);
+  }
+
+  public static <T> T readObject(final String jsonString, final Class<T> objectType)
+      throws JsonProcessingException {
+    final ObjectMapper objectMapper = JsonUtils.getConfiguredObjectMapper();
+    return objectMapper.readValue(jsonString, objectType);
+  }
+
+  public static String readStringFromFile(final String resourcePath) {
+    final InputStream resourceAsStream =
+        Thread.currentThread().getContextClassLoader().getResourceAsStream(resourcePath);
+    try {
+      return new String(resourceAsStream.readAllBytes(), StandardCharsets.UTF_8);
+    } catch (IOException e) {
+      return StringUtils.EMPTY;
+    }
   }
 
   @SuppressWarnings("unchecked")
   public static void stubClientsCustomObjectService(
-      @Nonnull final SphereClient client, @Nonnull final ZonedDateTime currentCtpTimestamp) {
+      @Nonnull final ProjectApiRoot client, @Nonnull final ZonedDateTime currentCtpTimestamp) {
 
-    final CustomObject<LastSyncCustomObject<ProductSyncStatistics>> customObject =
-        mockLastSyncCustomObject(currentCtpTimestamp);
+    final CustomObject customObject = mockLastSyncCustomObject(currentCtpTimestamp);
+    final ApiHttpResponse apiHttpResponse = mock(ApiHttpResponse.class);
+    when(apiHttpResponse.getBody()).thenReturn(customObject);
+    final ByProjectKeyCustomObjectsPost customObjectsPost =
+        mock(ByProjectKeyCustomObjectsPost.class);
+    when(customObjectsPost.execute())
+        .thenReturn(CompletableFuture.completedFuture(apiHttpResponse));
+    when(client.customObjects()).thenReturn(mock());
+    when(client.customObjects().post(any(CustomObjectDraft.class))).thenReturn(customObjectsPost);
+    when(client.customObjects().withContainerAndKey(anyString(), anyString())).thenReturn(mock());
+    when(client.customObjects().withContainerAndKey(anyString(), anyString()).get())
+        .thenReturn(mock());
+    when(client.customObjects().withContainerAndKey(anyString(), anyString()).get().execute())
+        .thenReturn(CompletableFuture.completedFuture(apiHttpResponse));
+  }
 
-    when(client.execute(any(CustomObjectUpsertCommand.class)))
-        .thenReturn(CompletableFuture.completedFuture(customObject));
-
-    final PagedQueryResult<CustomObject<LastSyncCustomObject<ProductSyncStatistics>>>
-        queriedCustomObjects = spy(PagedQueryResult.empty());
-    when(queriedCustomObjects.getResults()).thenReturn(singletonList(customObject));
-
-    when(client.execute(any(CustomObjectQuery.class)))
-        .thenReturn(CompletableFuture.completedFuture(queriedCustomObjects));
+  public static ProjectApiRoot withTestClient(
+      final String projectKey,
+      final TriFunction<String, ApiHttpMethod, String, CompletableFuture<ApiHttpResponse<byte[]>>>
+          fn) {
+    return ApiRootBuilder.of(
+            request -> {
+              final String uri = request.getUri() != null ? request.getUri().toString() : "";
+              final ApiHttpMethod method = request.getMethod();
+              final String encodedRequestBody =
+                  uri.contains("graphql")
+                      ? new String(request.getBody(), StandardCharsets.UTF_8)
+                      : "";
+              final CompletableFuture<ApiHttpResponse<byte[]>> response =
+                  fn.apply(uri, method, encodedRequestBody);
+              if (response != null) {
+                return response;
+              }
+              return null;
+            })
+        .withApiBaseUrl("testBaseUri")
+        .build(projectKey);
   }
 
   @Nonnull
   @SuppressWarnings("unchecked")
-  public static CustomObject<LastSyncCustomObject<ProductSyncStatistics>> mockLastSyncCustomObject(
-      @Nonnull ZonedDateTime currentCtpTimestamp) {
-    final CustomObject<LastSyncCustomObject<ProductSyncStatistics>> customObject =
-        mock(CustomObject.class);
+  public static CustomObject mockLastSyncCustomObject(@Nonnull ZonedDateTime currentCtpTimestamp) {
+    final CustomObject customObject = mock(CustomObject.class);
 
     final LastSyncCustomObject<ProductSyncStatistics> lastSyncCustomObject =
         LastSyncCustomObject.of(ZonedDateTime.now(), new ProductSyncStatistics(), 100);
@@ -229,14 +292,55 @@ public final class TestUtils {
     return clock;
   }
 
-  public static void mockResourceIdsGraphQlRequest(SphereClient client, String id, String key) {
+  public static void mockResourceIdsGraphQlRequest(
+      ProjectApiRoot client, String resource, String id, String key) {
     final String jsonResponseString =
-        "{\"results\":[{\"id\":\"" + id + "\"," + "\"key\":\"" + key + "\"}]}";
-    final ResourceKeyIdGraphQlResult result =
-        SphereJsonUtils.readObject(jsonResponseString, ResourceKeyIdGraphQlResult.class);
+        "{\"data\":{\""
+            + resource
+            + "\":{\"results\":[{\"id\":\""
+            + id
+            + "\","
+            + "\"key\":\""
+            + key
+            + "\"}]}}}";
+    final GraphQLResponse result =
+        JsonUtils.fromJsonString(jsonResponseString, GraphQLResponse.class);
 
-    when(client.execute(any(ResourceIdsGraphQlRequest.class)))
-        .thenReturn(CompletableFuture.completedFuture(result));
+    final ApiHttpResponse<GraphQLResponse> apiHttpResponse = mock(ApiHttpResponse.class);
+
+    when(apiHttpResponse.getBody()).thenReturn(result);
+    final ByProjectKeyGraphqlRequestBuilder byProjectKeyGraphqlRequestBuilder = mock();
+    when(client.graphql()).thenReturn(byProjectKeyGraphqlRequestBuilder);
+    final ByProjectKeyGraphqlPost byProjectKeyGraphqlPost = mock();
+    when(byProjectKeyGraphqlRequestBuilder.post(any(GraphQLRequest.class)))
+        .thenReturn(byProjectKeyGraphqlPost);
+    when(byProjectKeyGraphqlPost.execute())
+        .thenReturn(CompletableFuture.completedFuture(apiHttpResponse));
+  }
+
+  public static BadGatewayException createBadGatewayException() {
+    final String json = getErrorResponseJsonString(500);
+    return new BadGatewayException(
+        500, "", null, "", new ApiHttpResponse<>(500, null, json.getBytes(StandardCharsets.UTF_8)));
+  }
+
+  private static String getErrorResponseJsonString(Integer errorCode) {
+    final ErrorResponse errorResponse =
+        ErrorResponseBuilder.of()
+            .statusCode(errorCode)
+            .errors(Collections.emptyList())
+            .message("test")
+            .build();
+
+    final ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
+    String json;
+    try {
+      json = ow.writeValueAsString(errorResponse);
+    } catch (JsonProcessingException e) {
+      // ignore the error
+      json = null;
+    }
+    return json;
   }
 
   private TestUtils() {}

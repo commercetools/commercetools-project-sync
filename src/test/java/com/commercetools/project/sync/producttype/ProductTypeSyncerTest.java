@@ -1,26 +1,27 @@
 package com.commercetools.project.sync.producttype;
 
 import static com.commercetools.project.sync.util.TestUtils.getMockedClock;
-import static io.sphere.sdk.json.SphereJsonUtils.readObjectFromResource;
+import static com.commercetools.project.sync.util.TestUtils.readObjectFromResource;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import com.commercetools.api.client.ByProjectKeyProductTypesGet;
+import com.commercetools.api.client.ByProjectKeyProductTypesRequestBuilder;
+import com.commercetools.api.client.ProjectApiRoot;
+import com.commercetools.api.models.product_type.AttributeDefinitionDraftBuilder;
+import com.commercetools.api.models.product_type.ProductType;
+import com.commercetools.api.models.product_type.ProductTypeDraft;
+import com.commercetools.api.models.product_type.ProductTypeDraftBuilder;
+import com.commercetools.api.models.product_type.ProductTypePagedQueryResponse;
 import com.commercetools.sync.producttypes.ProductTypeSync;
-import io.sphere.sdk.client.SphereApiConfig;
-import io.sphere.sdk.client.SphereClient;
-import io.sphere.sdk.producttypes.ProductType;
-import io.sphere.sdk.producttypes.ProductTypeDraft;
-import io.sphere.sdk.producttypes.ProductTypeDraftBuilder;
-import io.sphere.sdk.producttypes.queries.ProductTypeQuery;
-import io.sphere.sdk.queries.PagedQueryResult;
+import io.vrap.rmf.base.client.ApiHttpResponse;
 import java.time.Clock;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import uk.org.lidalia.slf4jtest.LoggingEvent;
@@ -38,13 +39,19 @@ class ProductTypeSyncerTest {
 
   @Test
   void of_ShouldCreateProductTypeSyncerInstance() {
+    final ProjectApiRoot projectApiRoot = mock(ProjectApiRoot.class);
+    final ByProjectKeyProductTypesRequestBuilder byProjectKeyProductTypesRequestBuilder = mock();
+    when(projectApiRoot.productTypes()).thenReturn(byProjectKeyProductTypesRequestBuilder);
+    final ByProjectKeyProductTypesGet byProjectKeyProductTypesGet = mock();
+    when(byProjectKeyProductTypesRequestBuilder.get()).thenReturn(byProjectKeyProductTypesGet);
+
     // test
     final ProductTypeSyncer productTypeSyncer =
-        ProductTypeSyncer.of(mock(SphereClient.class), mock(SphereClient.class), getMockedClock());
+        ProductTypeSyncer.of(projectApiRoot, projectApiRoot, getMockedClock());
 
     // assertions
     assertThat(productTypeSyncer).isNotNull();
-    assertThat(productTypeSyncer.getQuery()).isInstanceOf(ProductTypeQuery.class);
+    assertThat(productTypeSyncer.getQuery()).isEqualTo(byProjectKeyProductTypesGet);
     assertThat(productTypeSyncer.getSync()).isExactlyInstanceOf(ProductTypeSync.class);
   }
 
@@ -52,53 +59,86 @@ class ProductTypeSyncerTest {
   void transform_ShouldConvertResourcesToDrafts() {
     // preparation
     final ProductTypeSyncer productTypeSyncer =
-        ProductTypeSyncer.of(mock(SphereClient.class), mock(SphereClient.class), getMockedClock());
-    final List<ProductType> productTypePage =
+        ProductTypeSyncer.of(
+            mock(ProjectApiRoot.class), mock(ProjectApiRoot.class), getMockedClock());
+    final List<ProductType> productTypes =
         asList(
             readObjectFromResource("product-type-key-1.json", ProductType.class),
             readObjectFromResource("product-type-key-2.json", ProductType.class));
 
     // test
-    final CompletionStage<List<ProductTypeDraft>> draftsFromPageStage =
-        productTypeSyncer.transform(productTypePage);
+    final List<ProductTypeDraft> productDrafts =
+        productTypeSyncer.transform(productTypes).toCompletableFuture().join();
 
     // assertions
-    assertThat(draftsFromPageStage)
-        .isCompletedWithValue(
-            productTypePage.stream()
-                .map(ProductTypeDraftBuilder::of)
-                .map(ProductTypeDraftBuilder::build)
-                .collect(toList()));
+    final List<ProductTypeDraft> expectedProductTypeDraft =
+        productTypes.stream()
+            .map(
+                (p) ->
+                    ProductTypeDraftBuilder.of()
+                        .key(p.getKey())
+                        .name(p.getName())
+                        .description(p.getDescription())
+                        .attributes(
+                            p.getAttributes().stream()
+                                .map(
+                                    attributeDefinition ->
+                                        AttributeDefinitionDraftBuilder.of()
+                                            .name(attributeDefinition.getName())
+                                            .label(attributeDefinition.getLabel())
+                                            .type(attributeDefinition.getType())
+                                            .isRequired(attributeDefinition.getIsRequired())
+                                            .inputHint(attributeDefinition.getInputHint())
+                                            .attributeConstraint(
+                                                attributeDefinition.getAttributeConstraint())
+                                            .isSearchable(attributeDefinition.getIsSearchable())
+                                            .inputTip(attributeDefinition.getInputTip())
+                                            .build())
+                                .collect(toList()))
+                        .build())
+            .collect(toList());
+
+    assertProductTypes(productDrafts.get(0), expectedProductTypeDraft.get(0));
+    assertProductTypes(productDrafts.get(1), expectedProductTypeDraft.get(1));
   }
 
-  @Test
-  void getQuery_ShouldBuildProductTypeQuery() {
-    // preparation
-    final ProductTypeSyncer productTypeSyncer =
-        ProductTypeSyncer.of(mock(SphereClient.class), mock(SphereClient.class), getMockedClock());
-
-    // test
-    final ProductTypeQuery query = productTypeSyncer.getQuery();
-
-    // assertion
-    assertThat(query).isEqualTo(ProductTypeQuery.of());
+  private static void assertProductTypes(
+      final ProductTypeDraft productTypeDraft, final ProductTypeDraft expectedProductTypeDraft) {
+    assertThat(productTypeDraft.getKey()).isEqualTo(expectedProductTypeDraft.getKey());
+    assertThat(productTypeDraft.getName()).isEqualTo(expectedProductTypeDraft.getName());
+    assertThat(productTypeDraft.getDescription())
+        .isEqualTo(expectedProductTypeDraft.getDescription());
+    assertThat(productTypeDraft.getAttributes().size())
+        .isEqualTo(expectedProductTypeDraft.getAttributes().size());
   }
 
   @Test
   void syncWithError_WhenNoKeyIsProvided_ShouldCallErrorCallback() {
     // preparation
-    final SphereClient sourceClient = mock(SphereClient.class);
-    final SphereClient targetClient = mock(SphereClient.class);
-    when(sourceClient.getConfig()).thenReturn(SphereApiConfig.of("source-project"));
-    when(targetClient.getConfig()).thenReturn(SphereApiConfig.of("target-project"));
+    final ProjectApiRoot sourceClient = mock(ProjectApiRoot.class);
+    final ProjectApiRoot targetClient = mock(ProjectApiRoot.class);
 
-    final List<ProductType> productTypePage =
-        asList(readObjectFromResource("product-type-without-key.json", ProductType.class));
+    final List<ProductType> productTypes =
+        List.of(readObjectFromResource("product-type-without-key.json", ProductType.class));
 
-    final PagedQueryResult<ProductType> pagedQueryResult = mock(PagedQueryResult.class);
-    when(pagedQueryResult.getResults()).thenReturn(productTypePage);
-    when(sourceClient.execute(any(ProductTypeQuery.class)))
-        .thenReturn(CompletableFuture.completedFuture(pagedQueryResult));
+    final ByProjectKeyProductTypesRequestBuilder byProjectKeyProductTypesRequestBuilder = mock();
+    when(sourceClient.productTypes()).thenReturn(byProjectKeyProductTypesRequestBuilder);
+    final ByProjectKeyProductTypesGet byProjectKeyProductTypesGet = mock();
+    when(byProjectKeyProductTypesRequestBuilder.get()).thenReturn(byProjectKeyProductTypesGet);
+    when(byProjectKeyProductTypesGet.withSort(anyString())).thenReturn(byProjectKeyProductTypesGet);
+    when(byProjectKeyProductTypesGet.withLimit(anyInt())).thenReturn(byProjectKeyProductTypesGet);
+    when(byProjectKeyProductTypesGet.withWithTotal(anyBoolean()))
+        .thenReturn(byProjectKeyProductTypesGet);
+
+    final ApiHttpResponse<ProductTypePagedQueryResponse> apiHttpResponse =
+        mock(ApiHttpResponse.class);
+    final ProductTypePagedQueryResponse productTypePagedQueryResponse =
+        mock(ProductTypePagedQueryResponse.class);
+    when(productTypePagedQueryResponse.getResults()).thenReturn(productTypes);
+    when(apiHttpResponse.getBody()).thenReturn(productTypePagedQueryResponse);
+
+    when(byProjectKeyProductTypesGet.execute())
+        .thenReturn(CompletableFuture.completedFuture(apiHttpResponse));
 
     // test
     final ProductTypeSyncer productTypeSyncer =

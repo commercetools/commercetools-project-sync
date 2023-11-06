@@ -1,36 +1,32 @@
 package com.commercetools.project.sync;
 
+import static com.commercetools.project.sync.util.CtpClientUtils.CTP_SOURCE_CLIENT;
+import static com.commercetools.project.sync.util.CtpClientUtils.CTP_TARGET_CLIENT;
 import static com.commercetools.project.sync.util.IntegrationTestUtils.cleanUpProjects;
 import static com.commercetools.project.sync.util.IntegrationTestUtils.createITSyncerFactory;
-import static com.commercetools.project.sync.util.SphereClientUtils.CTP_SOURCE_CLIENT;
-import static com.commercetools.project.sync.util.SphereClientUtils.CTP_TARGET_CLIENT;
-import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.commercetools.api.client.ProjectApiRoot;
+import com.commercetools.api.models.channel.Channel;
+import com.commercetools.api.models.channel.ChannelDraft;
+import com.commercetools.api.models.channel.ChannelDraftBuilder;
+import com.commercetools.api.models.channel.ChannelRoleEnum;
+import com.commercetools.api.models.common.LocalizedString;
+import com.commercetools.api.models.inventory.InventoryEntry;
+import com.commercetools.api.models.inventory.InventoryEntryDraft;
+import com.commercetools.api.models.inventory.InventoryEntryDraftBuilder;
+import com.commercetools.api.models.type.CustomFieldsDraftBuilder;
+import com.commercetools.api.models.type.FieldContainer;
+import com.commercetools.api.models.type.FieldContainerBuilder;
+import com.commercetools.api.models.type.FieldDefinition;
+import com.commercetools.api.models.type.FieldDefinitionBuilder;
+import com.commercetools.api.models.type.FieldTypeBuilder;
+import com.commercetools.api.models.type.ResourceTypeId;
+import com.commercetools.api.models.type.TypeDraft;
+import com.commercetools.api.models.type.TypeDraftBuilder;
 import com.commercetools.project.sync.inventoryentry.InventoryEntrySyncer;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
-import io.sphere.sdk.channels.Channel;
-import io.sphere.sdk.channels.ChannelDraft;
-import io.sphere.sdk.channels.ChannelRole;
-import io.sphere.sdk.channels.commands.ChannelCreateCommand;
-import io.sphere.sdk.client.SphereClient;
-import io.sphere.sdk.inventory.InventoryEntry;
-import io.sphere.sdk.inventory.InventoryEntryDraft;
-import io.sphere.sdk.inventory.InventoryEntryDraftBuilder;
-import io.sphere.sdk.inventory.commands.InventoryEntryCreateCommand;
-import io.sphere.sdk.models.LocalizedString;
-import io.sphere.sdk.models.Reference;
-import io.sphere.sdk.types.CustomFieldsDraft;
-import io.sphere.sdk.types.FieldDefinition;
-import io.sphere.sdk.types.StringFieldType;
-import io.sphere.sdk.types.TypeDraft;
-import io.sphere.sdk.types.TypeDraftBuilder;
-import io.sphere.sdk.types.commands.TypeCreateCommand;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Locale;
-import java.util.Map;
+import io.vrap.rmf.base.client.ApiHttpResponse;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.IntStream;
 import javax.annotation.Nonnull;
@@ -67,127 +63,174 @@ public class InventorySyncMultiChannelIT {
     setupProjectData(CTP_TARGET_CLIENT);
   }
 
-  private void setupProjectData(SphereClient sphereClient) {
+  private void setupProjectData(ProjectApiRoot projectApiRoot) {
     final ChannelDraft channelDraft1 =
-        ChannelDraft.of(SUPPLY_CHANNEL_KEY_1).withRoles(ChannelRole.INVENTORY_SUPPLY);
+        ChannelDraftBuilder.of()
+            .key(SUPPLY_CHANNEL_KEY_1)
+            .roles(ChannelRoleEnum.INVENTORY_SUPPLY)
+            .build();
     final ChannelDraft channelDraft2 =
-        ChannelDraft.of(SUPPLY_CHANNEL_KEY_2).withRoles(ChannelRole.INVENTORY_SUPPLY);
+        ChannelDraftBuilder.of()
+            .key(SUPPLY_CHANNEL_KEY_2)
+            .roles(ChannelRoleEnum.INVENTORY_SUPPLY)
+            .build();
 
-    final String channelId1 =
-        sphereClient
-            .execute(ChannelCreateCommand.of(channelDraft1))
+    final Channel channel1 =
+        projectApiRoot
+            .channels()
+            .create(channelDraft1)
+            .execute()
+            .thenApply(ApiHttpResponse::getBody)
             .toCompletableFuture()
-            .join()
-            .getId();
-    final String channelId2 =
-        sphereClient
-            .execute(ChannelCreateCommand.of(channelDraft2))
+            .join();
+    final Channel channel2 =
+        projectApiRoot
+            .channels()
+            .create(channelDraft2)
+            .execute()
+            .thenApply(ApiHttpResponse::getBody)
             .toCompletableFuture()
-            .join()
-            .getId();
+            .join();
 
-    final Reference<Channel> supplyChannelReference1 = Channel.referenceOfId(channelId1);
-    final Reference<Channel> supplyChannelReference2 = Channel.referenceOfId(channelId2);
-
-    createInventoriesCustomType(sphereClient);
+    createInventoriesCustomType(projectApiRoot);
 
     // NOTE: There can only be one inventory entry for the combination of sku and supplyChannel.
-    final InventoryEntryDraft draft1 = InventoryEntryDraftBuilder.of(SKU_1, 0L).build();
+    final InventoryEntryDraft draft1 =
+        InventoryEntryDraftBuilder.of().sku(SKU_1).quantityOnStock(0L).build();
     final InventoryEntryDraft draft2 =
-        InventoryEntryDraftBuilder.of(SKU_1, 0L)
-            .supplyChannel(supplyChannelReference1)
-            .custom(CustomFieldsDraft.ofTypeKeyAndJson(CUSTOM_TYPE, getMockCustomFieldsJsons()))
+        InventoryEntryDraftBuilder.of()
+            .sku(SKU_1)
+            .quantityOnStock(0L)
+            .supplyChannel(channel1.toResourceIdentifier())
+            .custom(
+                CustomFieldsDraftBuilder.of()
+                    .type(builder -> builder.key(CUSTOM_TYPE))
+                    .fields(getMockFieldContainer())
+                    .build())
             .build();
     final InventoryEntryDraft draft3 =
-        InventoryEntryDraftBuilder.of(SKU_1, 1L)
-            .supplyChannel(supplyChannelReference2)
-            .custom(CustomFieldsDraft.ofTypeKeyAndJson(CUSTOM_TYPE, getMockCustomFieldsJsons()))
+        InventoryEntryDraftBuilder.of()
+            .sku(SKU_1)
+            .quantityOnStock(1L)
+            .supplyChannel(channel2.toResourceIdentifier())
+            .custom(
+                CustomFieldsDraftBuilder.of()
+                    .type(builder -> builder.key(CUSTOM_TYPE))
+                    .fields(getMockFieldContainer())
+                    .build())
             .build();
 
-    final InventoryEntryDraft draft4 = InventoryEntryDraftBuilder.of(SKU_2, 0L).build();
+    final InventoryEntryDraft draft4 =
+        InventoryEntryDraftBuilder.of().sku(SKU_2).quantityOnStock(0L).build();
     final InventoryEntryDraft draft5 =
-        InventoryEntryDraftBuilder.of(SKU_2, 0L)
-            .supplyChannel(supplyChannelReference1)
-            .custom(CustomFieldsDraft.ofTypeKeyAndJson(CUSTOM_TYPE, getMockCustomFieldsJsons()))
+        InventoryEntryDraftBuilder.of()
+            .sku(SKU_2)
+            .quantityOnStock(0L)
+            .supplyChannel(channel1.toResourceIdentifier())
+            .custom(
+                CustomFieldsDraftBuilder.of()
+                    .type(builder -> builder.key(CUSTOM_TYPE))
+                    .fields(getMockFieldContainer())
+                    .build())
             .build();
     final InventoryEntryDraft draft6 =
-        InventoryEntryDraftBuilder.of(SKU_2, 1L)
-            .supplyChannel(supplyChannelReference2)
-            .custom(CustomFieldsDraft.ofTypeKeyAndJson(CUSTOM_TYPE, getMockCustomFieldsJsons()))
+        InventoryEntryDraftBuilder.of()
+            .sku(SKU_2)
+            .quantityOnStock(1L)
+            .supplyChannel(channel2.toResourceIdentifier())
+            .custom(
+                CustomFieldsDraftBuilder.of()
+                    .type(builder -> builder.key(CUSTOM_TYPE))
+                    .fields(getMockFieldContainer())
+                    .build())
             .build();
 
     CompletableFuture.allOf(
-            sphereClient.execute(InventoryEntryCreateCommand.of(draft1)).toCompletableFuture(),
-            sphereClient.execute(InventoryEntryCreateCommand.of(draft2)).toCompletableFuture(),
-            sphereClient.execute(InventoryEntryCreateCommand.of(draft3)).toCompletableFuture(),
-            sphereClient.execute(InventoryEntryCreateCommand.of(draft4)).toCompletableFuture(),
-            sphereClient.execute(InventoryEntryCreateCommand.of(draft5)).toCompletableFuture(),
-            sphereClient.execute(InventoryEntryCreateCommand.of(draft6)).toCompletableFuture())
+            projectApiRoot.inventory().create(draft1).execute().toCompletableFuture(),
+            projectApiRoot.inventory().create(draft2).execute().toCompletableFuture(),
+            projectApiRoot.inventory().create(draft3).execute().toCompletableFuture(),
+            projectApiRoot.inventory().create(draft4).execute().toCompletableFuture(),
+            projectApiRoot.inventory().create(draft5).execute().toCompletableFuture(),
+            projectApiRoot.inventory().create(draft6).execute().toCompletableFuture())
         .join();
   }
 
-  private static void createInventoriesCustomType(@Nonnull final SphereClient ctpClient) {
+  private static void createInventoriesCustomType(@Nonnull final ProjectApiRoot ctpClient) {
     final FieldDefinition fieldDefinition =
-        FieldDefinition.of(
-            StringFieldType.of(),
-            CUSTOM_FIELD_NAME,
-            LocalizedString.of(Locale.ENGLISH, CUSTOM_FIELD_NAME),
-            false);
-    final TypeDraft typeDraft =
-        TypeDraftBuilder.of(
-                CUSTOM_TYPE,
-                LocalizedString.of(Locale.ENGLISH, CUSTOM_TYPE),
-                Collections.singleton(InventoryEntry.resourceTypeId()))
-            .fieldDefinitions(singletonList(fieldDefinition))
+        FieldDefinitionBuilder.of()
+            .name(CUSTOM_FIELD_NAME)
+            .label(LocalizedString.ofEnglish(CUSTOM_FIELD_NAME))
+            .required(false)
+            .type(FieldTypeBuilder.of().stringBuilder().build())
             .build();
-    ctpClient.execute(TypeCreateCommand.of(typeDraft)).toCompletableFuture().join();
+
+    final TypeDraft typeDraft =
+        TypeDraftBuilder.of()
+            .key(CUSTOM_TYPE)
+            .name(LocalizedString.ofEnglish(CUSTOM_TYPE))
+            .resourceTypeIds(ResourceTypeId.INVENTORY_ENTRY)
+            .fieldDefinitions(fieldDefinition)
+            .build();
+
+    ctpClient.types().create(typeDraft).execute().toCompletableFuture().join();
   }
 
-  private static Map<String, JsonNode> getMockCustomFieldsJsons() {
-    final Map<String, JsonNode> customFieldsJsons = new HashMap<>();
-    customFieldsJsons.put(CUSTOM_FIELD_NAME, JsonNodeFactory.instance.textNode("customValue"));
-    return customFieldsJsons;
+  private static FieldContainer getMockFieldContainer() {
+    return FieldContainerBuilder.of()
+        .addValue(CUSTOM_FIELD_NAME, JsonNodeFactory.instance.textNode("customValue"))
+        .build();
   }
 
-  private void create249InventoryEntry(SphereClient sphereClient) {
+  private void create249InventoryEntry(ProjectApiRoot projectApiRoot) {
     CompletableFuture.allOf(
             IntStream.range(0, 10)
                 .mapToObj(
                     value ->
-                        sphereClient
-                            .execute(
-                                InventoryEntryCreateCommand.of(
-                                    InventoryEntryDraftBuilder.of("SKU_" + value, 1L).build()))
+                        projectApiRoot
+                            .inventory()
+                            .create(
+                                InventoryEntryDraftBuilder.of()
+                                    .sku("SKU_" + value)
+                                    .quantityOnStock(1L)
+                                    .build())
+                            .execute()
                             .toCompletableFuture())
                 .toArray(CompletableFuture[]::new))
         .join();
 
     CompletableFuture.allOf(
             IntStream.range(0, 251)
-                .mapToObj(value -> create(sphereClient, value))
+                .mapToObj(value -> create(projectApiRoot, value))
                 .toArray(CompletableFuture[]::new))
         .join();
   }
 
-  private CompletableFuture<InventoryEntry> create(SphereClient sphereClient, int value) {
+  private CompletableFuture<InventoryEntry> create(ProjectApiRoot projectApiRoot, int value) {
     final ChannelDraft channelDraft1 =
-        ChannelDraft.of("other-channel-key_" + value).withRoles(ChannelRole.INVENTORY_SUPPLY);
+        ChannelDraftBuilder.of()
+            .key("other-channel-key_" + value)
+            .roles(ChannelRoleEnum.INVENTORY_SUPPLY)
+            .build();
 
-    final String channelId =
-        sphereClient
-            .execute(ChannelCreateCommand.of(channelDraft1))
+    final Channel channel =
+        projectApiRoot
+            .channels()
+            .create(channelDraft1)
+            .execute()
+            .thenApply(ApiHttpResponse::getBody)
             .toCompletableFuture()
-            .join()
-            .getId();
+            .join();
 
-    final Reference<Channel> supplyChannelReference = Channel.referenceOfId(channelId);
-
-    return sphereClient
-        .execute(
-            InventoryEntryCreateCommand.of(
-                InventoryEntryDraftBuilder.of("SKU_CHANNEL", 0L)
-                    .supplyChannel(supplyChannelReference)
-                    .build()))
+    return projectApiRoot
+        .inventory()
+        .create(
+            InventoryEntryDraftBuilder.of()
+                .supplyChannel(channel.toResourceIdentifier())
+                .sku("SKU_CHANNEL")
+                .quantityOnStock(0L)
+                .build())
+        .execute()
+        .thenApply(ApiHttpResponse::getBody)
         .toCompletableFuture();
   }
 

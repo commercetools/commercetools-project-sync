@@ -1,24 +1,24 @@
 package com.commercetools.project.sync.customer;
 
+import static com.commercetools.project.sync.util.TestUtils.mockResourceIdsGraphQlRequest;
+import static com.commercetools.project.sync.util.TestUtils.readObjectFromResource;
 import static com.commercetools.sync.customers.utils.CustomerTransformUtils.toCustomerDrafts;
-import static io.sphere.sdk.json.SphereJsonUtils.readObjectFromResource;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import com.commercetools.sync.commons.models.ResourceIdsGraphQlRequest;
-import com.commercetools.sync.commons.models.ResourceKeyIdGraphQlResult;
+import com.commercetools.api.client.ByProjectKeyCustomersGet;
+import com.commercetools.api.client.ByProjectKeyCustomersRequestBuilder;
+import com.commercetools.api.client.ProjectApiRoot;
+import com.commercetools.api.models.customer.Customer;
+import com.commercetools.api.models.customer.CustomerDraft;
+import com.commercetools.api.models.customer.CustomerPagedQueryResponse;
+import com.commercetools.api.models.customer.CustomerPagedQueryResponseBuilder;
 import com.commercetools.sync.commons.utils.CaffeineReferenceIdToKeyCacheImpl;
 import com.commercetools.sync.commons.utils.ReferenceIdToKeyCache;
 import com.commercetools.sync.customers.CustomerSync;
-import io.sphere.sdk.client.SphereApiConfig;
-import io.sphere.sdk.client.SphereClient;
-import io.sphere.sdk.customers.Customer;
-import io.sphere.sdk.customers.CustomerDraft;
-import io.sphere.sdk.customers.queries.CustomerQuery;
-import io.sphere.sdk.json.SphereJsonUtils;
-import io.sphere.sdk.queries.PagedQueryResult;
+import io.vrap.rmf.base.client.ApiHttpResponse;
 import java.time.Clock;
 import java.util.Collections;
 import java.util.List;
@@ -45,7 +45,8 @@ class CustomerSyncerTest {
   void of_ShouldCreateCustomerSyncerInstance() {
     // test
     final CustomerSyncer customerSyncer =
-        CustomerSyncer.of(mock(SphereClient.class), mock(SphereClient.class), mock(Clock.class));
+        CustomerSyncer.of(
+            mock(ProjectApiRoot.class), mock(ProjectApiRoot.class), mock(Clock.class));
 
     // assertion
     assertThat(customerSyncer).isNotNull();
@@ -55,20 +56,13 @@ class CustomerSyncerTest {
   @Test
   void transform_ShouldReplaceCustomerReferenceIdsWithKeys() {
     // preparation
-    final SphereClient sourceClient = mock(SphereClient.class);
+    final ProjectApiRoot sourceClient = mock(ProjectApiRoot.class);
     final CustomerSyncer customerSyncer =
-        CustomerSyncer.of(sourceClient, mock(SphereClient.class), mock(Clock.class));
+        CustomerSyncer.of(sourceClient, mock(ProjectApiRoot.class), mock(Clock.class));
     final List<Customer> customers =
         Collections.singletonList(readObjectFromResource("customer-key-1.json", Customer.class));
-
-    final String jsonStringCustomerGroups =
-        "{\"results\":[{\"id\":\"d1229e6f-2b79-441e-b419-180311e52754\","
-            + "\"key\":\"customerGroupKey\"} ]}";
-    final ResourceKeyIdGraphQlResult customerGroupsResult =
-        SphereJsonUtils.readObject(jsonStringCustomerGroups, ResourceKeyIdGraphQlResult.class);
-
-    when(sourceClient.execute(any(ResourceIdsGraphQlRequest.class)))
-        .thenReturn(CompletableFuture.completedFuture(customerGroupsResult));
+    mockResourceIdsGraphQlRequest(
+        sourceClient, "customerGroups", "d1229e6f-2b79-441e-b419-180311e52754", "customerGroupKey");
 
     // test
     final CompletionStage<List<CustomerDraft>> draftsFromPageStage =
@@ -82,33 +76,31 @@ class CustomerSyncerTest {
 
   @Test
   void getQuery_ShouldBuildCustomerQuery() {
+    final ProjectApiRoot projectApiRoot = mock(ProjectApiRoot.class);
+    final ByProjectKeyCustomersRequestBuilder byProjectKeyCustomersRequestBuilder = mock();
+    when(projectApiRoot.customers()).thenReturn(byProjectKeyCustomersRequestBuilder);
+    final ByProjectKeyCustomersGet byProjectKeyCustomersGet = mock();
+    when(byProjectKeyCustomersRequestBuilder.get()).thenReturn(byProjectKeyCustomersGet);
+
     // test
     final CustomerSyncer customerSyncer =
-        CustomerSyncer.of(mock(SphereClient.class), mock(SphereClient.class), mock(Clock.class));
+        CustomerSyncer.of(projectApiRoot, mock(ProjectApiRoot.class), mock(Clock.class));
 
     // assertion
-    final CustomerQuery query = customerSyncer.getQuery();
-    assertThat(query).isEqualTo(CustomerQuery.of());
+    assertThat(customerSyncer.getQuery()).isEqualTo(byProjectKeyCustomersGet);
   }
 
   @Test
   void syncWithError_ShouldCallErrorCallback() {
     // preparation: customer with no key is synced
-    final SphereClient sourceClient = mock(SphereClient.class);
-    final SphereClient targetClient = mock(SphereClient.class);
-    when(sourceClient.getConfig()).thenReturn(SphereApiConfig.of("source-project"));
-    when(targetClient.getConfig()).thenReturn(SphereApiConfig.of("target-project"));
+    final ProjectApiRoot sourceClient = mock(ProjectApiRoot.class);
     final List<Customer> customers =
         Collections.singletonList(readObjectFromResource("customer-no-key.json", Customer.class));
-
-    final PagedQueryResult<Customer> pagedQueryResult = mock(PagedQueryResult.class);
-    when(pagedQueryResult.getResults()).thenReturn(customers);
-    when(sourceClient.execute(any(CustomerQuery.class)))
-        .thenReturn(CompletableFuture.completedFuture(pagedQueryResult));
+    mockProjectApiRootGetRequest(sourceClient, customers);
 
     // test
     final CustomerSyncer customerSyncer =
-        CustomerSyncer.of(sourceClient, targetClient, mock(Clock.class));
+        CustomerSyncer.of(sourceClient, mock(ProjectApiRoot.class), mock(Clock.class));
     customerSyncer.sync(null, true).toCompletableFuture().join();
 
     // assertion
@@ -124,24 +116,15 @@ class CustomerSyncerTest {
   @Test
   void syncWithWarning_ShouldCallWarningCallback() {
     // preparation: source customer has a different customer number than target customer
-    final SphereClient sourceClient = mock(SphereClient.class);
-    final SphereClient targetClient = mock(SphereClient.class);
-    when(sourceClient.getConfig()).thenReturn(SphereApiConfig.of("source-project"));
-    when(targetClient.getConfig()).thenReturn(SphereApiConfig.of("target-project"));
+    final ProjectApiRoot sourceClient = mock(ProjectApiRoot.class);
+    final ProjectApiRoot targetClient = mock(ProjectApiRoot.class);
     final List<Customer> sourceCustomers =
         Collections.singletonList(readObjectFromResource("customer-id-1.json", Customer.class));
     final List<Customer> targetCustomers =
         Collections.singletonList(readObjectFromResource("customer-id-2.json", Customer.class));
 
-    final PagedQueryResult<Customer> sourcePagedQueryResult = mock(PagedQueryResult.class);
-    when(sourcePagedQueryResult.getResults()).thenReturn(sourceCustomers);
-    when(sourceClient.execute(any(CustomerQuery.class)))
-        .thenReturn(CompletableFuture.completedFuture(sourcePagedQueryResult));
-
-    final PagedQueryResult<Customer> targetPagedQueryResult = mock(PagedQueryResult.class);
-    when(targetPagedQueryResult.getResults()).thenReturn(targetCustomers);
-    when(targetClient.execute(any(CustomerQuery.class)))
-        .thenReturn(CompletableFuture.completedFuture(targetPagedQueryResult));
+    mockProjectApiRootGetRequest(sourceClient, sourceCustomers);
+    mockProjectApiRootGetRequest(targetClient, targetCustomers);
 
     // test
     final CustomerSyncer customerSyncer =
@@ -155,5 +138,31 @@ class CustomerSyncerTest {
     assertThat(errorLog.getThrowable().get().getMessage())
         .isEqualTo(
             "Customer with key: \"customerKey\" has already a customer number: \"2\", once it's set it cannot be changed. Hereby, the update action is not created.");
+  }
+
+  private void mockProjectApiRootGetRequest(
+      final ProjectApiRoot projectApiRoot, final List<Customer> results) {
+    final ByProjectKeyCustomersRequestBuilder byProjectKeyCustomersRequestBuilder = mock();
+    when(projectApiRoot.customers()).thenReturn(byProjectKeyCustomersRequestBuilder);
+    final ByProjectKeyCustomersGet byProjectKeyCustomersGet = mock();
+    when(byProjectKeyCustomersRequestBuilder.get()).thenReturn(byProjectKeyCustomersGet);
+    when(byProjectKeyCustomersGet.withSort(anyString())).thenReturn(byProjectKeyCustomersGet);
+    when(byProjectKeyCustomersGet.withWithTotal(anyBoolean())).thenReturn(byProjectKeyCustomersGet);
+    when(byProjectKeyCustomersGet.withLimit(anyInt())).thenReturn(byProjectKeyCustomersGet);
+    when(byProjectKeyCustomersGet.withWhere(anyString())).thenReturn(byProjectKeyCustomersGet);
+    when(byProjectKeyCustomersGet.withPredicateVar(anyString(), any()))
+        .thenReturn(byProjectKeyCustomersGet);
+
+    final ApiHttpResponse<CustomerPagedQueryResponse> response = mock(ApiHttpResponse.class);
+    final CustomerPagedQueryResponse customerPagedQueryResponse =
+        CustomerPagedQueryResponseBuilder.of()
+            .results(results)
+            .limit(20L)
+            .offset(0L)
+            .count(1L)
+            .build();
+    when(response.getBody()).thenReturn(customerPagedQueryResponse);
+    when(byProjectKeyCustomersGet.execute())
+        .thenReturn(CompletableFuture.completedFuture(response));
   }
 }

@@ -1,29 +1,32 @@
 package com.commercetools.project.sync.taxcategory;
 
 import static com.commercetools.project.sync.util.TestUtils.getMockedClock;
-import static io.sphere.sdk.json.SphereJsonUtils.readObjectFromResource;
-import static java.util.Arrays.asList;
+import static com.commercetools.project.sync.util.TestUtils.readObjectFromResource;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import com.commercetools.api.client.ByProjectKeyTaxCategoriesGet;
+import com.commercetools.api.client.ProjectApiRoot;
+import com.commercetools.api.models.tax_category.TaxCategory;
+import com.commercetools.api.models.tax_category.TaxCategoryDraft;
+import com.commercetools.api.models.tax_category.TaxCategoryDraftBuilder;
+import com.commercetools.api.models.tax_category.TaxCategoryPagedQueryResponse;
+import com.commercetools.api.models.tax_category.TaxCategoryPagedQueryResponseBuilder;
+import com.commercetools.api.models.tax_category.TaxRate;
+import com.commercetools.api.models.tax_category.TaxRateDraft;
+import com.commercetools.api.models.tax_category.TaxRateDraftBuilder;
 import com.commercetools.sync.taxcategories.TaxCategorySync;
-import io.sphere.sdk.client.SphereApiConfig;
-import io.sphere.sdk.client.SphereClient;
-import io.sphere.sdk.queries.PagedQueryResult;
-import io.sphere.sdk.taxcategories.TaxCategory;
-import io.sphere.sdk.taxcategories.TaxCategoryDraft;
-import io.sphere.sdk.taxcategories.TaxCategoryDraftBuilder;
-import io.sphere.sdk.taxcategories.TaxRateDraft;
-import io.sphere.sdk.taxcategories.TaxRateDraftBuilder;
-import io.sphere.sdk.taxcategories.queries.TaxCategoryQuery;
-import java.time.Clock;
+import io.vrap.rmf.base.client.ApiHttpResponse;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.stream.Collectors;
+import javax.annotation.Nonnull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import uk.org.lidalia.slf4jtest.LoggingEvent;
@@ -41,13 +44,18 @@ class TaxCategorySyncerTest {
 
   @Test
   void of_ShouldCreateTaxCategorySyncerInstance() {
+    // preparation
+    final ProjectApiRoot sourceClient = mock(ProjectApiRoot.class);
+    when(sourceClient.taxCategories()).thenReturn(mock());
+    when(sourceClient.taxCategories().get()).thenReturn(mock());
+
     // test
     final TaxCategorySyncer taxCategorySyncer =
-        TaxCategorySyncer.of(mock(SphereClient.class), mock(SphereClient.class), getMockedClock());
+        TaxCategorySyncer.of(sourceClient, mock(ProjectApiRoot.class), getMockedClock());
 
     // assertions
     assertThat(taxCategorySyncer).isNotNull();
-    assertThat(taxCategorySyncer.getQuery()).isEqualTo(TaxCategoryQuery.of());
+    assertThat(taxCategorySyncer.getQuery()).isInstanceOf(ByProjectKeyTaxCategoriesGet.class);
     assertThat(taxCategorySyncer.getSync()).isInstanceOf(TaxCategorySync.class);
   }
 
@@ -55,9 +63,10 @@ class TaxCategorySyncerTest {
   void transform_ShouldConvertResourcesToDrafts() {
     // preparation
     final TaxCategorySyncer taxCategorySyncer =
-        TaxCategorySyncer.of(mock(SphereClient.class), mock(SphereClient.class), getMockedClock());
+        TaxCategorySyncer.of(
+            mock(ProjectApiRoot.class), mock(ProjectApiRoot.class), getMockedClock());
     final List<TaxCategory> taxCategoryPage =
-        asList(
+        List.of(
             readObjectFromResource("tax-category-key-1.json", TaxCategory.class),
             readObjectFromResource("tax-category-key-2.json", TaxCategory.class));
 
@@ -71,50 +80,66 @@ class TaxCategorySyncerTest {
             taxCategoryPage.stream()
                 .map(
                     taxCategory -> {
-                      List<TaxRateDraft> taxRateDrafts =
-                          taxCategory.getTaxRates().stream()
-                              .map(taxRate -> TaxRateDraftBuilder.of(taxRate).build())
-                              .collect(Collectors.toList());
-                      return TaxCategoryDraftBuilder.of(
-                              taxCategory.getName(), taxRateDrafts, taxCategory.getDescription())
+                      final List<TaxRateDraft> taxRateDrafts =
+                          convertTaxRateToTaxRateDraft(taxCategory.getRates());
+                      return TaxCategoryDraftBuilder.of()
+                          .name(taxCategory.getName())
+                          .rates(taxRateDrafts)
+                          .description(taxCategory.getDescription())
                           .key(taxCategory.getKey());
                     })
                 .map(TaxCategoryDraftBuilder::build)
                 .collect(toList()));
   }
 
-  @Test
-  void getQuery_ShouldBuildTaxCategoryQuery() {
-    // preparation
-    final TaxCategorySyncer taxCategorySyncer =
-        TaxCategorySyncer.of(mock(SphereClient.class), mock(SphereClient.class), getMockedClock());
+  private List<TaxRateDraft> convertTaxRateToTaxRateDraft(@Nonnull final List<TaxRate> taxRates) {
 
-    // test
-    final TaxCategoryQuery query = taxCategorySyncer.getQuery();
-
-    // assertion
-    assertThat(query).isEqualTo(TaxCategoryQuery.of());
+    return taxRates.stream()
+        .map(
+            taxRate ->
+                TaxRateDraftBuilder.of()
+                    .name(taxRate.getName())
+                    .country(taxRate.getCountry())
+                    .state(taxRate.getState())
+                    .includedInPrice(taxRate.getIncludedInPrice())
+                    .amount(taxRate.getAmount())
+                    .key(taxRate.getKey())
+                    .subRates(taxRate.getSubRates())
+                    .build())
+        .collect(Collectors.toList());
   }
 
   @Test
   void syncWithError_WhenNoKeyIsProvided_ShouldCallErrorCallback() {
     // preparation
-    final SphereClient sourceClient = mock(SphereClient.class);
-    final SphereClient targetClient = mock(SphereClient.class);
-    when(sourceClient.getConfig()).thenReturn(SphereApiConfig.of("source-project"));
-    when(targetClient.getConfig()).thenReturn(SphereApiConfig.of("target-project"));
-
+    final ProjectApiRoot sourceClient = mock(ProjectApiRoot.class);
     final List<TaxCategory> taxCategoryPage =
-        asList(readObjectFromResource("tax-category-without-key.json", TaxCategory.class));
+        List.of(readObjectFromResource("tax-category-without-key.json", TaxCategory.class));
 
-    final PagedQueryResult<TaxCategory> pagedQueryResult = mock(PagedQueryResult.class);
-    when(pagedQueryResult.getResults()).thenReturn(taxCategoryPage);
-    when(sourceClient.execute(any(TaxCategoryQuery.class)))
-        .thenReturn(CompletableFuture.completedFuture(pagedQueryResult));
+    final TaxCategoryPagedQueryResponse queryResponse =
+        TaxCategoryPagedQueryResponseBuilder.of()
+            .results(taxCategoryPage)
+            .limit(20L)
+            .offset(0L)
+            .count(1L)
+            .build();
 
+    final ApiHttpResponse apiHttpResponse = mock(ApiHttpResponse.class);
+    when(apiHttpResponse.getBody()).thenReturn(queryResponse);
+    final ByProjectKeyTaxCategoriesGet byProjectKeyTaxCategoriesGet =
+        mock(ByProjectKeyTaxCategoriesGet.class);
+    when(sourceClient.taxCategories()).thenReturn(mock());
+    when(sourceClient.taxCategories().get()).thenReturn(byProjectKeyTaxCategoriesGet);
+    when(byProjectKeyTaxCategoriesGet.withLimit(anyInt())).thenReturn(byProjectKeyTaxCategoriesGet);
+    when(byProjectKeyTaxCategoriesGet.withWithTotal(anyBoolean()))
+        .thenReturn(byProjectKeyTaxCategoriesGet);
+    when(byProjectKeyTaxCategoriesGet.withSort(anyString()))
+        .thenReturn(byProjectKeyTaxCategoriesGet);
+    when(byProjectKeyTaxCategoriesGet.execute())
+        .thenReturn(CompletableFuture.completedFuture(apiHttpResponse));
     // test
     final TaxCategorySyncer taxCategorySyncer =
-        TaxCategorySyncer.of(sourceClient, targetClient, mock(Clock.class));
+        TaxCategorySyncer.of(sourceClient, mock(ProjectApiRoot.class), getMockedClock());
     taxCategorySyncer.sync(null, true).toCompletableFuture().join();
 
     // assertion

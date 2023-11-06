@@ -1,33 +1,24 @@
 package com.commercetools.project.sync;
 
+import static com.commercetools.api.models.common.LocalizedString.ofEnglish;
+import static com.commercetools.project.sync.util.CtpClientUtils.CTP_SOURCE_CLIENT;
+import static com.commercetools.project.sync.util.CtpClientUtils.CTP_TARGET_CLIENT;
 import static com.commercetools.project.sync.util.IntegrationTestUtils.cleanUpProjects;
 import static com.commercetools.project.sync.util.IntegrationTestUtils.createITSyncerFactory;
-import static com.commercetools.project.sync.util.SphereClientUtils.CTP_SOURCE_CLIENT;
-import static com.commercetools.project.sync.util.SphereClientUtils.CTP_TARGET_CLIENT;
-import static io.sphere.sdk.models.LocalizedString.ofEnglish;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.sphere.sdk.client.SphereClient;
-import io.sphere.sdk.models.LocalizedString;
-import io.sphere.sdk.products.Product;
-import io.sphere.sdk.products.ProductDraft;
-import io.sphere.sdk.products.ProductDraftBuilder;
-import io.sphere.sdk.products.ProductVariant;
-import io.sphere.sdk.products.ProductVariantDraft;
-import io.sphere.sdk.products.ProductVariantDraftBuilder;
-import io.sphere.sdk.products.attributes.AttributeConstraint;
-import io.sphere.sdk.products.attributes.AttributeDefinitionDraftBuilder;
-import io.sphere.sdk.products.attributes.AttributeDraft;
-import io.sphere.sdk.products.attributes.StringAttributeType;
-import io.sphere.sdk.products.commands.ProductCreateCommand;
-import io.sphere.sdk.products.queries.ProductQuery;
-import io.sphere.sdk.producttypes.ProductType;
-import io.sphere.sdk.producttypes.ProductTypeDraft;
-import io.sphere.sdk.producttypes.ProductTypeDraftBuilder;
-import io.sphere.sdk.producttypes.commands.ProductTypeCreateCommand;
-import io.sphere.sdk.queries.PagedQueryResult;
-import java.util.Collections;
-import java.util.List;
+import com.commercetools.api.client.ProjectApiRoot;
+import com.commercetools.api.models.product.ProductDraft;
+import com.commercetools.api.models.product.ProductDraftBuilder;
+import com.commercetools.api.models.product.ProductPagedQueryResponse;
+import com.commercetools.api.models.product.ProductVariant;
+import com.commercetools.api.models.product.ProductVariantDraft;
+import com.commercetools.api.models.product.ProductVariantDraftBuilder;
+import com.commercetools.api.models.product_type.AttributeConstraintEnum;
+import com.commercetools.api.models.product_type.AttributeTypeBuilder;
+import com.commercetools.api.models.product_type.ProductType;
+import com.commercetools.api.models.product_type.ProductTypeDraft;
+import com.commercetools.api.models.product_type.ProductTypeDraftBuilder;
 import javax.annotation.Nonnull;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -36,8 +27,6 @@ import uk.org.lidalia.slf4jext.Level;
 import uk.org.lidalia.slf4jtest.TestLogger;
 import uk.org.lidalia.slf4jtest.TestLoggerFactory;
 
-// This will suppress MoreThanOneLogger warnings in this class
-@SuppressWarnings("PMD.MoreThanOneLogger")
 class ProductSyncWithMasterVariantSwitchIT {
   private static final TestLogger cliRunnerTestLogger =
       TestLoggerFactory.getTestLogger(CliRunner.class);
@@ -54,52 +43,56 @@ class ProductSyncWithMasterVariantSwitchIT {
   }
 
   static void setupProjectData(
-      @Nonnull final SphereClient sphereClient, @Nonnull final String variantSuffix) {
+      @Nonnull final ProjectApiRoot ctpClient, @Nonnull final String variantSuffix) {
     final ProductTypeDraft productTypeDraft =
-        ProductTypeDraftBuilder.of(
-                MAIN_PRODUCT_TYPE_KEY,
-                MAIN_PRODUCT_TYPE_KEY,
-                "a productType for t-shirts",
-                Collections.singletonList(
-                    AttributeDefinitionDraftBuilder.of(
-                            StringAttributeType.of(),
-                            "test",
-                            LocalizedString.ofEnglish("test"),
-                            false)
-                        .attributeConstraint(AttributeConstraint.SAME_FOR_ALL)
-                        .build()))
+        ProductTypeDraftBuilder.of()
+            .name(MAIN_PRODUCT_TYPE_KEY)
+            .key(MAIN_PRODUCT_TYPE_KEY)
+            .description("a productType for t-shirts")
+            .addAttributes(
+                attributeDefinitionDraftBuilder ->
+                    attributeDefinitionDraftBuilder
+                        .type(AttributeTypeBuilder::textBuilder)
+                        .name("test")
+                        .label(ofEnglish("test"))
+                        .isSearchable(false)
+                        .isRequired(false)
+                        .attributeConstraint(AttributeConstraintEnum.SAME_FOR_ALL)
+                        .build())
             .build();
 
     final ProductType productType =
-        sphereClient
-            .execute(ProductTypeCreateCommand.of(productTypeDraft))
-            .toCompletableFuture()
-            .join();
+        ctpClient.productTypes().post(productTypeDraft).executeBlocking().getBody();
 
     final ProductVariantDraft masterVariant =
         ProductVariantDraftBuilder.of()
             .key("key" + variantSuffix)
             .sku("sku" + variantSuffix)
-            .attributes(AttributeDraft.of("test", "test" + variantSuffix))
+            .addAttributes(
+                attributeBuilder ->
+                    attributeBuilder.name("test").value("test" + variantSuffix).build())
             .build();
 
     final ProductVariantDraft variant1 =
         ProductVariantDraftBuilder.of()
             .key("key" + variantSuffix + "Variant1")
             .sku("sku" + variantSuffix + "Variant1")
-            .attributes(AttributeDraft.of("test", "test" + variantSuffix))
+            .addAttributes(
+                attributeBuilder ->
+                    attributeBuilder.name("test").value("test" + variantSuffix).build())
             .build();
 
     final ProductDraft draft =
-        ProductDraftBuilder.of(
-                productType,
-                ofEnglish(MAIN_PRODUCT_KEY),
-                ofEnglish(MAIN_PRODUCT_KEY),
-                List.of(masterVariant, variant1))
+        ProductDraftBuilder.of()
+            .productType(productType.toResourceIdentifier())
+            .name(ofEnglish(MAIN_PRODUCT_KEY))
+            .slug(ofEnglish(MAIN_PRODUCT_KEY))
+            .masterVariant(masterVariant)
+            .variants(variant1)
             .key(MAIN_PRODUCT_KEY)
             .build();
 
-    sphereClient.execute(ProductCreateCommand.of(draft)).toCompletableFuture().join();
+    ctpClient.products().post(draft).executeBlocking();
   }
 
   @AfterAll
@@ -117,10 +110,10 @@ class ProductSyncWithMasterVariantSwitchIT {
     assertThat(cliRunnerTestLogger.getAllLoggingEvents())
         .allMatch(loggingEvent -> !Level.ERROR.equals(loggingEvent.getLevel()));
 
-    final PagedQueryResult<Product> productQueryResult =
-        CTP_TARGET_CLIENT.execute(ProductQuery.of()).toCompletableFuture().join();
+    final ProductPagedQueryResponse productPagedQueryResponse =
+        CTP_TARGET_CLIENT.products().get().execute().toCompletableFuture().join().getBody();
 
-    assertThat(productQueryResult.getResults())
+    assertThat(productPagedQueryResponse.getResults())
         .hasSize(1)
         .singleElement()
         .satisfies(
@@ -131,13 +124,12 @@ class ProductSyncWithMasterVariantSwitchIT {
                   product.getMasterData().getStaged().getVariants().get(0);
               assertThat(targetMasterVariant.getSku()).isEqualTo("skuSource");
               assertThat(targetMasterVariant.getKey()).isEqualTo("keySource");
-              assertThat(targetMasterVariant.getAttributes().get(0).getValueAsString())
+              assertThat(targetMasterVariant.getAttributes().get(0).getValue())
                   .isEqualTo("testSource");
 
               assertThat(targetVariant1.getSku()).isEqualTo("skuSourceVariant1");
               assertThat(targetVariant1.getKey()).isEqualTo("keySourceVariant1");
-              assertThat(targetVariant1.getAttributes().get(0).getValueAsString())
-                  .isEqualTo("testSource");
+              assertThat(targetVariant1.getAttributes().get(0).getValue()).isEqualTo("testSource");
             });
   }
 }

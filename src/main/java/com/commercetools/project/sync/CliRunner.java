@@ -3,7 +3,7 @@ package com.commercetools.project.sync;
 import static com.commercetools.project.sync.model.ProductSyncCustomRequest.parseProductQueryParametersOption;
 import static com.commercetools.project.sync.util.SyncUtils.getApplicationName;
 import static com.commercetools.project.sync.util.SyncUtils.getApplicationVersion;
-import static io.sphere.sdk.utils.CompletableFutureUtils.exceptionallyCompletedFuture;
+import static io.vrap.rmf.base.client.utils.CompletableFutureUtils.exceptionallyCompletedFuture;
 import static java.lang.String.format;
 
 import com.commercetools.project.sync.exception.CliException;

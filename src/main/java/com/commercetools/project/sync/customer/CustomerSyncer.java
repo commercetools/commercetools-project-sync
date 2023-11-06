@@ -4,6 +4,13 @@ import static com.commercetools.project.sync.util.SyncUtils.logErrorCallback;
 import static com.commercetools.project.sync.util.SyncUtils.logWarningCallback;
 import static com.commercetools.sync.customers.utils.CustomerTransformUtils.toCustomerDrafts;
 
+import com.commercetools.api.client.ByProjectKeyCustomersGet;
+import com.commercetools.api.client.ProjectApiRoot;
+import com.commercetools.api.models.customer.Customer;
+import com.commercetools.api.models.customer.CustomerDraft;
+import com.commercetools.api.models.customer.CustomerPagedQueryResponse;
+import com.commercetools.api.models.customer.CustomerUpdateAction;
+import com.commercetools.api.predicates.query.customer.CustomerQueryBuilderDsl;
 import com.commercetools.project.sync.Syncer;
 import com.commercetools.project.sync.service.CustomObjectService;
 import com.commercetools.project.sync.service.impl.CustomObjectServiceImpl;
@@ -14,11 +21,6 @@ import com.commercetools.sync.customers.CustomerSync;
 import com.commercetools.sync.customers.CustomerSyncOptions;
 import com.commercetools.sync.customers.CustomerSyncOptionsBuilder;
 import com.commercetools.sync.customers.helpers.CustomerSyncStatistics;
-import io.sphere.sdk.client.SphereClient;
-import io.sphere.sdk.commands.UpdateAction;
-import io.sphere.sdk.customers.Customer;
-import io.sphere.sdk.customers.CustomerDraft;
-import io.sphere.sdk.customers.queries.CustomerQuery;
 import java.time.Clock;
 import java.util.List;
 import java.util.Optional;
@@ -30,34 +32,32 @@ import org.slf4j.LoggerFactory;
 public final class CustomerSyncer
     extends Syncer<
         Customer,
-        Customer,
+        CustomerUpdateAction,
         CustomerDraft,
-        Customer,
+        CustomerQueryBuilderDsl,
         CustomerSyncStatistics,
         CustomerSyncOptions,
-        CustomerQuery,
+        ByProjectKeyCustomersGet,
+        CustomerPagedQueryResponse,
         CustomerSync> {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(CustomerSyncer.class);
 
   private CustomerSyncer(
       @Nonnull final CustomerSync customerSync,
-      @Nonnull final SphereClient sourceClient,
-      @Nonnull final SphereClient targetClient,
+      @Nonnull final ProjectApiRoot sourceClient,
+      @Nonnull final ProjectApiRoot targetClient,
       @Nonnull final CustomObjectService customObjectService,
       @Nonnull final Clock clock) {
     super(customerSync, sourceClient, targetClient, customObjectService, clock);
   }
 
   public static CustomerSyncer of(
-      @Nonnull final SphereClient sourceClient,
-      @Nonnull final SphereClient targetClient,
+      @Nonnull final ProjectApiRoot sourceClient,
+      @Nonnull final ProjectApiRoot targetClient,
       @Nonnull final Clock clock) {
     final QuadConsumer<
-            SyncException,
-            Optional<CustomerDraft>,
-            Optional<Customer>,
-            List<UpdateAction<Customer>>>
+            SyncException, Optional<CustomerDraft>, Optional<Customer>, List<CustomerUpdateAction>>
         logErrorCallback =
             (exception, newResourceDraft, oldResource, updateActions) ->
                 logErrorCallback(LOGGER, "customer", exception, oldResource, updateActions);
@@ -86,8 +86,8 @@ public final class CustomerSyncer
 
   @Nonnull
   @Override
-  protected CustomerQuery getQuery() {
-    return CustomerQuery.of();
+  protected ByProjectKeyCustomersGet getQuery() {
+    return getSourceClient().customers().get();
   }
 
   @Nonnull

@@ -4,6 +4,13 @@ import static com.commercetools.project.sync.util.SyncUtils.logErrorCallback;
 import static com.commercetools.project.sync.util.SyncUtils.logWarningCallback;
 import static com.commercetools.sync.cartdiscounts.utils.CartDiscountTransformUtils.toCartDiscountDrafts;
 
+import com.commercetools.api.client.ByProjectKeyCartDiscountsGet;
+import com.commercetools.api.client.ProjectApiRoot;
+import com.commercetools.api.models.cart_discount.CartDiscount;
+import com.commercetools.api.models.cart_discount.CartDiscountDraft;
+import com.commercetools.api.models.cart_discount.CartDiscountPagedQueryResponse;
+import com.commercetools.api.models.cart_discount.CartDiscountUpdateAction;
+import com.commercetools.api.predicates.query.cart_discount.CartDiscountQueryBuilderDsl;
 import com.commercetools.project.sync.Syncer;
 import com.commercetools.project.sync.service.CustomObjectService;
 import com.commercetools.project.sync.service.impl.CustomObjectServiceImpl;
@@ -14,11 +21,6 @@ import com.commercetools.sync.cartdiscounts.helpers.CartDiscountSyncStatistics;
 import com.commercetools.sync.commons.exceptions.SyncException;
 import com.commercetools.sync.commons.utils.QuadConsumer;
 import com.commercetools.sync.commons.utils.TriConsumer;
-import io.sphere.sdk.cartdiscounts.CartDiscount;
-import io.sphere.sdk.cartdiscounts.CartDiscountDraft;
-import io.sphere.sdk.cartdiscounts.queries.CartDiscountQuery;
-import io.sphere.sdk.client.SphereClient;
-import io.sphere.sdk.commands.UpdateAction;
 import java.time.Clock;
 import java.util.List;
 import java.util.Optional;
@@ -30,12 +32,13 @@ import org.slf4j.LoggerFactory;
 public final class CartDiscountSyncer
     extends Syncer<
         CartDiscount,
-        CartDiscount,
+        CartDiscountUpdateAction,
         CartDiscountDraft,
-        CartDiscount,
+        CartDiscountQueryBuilderDsl,
         CartDiscountSyncStatistics,
         CartDiscountSyncOptions,
-        CartDiscountQuery,
+        ByProjectKeyCartDiscountsGet,
+        CartDiscountPagedQueryResponse,
         CartDiscountSync> {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(CartDiscountSyncer.class);
@@ -43,8 +46,8 @@ public final class CartDiscountSyncer
   /** Instantiates a {@link Syncer} instance. */
   private CartDiscountSyncer(
       @Nonnull final CartDiscountSync cartDiscountSync,
-      @Nonnull final SphereClient sourceClient,
-      @Nonnull final SphereClient targetClient,
+      @Nonnull final ProjectApiRoot sourceClient,
+      @Nonnull final ProjectApiRoot targetClient,
       @Nonnull final CustomObjectService customObjectService,
       @Nonnull final Clock clock) {
     super(cartDiscountSync, sourceClient, targetClient, customObjectService, clock);
@@ -52,15 +55,15 @@ public final class CartDiscountSyncer
 
   @Nonnull
   public static CartDiscountSyncer of(
-      @Nonnull final SphereClient sourceClient,
-      @Nonnull final SphereClient targetClient,
+      @Nonnull final ProjectApiRoot sourceClient,
+      @Nonnull final ProjectApiRoot targetClient,
       @Nonnull final Clock clock) {
 
     final QuadConsumer<
             SyncException,
             Optional<CartDiscountDraft>,
             Optional<CartDiscount>,
-            List<UpdateAction<CartDiscount>>>
+            List<CartDiscountUpdateAction>>
         logErrorCallback =
             (exception, newResourceDraft, oldResource, updateActions) ->
                 logErrorCallback(LOGGER, "cart discount", exception, oldResource, updateActions);
@@ -91,8 +94,8 @@ public final class CartDiscountSyncer
 
   @Nonnull
   @Override
-  protected CartDiscountQuery getQuery() {
-    return CartDiscountQuery.of();
+  protected ByProjectKeyCartDiscountsGet getQuery() {
+    return getSourceClient().cartDiscounts().get();
   }
 
   @Nonnull

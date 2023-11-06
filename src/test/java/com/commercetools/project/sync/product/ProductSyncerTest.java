@@ -1,29 +1,38 @@
 package com.commercetools.project.sync.product;
 
+import static com.commercetools.project.sync.util.TestUtils.createBadGatewayException;
 import static com.commercetools.project.sync.util.TestUtils.getMockedClock;
-import static io.sphere.sdk.json.SphereJsonUtils.readObjectFromResource;
-import static java.util.Arrays.asList;
+import static com.commercetools.project.sync.util.TestUtils.mockResourceIdsGraphQlRequest;
+import static com.commercetools.project.sync.util.TestUtils.readObjectFromResource;
+import static com.commercetools.project.sync.util.TestUtils.withTestClient;
+import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import com.commercetools.api.client.ByProjectKeyGraphqlPost;
+import com.commercetools.api.client.ByProjectKeyProductProjectionsGet;
+import com.commercetools.api.client.ProjectApiRoot;
+import com.commercetools.api.defaultconfig.ApiRootBuilder;
+import com.commercetools.api.models.graph_ql.GraphQLRequest;
+import com.commercetools.api.models.product.Product;
+import com.commercetools.api.models.product.ProductDraft;
+import com.commercetools.api.models.product.ProductMixin;
+import com.commercetools.api.models.product.ProductProjection;
+import com.commercetools.api.models.product.ProductProjectionType;
 import com.commercetools.project.sync.model.ProductSyncCustomRequest;
 import com.commercetools.sync.commons.exceptions.ReferenceTransformException;
-import com.commercetools.sync.commons.models.ResourceIdsGraphQlRequest;
-import com.commercetools.sync.commons.models.ResourceKeyIdGraphQlResult;
 import com.commercetools.sync.products.ProductSync;
+import com.commercetools.sync.products.utils.AttributeUtils;
 import com.fasterxml.jackson.databind.JsonNode;
-import io.sphere.sdk.client.BadGatewayException;
-import io.sphere.sdk.client.SphereClient;
-import io.sphere.sdk.json.SphereJsonUtils;
-import io.sphere.sdk.products.Product;
-import io.sphere.sdk.products.ProductDraft;
-import io.sphere.sdk.products.ProductProjection;
-import io.sphere.sdk.products.ProductProjectionType;
-import io.sphere.sdk.products.queries.ProductProjectionQuery;
-import io.sphere.sdk.queries.QueryPredicate;
-import io.sphere.sdk.utils.CompletableFutureUtils;
+import io.vrap.rmf.base.client.ApiHttpMethod;
+import io.vrap.rmf.base.client.ApiHttpResponse;
+import io.vrap.rmf.base.client.error.BadGatewayException;
+import io.vrap.rmf.base.client.utils.CompletableFutureUtils;
+import io.vrap.rmf.base.client.utils.json.JsonUtils;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -45,54 +54,76 @@ class ProductSyncerTest {
 
   @Test
   void of_ShouldCreateProductSyncerInstance() {
+    final ProjectApiRoot apiRoot = mock(ProjectApiRoot.class);
+    when(apiRoot.productProjections()).thenReturn(mock());
+    final ByProjectKeyProductProjectionsGet getMock = mock(ByProjectKeyProductProjectionsGet.class);
+    when(getMock.addStaged(anyBoolean())).thenReturn(getMock);
+    when(apiRoot.productProjections().get()).thenReturn(getMock);
     // test
-    final ProductSyncer productSyncer =
-        ProductSyncer.of(
-            mock(SphereClient.class), mock(SphereClient.class), getMockedClock(), null);
+    final ProductSyncer productSyncer = ProductSyncer.of(apiRoot, apiRoot, getMockedClock(), null);
 
     // assertions
     assertThat(productSyncer).isNotNull();
-    assertThat(productSyncer.getQuery()).isInstanceOf(ProductProjectionQuery.class);
+    assertThat(productSyncer.getQuery()).isEqualTo(getMock);
     assertThat(productSyncer.getSync()).isExactlyInstanceOf(ProductSync.class);
   }
 
   @Test
   void transform_WithAttributeReferences_ShouldReplaceProductReferenceIdsWithKeys() {
     // preparation
-    final SphereClient sourceClient = mock(SphereClient.class);
+    final ProductProjection productProjection =
+        ProductMixin.toProjection(
+            readObjectFromResource("product-key-4.json", Product.class),
+            ProductProjectionType.STAGED);
+
+    final String jsonStringProducts =
+        "{\"data\":{\"products\":{\"results\":[{\"id\":\"53c4a8b4-754f-4b95-b6f2-3e1e70e3d0d2\","
+            + "\"key\":\"prod1\"},"
+            + "{\"id\":\"53c4a8b4-754f-4b95-b6f2-3e1e70e3d0d6\",\"key\":\"prod2\"}]}}}";
+
+    final String jsonStringProductTypes =
+        "{\"data\":{\"productTypes\":{\"results\":[{\"id\":\"53c4a8b4-754f-4b95-b6f2-3e1e70e3d0d3\","
+            + "\"key\":\"prodType1\"}]}}}";
+
+    final String jsonStringCategories =
+        "{\"data\":{\"categories\":{\"results\":[{\"id\":\"53c4a8b4-754f-4b95-b6f2-3e1e70e3d0d4\",\"key\":\"cat1\"},"
+            + "{\"id\":\"53c4a8b4-754f-4b95-b6f2-3e1e70e3d0d5\",\"key\":\"cat2\"}]}}}";
+
+    final ProjectApiRoot sourceClient =
+        withTestClient(
+            "testProjectKey",
+            (uri, method, requestBody) -> {
+              if (uri.contains("graphql") && ApiHttpMethod.POST.equals(method)) {
+                final GraphQLRequest graphQLRequest =
+                    JsonUtils.fromJsonString(requestBody, GraphQLRequest.class);
+                final String requestQuery = graphQLRequest.getQuery();
+                if (requestQuery.contains("products")) {
+                  return CompletableFuture.completedFuture(
+                      new ApiHttpResponse<>(
+                          200, null, jsonStringProducts.getBytes(StandardCharsets.UTF_8)));
+                }
+                if (requestQuery.contains("productTypes")) {
+                  return CompletableFuture.completedFuture(
+                      new ApiHttpResponse<>(
+                          200, null, jsonStringProductTypes.getBytes(StandardCharsets.UTF_8)));
+                }
+                if (requestQuery.contains("categories")) {
+                  return CompletableFuture.completedFuture(
+                      new ApiHttpResponse<>(
+                          200, null, jsonStringCategories.getBytes(StandardCharsets.UTF_8)));
+                }
+                final String result = "{\"data\":{}}";
+                return CompletableFuture.completedFuture(
+                    new ApiHttpResponse<>(200, null, result.getBytes(StandardCharsets.UTF_8)));
+              }
+              return null;
+            });
+
     final ProductSyncer productSyncer =
-        ProductSyncer.of(sourceClient, mock(SphereClient.class), getMockedClock(), null);
-    final List<ProductProjection> productPage =
-        Collections.singletonList(
-            readObjectFromResource("product-key-4.json", Product.class)
-                .toProjection(ProductProjectionType.STAGED));
-
-    String jsonStringProducts =
-        "{\"results\":[{\"id\":\"53c4a8b4-754f-4b95-b6f2-3e1e70e3d0d2\",\"key\":\"prod1\"},"
-            + "{\"id\":\"53c4a8b4-754f-4b95-b6f2-3e1e70e3d0d6\",\"key\":\"prod2\"}]}";
-    final ResourceKeyIdGraphQlResult productsResult =
-        SphereJsonUtils.readObject(jsonStringProducts, ResourceKeyIdGraphQlResult.class);
-
-    String jsonStringProductTypes =
-        "{\"results\":[{\"id\":\"53c4a8b4-754f-4b95-b6f2-3e1e70e3d0d3\","
-            + "\"key\":\"prodType1\"}]}";
-    final ResourceKeyIdGraphQlResult productTypesResult =
-        SphereJsonUtils.readObject(jsonStringProductTypes, ResourceKeyIdGraphQlResult.class);
-
-    String jsonStringCategories =
-        "{\"results\":[{\"id\":\"53c4a8b4-754f-4b95-b6f2-3e1e70e3d0d4\",\"key\":\"cat1\"},"
-            + "{\"id\":\"53c4a8b4-754f-4b95-b6f2-3e1e70e3d0d5\",\"key\":\"cat2\"}]}";
-    final ResourceKeyIdGraphQlResult categoriesResult =
-        SphereJsonUtils.readObject(jsonStringCategories, ResourceKeyIdGraphQlResult.class);
-
-    when(sourceClient.execute(any(ResourceIdsGraphQlRequest.class)))
-        .thenReturn(CompletableFuture.completedFuture(productsResult))
-        .thenReturn(CompletableFuture.completedFuture(productTypesResult))
-        .thenReturn(CompletableFuture.completedFuture(categoriesResult));
-
+        ProductSyncer.of(sourceClient, mock(ProjectApiRoot.class), getMockedClock(), null);
     // test
     final List<ProductDraft> draftsFromPageStage =
-        productSyncer.transform(productPage).toCompletableFuture().join();
+        productSyncer.transform(singletonList(productProjection)).toCompletableFuture().join();
 
     // assertions
 
@@ -108,7 +139,11 @@ class ProductSyncerTest {
                     .anySatisfy(
                         attributeDraft -> {
                           assertThat(attributeDraft.getName()).isEqualTo("productReference");
-                          final JsonNode referenceSet = attributeDraft.getValue();
+                          final JsonNode attributeValue =
+                              AttributeUtils.replaceAttributeValueWithJsonAndReturnValue(
+                                  attributeDraft);
+                          final List<JsonNode> referenceSet =
+                              AttributeUtils.getAttributeReferences(attributeValue);
                           assertThat(referenceSet)
                               .anySatisfy(
                                   reference ->
@@ -126,7 +161,11 @@ class ProductSyncerTest {
                     .anySatisfy(
                         attributeDraft -> {
                           assertThat(attributeDraft.getName()).isEqualTo("categoryReference");
-                          final JsonNode referenceSet = attributeDraft.getValue();
+                          final JsonNode attributeValue =
+                              AttributeUtils.replaceAttributeValueWithJsonAndReturnValue(
+                                  attributeDraft);
+                          final List<JsonNode> referenceSet =
+                              AttributeUtils.getAttributeReferences(attributeValue);
                           assertThat(referenceSet)
                               .anySatisfy(
                                   reference ->
@@ -144,8 +183,12 @@ class ProductSyncerTest {
                     .anySatisfy(
                         attributeDraft -> {
                           assertThat(attributeDraft.getName()).isEqualTo("productTypeReference");
-                          assertThat(attributeDraft.getValue().get("id").asText())
-                              .isEqualTo("prodType1");
+                          final JsonNode attributeValue =
+                              AttributeUtils.replaceAttributeValueWithJsonAndReturnValue(
+                                  attributeDraft);
+                          final List<JsonNode> referenceSet =
+                              AttributeUtils.getAttributeReferences(attributeValue);
+                          assertThat(referenceSet.get(0).get("id").asText()).isEqualTo("prodType1");
                         }));
 
     assertThat(testLogger.getAllLoggingEvents()).isEmpty();
@@ -154,26 +197,20 @@ class ProductSyncerTest {
   @Test
   void transform_WithDiscountedPrices_ShouldRemoveDiscountedPrices() {
     // preparation
-    final SphereClient sourceClient = mock(SphereClient.class);
+    final ProjectApiRoot sourceClient = mock(ProjectApiRoot.class);
     final ProductSyncer productSyncer =
-        ProductSyncer.of(sourceClient, mock(SphereClient.class), getMockedClock(), null);
-    final List<ProductProjection> productPage =
-        Collections.singletonList(
-            readObjectFromResource("product-key-10.json", Product.class)
-                .toProjection(ProductProjectionType.STAGED));
+        ProductSyncer.of(sourceClient, mock(ProjectApiRoot.class), getMockedClock(), null);
+    final ProductProjection productProjection =
+        ProductMixin.toProjection(
+            readObjectFromResource("product-key-10.json", Product.class),
+            ProductProjectionType.STAGED);
 
-    String jsonStringProductTypes =
-        "{\"results\":[{\"id\":\"53c4a8b4-754f-4b95-b6f2-3e1e70e3d0d3\","
-            + "\"key\":\"prodType1\"}]}";
-    final ResourceKeyIdGraphQlResult productTypesResult =
-        SphereJsonUtils.readObject(jsonStringProductTypes, ResourceKeyIdGraphQlResult.class);
-
-    when(sourceClient.execute(any(ResourceIdsGraphQlRequest.class)))
-        .thenReturn(CompletableFuture.completedFuture(productTypesResult));
+    mockResourceIdsGraphQlRequest(
+        sourceClient, "productTypes", "53c4a8b4-754f-4b95-b6f2-3e1e70e3d0d3", "prodType1");
 
     // test
     final List<ProductDraft> draftsFromPageStage =
-        productSyncer.transform(productPage).toCompletableFuture().join();
+        productSyncer.transform(singletonList(productProjection)).toCompletableFuture().join();
 
     final Optional<ProductDraft> productDraftKey1 =
         draftsFromPageStage.stream()
@@ -191,24 +228,29 @@ class ProductSyncerTest {
   @Test
   void transform_WithErrorOnGraphQlRequest_ShouldContinueAndLogError() {
     // preparation
-    final SphereClient sourceClient = mock(SphereClient.class);
+    final ProjectApiRoot sourceClient = mock(ProjectApiRoot.class);
     final ProductSyncer productSyncer =
-        ProductSyncer.of(sourceClient, mock(SphereClient.class), getMockedClock(), null);
-    final List<ProductProjection> productPage =
-        asList(
-            readObjectFromResource("product-key-1.json", Product.class)
-                .toProjection(ProductProjectionType.STAGED),
-            readObjectFromResource("product-key-2.json", Product.class)
-                .toProjection(ProductProjectionType.STAGED));
+        ProductSyncer.of(sourceClient, mock(ProjectApiRoot.class), getMockedClock(), null);
+    final ProductProjection productProjection1 =
+        ProductMixin.toProjection(
+            readObjectFromResource("product-key-1.json", Product.class),
+            ProductProjectionType.STAGED);
+    final ProductProjection productProjection2 =
+        ProductMixin.toProjection(
+            readObjectFromResource("product-key-2.json", Product.class),
+            ProductProjectionType.STAGED);
 
-    final BadGatewayException badGatewayException =
-        new BadGatewayException("Failed Graphql request");
-    when(sourceClient.execute(any(ResourceIdsGraphQlRequest.class)))
+    final ByProjectKeyGraphqlPost byProjectKeyGraphqlPost = mock(ByProjectKeyGraphqlPost.class);
+    final BadGatewayException badGatewayException = createBadGatewayException();
+    when(sourceClient.graphql()).thenReturn(mock());
+    when(sourceClient.graphql().post(any(GraphQLRequest.class)))
+        .thenReturn(byProjectKeyGraphqlPost);
+    when(byProjectKeyGraphqlPost.execute())
         .thenReturn(CompletableFutureUtils.failed(badGatewayException));
 
     // test
     final CompletionStage<List<ProductDraft>> draftsFromPageStage =
-        productSyncer.transform(productPage);
+        productSyncer.transform(List.of(productProjection1, productProjection2));
 
     // assertions
     assertThat(draftsFromPageStage).isCompletedWithValue(Collections.emptyList());
@@ -230,15 +272,17 @@ class ProductSyncerTest {
   @Test
   void getQuery_ShouldBuildProductQueryWithoutAnyExpansionPaths() {
     // preparation
-    final ProductSyncer productSyncer =
-        ProductSyncer.of(
-            mock(SphereClient.class), mock(SphereClient.class), getMockedClock(), null);
+    ProjectApiRoot apiRoot = mock(ProjectApiRoot.class);
+    when(apiRoot.productProjections()).thenReturn(mock());
+    when(apiRoot.productProjections().get()).thenReturn(mock());
+    when(apiRoot.productProjections().get().addStaged(anyBoolean())).thenReturn(mock());
+    final ProductSyncer productSyncer = ProductSyncer.of(apiRoot, apiRoot, getMockedClock(), null);
 
     // test
-    final ProductProjectionQuery query = productSyncer.getQuery();
+    final ByProjectKeyProductProjectionsGet query = productSyncer.getQuery();
 
     // assertion
-    assertThat(query.expansionPaths()).isEmpty();
+    assertThat(query.getExpand()).isEmpty();
   }
 
   @Test
@@ -248,22 +292,21 @@ class ProductSyncerTest {
     final String customQuery =
         "published=true AND masterData(masterVariant(attributes(name= \"abc\" AND value=123)))";
 
+    final ProjectApiRoot apiRoot =
+        ApiRootBuilder.of().withApiBaseUrl("apiBaseUrl").build("projectKey");
+
     final ProductSyncCustomRequest productSyncCustomRequest = new ProductSyncCustomRequest();
-    productSyncCustomRequest.setWhere(customQuery);
     productSyncCustomRequest.setLimit(limit);
+    productSyncCustomRequest.setWhere(customQuery);
 
     final ProductSyncer productSyncer =
-        ProductSyncer.of(
-            mock(SphereClient.class),
-            mock(SphereClient.class),
-            getMockedClock(),
-            productSyncCustomRequest);
+        ProductSyncer.of(apiRoot, apiRoot, getMockedClock(), productSyncCustomRequest);
 
     // test
-    final ProductProjectionQuery query = productSyncer.getQuery();
+    final ByProjectKeyProductProjectionsGet query = productSyncer.getQuery();
 
     // assertion
-    assertThat(query.limit()).isEqualTo(100);
-    assertThat(query.predicates()).contains(QueryPredicate.of(customQuery));
+    assertThat(query.getLimit().get(0)).isEqualTo("100");
+    assertThat(query.getWhere()).contains(customQuery);
   }
 }

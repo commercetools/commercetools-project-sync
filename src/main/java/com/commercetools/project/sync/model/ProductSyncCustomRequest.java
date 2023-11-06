@@ -6,6 +6,7 @@ import com.commercetools.project.sync.exception.CliException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 
+// TODO: Migration needed
 public final class ProductSyncCustomRequest {
 
   private Long limit;
