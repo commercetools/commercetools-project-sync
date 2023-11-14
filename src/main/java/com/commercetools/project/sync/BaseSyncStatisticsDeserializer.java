@@ -9,8 +9,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import java.io.IOException;
 
-// This class compiles but not tested yet
-// TODO: Test class and adjust logic if needed
 public class BaseSyncStatisticsDeserializer extends StdDeserializer<BaseSyncStatistics> {
 
   public BaseSyncStatisticsDeserializer() {
@@ -26,15 +24,17 @@ public class BaseSyncStatisticsDeserializer extends StdDeserializer<BaseSyncStat
       throws IOException {
     final ObjectMapper mapper = (ObjectMapper) jsonParser.getCodec();
     final JsonNode syncStatisticsNode = mapper.readTree(jsonParser);
-    // since BaseSyncStatistics is abstract and there's no difference in the Subclasses except
-    // implementation of
-    // method getReportMessage(), additionally there's no field which could be used to identify the
-    // type of the
-    // subclass, the jsonNode is mapped to any concrete class
-    // this is a workaround, to fix that BaseSyncStatistics in java-sync library needs to be
-    // adjusted declaring
-    // the subtypes with Json annotations: JsonTypeInfo and JsonSubTypes
-    // more details: https://www.baeldung.com/jackson-inheritance#2-per-class-annotations
-    return mapper.treeToValue(syncStatisticsNode, CustomerSyncStatistics.class);
+    final Class<CustomerSyncStatistics> customerSyncStatisticsClass = CustomerSyncStatistics.class;
+    try {
+      final String syncStatisticsClassName =
+          syncStatisticsNode
+              .get("syncStatisticsClassName")
+              .asText(customerSyncStatisticsClass.getName());
+      final Class<? extends BaseSyncStatistics> c =
+          Class.forName(syncStatisticsClassName).asSubclass(BaseSyncStatistics.class);
+      return mapper.treeToValue(syncStatisticsNode, c);
+    } catch (ClassNotFoundException | ClassCastException e) {
+      return mapper.treeToValue(syncStatisticsNode, customerSyncStatisticsClass);
+    }
   }
 }

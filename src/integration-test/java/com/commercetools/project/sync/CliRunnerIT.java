@@ -10,6 +10,7 @@ import static com.commercetools.project.sync.util.IntegrationTestUtils.assertPro
 import static com.commercetools.project.sync.util.IntegrationTestUtils.cleanUpProjects;
 import static com.commercetools.project.sync.util.IntegrationTestUtils.createITSyncerFactory;
 import static com.commercetools.project.sync.util.SyncUtils.APPLICATION_DEFAULT_NAME;
+import static com.commercetools.project.sync.util.SyncUtils.DEFAULT_RUNNER_NAME;
 import static com.commercetools.project.sync.util.TestUtils.assertCartDiscountSyncerLoggingEvents;
 import static com.commercetools.project.sync.util.TestUtils.assertCategorySyncerLoggingEvents;
 import static com.commercetools.project.sync.util.TestUtils.assertCustomObjectSyncerLoggingEvents;
@@ -85,6 +86,7 @@ import com.commercetools.project.sync.state.StateSyncer;
 import com.commercetools.project.sync.taxcategory.TaxCategorySyncer;
 import com.commercetools.project.sync.type.TypeSyncer;
 import com.commercetools.sync.commons.helpers.BaseSyncStatistics;
+import com.commercetools.sync.producttypes.helpers.ProductTypeSyncStatistics;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -704,20 +706,19 @@ class CliRunnerIT {
 
     assertProductTypesAreSyncedCorrectly(CTP_TARGET_CLIENT);
 
-    // todo: https://commercetools.atlassian.net/browse/DEVX-272
-    //    final ZonedDateTime lastSyncTimestamp =
-    //        assertCurrentCtpTimestampGeneratorAndGetLastModifiedAt(
-    //            CTP_TARGET_CLIENT, DEFAULT_RUNNER_NAME, "ProductTypeSync");
+    final ZonedDateTime lastSyncTimestamp =
+        assertCurrentCtpTimestampGeneratorAndGetLastModifiedAt(
+            CTP_TARGET_CLIENT, DEFAULT_RUNNER_NAME, "ProductTypeSync");
 
-    //    final String sourceProjectKey = CTP_SOURCE_CLIENT.getProjectKey();
+    final String sourceProjectKey = CTP_SOURCE_CLIENT.getProjectKey();
 
-    //    assertLastSyncCustomObjectIsCorrect(
-    //        CTP_TARGET_CLIENT,
-    //        sourceProjectKey,
-    //        "productTypeSync",
-    //        DEFAULT_RUNNER_NAME,
-    //        ProductSyncStatistics.class,
-    //        lastSyncTimestamp);
+    assertLastSyncCustomObjectIsCorrect(
+        CTP_TARGET_CLIENT,
+        sourceProjectKey,
+        "productTypeSync",
+        DEFAULT_RUNNER_NAME,
+        ProductTypeSyncStatistics.class,
+        lastSyncTimestamp);
   }
 
   private static void assertTypesAreSyncedCorrectly(@Nonnull final ProjectApiRoot ctpClient) {
