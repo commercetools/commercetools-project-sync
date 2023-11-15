@@ -19,6 +19,7 @@ import com.commercetools.api.models.custom_object.CustomObjectDraft;
 import com.commercetools.project.sync.model.response.LastSyncCustomObject;
 import com.commercetools.project.sync.service.CustomObjectService;
 import com.commercetools.project.sync.util.TestUtils;
+import com.commercetools.sync.customers.helpers.CustomerSyncStatistics;
 import com.commercetools.sync.products.helpers.ProductSyncStatistics;
 import io.vrap.rmf.base.client.ApiHttpResponse;
 import io.vrap.rmf.base.client.error.BadGatewayException;
@@ -197,6 +198,35 @@ class CustomObjectServiceImplTest {
                 assertThat(exception.getCause().getCause())
                     .isInstanceOf(BadGatewayException.class)
                     .hasMessageContaining("test"));
+  }
+
+  @Test
+  void
+      getLastSyncCustomObject_OnCustomObjectWithoutSyncStatisticsClassNameAttr_ShouldCompleteWithCustomerSyncStatisticsClass() {
+    // preparation
+    final CustomObject mockCustomObject = mock(CustomObject.class);
+
+    final ProductSyncStatistics productSyncStatistics = mock(ProductSyncStatistics.class);
+    when(productSyncStatistics.getSyncStatisticsClassName()).thenReturn("");
+
+    final LastSyncCustomObject<ProductSyncStatistics> lastSyncCustomObjectValue =
+        LastSyncCustomObject.of(now, productSyncStatistics, 0);
+    when(mockCustomObject.getValue()).thenReturn(lastSyncCustomObjectValue);
+
+    when(apiHttpResponse.getBody()).thenReturn(mockCustomObject);
+
+    when(byProjectKeyCustomObjectsByContainerByKeyGet.execute())
+        .thenReturn(CompletableFuture.completedFuture(apiHttpResponse));
+
+    final CustomObjectService customObjectService = new CustomObjectServiceImpl(ctpClient);
+
+    // test
+    final LastSyncCustomObject lastSyncCustomObject =
+        customObjectService.getLastSyncCustomObject("foo", "bar", DEFAULT_RUNNER_NAME).join().get();
+
+    // assert
+    assertThat(lastSyncCustomObject.getLastSyncStatistics())
+        .isInstanceOf(CustomerSyncStatistics.class);
   }
 
   @Test

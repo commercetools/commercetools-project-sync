@@ -24,16 +24,15 @@ public class BaseSyncStatisticsDeserializer extends StdDeserializer<BaseSyncStat
       throws IOException {
     final ObjectMapper mapper = (ObjectMapper) jsonParser.getCodec();
     final JsonNode syncStatisticsNode = mapper.readTree(jsonParser);
-    final Class<CustomerSyncStatistics> customerSyncStatisticsClass = CustomerSyncStatistics.class;
     try {
       final String syncStatisticsClassName =
-          syncStatisticsNode
-              .get("syncStatisticsClassName")
-              .asText(customerSyncStatisticsClass.getName());
+          syncStatisticsNode.get("syncStatisticsClassName").asText();
       final Class<? extends BaseSyncStatistics> c =
           Class.forName(syncStatisticsClassName).asSubclass(BaseSyncStatistics.class);
       return mapper.treeToValue(syncStatisticsNode, c);
     } catch (ClassNotFoundException | ClassCastException e) {
+      final Class<CustomerSyncStatistics> customerSyncStatisticsClass =
+          CustomerSyncStatistics.class;
       return mapper.treeToValue(syncStatisticsNode, customerSyncStatisticsClass);
     }
   }
