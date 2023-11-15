@@ -54,7 +54,7 @@ public final class LastSyncCustomObject<T extends BaseSyncStatistics> {
   public LastSyncCustomObject() {}
 
   @Nonnull
-  public static <T extends BaseSyncStatistics> LastSyncCustomObject<T> of(
+  public static <T extends BaseSyncStatistics<T>> LastSyncCustomObject<T> of(
       @Nonnull final ZonedDateTime lastSyncTimestamp,
       @Nonnull final T lastSyncStatistics,
       final long lastSyncDurationInSeconds) {
@@ -64,7 +64,7 @@ public final class LastSyncCustomObject<T extends BaseSyncStatistics> {
   }
 
   @Nonnull
-  public static <T extends BaseSyncStatistics> LastSyncCustomObject<T> of(
+  public static <T extends BaseSyncStatistics<T>> LastSyncCustomObject<T> of(
       @Nonnull final ZonedDateTime lastSyncTimestamp,
       @Nonnull final T lastSyncStatistics,
       @Nonnull final String applicationVersion,

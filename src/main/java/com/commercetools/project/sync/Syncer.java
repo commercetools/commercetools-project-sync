@@ -63,7 +63,7 @@ public abstract class Syncer<
     ResourceUpdateActionT extends ResourceUpdateAction<ResourceUpdateActionT>,
     ResourceDraftT,
     QueryBuilderDslT,
-    SyncStatisticsT extends BaseSyncStatistics,
+    SyncStatisticsT extends BaseSyncStatistics<SyncStatisticsT>,
     SyncOptionsT extends BaseSyncOptions<ResourceT, ResourceDraftT, ResourceUpdateActionT>,
     PagedQueryT extends
         PagedQueryResourceRequest<PagedQueryT, PagedQueryResponseT, QueryBuilderDslT>,

@@ -4,7 +4,6 @@ import static com.commercetools.api.models.common.LocalizedString.ofEnglish;
 import static com.commercetools.project.sync.util.CtpClientUtils.CTP_SOURCE_CLIENT;
 import static com.commercetools.project.sync.util.CtpClientUtils.CTP_TARGET_CLIENT;
 import static com.commercetools.project.sync.util.IntegrationTestUtils.*;
-import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.commercetools.api.client.ProjectApiRoot;
@@ -85,7 +84,7 @@ public class CategorySyncWithReferenceResolutionIT {
             .name(ofEnglish("t-shirts"))
             .slug(ofEnglish("t-shirts"))
             .key(RESOURCE_KEY)
-            .assets(asList(assetDraft))
+            .assets(assetDraft)
             .custom(customFieldsDraft)
             .build();
 
