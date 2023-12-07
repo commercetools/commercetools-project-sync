@@ -5,21 +5,16 @@ import static com.commercetools.project.sync.util.TestUtils.mockResourceIdsGraph
 import static com.commercetools.project.sync.util.TestUtils.readObjectFromResource;
 import static java.lang.String.format;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import com.commercetools.api.client.ByProjectKeyGraphqlPost;
-import com.commercetools.api.client.ByProjectKeyGraphqlRequestBuilder;
 import com.commercetools.api.client.ByProjectKeyStatesGet;
 import com.commercetools.api.client.ProjectApiRoot;
 import com.commercetools.api.defaultconfig.ApiRootBuilder;
 import com.commercetools.api.models.common.LocalizedString;
-import com.commercetools.api.models.graph_ql.GraphQLRequest;
-import com.commercetools.api.models.graph_ql.GraphQLResponse;
 import com.commercetools.api.models.state.State;
 import com.commercetools.api.models.state.StateDraft;
 import com.commercetools.api.models.state.StateDraftBuilder;
@@ -29,7 +24,6 @@ import com.commercetools.api.models.state.StateResourceIdentifierBuilder;
 import com.commercetools.api.models.state.StateTypeEnum;
 import com.commercetools.sync.states.StateSync;
 import io.vrap.rmf.base.client.ApiHttpResponse;
-import io.vrap.rmf.base.client.utils.json.JsonUtils;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
@@ -129,13 +123,14 @@ class StateSyncerTest {
   }
 
   @Test
-  void syncWithError_WhenTransistionReferencesAreInvalid_ShouldCallErrorCallback() {
+  void syncWithError_WhenTransitionReferencesAreInvalid_ShouldCallErrorCallback() {
     // preparation
     final ProjectApiRoot sourceClient = mock(ProjectApiRoot.class);
-    final List<State> stateTypePage = List.of(readObjectFromResource("state-2.json", State.class));
+    final State state = readObjectFromResource("state-2.json", State.class);
+    state.getTransitions().get(0).setId("invalidReference");
     final StatePagedQueryResponse queryResponse =
         StatePagedQueryResponseBuilder.of()
-            .results(stateTypePage)
+            .results(List.of(state))
             .limit(20L)
             .offset(0L)
             .count(1L)
@@ -151,19 +146,7 @@ class StateSyncerTest {
     when(sourceClient.states()).thenReturn(mock());
     when(sourceClient.states().get()).thenReturn(byProjectKeyStatesGet);
 
-    final String jsonResponseString = "{\"data\":{\"states\":{\"results\":[]}}}";
-    final GraphQLResponse result =
-        JsonUtils.fromJsonString(jsonResponseString, GraphQLResponse.class);
-    final ApiHttpResponse graphQlResponse = mock(ApiHttpResponse.class);
-    when(graphQlResponse.getBody()).thenReturn(result);
-    final ByProjectKeyGraphqlRequestBuilder byProjectKeyGraphqlRequestBuilder = mock();
-    when(sourceClient.graphql()).thenReturn(byProjectKeyGraphqlRequestBuilder);
-    final ByProjectKeyGraphqlPost byProjectKeyGraphqlPost = mock();
-    when(byProjectKeyGraphqlRequestBuilder.post(any(GraphQLRequest.class)))
-        .thenReturn(byProjectKeyGraphqlPost);
-    when(byProjectKeyGraphqlPost.execute())
-        .thenReturn(CompletableFuture.completedFuture(graphQlResponse));
-
+    mockResourceIdsGraphQlRequest(sourceClient, "states", "", "");
     // test
     final StateSyncer stateSyncer =
         StateSyncer.of(sourceClient, mock(ProjectApiRoot.class), getMockedClock());
@@ -176,8 +159,6 @@ class StateSyncerTest {
             "Error when trying to sync state. Existing key: <<not present>>. Update actions: []");
     assertThat(errorLog.getThrowable().get().getMessage())
         .isEqualTo(
-            format(
-                "StateDraft with key: '%s' has invalid state transitions",
-                stateTypePage.get(0).getKey()));
+            format("StateDraft with key: '%s' has invalid state transitions", state.getKey()));
   }
 }

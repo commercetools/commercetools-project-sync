@@ -198,7 +198,7 @@ class ProductSyncWithSelfReferencesIT {
   private static void assertAllResourcesAreSyncedToTarget(
       @Nonnull final ProjectApiRoot targetClient) {
 
-    final ProductType productType = assertProductTypeExists(targetClient, MAIN_PRODUCT_TYPE_KEY);
+    assertProductTypeExists(targetClient, MAIN_PRODUCT_TYPE_KEY);
     final Product mainProduct =
         assertProductExists(
             targetClient,
