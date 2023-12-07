@@ -33,7 +33,6 @@ import java.util.concurrent.CompletionStage;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import uk.org.lidalia.slf4jtest.LoggingEvent;
 import uk.org.lidalia.slf4jtest.TestLogger;
@@ -129,8 +128,7 @@ class InventoryEntrySyncerTest {
   }
 
   @Test
-  @Disabled("https://commercetools.atlassian.net/browse/DEVX-275")
-  void syncWithError_ShouldCallErrorCallback() throws JsonProcessingException {
+  void syncWithError_ShouldCallErrorCallback() {
     // preparation: inventory entry with no key is synced
     final ProjectApiRoot sourceClient = mock(ProjectApiRoot.class);
     final ProjectApiRoot targetClient = mock(ProjectApiRoot.class);

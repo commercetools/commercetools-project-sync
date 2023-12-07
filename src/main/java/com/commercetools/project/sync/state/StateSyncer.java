@@ -1,6 +1,5 @@
 package com.commercetools.project.sync.state;
 
-import static com.commercetools.project.sync.util.SyncUtils.getCompletionExceptionCause;
 import static com.commercetools.project.sync.util.SyncUtils.logErrorCallback;
 import static com.commercetools.project.sync.util.SyncUtils.logWarningCallback;
 import static com.commercetools.sync.states.utils.StateTransformUtils.toStateDrafts;
@@ -78,17 +77,7 @@ public final class StateSyncer
   @Nonnull
   @Override
   protected CompletionStage<List<StateDraft>> transform(@Nonnull List<State> states) {
-    return toStateDrafts(getSourceClient(), referenceIdToKeyCache, states)
-        .handle(
-            (stateDrafts, throwable) -> {
-              if (throwable != null) {
-                if (LOGGER.isWarnEnabled()) {
-                  LOGGER.warn(throwable.getMessage(), getCompletionExceptionCause(throwable));
-                }
-                return List.of();
-              }
-              return stateDrafts;
-            });
+    return toStateDrafts(getSourceClient(), referenceIdToKeyCache, states);
   }
 
   @Nonnull
