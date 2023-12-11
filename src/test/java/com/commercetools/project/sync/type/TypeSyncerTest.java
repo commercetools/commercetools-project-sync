@@ -21,7 +21,6 @@ import com.commercetools.api.models.type.TypePagedQueryResponse;
 import com.commercetools.api.models.type.TypePagedQueryResponseBuilder;
 import com.commercetools.sync.types.TypeSync;
 import io.vrap.rmf.base.client.ApiHttpResponse;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import org.junit.jupiter.api.BeforeEach;
@@ -97,7 +96,7 @@ class TypeSyncerTest {
   }
 
   @Test
-  void transform_WhenNoKeyIsProvided_ShouldLogErrorAndContinue() {
+  void transform_WhenNoKeyIsProvided_ShouldContinueWithEmptyStateDraft() {
     // preparation
     final ProjectApiRoot sourceClient = mock(ProjectApiRoot.class);
     final List<Type> typePage =
@@ -109,15 +108,8 @@ class TypeSyncerTest {
     final List<TypeDraft> typeDrafts = typeSyncer.transform(typePage).toCompletableFuture().join();
 
     // assertion
-    assertThat(typeDrafts).isEqualTo(Collections.emptyList());
-    assertThat(syncerTestLogger.getAllLoggingEvents())
-        .anySatisfy(
-            loggingEvent -> {
-              assertThat(loggingEvent.getMessage()).contains("TypeDraft: key is missing");
-              assertThat(loggingEvent.getThrowable().isPresent()).isTrue();
-              assertThat(loggingEvent.getThrowable().get())
-                  .isInstanceOf(NullPointerException.class);
-            });
+    assertThat(typeDrafts).hasSize(1);
+    assertThat(typeDrafts).isEqualTo(List.of(TypeDraft.of()));
   }
 
   @Test

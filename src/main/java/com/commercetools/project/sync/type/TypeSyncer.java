@@ -1,6 +1,5 @@
 package com.commercetools.project.sync.type;
 
-import static com.commercetools.project.sync.util.SyncUtils.getCompletionExceptionCause;
 import static com.commercetools.project.sync.util.SyncUtils.logErrorCallback;
 import static com.commercetools.project.sync.util.SyncUtils.logWarningCallback;
 
@@ -33,8 +32,6 @@ import javax.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-// This class compiles but not tested yet
-// TODO: Test class and adjust logic if needed
 public final class TypeSyncer
     extends Syncer<
         Type,
@@ -100,28 +97,22 @@ public final class TypeSyncer
   @Nonnull
   @Override
   protected CompletionStage<List<TypeDraft>> transform(@Nonnull final List<Type> page) {
-    return CompletableFuture.supplyAsync(
-            () -> page.stream().map(TypeSyncer::typeToDraft).collect(Collectors.toList()))
-        .handle(
-            ((typeDrafts, throwable) -> {
-              if (throwable != null) {
-                if (LOGGER.isWarnEnabled()) {
-                  LOGGER.warn(throwable.getMessage(), getCompletionExceptionCause(throwable));
-                }
-                return List.of();
-              }
-              return typeDrafts;
-            }));
+    return CompletableFuture.completedFuture(
+        page.stream().map(TypeSyncer::typeToDraft).collect(Collectors.toList()));
   }
 
   @Nullable
   private static TypeDraft typeToDraft(@Nonnull final Type type) {
-    return TypeDraftBuilder.of()
-        .key(type.getKey())
-        .name(type.getName())
-        .resourceTypeIds(type.getResourceTypeIds())
-        .description(type.getDescription())
-        .fieldDefinitions(type.getFieldDefinitions())
-        .build();
+    if (type.getKey() != null && type.getName() != null && type.getResourceTypeIds() != null) {
+      return TypeDraftBuilder.of()
+          .key(type.getKey())
+          .name(type.getName())
+          .resourceTypeIds(type.getResourceTypeIds())
+          .description(type.getDescription())
+          .fieldDefinitions(type.getFieldDefinitions())
+          .build();
+    } else {
+      return TypeDraft.of();
+    }
   }
 }
