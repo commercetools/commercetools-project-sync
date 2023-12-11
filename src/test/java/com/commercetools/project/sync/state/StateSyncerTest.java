@@ -24,12 +24,10 @@ import com.commercetools.api.models.state.StateResourceIdentifierBuilder;
 import com.commercetools.api.models.state.StateTypeEnum;
 import com.commercetools.sync.states.StateSync;
 import io.vrap.rmf.base.client.ApiHttpResponse;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import uk.org.lidalia.slf4jtest.LoggingEvent;
 import uk.org.lidalia.slf4jtest.TestLogger;
@@ -108,7 +106,7 @@ class StateSyncerTest {
   }
 
   @Test
-  void transform_WhenNoKeyIsProvided_ShouldContinueAndLogError() {
+  void transform_WhenNoKeyIsProvided_ShouldContinueWithEmptyStateDraft() {
     // preparation
     final ProjectApiRoot sourceClient = mock(ProjectApiRoot.class);
     final List<State> stateTypePage =
@@ -121,32 +119,18 @@ class StateSyncerTest {
         stateSyncer.transform(stateTypePage).toCompletableFuture();
 
     // assertion
-    assertThat(stateDrafts).isCompletedWithValue(Collections.emptyList());
-    assertThat(syncerTestLogger.getAllLoggingEvents())
-        .anySatisfy(
-            loggingEvent -> {
-              assertThat(loggingEvent.getMessage()).contains("StateDraft: key is missing");
-              assertThat(loggingEvent.getThrowable().isPresent()).isTrue();
-              assertThat(loggingEvent.getThrowable().get())
-                  .isInstanceOf(NullPointerException.class);
-            });
+    assertThat(stateDrafts).isCompletedWithValue(List.of(StateDraft.of()));
   }
 
-  /*
-   * Disabled as long as there's NPE when a key is null or empty and therefore add with PLACEHOLDER to cache.
-   * See: https://commercetools.atlassian.net/browse/DEVX-277
-   */
-  @Disabled
   @Test
-  void syncWithError_WhenTransistionReferencesAreInvalid_ShouldCallErrorCallback() {
+  void syncWithError_WhenTransitionReferencesAreInvalid_ShouldCallErrorCallback() {
     // preparation
     final ProjectApiRoot sourceClient = mock(ProjectApiRoot.class);
-    mockResourceIdsGraphQlRequest(
-        sourceClient, "states", "ab949f1b-c441-4c70-9cf0-4182c36d6a6c", "");
-    final List<State> stateTypePage = List.of(readObjectFromResource("state-2.json", State.class));
+    final State state = readObjectFromResource("state-2.json", State.class);
+    state.getTransitions().get(0).setId("invalidReference");
     final StatePagedQueryResponse queryResponse =
         StatePagedQueryResponseBuilder.of()
-            .results(stateTypePage)
+            .results(List.of(state))
             .limit(20L)
             .offset(0L)
             .count(1L)
@@ -162,6 +146,7 @@ class StateSyncerTest {
     when(sourceClient.states()).thenReturn(mock());
     when(sourceClient.states().get()).thenReturn(byProjectKeyStatesGet);
 
+    mockResourceIdsGraphQlRequest(sourceClient, "states", "", "");
     // test
     final StateSyncer stateSyncer =
         StateSyncer.of(sourceClient, mock(ProjectApiRoot.class), getMockedClock());
@@ -174,8 +159,6 @@ class StateSyncerTest {
             "Error when trying to sync state. Existing key: <<not present>>. Update actions: []");
     assertThat(errorLog.getThrowable().get().getMessage())
         .isEqualTo(
-            format(
-                "StateDraft with key: %s has invalid state transitions",
-                stateTypePage.get(0).getKey()));
+            format("StateDraft with key: '%s' has invalid state transitions", state.getKey()));
   }
 }
