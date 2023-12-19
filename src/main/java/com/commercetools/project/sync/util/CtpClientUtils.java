@@ -104,18 +104,39 @@ public final class CtpClientUtils {
         .build(projectKey);
   }
 
-  private static Properties loadFromEnvVars(String propertiesPrefix) {
-    String projectKeyKey = propertiesPrefix.toUpperCase().replace(".", "_") + "PROJECT_KEY";
-    String projectKey = System.getenv(projectKeyKey);
-    String clientIdKey = propertiesPrefix.toUpperCase().replace(".", "_") + "CLIENT_ID";
-    String clientId = System.getenv(clientIdKey);
-    String clientSecretKey = propertiesPrefix.toUpperCase().replace(".", "_") + "CLIENT_SECRET";
-    String clientSecret = System.getenv(clientSecretKey);
-    Properties properties = new Properties();
-    properties.put(propertiesPrefix + PROPERTIES_KEY_PROJECT_KEY_SUFFIX, projectKey);
-    properties.put(propertiesPrefix + PROPERTIES_KEY_CLIENT_ID_SUFFIX, clientId);
-    properties.put(propertiesPrefix + PROPERTIES_KEY_CLIENT_SECRET_SUFFIX, clientSecret);
+  private static Properties loadFromEnvVars(final String propertiesPrefix) {
+    final Properties properties = new Properties();
+
+    final String capitalizeAndReplaceDot = propertiesPrefix.toUpperCase().replace(".", "_");
+
+    properties.put(
+        propertiesPrefix + PROPERTIES_KEY_PROJECT_KEY_SUFFIX,
+        getPropertyFromEnv(capitalizeAndReplaceDot + "PROJECT_KEY"));
+    properties.put(
+        propertiesPrefix + PROPERTIES_KEY_CLIENT_ID_SUFFIX,
+        getPropertyFromEnv(capitalizeAndReplaceDot + "CLIENT_ID"));
+    properties.put(
+        propertiesPrefix + PROPERTIES_KEY_CLIENT_SECRET_SUFFIX,
+        getPropertyFromEnv(capitalizeAndReplaceDot + "CLIENT_SECRET"));
+    final String authUrl = getPropertyFromEnv(capitalizeAndReplaceDot + "AUTH_URL");
+    if (authUrl != null) {
+      properties.put(propertiesPrefix + PROPERTIES_KEY_AUTH_URL_SUFFIX, authUrl);
+    }
+    final String apiUrl = getPropertyFromEnv(capitalizeAndReplaceDot + "API_URL");
+    if (apiUrl != null) {
+      properties.put(propertiesPrefix + PROPERTIES_KEY_API_URL_SUFFIX, apiUrl);
+    }
+
+    final String scopes = getPropertyFromEnv(capitalizeAndReplaceDot + "SCOPES");
+    if (scopes != null) {
+      properties.put(propertiesPrefix + PROPERTIES_KEY_SCOPES_SUFFIX, scopes);
+    }
+
     return properties;
+  }
+
+  private static String getPropertyFromEnv(String key) {
+    return System.getenv(key);
   }
 
   private static String extract(
