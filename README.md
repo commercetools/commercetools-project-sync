@@ -72,14 +72,14 @@ As of now, these are the supported resources:
    export SOURCE_PROJECT_KEY = "source-project-key"
    export SOURCE_CLIENT_ID = "sourceClientId"
    export SOURCE_CLIENT_SECRET = "sourceClientSecret"
-   export SOURCE_AUTH_URL = "https://auth.eu-central-1.aws.commercetools.com" #optional parameter
+   export SOURCE_AUTH_URL = "https://auth.eu-central-1.aws.commercetools.com/oauth/token" #optional parameter
    export SOURCE_API_URL = "https://api.eu-central-1.aws.commercetools.com" #optional parameter
    export SOURCE_SCOPES = "manage_project" #optional parameter
    
    export TARGET_PROJECT_KEY = "target-project-key"
    export TARGET_CLIENT_ID = "targetClientId"
    export TARGET_CLIENT_SECRET = "targetClientSecret"
-   export TARGET_AUTH_URL = "https://auth.eu-central-1.aws.commercetools.com" #optional parameter
+   export TARGET_AUTH_URL = "https://auth.eu-central-1.aws.commercetools.com/oauth/token" #optional parameter
    export TARGET_API_URL = "https://api.eu-central-1.aws.commercetools.com" #optional parameter
    export TARGET_SCOPES = "manage_project" #optional parameter
    ```
