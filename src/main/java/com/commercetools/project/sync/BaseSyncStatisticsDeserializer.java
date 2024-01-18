@@ -25,8 +25,12 @@ public class BaseSyncStatisticsDeserializer extends StdDeserializer<BaseSyncStat
     final ObjectMapper mapper = (ObjectMapper) jsonParser.getCodec();
     final JsonNode syncStatisticsNode = mapper.readTree(jsonParser);
     try {
-      final String syncStatisticsClassName =
-          syncStatisticsNode.get("syncStatisticsClassName").asText();
+      final JsonNode syncStatisticsClassNameJsonNode =
+          syncStatisticsNode.get("syncStatisticsClassName");
+      if (syncStatisticsClassNameJsonNode == null) {
+        throw new ClassNotFoundException();
+      }
+      final String syncStatisticsClassName = syncStatisticsClassNameJsonNode.asText();
       final Class<? extends BaseSyncStatistics> c =
           Class.forName(syncStatisticsClassName).asSubclass(BaseSyncStatistics.class);
       return mapper.treeToValue(syncStatisticsNode, c);
