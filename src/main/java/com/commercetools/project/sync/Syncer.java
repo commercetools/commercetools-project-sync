@@ -210,7 +210,7 @@ public abstract class Syncer<
       @Nonnull final ZonedDateTime lowerBound, @Nonnull final ZonedDateTime upperBound) {
     return (PagedQueryT)
         getQuery()
-            .withWhere("lastModifiedAt >= :lower AND lastModifiedAt <= :upper")
+            .addWhere("lastModifiedAt >= :lower AND lastModifiedAt <= :upper")
             .withPredicateVar("lower", lowerBound)
             .withPredicateVar("upper", upperBound);
   }
