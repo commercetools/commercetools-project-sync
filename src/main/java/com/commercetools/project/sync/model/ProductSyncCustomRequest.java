@@ -5,7 +5,6 @@ import static java.lang.String.format;
 import com.commercetools.project.sync.exception.CliException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.vrap.rmf.base.client.utils.json.JsonUtils;
-
 import java.io.IOException;
 
 // TODO: Migration needed
