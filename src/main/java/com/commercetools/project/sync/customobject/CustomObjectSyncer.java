@@ -108,9 +108,8 @@ public final class CustomObjectSyncer
       return customObjectQuery;
     } else {
       final List<String> excludedContainerNames = getExcludedContainerNames();
-      return customObjectQuery
-          .withWhere("container not in :excludedNames")
-          .withPredicateVar("excludedNames", excludedContainerNames);
+      return customObjectQuery.withWhere(
+          CustomObjectQueryBuilderDsl.of().container().isIn(excludedContainerNames).not());
     }
   }
 
