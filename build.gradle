@@ -37,7 +37,7 @@ ext {
     commercetoolsSyncJava = '10.0.5'
     httpClientVersion = '17.11.0'
     apacheCliVersion = '1.8.0'
-    jupiterApiVersion = '5.10.2'
+    jupiterApiVersion = '5.10.3'
     logbackVersion = '1.5.6'
     logstashLogbackEncoderVersion= '7.4'
 }
