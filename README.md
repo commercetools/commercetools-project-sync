@@ -179,6 +179,17 @@ _Note:_ Another `customObject` with the `container` convention `commercetools-pr
 
 Running a **Full sync** using `-f` or `--full` option will not create any `customObjects`.
 
+#### Understanding the summary reportMessage
+
+In the best case, the reportMessage should be self-explaining like in the example above. However, in case of errors, this kind of message could appear:
+
+```
+Summary: 1 product(s) were processed in total (0 created, 0 updated, 0 failed to sync and 1 product(s) with missing reference(s))
+```
+
+- `failed to sync` means there is an error from the composable commerce API after the sync tried to create/update the product. Therefore, this product could not be created/updated. The root cause is returned in the previous log lines, immediately during the sync process when this problem happens.
+- `product(s) with missing reference(s)` means that the synced product has some [references](https://docs.commercetools.com/api/types#references) to other products in its attributes. These referenced products do not exist in the target project, therefore the synced product cannot be created/updated. The solution to this problem is to make sure all the references are already synced. This is not counted as `failed to sync` because this reference check happens before the sync itself.
+
 #### Running Multiple Syncers
 
 The application can sync multiple resources. For example, to run `type` and `productType` sync together, 
