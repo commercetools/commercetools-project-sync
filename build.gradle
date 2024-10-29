@@ -35,7 +35,7 @@ ext {
     pmdVersion = '7.2.0'
     jacocoVersion = '0.8.12'
     commercetoolsSyncJava = '10.0.5'
-    httpClientVersion = '17.12.0'
+    httpClientVersion = '17.16.0'
     apacheCliVersion = '1.8.0'
     jupiterApiVersion = '5.10.3'
     logbackVersion = '1.5.12'
