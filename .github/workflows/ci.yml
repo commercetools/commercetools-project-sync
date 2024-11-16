@@ -27,4 +27,4 @@ jobs:
           TARGET_CLIENT_ID: ${{ secrets.TARGET_CLIENT_ID }}
           TARGET_CLIENT_SECRET: ${{ secrets.TARGET_CLIENT_SECRET }}
       - name: Codecov
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
