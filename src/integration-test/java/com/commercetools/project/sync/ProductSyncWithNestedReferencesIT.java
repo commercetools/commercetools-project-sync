@@ -72,6 +72,8 @@ import com.commercetools.project.sync.util.TestUtils;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.github.valfirst.slf4jtest.TestLogger;
+import com.github.valfirst.slf4jtest.TestLoggerFactory;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -82,8 +84,6 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import uk.org.lidalia.slf4jext.Level;
-import uk.org.lidalia.slf4jtest.TestLogger;
-import uk.org.lidalia.slf4jtest.TestLoggerFactory;
 
 // This will suppress MoreThanOneLogger warnings in this class
 @SuppressWarnings("PMD.MoreThanOneLogger")

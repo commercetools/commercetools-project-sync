@@ -30,7 +30,7 @@ apply from: "$rootDir/gradle-scripts/set-library-version.gradle"
 
 ext {
     mockitoVersion = '5.14.2'
-    slf4jTestVersion = '1.2.0'
+    slf4jTestVersion = '2.9.0'
     assertjVersion = '3.26.3'
     pmdVersion = '7.7.0'
     jacocoVersion = '0.8.12'
@@ -70,7 +70,7 @@ dependencies {
     implementation "ch.qos.logback:logback-classic:${logbackVersion}"
     implementation "ch.qos.logback:logback-core:${logbackVersion}"
     implementation "net.logstash.logback:logstash-logback-encoder:${logstashLogbackEncoderVersion}"
-    testImplementation "uk.org.lidalia:slf4j-test:${slf4jTestVersion}"
+    testImplementation "com.github.valfirst:slf4j-test:${slf4jTestVersion}"
     testImplementation "org.mockito:mockito-core:${mockitoVersion}"
     testImplementation "org.junit.jupiter:junit-jupiter-api:${jupiterApiVersion}"
     testImplementation "org.junit.jupiter:junit-jupiter-params:${jupiterApiVersion}"

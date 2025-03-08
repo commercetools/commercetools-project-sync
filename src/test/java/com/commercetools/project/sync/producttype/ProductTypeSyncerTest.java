@@ -18,15 +18,15 @@ import com.commercetools.api.models.product_type.ProductTypeDraft;
 import com.commercetools.api.models.product_type.ProductTypeDraftBuilder;
 import com.commercetools.api.models.product_type.ProductTypePagedQueryResponse;
 import com.commercetools.sync.producttypes.ProductTypeSync;
+import com.github.valfirst.slf4jtest.LoggingEvent;
+import com.github.valfirst.slf4jtest.TestLogger;
+import com.github.valfirst.slf4jtest.TestLoggerFactory;
 import io.vrap.rmf.base.client.ApiHttpResponse;
 import java.time.Clock;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import uk.org.lidalia.slf4jtest.LoggingEvent;
-import uk.org.lidalia.slf4jtest.TestLogger;
-import uk.org.lidalia.slf4jtest.TestLoggerFactory;
 
 class ProductTypeSyncerTest {
   private final TestLogger syncerTestLogger =

@@ -23,12 +23,12 @@ import com.commercetools.api.models.type.TypeDraft;
 import com.commercetools.api.models.type.TypeDraftBuilder;
 import com.commercetools.api.models.type.TypeTextInputHint;
 import com.commercetools.project.sync.category.CategorySyncer;
+import com.github.valfirst.slf4jtest.TestLogger;
+import com.github.valfirst.slf4jtest.TestLoggerFactory;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import uk.org.lidalia.slf4jext.Level;
-import uk.org.lidalia.slf4jtest.TestLogger;
-import uk.org.lidalia.slf4jtest.TestLoggerFactory;
 
 public class CategorySyncWithReferenceResolutionIT {
 

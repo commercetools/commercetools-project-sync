@@ -23,15 +23,15 @@ import com.commercetools.api.models.state.StatePagedQueryResponseBuilder;
 import com.commercetools.api.models.state.StateResourceIdentifierBuilder;
 import com.commercetools.api.models.state.StateTypeEnum;
 import com.commercetools.sync.states.StateSync;
+import com.github.valfirst.slf4jtest.LoggingEvent;
+import com.github.valfirst.slf4jtest.TestLogger;
+import com.github.valfirst.slf4jtest.TestLoggerFactory;
 import io.vrap.rmf.base.client.ApiHttpResponse;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import uk.org.lidalia.slf4jtest.LoggingEvent;
-import uk.org.lidalia.slf4jtest.TestLogger;
-import uk.org.lidalia.slf4jtest.TestLoggerFactory;
 
 class StateSyncerTest {
   private final TestLogger syncerTestLogger = TestLoggerFactory.getTestLogger(StateSyncer.class);

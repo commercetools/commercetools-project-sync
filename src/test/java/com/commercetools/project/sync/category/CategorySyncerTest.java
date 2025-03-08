@@ -22,6 +22,9 @@ import com.commercetools.sync.categories.CategorySync;
 import com.commercetools.sync.commons.utils.CaffeineReferenceIdToKeyCacheImpl;
 import com.commercetools.sync.commons.utils.ReferenceIdToKeyCache;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.github.valfirst.slf4jtest.LoggingEvent;
+import com.github.valfirst.slf4jtest.TestLogger;
+import com.github.valfirst.slf4jtest.TestLoggerFactory;
 import io.vrap.rmf.base.client.ApiHttpResponse;
 import java.time.Clock;
 import java.util.Collections;
@@ -31,9 +34,6 @@ import java.util.concurrent.CompletionStage;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import uk.org.lidalia.slf4jtest.LoggingEvent;
-import uk.org.lidalia.slf4jtest.TestLogger;
-import uk.org.lidalia.slf4jtest.TestLoggerFactory;
 
 class CategorySyncerTest {
   private final TestLogger syncerTestLogger = TestLoggerFactory.getTestLogger(CategorySyncer.class);

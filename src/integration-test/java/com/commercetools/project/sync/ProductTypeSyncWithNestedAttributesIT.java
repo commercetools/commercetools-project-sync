@@ -22,13 +22,13 @@ import com.commercetools.api.models.product_type.ProductType;
 import com.commercetools.api.models.product_type.ProductTypeDraft;
 import com.commercetools.api.models.product_type.ProductTypeDraftBuilder;
 import com.commercetools.project.sync.producttype.ProductTypeSyncer;
+import com.github.valfirst.slf4jtest.TestLogger;
+import com.github.valfirst.slf4jtest.TestLoggerFactory;
 import javax.annotation.Nonnull;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import uk.org.lidalia.slf4jext.Level;
-import uk.org.lidalia.slf4jtest.TestLogger;
-import uk.org.lidalia.slf4jtest.TestLoggerFactory;
 
 // This will suppress MoreThanOneLogger warnings in this class
 @SuppressWarnings("PMD.MoreThanOneLogger")

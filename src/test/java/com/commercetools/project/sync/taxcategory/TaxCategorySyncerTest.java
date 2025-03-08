@@ -21,6 +21,9 @@ import com.commercetools.api.models.tax_category.TaxRate;
 import com.commercetools.api.models.tax_category.TaxRateDraft;
 import com.commercetools.api.models.tax_category.TaxRateDraftBuilder;
 import com.commercetools.sync.taxcategories.TaxCategorySync;
+import com.github.valfirst.slf4jtest.LoggingEvent;
+import com.github.valfirst.slf4jtest.TestLogger;
+import com.github.valfirst.slf4jtest.TestLoggerFactory;
 import io.vrap.rmf.base.client.ApiHttpResponse;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -29,9 +32,6 @@ import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import uk.org.lidalia.slf4jtest.LoggingEvent;
-import uk.org.lidalia.slf4jtest.TestLogger;
-import uk.org.lidalia.slf4jtest.TestLoggerFactory;
 
 class TaxCategorySyncerTest {
   private final TestLogger syncerTestLogger =

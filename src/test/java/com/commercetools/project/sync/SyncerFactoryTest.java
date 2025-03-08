@@ -65,6 +65,9 @@ import com.commercetools.project.sync.type.TypeSyncer;
 import com.commercetools.sync.commons.exceptions.ReferenceTransformException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.valfirst.slf4jtest.LoggingEvent;
+import com.github.valfirst.slf4jtest.TestLogger;
+import com.github.valfirst.slf4jtest.TestLoggerFactory;
 import io.vrap.rmf.base.client.ApiHttpMethod;
 import io.vrap.rmf.base.client.ApiHttpResponse;
 import io.vrap.rmf.base.client.error.BadGatewayException;
@@ -90,9 +93,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InOrder;
 import org.mockito.Mockito;
 import uk.org.lidalia.slf4jext.Level;
-import uk.org.lidalia.slf4jtest.LoggingEvent;
-import uk.org.lidalia.slf4jtest.TestLogger;
-import uk.org.lidalia.slf4jtest.TestLoggerFactory;
 
 // This will suppress MoreThanOneLogger warnings in this class
 @SuppressWarnings("PMD.MoreThanOneLogger")

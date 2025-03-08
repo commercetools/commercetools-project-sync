@@ -53,6 +53,8 @@ import com.commercetools.api.models.type.TypeDraft;
 import com.commercetools.api.models.type.TypeDraftBuilder;
 import com.commercetools.api.models.type.TypeTextInputHint;
 import com.commercetools.project.sync.product.ProductSyncer;
+import com.github.valfirst.slf4jtest.TestLogger;
+import com.github.valfirst.slf4jtest.TestLoggerFactory;
 import io.vrap.rmf.base.client.ApiHttpResponse;
 import io.vrap.rmf.base.client.http.HttpStatusCode;
 import java.util.List;
@@ -61,8 +63,6 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import uk.org.lidalia.slf4jext.Level;
-import uk.org.lidalia.slf4jtest.TestLogger;
-import uk.org.lidalia.slf4jtest.TestLoggerFactory;
 
 // This will suppress MoreThanOneLogger warnings in this class
 @SuppressWarnings("PMD.MoreThanOneLogger")

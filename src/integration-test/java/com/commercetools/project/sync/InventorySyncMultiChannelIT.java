@@ -26,6 +26,8 @@ import com.commercetools.api.models.type.TypeDraft;
 import com.commercetools.api.models.type.TypeDraftBuilder;
 import com.commercetools.project.sync.inventoryentry.InventoryEntrySyncer;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.github.valfirst.slf4jtest.TestLogger;
+import com.github.valfirst.slf4jtest.TestLoggerFactory;
 import io.vrap.rmf.base.client.ApiHttpResponse;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.IntStream;
@@ -34,8 +36,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import uk.org.lidalia.slf4jext.Level;
-import uk.org.lidalia.slf4jtest.TestLogger;
-import uk.org.lidalia.slf4jtest.TestLoggerFactory;
 
 @Disabled(
     "Disabled for normal builds, "

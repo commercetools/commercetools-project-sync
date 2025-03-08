@@ -27,6 +27,8 @@ import com.commercetools.sync.commons.exceptions.ReferenceTransformException;
 import com.commercetools.sync.products.ProductSync;
 import com.commercetools.sync.products.utils.AttributeUtils;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.github.valfirst.slf4jtest.TestLogger;
+import com.github.valfirst.slf4jtest.TestLoggerFactory;
 import io.vrap.rmf.base.client.ApiHttpMethod;
 import io.vrap.rmf.base.client.ApiHttpResponse;
 import io.vrap.rmf.base.client.error.BadGatewayException;
@@ -40,8 +42,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import uk.org.lidalia.slf4jtest.TestLogger;
-import uk.org.lidalia.slf4jtest.TestLoggerFactory;
 
 class ProductSyncerTest {
 

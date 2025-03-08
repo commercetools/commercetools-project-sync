@@ -27,6 +27,8 @@ import com.commercetools.sync.products.helpers.ProductSyncStatistics;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
+import com.github.valfirst.slf4jtest.LoggingEvent;
+import com.github.valfirst.slf4jtest.TestLogger;
 import io.vrap.rmf.base.client.ApiHttpMethod;
 import io.vrap.rmf.base.client.ApiHttpResponse;
 import io.vrap.rmf.base.client.error.BadGatewayException;
@@ -43,8 +45,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.assertj.core.api.Condition;
 import org.assertj.core.util.TriFunction;
 import uk.org.lidalia.slf4jext.Level;
-import uk.org.lidalia.slf4jtest.LoggingEvent;
-import uk.org.lidalia.slf4jtest.TestLogger;
 
 // This utility class compiles but not used yet
 // TODO: Use the utility functions and adjust them
