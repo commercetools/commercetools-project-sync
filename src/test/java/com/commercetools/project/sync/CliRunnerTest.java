@@ -112,16 +112,15 @@ class CliRunnerTest {
         .singleElement()
         .satisfies(
             loggingEvent -> {
-              //              assertThat(loggingEvent.getLevel()).isEqualTo(Level.ERROR);
+              assertThat(loggingEvent.getLevel()).isEqualTo(Level.ERROR);
               assertThat(loggingEvent.getMessage()).contains("Failed to run sync process.");
-              //              final Optional<Throwable> actualThrowableOpt =
-              // loggingEvent.getThrowable();
-              //              assertThat(actualThrowableOpt).isNotNull();
-              //              assertThat(actualThrowableOpt.isPresent()).isTrue();
-              //              final Throwable actualThrowable = actualThrowableOpt.get();
-              //              assertThat(actualThrowable).isExactlyInstanceOf(CliException.class);
-              //              assertThat(actualThrowable.getMessage())
-              //                  .contains("Please pass at least 1 option to the CLI.");
+              final Optional<Throwable> actualThrowableOpt = loggingEvent.getThrowable();
+              assertThat(actualThrowableOpt).isNotNull();
+              assertThat(actualThrowableOpt.isPresent()).isTrue();
+              final Throwable actualThrowable = actualThrowableOpt.get();
+              assertThat(actualThrowable).isExactlyInstanceOf(CliException.class);
+              assertThat(actualThrowable.getMessage())
+                  .contains("Please pass at least 1 option to the CLI.");
             });
   }
 
