@@ -1,13 +1,16 @@
 package com.commercetools.project.sync;
 
+import static com.commercetools.api.models.common.LocalizedString.ofEnglish;
+import static com.commercetools.project.sync.util.CtpClientUtils.CTP_SOURCE_CLIENT;
+import static com.commercetools.project.sync.util.CtpClientUtils.CTP_TARGET_CLIENT;
+import static com.commercetools.project.sync.util.IntegrationTestUtils.cleanUpProjects;
+import static com.commercetools.project.sync.util.IntegrationTestUtils.createITSyncerFactory;
+import static org.assertj.core.api.Assertions.assertThat;
+
 import com.commercetools.api.client.ProjectApiRoot;
 import com.commercetools.api.models.common.CentPrecisionMoneyBuilder;
-import com.commercetools.api.models.common.DiscountedPriceDraft;
-import com.commercetools.api.models.common.DiscountedPriceDraftBuilder;
-import com.commercetools.api.models.common.Price;
-import com.commercetools.api.models.common.PriceDraft;
-import com.commercetools.api.models.common.PriceDraftBuilder;
 import com.commercetools.api.models.common.TypedMoney;
+import com.commercetools.api.models.product.Attribute;
 import com.commercetools.api.models.product.Product;
 import com.commercetools.api.models.product.ProductDraft;
 import com.commercetools.api.models.product.ProductDraftBuilder;
@@ -15,10 +18,6 @@ import com.commercetools.api.models.product.ProductPagedQueryResponse;
 import com.commercetools.api.models.product.ProductVariant;
 import com.commercetools.api.models.product.ProductVariantDraft;
 import com.commercetools.api.models.product.ProductVariantDraftBuilder;
-import com.commercetools.api.models.product_discount.ProductDiscount;
-import com.commercetools.api.models.product_discount.ProductDiscountDraft;
-import com.commercetools.api.models.product_discount.ProductDiscountDraftBuilder;
-import com.commercetools.api.models.product_discount.ProductDiscountValueExternalDraftBuilder;
 import com.commercetools.api.models.product_type.AttributeConstraintEnum;
 import com.commercetools.api.models.product_type.AttributeTypeBuilder;
 import com.commercetools.api.models.product_type.ProductType;
@@ -27,21 +26,11 @@ import com.commercetools.api.models.product_type.ProductTypeDraftBuilder;
 import com.github.valfirst.slf4jtest.TestLogger;
 import com.github.valfirst.slf4jtest.TestLoggerFactory;
 import io.vrap.rmf.base.client.ApiHttpResponse;
+import javax.annotation.Nonnull;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import uk.org.lidalia.slf4jext.Level;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import java.time.ZonedDateTime;
-
-import static com.commercetools.api.models.common.LocalizedString.ofEnglish;
-import static com.commercetools.project.sync.util.CtpClientUtils.CTP_SOURCE_CLIENT;
-import static com.commercetools.project.sync.util.CtpClientUtils.CTP_TARGET_CLIENT;
-import static com.commercetools.project.sync.util.IntegrationTestUtils.cleanUpProjects;
-import static com.commercetools.project.sync.util.IntegrationTestUtils.createITSyncerFactory;
-import static org.assertj.core.api.Assertions.assertThat;
 
 class ProductSyncWithStringAttributeIT {
 
@@ -67,19 +56,23 @@ class ProductSyncWithStringAttributeIT {
     targetProduct = setupProjectData(CTP_TARGET_CLIENT);
   }
 
-  static Product setupProjectData(
-      @Nonnull final ProjectApiRoot ctpClient) {
+  static Product setupProjectData(@Nonnull final ProjectApiRoot ctpClient) {
     final ProductTypeDraft productTypeDraft =
         ProductTypeDraftBuilder.of()
             .key(MAIN_PRODUCT_TYPE_KEY)
             .name(MAIN_PRODUCT_TYPE_KEY)
             .description("a productType for t-shirts")
-            .addAttributes(attributeDefinitionDraftBuilder -> attributeDefinitionDraftBuilder.type(AttributeTypeBuilder::textBuilder)
-                    .isRequired(false)
-                    .attributeConstraint(AttributeConstraintEnum.SAME_FOR_ALL)
-                    .name("modelo")
-                    .label(localizedStringBuilder -> localizedStringBuilder.addValue("en", "modelo"))
-                    .build())
+            .addAttributes(
+                attributeDefinitionDraftBuilder ->
+                    attributeDefinitionDraftBuilder
+                        .type(AttributeTypeBuilder::textBuilder)
+                        .isRequired(false)
+                        .attributeConstraint(AttributeConstraintEnum.SAME_FOR_ALL)
+                        .name("modelo")
+                        .label(
+                            localizedStringBuilder ->
+                                localizedStringBuilder.addValue("en", "modelo"))
+                        .build())
             .build();
 
     final ProductType productType =
@@ -110,11 +103,23 @@ class ProductSyncWithStringAttributeIT {
 
   @Test
   void run_WhenTargetProductHasStringAttributeThatLooksLikeDate_ShouldNotParseIt() {
-    sourceProduct = CTP_SOURCE_CLIENT.products().withId(sourceProduct.getId())
-            .post(productUpdateBuilder -> productUpdateBuilder.version(sourceProduct.getVersion()).withActions(
-                    productUpdateActionBuilder -> productUpdateActionBuilder.setAttributeInAllVariantsBuilder().name("modelo").value("2281-22-90")
-            ))
-            .execute().thenApply(ApiHttpResponse::getBody).join();
+    sourceProduct =
+        CTP_SOURCE_CLIENT
+            .products()
+            .withId(sourceProduct.getId())
+            .post(
+                productUpdateBuilder ->
+                    productUpdateBuilder
+                        .version(sourceProduct.getVersion())
+                        .withActions(
+                            productUpdateActionBuilder ->
+                                productUpdateActionBuilder
+                                    .setAttributeInAllVariantsBuilder()
+                                    .name("modelo")
+                                    .value("2281-22-90")))
+            .execute()
+            .thenApply(ApiHttpResponse::getBody)
+            .join();
 
     // test
     CliRunner.of()
@@ -134,7 +139,12 @@ class ProductSyncWithStringAttributeIT {
             product -> {
               final ProductVariant stagedMasterVariant =
                   product.getMasterData().getStaged().getMasterVariant();
-              System.out.println(stagedMasterVariant);
+              Attribute modeloAttribute =
+                  stagedMasterVariant.getAttributes().stream()
+                      .filter(attribute -> attribute.getName().equals("modelo"))
+                      .findFirst()
+                      .orElse(null);
+              assertThat(modeloAttribute.getValue()).isEqualTo("2281-22-90");
             });
   }
 }

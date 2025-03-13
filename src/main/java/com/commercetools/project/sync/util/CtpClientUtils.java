@@ -5,8 +5,12 @@ import static java.lang.String.format;
 import com.commercetools.api.client.ProjectApiRoot;
 import com.commercetools.api.defaultconfig.ApiRootBuilder;
 import com.commercetools.api.defaultconfig.ServiceRegion;
+import com.commercetools.api.json.ApiModuleOptions;
 import com.commercetools.http.okhttp4.CtOkHttp4Client;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.vrap.rmf.base.client.ResponseSerializer;
 import io.vrap.rmf.base.client.oauth2.ClientCredentials;
+import io.vrap.rmf.base.client.utils.json.JsonUtils;
 import java.io.InputStream;
 import java.util.Arrays;
 import java.util.InvalidPropertiesFormatException;
@@ -98,8 +102,13 @@ public final class CtpClientUtils {
       @Nonnull String apiUrl,
       @Nonnull ClientCredentials credentials,
       @Nonnull String projectKey) {
+    final ApiModuleOptions options =
+        ApiModuleOptions.of().withDateAttributeAsString(true).withDateCustomFieldAsString(true);
+    final ObjectMapper mapper = JsonUtils.createObjectMapper(options);
+
     return ApiRootBuilder.of(new CtOkHttp4Client(200, 200))
         .defaultClient(credentials, authUrl, apiUrl)
+        .withSerializer(ResponseSerializer.of(mapper))
         .withRetryMiddleware(5, Arrays.asList(500, 502, 503, 504))
         .build(projectKey);
   }
