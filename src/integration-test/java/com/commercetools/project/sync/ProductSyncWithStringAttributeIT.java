@@ -47,13 +47,12 @@ class ProductSyncWithStringAttributeIT {
           .fractionDigits(2)
           .build();
   private Product sourceProduct;
-  private Product targetProduct;
 
   @BeforeEach
   void setup() {
     cliRunnerTestLogger.clearAll();
     sourceProduct = setupProjectData(CTP_SOURCE_CLIENT);
-    targetProduct = setupProjectData(CTP_TARGET_CLIENT);
+    setupProjectData(CTP_TARGET_CLIENT);
   }
 
   static Product setupProjectData(@Nonnull final ProjectApiRoot ctpClient) {
