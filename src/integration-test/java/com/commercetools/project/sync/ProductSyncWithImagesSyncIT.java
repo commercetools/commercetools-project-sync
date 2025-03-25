@@ -24,7 +24,7 @@ import javax.annotation.Nonnull;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import uk.org.lidalia.slf4jext.Level;
+import org.slf4j.event.Level;
 
 class ProductSyncWithImagesSyncIT {
   private static final TestLogger cliRunnerTestLogger =
