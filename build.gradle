@@ -11,10 +11,10 @@ buildscript {
 }
 
 plugins {
-    id "com.github.ben-manes.versions" version '0.51.0'
+    id "com.github.ben-manes.versions" version '0.52.0'
     id 'com.adarshr.test-logger' version '4.0.0'
     id 'com.diffplug.spotless' version '6.25.0'
-    id "com.github.spotbugs" version "6.0.25"
+    id "com.github.spotbugs" version "6.1.7"
 }
 
 apply from: "$rootDir/gradle-scripts/extensions.gradle"
@@ -31,11 +31,11 @@ apply from: "$rootDir/gradle-scripts/set-library-version.gradle"
 ext {
     mockitoVersion = '5.14.2'
     slf4jTestVersion = '2.9.0'
-    assertjVersion = '3.26.3'
-    pmdVersion = '7.7.0'
+    assertjVersion = '3.27.3'
+    pmdVersion = '7.11.0'
     jacocoVersion = '0.8.12'
     commercetoolsSyncJava = '10.0.6'
-    httpClientVersion = '17.16.0'
+    httpClientVersion = '17.29.0'
     apacheCliVersion = '1.9.0'
     jupiterApiVersion = '5.11.3'
     logbackVersion = '1.5.12'
