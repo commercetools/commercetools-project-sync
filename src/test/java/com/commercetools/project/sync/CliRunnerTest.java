@@ -51,7 +51,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InOrder;
 import org.mockito.Mockito;
-import uk.org.lidalia.slf4jext.Level;
+import org.slf4j.event.Level;
 
 class CliRunnerTest {
   private static final TestLogger testLogger = TestLoggerFactory.getTestLogger(CliRunner.class);
