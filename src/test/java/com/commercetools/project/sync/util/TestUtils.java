@@ -44,7 +44,7 @@ import javax.annotation.Nonnull;
 import org.apache.commons.lang3.StringUtils;
 import org.assertj.core.api.Condition;
 import org.assertj.core.util.TriFunction;
-import uk.org.lidalia.slf4jext.Level;
+import org.slf4j.event.Level;
 
 // This utility class compiles but not used yet
 // TODO: Use the utility functions and adjust them

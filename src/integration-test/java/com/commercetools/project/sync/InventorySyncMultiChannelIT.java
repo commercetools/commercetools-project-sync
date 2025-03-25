@@ -35,7 +35,7 @@ import javax.annotation.Nonnull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
-import uk.org.lidalia.slf4jext.Level;
+import org.slf4j.event.Level;
 
 @Disabled(
     "Disabled for normal builds, "
