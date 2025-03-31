@@ -12,8 +12,8 @@ import io.vrap.rmf.base.client.ResponseSerializer;
 import io.vrap.rmf.base.client.oauth2.ClientCredentials;
 import io.vrap.rmf.base.client.utils.json.JsonUtils;
 import java.io.InputStream;
-import java.util.Arrays;
 import java.util.InvalidPropertiesFormatException;
+import java.util.List;
 import java.util.Properties;
 import javax.annotation.Nonnull;
 
@@ -109,7 +109,11 @@ public final class CtpClientUtils {
     return ApiRootBuilder.of(new CtOkHttp4Client(200, 200))
         .defaultClient(credentials, authUrl, apiUrl)
         .withSerializer(ResponseSerializer.of(mapper))
-        .withRetryMiddleware(5, Arrays.asList(500, 502, 503, 504))
+        .withPolicies(
+            policyBuilder ->
+                policyBuilder.withRetry(
+                    retryPolicyBuilder ->
+                        retryPolicyBuilder.maxRetries(5).statusCodes(List.of(500, 502, 503, 504))))
         .build(projectKey);
   }
 
