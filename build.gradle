@@ -34,7 +34,7 @@ ext {
     assertjVersion = '3.27.3'
     pmdVersion = '7.12.0'
     jacocoVersion = '0.8.12'
-    commercetoolsSyncJava = '10.0.6'
+    commercetoolsSyncJava = '10.0.7'
     httpClientVersion = '17.29.0'
     apacheCliVersion = '1.9.0'
     jupiterApiVersion = '5.12.1'
