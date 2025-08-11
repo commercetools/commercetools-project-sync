@@ -26,5 +26,6 @@ jobs:
           TARGET_PROJECT_KEY: project-sync-target
           TARGET_CLIENT_ID: ${{ secrets.TARGET_CLIENT_ID }}
           TARGET_CLIENT_SECRET: ${{ secrets.TARGET_CLIENT_SECRET }}
+          JAVA_OPTS: -Xmx4g -XX:+HeapDumpOnOutOfMemoryError
       - name: Codecov
         uses: codecov/codecov-action@v5
