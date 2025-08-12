@@ -37,10 +37,10 @@ ext {
     commercetoolsSyncJava = '10.0.8'
     httpClientVersion = '18.3.0'
     apacheCliVersion = '1.10.0'
-    jupiterApiVersion = '5.12.2'
+    jupiterApiVersion = '5.13.4'
     logbackVersion = '1.5.18'
     logstashLogbackEncoderVersion= '8.1'
-    jupiterPlatformVersion = '1.12.2'
+    jupiterPlatformVersion = '1.13.4'
 }
 
 apply from: "$rootDir/gradle-scripts/spotless.gradle"
