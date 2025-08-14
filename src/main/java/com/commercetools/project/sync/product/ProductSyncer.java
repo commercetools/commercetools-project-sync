@@ -95,6 +95,7 @@ public final class ProductSyncer
                 logWarningCallback(LOGGER, "product", exception, oldResource);
     final ProductSyncOptions syncOptions =
         ProductSyncOptionsBuilder.of(targetClient)
+            .cacheSize(1000000)
             .errorCallback(logErrorCallback)
             .warningCallback(logWarningCallback)
             .build();
