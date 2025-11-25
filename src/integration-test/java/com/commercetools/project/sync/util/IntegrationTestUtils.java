@@ -120,6 +120,24 @@ public final class IntegrationTestUtils {
 
   private static void deleteProjectData(@Nonnull final ProjectApiRoot client) {
     QueryUtils.queryAll(
+            client.customers().get(),
+            customers -> {
+              CompletableFuture.allOf(
+                      customers.stream()
+                          .map(
+                              customer ->
+                                  client
+                                      .customers()
+                                      .delete(customer)
+                                      .execute()
+                                      .thenApply(ApiHttpResponse::getBody))
+                          .map(CompletionStage::toCompletableFuture)
+                          .toArray(CompletableFuture[]::new))
+                  .join();
+            })
+        .toCompletableFuture()
+        .join();
+    QueryUtils.queryAll(
             client.categories().get(),
             categories -> {
               CompletableFuture.allOf(
