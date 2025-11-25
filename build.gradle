@@ -34,13 +34,13 @@ ext {
     assertjVersion = '3.27.4'
     pmdVersion = '7.16.0'
     jacocoVersion = '0.8.13'
-    commercetoolsSyncJava = '10.1.0'
+    commercetoolsSyncJava = '10.2.0'
     httpClientVersion = '18.3.0'
     apacheCliVersion = '1.10.0'
-    jupiterApiVersion = '5.13.4'
+    jupiterApiVersion = '5.12.2'
     logbackVersion = '1.5.18'
     logstashLogbackEncoderVersion= '8.1'
-    jupiterPlatformVersion = '1.13.4'
+    jupiterPlatformVersion = '1.12.2'
 }
 
 apply from: "$rootDir/gradle-scripts/spotless.gradle"
