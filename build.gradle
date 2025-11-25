@@ -38,7 +38,7 @@ ext {
     httpClientVersion = '18.3.0'
     apacheCliVersion = '1.10.0'
     jupiterApiVersion = '5.12.2'
-    logbackVersion = '1.5.18'
+    logbackVersion = '1.5.21'
     logstashLogbackEncoderVersion= '8.1'
     jupiterPlatformVersion = '1.12.2'
 }
