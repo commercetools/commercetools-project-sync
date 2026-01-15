@@ -150,8 +150,7 @@ class ShoppingListSyncerTest {
         List.of(readObjectFromResource("shopping-list-with-store.json", ShoppingList.class));
 
     // Mock the store reference resolution
-    mockResourceIdsGraphQlRequest(
-        sourceClient, "stores", "store-id-456", "store-key-456");
+    mockResourceIdsGraphQlRequest(sourceClient, "stores", "store-id-456", "store-key-456");
     mockResourceIdsGraphQlRequest(
         sourceClient, "shoppingLists", "5ebfa80e-f4aa-4c0b-be64-e348e09a855a", "customTypeKey");
 
