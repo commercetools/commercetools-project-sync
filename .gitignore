@@ -2,10 +2,13 @@
 .idea
 *.iml
 
+.env
+
 # Gradle
 .gradle/
 build/
 out/
+bin/
 
 # MACOS
 .DS_Store

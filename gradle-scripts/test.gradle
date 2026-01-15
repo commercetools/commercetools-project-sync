@@ -1,6 +1,6 @@
 test {
     useJUnitPlatform {
-        includeEngines 'junit-jupiter', 'junit-vintage'
+        includeEngines 'junit-jupiter'
     }
 }
 

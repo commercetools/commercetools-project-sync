@@ -33,6 +33,17 @@ All notable changes to the [commercetools-project-sync project](https://github.c
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+### 5.9.0 - Jan 8, 2026
+[Commits](https://github.com/commercetools/commercetools-project-sync/compare/5.8.0...5.9.0)
+
+- 🛠️ **Dependency Updates** (1)
+  - `com.commercetools:commercetools-sync-java` `10.4.0` -> [`10.5.0`](https://github.com/commercetools/commercetools-sync-java/releases/tag/10.5.0)
+
+- 🐞 **Bug Fixes** (1)
+  - Fixed test configuration by removing `junit-vintage` engine from JUnit Platform configuration, as the project only uses JUnit 5 (Jupiter).
+
+---
+
 ### 5.1.2 - April 6, 2022
 [Commits](https://github.com/commercetools/commercetools-project-sync/compare/5.1.1...5.1.2)
 
