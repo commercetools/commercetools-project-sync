@@ -37,10 +37,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 [Commits](https://github.com/commercetools/commercetools-project-sync/compare/5.9.0...5.9.1)
 
 - 🐞 **Bug Fixes** (1)
-  - Removed `junit-jupiter` dependency from build configuration to fix test execution issues.
-
-- 📋 **Documentation** (1)
-  - Updated documentation to reflect the junit-jupiter dependency removal.
+  - update to use the version 10.5.0 from commercetools-java-sync.
 
 ---
 
