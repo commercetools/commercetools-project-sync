@@ -139,4 +139,58 @@ class ShoppingListSyncerTest {
                     + ".",
                 shoppingLists.get(0).getName().toString()));
   }
+
+  @Test
+  void transform_WithStoreReference_ShouldReplaceStoreReferenceIdsWithKeys() {
+    // preparation
+    final ProjectApiRoot sourceClient = mock(ProjectApiRoot.class);
+    final ShoppingListSyncer shoppingListSyncer =
+        ShoppingListSyncer.of(sourceClient, mock(ProjectApiRoot.class), mock(Clock.class));
+    final List<ShoppingList> shoppingLists =
+        List.of(readObjectFromResource("shopping-list-with-store.json", ShoppingList.class));
+
+    // Mock the store reference resolution
+    mockResourceIdsGraphQlRequest(
+        sourceClient, "stores", "store-id-456", "store-key-456");
+    mockResourceIdsGraphQlRequest(
+        sourceClient, "shoppingLists", "5ebfa80e-f4aa-4c0b-be64-e348e09a855a", "customTypeKey");
+
+    // test
+    final CompletionStage<List<ShoppingListDraft>> draftsFromPageStage =
+        shoppingListSyncer.transform(shoppingLists);
+
+    // assertion
+    assertThat(draftsFromPageStage)
+        .isCompletedWithValue(
+            ShoppingListTransformUtils.toShoppingListDrafts(
+                    sourceClient, referenceIdToKeyCache, shoppingLists)
+                .join());
+  }
+
+  @Test
+  void transform_WithMultipleStoreReferences_ShouldResolveAllStoreReferences() {
+    // preparation
+    final ProjectApiRoot sourceClient = mock(ProjectApiRoot.class);
+    final ShoppingListSyncer shoppingListSyncer =
+        ShoppingListSyncer.of(sourceClient, mock(ProjectApiRoot.class), mock(Clock.class));
+    final List<ShoppingList> shoppingLists =
+        List.of(
+            readObjectFromResource("shopping-list-with-multiple-stores.json", ShoppingList.class));
+
+    // Mock multiple store reference resolutions
+    mockResourceIdsGraphQlRequest(sourceClient, "stores", "store-id-1", "store-key-1");
+    mockResourceIdsGraphQlRequest(sourceClient, "stores", "store-id-2", "store-key-2");
+    mockResourceIdsGraphQlRequest(
+        sourceClient, "shoppingLists", "5ebfa80e-f4aa-4c0b-be64-e348e09a855a", "customTypeKey");
+
+    // test
+    final CompletionStage<List<ShoppingListDraft>> draftsFromPageStage =
+        shoppingListSyncer.transform(shoppingLists);
+
+    // assertion
+    final List<ShoppingListDraft> shoppingListDrafts =
+        draftsFromPageStage.toCompletableFuture().join();
+    assertThat(shoppingListDrafts).isNotEmpty();
+    assertThat(shoppingListDrafts.get(0).getStore()).isNotNull();
+  }
 }

@@ -142,6 +142,59 @@ class CustomerSyncerTest {
             "Customer with key: \"customerKey\" has already a customer number: \"2\", once it's set it cannot be changed. Hereby, the update action is not created.");
   }
 
+  @Test
+  void transform_WithAdditionalAddressInfoAndState_ShouldPreserveAddressFields() {
+    // preparation
+    final ProjectApiRoot sourceClient = mock(ProjectApiRoot.class);
+    final CustomerSyncer customerSyncer =
+        CustomerSyncer.of(sourceClient, mock(ProjectApiRoot.class), mock(Clock.class));
+    final List<Customer> customers =
+        Collections.singletonList(
+            readObjectFromResource("customer-with-state-reference.json", Customer.class));
+
+    // test
+    final CompletionStage<List<CustomerDraft>> draftsFromPageStage =
+        customerSyncer.transform(customers);
+
+    // assertion
+    final List<CustomerDraft> customerDrafts = draftsFromPageStage.toCompletableFuture().join();
+    assertThat(customerDrafts).isNotEmpty();
+    assertThat(customerDrafts.get(0).getAddresses()).isNotEmpty();
+    assertThat(customerDrafts.get(0).getAddresses().get(0).getState()).isEqualTo("New York");
+    assertThat(customerDrafts.get(0).getAddresses().get(0).getAdditionalAddressInfo())
+        .isEqualTo("Building B, Floor 5");
+  }
+
+  @Test
+  void transform_WithMultipleAddressesWithStateAndAdditionalInfo_ShouldPreserveAllAddressFields() {
+    // preparation
+    final ProjectApiRoot sourceClient = mock(ProjectApiRoot.class);
+    final CustomerSyncer customerSyncer =
+        CustomerSyncer.of(sourceClient, mock(ProjectApiRoot.class), mock(Clock.class));
+    final List<Customer> customers =
+        Collections.singletonList(
+            readObjectFromResource("customer-with-multiple-addresses.json", Customer.class));
+
+    // test
+    final CompletionStage<List<CustomerDraft>> draftsFromPageStage =
+        customerSyncer.transform(customers);
+
+    // assertion
+    final List<CustomerDraft> customerDrafts = draftsFromPageStage.toCompletableFuture().join();
+    assertThat(customerDrafts).isNotEmpty();
+    assertThat(customerDrafts.get(0).getAddresses()).hasSize(2);
+
+    // Verify first address
+    assertThat(customerDrafts.get(0).getAddresses().get(0).getState()).isEqualTo("California");
+    assertThat(customerDrafts.get(0).getAddresses().get(0).getAdditionalAddressInfo())
+        .isEqualTo("Ring doorbell twice");
+
+    // Verify second address
+    assertThat(customerDrafts.get(0).getAddresses().get(1).getState()).isEqualTo("California");
+    assertThat(customerDrafts.get(0).getAddresses().get(1).getAdditionalAddressInfo())
+        .isEqualTo("Suite 300, Reception on 3rd floor");
+  }
+
   private void mockProjectApiRootGetRequest(
       final ProjectApiRoot projectApiRoot, final List<Customer> results) {
     final ByProjectKeyCustomersRequestBuilder byProjectKeyCustomersRequestBuilder = mock();

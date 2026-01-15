@@ -1,0 +1,28 @@
+{
+  "key": "customerWithAdditionalAddressInfo",
+  "customerNumber": "1",
+  "email": "customer@example.com",
+  "firstName": "John",
+  "lastName": "Doe",
+  "password": "xxx",
+  "addresses": [
+    {
+      "key": "addressKey",
+      "id": "addr123",
+      "firstName": "John",
+      "lastName": "Doe",
+      "streetName": "Main Street",
+      "streetNumber": "123",
+      "postalCode": "12345",
+      "city": "New York",
+      "region": "NY",
+      "state": "New York",
+      "country": "US",
+      "additionalAddressInfo": "Building B, Floor 5"
+    }
+  ],
+  "shippingAddressIds": [],
+  "billingAddressIds": [],
+  "isEmailVerified": false,
+  "stores": []
+}

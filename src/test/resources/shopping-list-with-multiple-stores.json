@@ -1,0 +1,69 @@
+{
+  "key": "shoppingListMultipleStores",
+  "slug": {
+    "en": "shopping-list-multi-store"
+  },
+  "name": {
+    "en": "Shopping List with Multiple Store References"
+  },
+  "description": {
+    "en": "A shopping list with store reference"
+  },
+  "store": {
+    "typeId": "store",
+    "id": "store-id-1"
+  },
+  "customer": {
+    "typeId": "customer",
+    "id": "customer-id-789"
+  },
+  "lineItems": [
+    {
+      "id": "line-item-1",
+      "productId": "product-id-1",
+      "name": {
+        "en": "Product One"
+      },
+      "productType": {
+        "typeId": "product-type",
+        "id": "product-type-id-1"
+      },
+      "variantId": 1,
+      "quantity": 3,
+      "addedAt": "2020-10-16T07:52:56.960Z"
+    },
+    {
+      "id": "line-item-2",
+      "productId": "product-id-2",
+      "name": {
+        "en": "Product Two"
+      },
+      "productType": {
+        "typeId": "product-type",
+        "id": "product-type-id-2"
+      },
+      "variantId": 1,
+      "quantity": 2,
+      "addedAt": "2020-10-16T08:00:00.000Z"
+    }
+  ],
+  "textLineItems": [
+    {
+      "id": "text-line-item-1",
+      "name": {
+        "en": "Additional Note"
+      },
+      "quantity": 1,
+      "addedAt": "2020-10-16T09:57:12.335Z"
+    }
+  ],
+  "custom": {
+    "type": {
+      "typeId": "type",
+      "id": "5ebfa80e-f4aa-4c0b-be64-e348e09a855a"
+    },
+    "fields": {
+      "textField": "multi-store shopping list"
+    }
+  }
+}
