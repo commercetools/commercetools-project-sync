@@ -33,6 +33,14 @@ All notable changes to the [commercetools-project-sync project](https://github.c
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+### 5.9.1 - Jan 15, 2026
+[Commits](https://github.com/commercetools/commercetools-project-sync/compare/5.9.0...5.9.1)
+
+- 🐞 **Bug Fixes** (1)
+  - update to use the version 10.5.0 from commercetools-java-sync.
+
+---
+
 ### 5.9.0 - Jan 8, 2026
 [Commits](https://github.com/commercetools/commercetools-project-sync/compare/5.8.0...5.9.0)
 

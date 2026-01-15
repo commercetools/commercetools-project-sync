@@ -1,0 +1,42 @@
+{
+  "key": "customerMultipleAddresses",
+  "customerNumber": "2",
+  "email": "customer2@example.com",
+  "firstName": "Jane",
+  "lastName": "Smith",
+  "password": "xxx",
+  "addresses": [
+    {
+      "key": "homeAddress",
+      "id": "addr001",
+      "firstName": "Jane",
+      "lastName": "Smith",
+      "streetName": "Oak Avenue",
+      "streetNumber": "456",
+      "postalCode": "67890",
+      "city": "Los Angeles",
+      "region": "CA",
+      "state": "California",
+      "country": "US",
+      "additionalAddressInfo": "Ring doorbell twice"
+    },
+    {
+      "key": "officeAddress",
+      "id": "addr002",
+      "firstName": "Jane",
+      "lastName": "Smith",
+      "streetName": "Business Blvd",
+      "streetNumber": "789",
+      "postalCode": "11111",
+      "city": "San Francisco",
+      "region": "CA",
+      "state": "California",
+      "country": "US",
+      "additionalAddressInfo": "Suite 300, Reception on 3rd floor"
+    }
+  ],
+  "shippingAddressIds": ["addr001"],
+  "billingAddressIds": ["addr002"],
+  "isEmailVerified": true,
+  "stores": []
+}
