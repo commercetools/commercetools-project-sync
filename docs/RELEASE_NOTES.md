@@ -33,6 +33,17 @@ All notable changes to the [commercetools-project-sync project](https://github.c
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+### 5.9.1 - Jan 15, 2026
+[Commits](https://github.com/commercetools/commercetools-project-sync/compare/5.9.0...5.9.1)
+
+- 🐞 **Bug Fixes** (1)
+  - Removed `junit-jupiter` dependency from build configuration to fix test execution issues.
+
+- 📋 **Documentation** (1)
+  - Updated documentation to reflect the junit-jupiter dependency removal.
+
+---
+
 ### 5.9.0 - Jan 8, 2026
 [Commits](https://github.com/commercetools/commercetools-project-sync/compare/5.8.0...5.9.0)
 
